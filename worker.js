@@ -1,4 +1,51 @@
 
+const SUPABASE_URL = "https://aqfqwvzbsbjrixzgxtro.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZnF3dnpic2Jqcml4emd4dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTA5MjMsImV4cCI6MjEwOTEyNjkyM30.VWRIowVOECv7ycW3Nnpz-EQNJx2izM7yx7xOxkNWVZo";
+const FOTO_IA_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
+
+async function getSupabaseUser(token) {
+  const r = await fetch(SUPABASE_URL + "/auth/v1/user", {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
+  });
+  if (!r.ok) return null;
+  const user = await r.json().catch(() => null);
+  return user && user.id ? user : null;
+}
+
+function madridDayBounds(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
+    timeZoneName: "longOffset"
+  }).formatToParts(now);
+  const get = type => parts.find(p => p.type === type)?.value;
+  const date = get("year") + "-" + get("month") + "-" + get("day");
+  const offset = (get("timeZoneName") || "GMT").match(/GMT([+-])(\\d{1,2})(?::(\\d{2}))?/);
+  const offsetMinutes = offset ? (offset[1] === "+" ? 1 : -1) * (Number(offset[2]) * 60 + Number(offset[3] || 0)) : 0;
+  const [y, m, d] = date.split("-").map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d) - offsetMinutes * 60000);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return { date, start: start.toISOString(), end: end.toISOString() };
+}
+
+async function countFotoIARows(token, userId, start, end) {
+  const q = new URLSearchParams({ select: "id", user_id: "eq." + userId });
+  if (start) q.set("created_at", "gte." + start);
+  if (end) q.append("created_at", "lt." + end);
+  const r = await fetch(SUPABASE_URL + "/rest/v1/foto_ia_generaciones?" + q.toString(), {
+    method: "HEAD",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: "Bearer " + token,
+      Prefer: "count=exact",
+      Range: "0-0"
+    }
+  });
+  if (!r.ok) throw new Error("No se pudieron consultar las estadísticas (" + r.status + ").");
+  const range = r.headers.get("Content-Range") || "";
+  const total = Number((range.split("/")[1] || "0").replace("*", "0"));
+  return Number.isFinite(total) ? total : 0;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -61,6 +108,29 @@ export default {
       }
     }
 
+    // Estadísticas personales de Foto IA (día natural de España).
+    if (url.pathname === "/api/ia/estadisticas") {
+      if (request.method !== "GET") {
+        return Response.json({ error: "Utiliza GET." }, { status: 405 });
+      }
+      try {
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        if (!token) return Response.json({ error: "Inicia sesión en «Mis proyectos» para consultar el contador." }, { status: 401 });
+        const user = await getSupabaseUser(token);
+        if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
+        const day = madridDayBounds();
+        const [hoy, total] = await Promise.all([
+          countFotoIARows(token, user.id, day.start, day.end),
+          countFotoIARows(token, user.id)
+        ]);
+        return Response.json({ ok: true, hoy, total, fecha: day.date, zonaHoraria: "Europe/Madrid" }, {
+          headers: { "Cache-Control": "no-store" }
+        });
+      } catch (error) {
+        return Response.json({ error: "No se pudieron cargar las estadísticas.", detalle: String(error.message || error) }, { status: 502 });
+      }
+    }
+
     // Edición de una habitación usando una imagen de referencia
     if (url.pathname === "/api/ia/editar") {
       if (request.method !== "POST") {
@@ -71,6 +141,15 @@ export default {
       }
 
       try {
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        if (!token) {
+          return Response.json({ error: "Inicia sesión en «Mis proyectos» para usar Foto IA." }, { status: 401 });
+        }
+        const user = await getSupabaseUser(token);
+        if (!user) {
+          return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
+        }
+
         if (!env.AI) {
           return Response.json(
             { error: "Workers AI no está disponible." },
@@ -143,10 +222,29 @@ export default {
           c => c.charCodeAt(0)
         );
 
+        // Registrar la generación con el token del usuario: RLS impide escribir en cuentas ajenas.
+        let countSynced = true;
+        try {
+          const saved = await fetch(SUPABASE_URL + "/rest/v1/foto_ia_generaciones", {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal"
+            },
+            body: JSON.stringify({ user_id: user.id, modelo: FOTO_IA_MODEL })
+          });
+          if (!saved.ok) countSynced = false;
+        } catch (e) {
+          countSynced = false;
+        }
+
         return new Response(binary, {
           headers: {
             "Content-Type": "image/png",
-            "Cache-Control": "no-store"
+            "Cache-Control": "no-store",
+            "X-FotoIA-Count-Synced": countSynced ? "true" : "false"
           }
         });
 
