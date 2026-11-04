@@ -11,8 +11,9 @@
       "/api/*"
     ]
   },
-  "ai": {
-    "binding": "AI"
-  },
-  "previews": {}
+  "previews": {
+    "ai": {
+      "binding": "AI"
+    }
+  }
 }
