@@ -19,7 +19,7 @@ function madridDayBounds(now = new Date()) {
   }).formatToParts(now);
   const get = type => parts.find(p => p.type === type)?.value;
   const date = get("year") + "-" + get("month") + "-" + get("day");
-  const offset = (get("timeZoneName") || "GMT").match(/GMT([+-])(\\d{1,2})(?::(\\d{2}))?/);
+  const offset = (get("timeZoneName") || "GMT").match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
   const offsetMinutes = offset ? (offset[1] === "+" ? 1 : -1) * (Number(offset[2]) * 60 + Number(offset[3] || 0)) : 0;
   const [y, m, d] = date.split("-").map(Number);
   const start = new Date(Date.UTC(y, m - 1, d) - offsetMinutes * 60000);
@@ -114,7 +114,7 @@ export default {
         return Response.json({ error: "Utiliza GET." }, { status: 405 });
       }
       try {
-        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
         if (!token) return Response.json({ error: "Inicia sesión en «Mis proyectos» para consultar el contador." }, { status: 401 });
         const user = await getSupabaseUser(token);
         if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
@@ -141,7 +141,7 @@ export default {
       }
 
       try {
-        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
         if (!token) {
           return Response.json({ error: "Inicia sesión en «Mis proyectos» para usar Foto IA." }, { status: 401 });
         }
