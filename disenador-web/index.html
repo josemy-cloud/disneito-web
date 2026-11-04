@@ -484,6 +484,18 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl=URL.createObjectURL(result);
    $f('fotoIAResultado').src=resultUrl;$f('fotoIAResultado').style.display='block';$f('fotoIAVacio').style.display='none';$f('fotoIAGuardar').disabled=false;
    $f('fotoIAEstado').textContent='¡Imagen generada! Compara el original y el resultado antes de guardarlo.';
+   $f('fotoIAGuardar').onclick=()=>{
+    if(!resultUrl)return;
+    const mime=$f('fotoIAResultado').src?($f('fotoIAResultado').naturalWidth? 'image/png':'image/png'):'image/png';
+    const a=document.createElement('a');
+    a.href=resultUrl;
+    a.download='foto-ia.png';
+    a.style.display='none';
+    document.body.append(a);
+    a.click();
+    a.remove();
+    $f('fotoIAEstado').textContent='Descarga iniciada. Si Chrome pregunta dónde guardarla, elige la carpeta que prefieras.';
+   };
   }catch(err){console.error('Foto IA:',err);$f('fotoIAEstado').textContent='No se pudo generar la imagen: '+err.message}
   finally{busy=false;$f('fotoIAGenerar').disabled=false}
  };
