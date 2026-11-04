@@ -441,10 +441,22 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  const modal=document.createElement('div');
  modal.id='fotoIAModal';
  modal.style.cssText='display:none;position:fixed;inset:0;z-index:200;background:#090b0feF;align-items:center;justify-content:center;padding:18px;overflow:auto';
- modal.innerHTML='<section style="width:min(1100px,100%);max-height:96vh;overflow:auto;background:#20242c;border:1px solid #505866;border-radius:12px;padding:16px;box-shadow:0 18px 60px #000b;color:#f1f3f6"><header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="font-size:18px">✨ Foto IA</b><div style="color:#aeb8c7;font-size:12px">Convierte la vista 3D actual en una imagen más realista.</div></div><button id="fotoIACerrar">✕ Cerrar</button></header><div style="margin:14px 0;padding:12px;background:#171a20;border-radius:8px"><label for="fotoIANivel"><b>Equilibrio entre fidelidad y realismo</b></label><div style="display:flex;justify-content:space-between;color:#aeb8c7;font-size:11px"><span>Más realismo</span><span>Más fidelidad al diseño</span></div><input id="fotoIANivel" type="range" min="0" max="100" value="65" style="width:100%"><div id="fotoIANivelTxt" style="font-size:12px;color:#cbd5e1">Equilibrado, con prioridad moderada a respetar el diseño.</div></div><div id="fotoIAEstado" style="padding:9px;background:#171a20;border-radius:7px;margin-bottom:12px">Capturando la vista 3D…</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><div><b>Diseño original</b><img id="fotoIAOriginal" alt="Vista 3D original" style="display:block;width:100%;max-height:55vh;object-fit:contain;background:#111;border-radius:7px;margin-top:6px"></div><div><b>Resultado Foto IA</b><div id="fotoIAVacio" style="display:flex;align-items:center;justify-content:center;min-height:220px;background:#171a20;color:#8994a4;border-radius:7px;margin-top:6px">Aquí aparecerá la imagen generada.</div><img id="fotoIAResultado" alt="Resultado Foto IA" style="display:none;width:100%;max-height:55vh;object-fit:contain;background:#111;border-radius:7px;margin-top:6px"></div></div><footer style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button id="fotoIAGenerar" style="background:#16865b">✨ Generar Foto IA</button><button id="fotoIAGuardar" disabled>⬇ Guardar resultado</button><span style="color:#aeb8c7;font-size:11px;align-self:center">La imagen generada no modifica los muebles ni el proyecto 3D.</span></footer></section>';
+ modal.innerHTML='<section style="width:min(1100px,100%);max-height:96vh;overflow:auto;background:#20242c;border:1px solid #505866;border-radius:12px;padding:16px;box-shadow:0 18px 60px #000b;color:#f1f3f6"><header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="font-size:18px">✨ Foto IA</b><div style="color:#aeb8c7;font-size:12px">Convierte la vista 3D actual en una imagen más realista.</div></div><button id="fotoIACerrar">✕ Cerrar</button></header><div id="fotoIAContador" style="margin:10px 0;padding:10px 12px;background:#17251f;border:1px solid #315b45;border-radius:8px;color:#bfe8cf;font-size:13px">Consultando tu contador…</div><div style="margin:14px 0;padding:12px;background:#171a20;border-radius:8px"><label for="fotoIANivel"><b>Equilibrio entre fidelidad y realismo</b></label><div style="display:flex;justify-content:space-between;color:#aeb8c7;font-size:11px"><span>Más realismo</span><span>Más fidelidad al diseño</span></div><input id="fotoIANivel" type="range" min="0" max="100" value="65" style="width:100%"><div id="fotoIANivelTxt" style="font-size:12px;color:#cbd5e1">Equilibrado, con prioridad moderada a respetar el diseño.</div></div><div id="fotoIAEstado" style="padding:9px;background:#171a20;border-radius:7px;margin-bottom:12px">Capturando la vista 3D…</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><div><b>Diseño original</b><img id="fotoIAOriginal" alt="Vista 3D original" style="display:block;width:100%;max-height:55vh;object-fit:contain;background:#111;border-radius:7px;margin-top:6px"></div><div><b>Resultado Foto IA</b><div id="fotoIAVacio" style="display:flex;align-items:center;justify-content:center;min-height:220px;background:#171a20;color:#8994a4;border-radius:7px;margin-top:6px">Aquí aparecerá la imagen generada.</div><img id="fotoIAResultado" alt="Resultado Foto IA" style="display:none;width:100%;max-height:55vh;object-fit:contain;background:#111;border-radius:7px;margin-top:6px"></div></div><footer style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button id="fotoIAGenerar" style="background:#16865b">✨ Generar Foto IA</button><button id="fotoIAGuardar" disabled>⬇ Guardar resultado</button><span style="color:#aeb8c7;font-size:11px;align-self:center">La imagen generada no modifica los muebles ni el proyecto 3D.</span></footer></section>';
  document.body.append(modal);
  const $f=id=>modal.querySelector('#'+id);
  let originalBlob=null,originalUrl='',resultUrl='',busy=false;
+ const refreshFotoIAStats=async()=>{
+  const box=$f('fotoIAContador');
+  try{
+   const token=await sbTok();
+   const r=await fetch('/api/ia/estadisticas',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+   const j=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(j.error||'No se pudo consultar el contador.');
+   box.textContent='Hoy: '+j.hoy+' imágenes · Total: '+j.total+' imágenes (día de España)';
+  }catch(e){
+   box.textContent=e.message&&e.message.includes('Sin sesión')?'Inicia sesión en «Mis proyectos» para activar el contador entre dispositivos.':'Contador no disponible: '+(e.message||e);
+  }
+ };
  const close=()=>{modal.style.display='none';if(originalUrl)URL.revokeObjectURL(originalUrl);if(resultUrl)URL.revokeObjectURL(resultUrl);originalBlob=null;originalUrl='';resultUrl='';$f('fotoIAOriginal').removeAttribute('src');$f('fotoIAResultado').removeAttribute('src');$f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;$f('fotoIAGenerar').disabled=false;$f('fotoIAEstado').textContent='Captura preparada.'};
  $f('fotoIACerrar').onclick=close;
  modal.addEventListener('click',e=>{if(e.target===modal&&!busy)close()});
@@ -455,6 +467,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
   if(walk&&typeof exitWalk==='function')exitWalk();
   if(mode!=='3d')setMode('3d');
   modal.style.display='flex';$f('fotoIAEstado').textContent='Preparando captura de la vista 3D…';
+  refreshFotoIAStats();
   $f('fotoIAGenerar').disabled=true;
   try{
    await new Promise(requestAnimationFrame);r3.render(sc,cam);
@@ -478,12 +491,15 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
   busy=true;$f('fotoIAGenerar').disabled=true;$f('fotoIAEstado').textContent='Enviando la captura a Foto IA…';
   try{
    const form=new FormData();form.append('imagen',originalBlob,'vista-3d.jpg');form.append('nivel',$f('fotoIANivel').value);
-   const response=await fetch('/api/ia/editar',{method:'POST',body:form});
+   const token=await sbTok();
+   const response=await fetch('/api/ia/editar',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
    if(!response.ok){let detail='HTTP '+response.status;try{const j=await response.json();detail=j.error||j.detalle||detail}catch(e){}throw new Error(detail)}
    const result=await response.blob();if(!result.type.startsWith('image/'))throw new Error('El servidor no ha devuelto una imagen válida.');
    if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl=URL.createObjectURL(result);
    $f('fotoIAResultado').src=resultUrl;$f('fotoIAResultado').style.display='block';$f('fotoIAVacio').style.display='none';$f('fotoIAGuardar').disabled=false;
-   $f('fotoIAEstado').textContent='¡Imagen generada! Compara el original y el resultado antes de guardarlo.';
+   const countSynced=response.headers.get('X-FotoIA-Count-Synced')!=='false';
+   $f('fotoIAEstado').textContent=countSynced?'¡Imagen generada! Compara el original y el resultado antes de guardarlo.':'Imagen generada, pero no se pudo sincronizar el contador. Vuelve a consultar en unos segundos.';
+   refreshFotoIAStats();
    $f('fotoIAGuardar').onclick=()=>{
     if(!resultUrl)return;
     const mime=$f('fotoIAResultado').src?($f('fotoIAResultado').naturalWidth? 'image/png':'image/png'):'image/png';
