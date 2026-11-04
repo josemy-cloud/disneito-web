@@ -80,6 +80,15 @@ export default {
 
         const received = await request.formData();
         const image = received.get("imagen");
+        const rawLevel = Number(received.get("nivel"));
+        const fidelity = Number.isFinite(rawLevel)
+          ? Math.max(0, Math.min(100, rawLevel))
+          : 65;
+        const fidelityInstruction = fidelity < 34
+          ? "Allow stronger photographic interpretation of lighting and surface appearance, but do not change the room layout, architecture, object count or object positions."
+          : fidelity < 67
+            ? "Balance photorealism with design fidelity. Preserve the exact room layout, architecture, object count, furniture positions and proportions; improve only materials, textures, lighting, shadows and reflections."
+            : "Prioritize strict design fidelity over creative interpretation. Preserve the exact geometry, architecture, object count, furniture positions, dimensions, cabinet fronts, handles (only if present), worktops (only if present), doors, windows and camera viewpoint. Do not invent or add any object or detail.";
 
         if (!image || typeof image === "string") {
           return Response.json(
@@ -106,7 +115,7 @@ export default {
 
         aiForm.append(
           "prompt",
-          "Transform this exact interior design screenshot into a highly photorealistic architectural interior photograph. Preserve the original room geometry, camera viewpoint, perspective, layout, furniture positions, proportions, doors, windows, kitchen cabinets and appliances. Do not add, remove, move or redesign objects. Improve only realistic materials, textures, lighting, shadows and reflections. Maintain the original architectural design faithfully."
+          "Transform this exact interior design screenshot into a highly photorealistic architectural interior photograph. " + fidelityInstruction + " Never add, remove, move or redesign objects. Do not invent handles, countertops, shelves, decorations or architectural features that are not clearly present in the reference image. Maintain the original camera viewpoint and perspective."
         );
 
         aiForm.append("input_image_0", image, "referencia.png");
