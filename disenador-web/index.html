@@ -20,7 +20,7 @@ h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;
 <div id="top"><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
 <button id="bU" title="Deshacer (Ctrl+Z)">↶</button><button id="bR" title="Rehacer (Ctrl+Y)">↷</button>
-<button id="bCat" style="background:#2f6fd1">📚 Catálogos</button><button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">📁 Proyectos</button><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bMo">Modo: navegación</button><select id="bSt" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select>cm <span class="seg"><button id="mv2" title="Vista 2D">▦</button><button id="mvf" title="Vista 3D rápida">◧</button><button id="mvm" title="Vista 3D con materiales">◈</button><button id="mvq" title="Vista realista en tiempo real">☀</button></span><button id="bM" style="display:none">Cambiar a 3D</button><select id="sq" style="display:none"><option value="f">Vista rápida</option><option value="m" selected>3D con materiales</option><option value="q">Realista (sombras)</option></select>
+<button id="bCat" style="background:#2f6fd1">📚 Catálogos</button><button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">📁 Proyectos</button><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><select id="bSt" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select>cm <span class="seg"><button id="mv2" title="Vista 2D">▦</button><button id="mvf" title="Vista 3D rápida">◧</button><button id="mvm" title="Vista 3D con materiales">◈</button><button id="mvq" title="Vista realista en tiempo real">☀</button></span><button id="bM" style="display:none">Cambiar a 3D</button><select id="sq" style="display:none"><option value="f">Vista rápida</option><option value="m" selected>3D con materiales</option><option value="q">Realista (sombras)</option></select>
 <span class="dd"><button id="bX" title="Exportar imagen">🖼 Imagen ▾</button><div class="ddm"><button id="bP2">Plano 2D (PNG)</button><button id="bP3">Captura 3D</button></div></span>
 <label><input type="checkbox" id="ck" checked> Ajuste</label>
 <label title="Elegir qué paredes ocultar o hacer transparentes"><input type="checkbox" id="ct"> 👁 Muros</label>
@@ -434,6 +434,58 @@ $('#bE').onclick=()=>dl(URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'
 $('#bI').onclick=()=>$('#fi').click();$('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{S=migrate(JSON.parse(t));sel=null;commit();libUI()})};
 $('#bP2').onclick=()=>{const w=mode;draw();c2.toBlob(b=>dl(URL.createObjectURL(b),S.nm+'-plano.png'))};
 $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render(sc,cam);r3.domElement.toBlob(b=>{dl(URL.createObjectURL(b),S.nm+'-3d-HD.png');setQ()})};
+
+/* ===== Foto IA: captura automática de la vista 3D y edición ===== */
+(function initFotoIA(){
+ const btn=$('#bFotoIA');
+ if(!btn)return;
+ const modal=document.createElement('div');
+ modal.id='fotoIAModal';
+ modal.style.cssText='display:none;position:fixed;inset:0;z-index:200;background:#090b0feF;align-items:center;justify-content:center;padding:18px;overflow:auto';
+ modal.innerHTML='<section style="width:min(1100px,100%);max-height:96vh;overflow:auto;background:#20242c;border:1px solid #505866;border-radius:12px;padding:16px;box-shadow:0 18px 60px #000b;color:#f1f3f6"><header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="font-size:18px">✨ Foto IA</b><div style="color:#aeb8c7;font-size:12px">Convierte la vista 3D actual en una imagen más realista.</div></div><button id="fotoIACerrar">✕ Cerrar</button></header><div style="margin:14px 0;padding:12px;background:#171a20;border-radius:8px"><label for="fotoIANivel"><b>Equilibrio entre fidelidad y realismo</b></label><div style="display:flex;justify-content:space-between;color:#aeb8c7;font-size:11px"><span>Más realismo</span><span>Más fidelidad al diseño</span></div><input id="fotoIANivel" type="range" min="0" max="100" value="65" style="width:100%"><div id="fotoIANivelTxt" style="font-size:12px;color:#cbd5e1">Equilibrado, con prioridad moderada a respetar el diseño.</div></div><div id="fotoIAEstado" style="padding:9px;background:#171a20;border-radius:7px;margin-bottom:12px">La captura se hará automáticamente desde la vista 3D.</div><div id="fotoIAImagenes" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><div><b>Diseño original</b><img id="fotoIAOriginal" alt="Vista 3D original" style="display:block;width:100%;max-height:55vh;object-fit:contain;background:#111;border-radius:7px;margin-top:6px"></div><div><b>Resultado Foto IA</b><div id="fotoIAVacio" style="display:flex;align-items:center;justify-content:center;min-height:220px;background:#171a20;color:#8994a4;border-radius:7px;margin-top:6px">Aquí aparecerá la imagen generada.</div><img id="fotoIAResultado" alt="Resultado Foto IA" style="display:none;width:100%;max-height:55vh;object-fit:contain;background:#111;border-radius:7px;margin-top:6px"></div></div><footer style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button id="fotoIAGenerar" style="background:#16865b">✨ Generar Foto IA</button><button id="fotoIAGuardar" disabled>⬇ Guardar resultado</button><span style="color:#aeb8c7;font-size:11px;align-self:center">La imagen generada no modifica los muebles ni el proyecto 3D.</span></footer></section>';
+ document.body.append(modal);
+ const $f=id=>modal.querySelector('#'+id);
+ let originalUrl='',resultUrl='',busy=false;
+ const close=()=>{modal.style.display='none';if(originalUrl)URL.revokeObjectURL(originalUrl);if(resultUrl)URL.revokeObjectURL(resultUrl);originalUrl='';resultUrl='';$f('fotoIAOriginal').removeAttribute('src');$f('fotoIAResultado').removeAttribute('src');$f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;$f('fotoIAEstado').textContent='La captura se hará automáticamente desde la vista 3D.'};
+ $f('fotoIACerrar').onclick=close;
+ modal.addEventListener('click',e=>{if(e.target===modal)close()});
+ $f('fotoIANivel').oninput=()=>{const n=+$f('fotoIANivel').value;$f('fotoIANivelTxt').textContent=n<34?'Se permite más interpretación visual, manteniendo la distribución y los elementos existentes.':n<67?'Equilibrado, con prioridad moderada a respetar el diseño.':'Máxima prioridad a conservar exactamente la geometría, los muebles y su distribución.'};
+ $f('fotoIAGuardar').onclick=()=>{if(!resultUrl)return;const a=document.createElement('a');a.href=resultUrl;a.download=(S.nm||'proyecto').replace(/[^\w-]+/g,'_')+'-foto-ia.png';a.click()};
+ btn.onclick=async()=>{
+  if(busy)return;
+  if(RVo){alert('Cierra primero la vista «Ver en Realidad» y vuelve al modo 3D normal.');return}
+  if(walk&&typeof exitWalk==='function')exitWalk();
+  if(mode!=='3d')setMode('3d');
+  modal.style.display='flex';$f('fotoIAEstado').textContent='Preparando captura de la vista 3D…';
+  $f('fotoIAGenerar').disabled=true;
+  try{
+   await new Promise(requestAnimationFrame);
+   r3.render(sc,cam);
+   const src=r3.domElement;
+   if(!src.width||!src.height)throw new Error('La vista 3D todavía no está disponible.');
+   const scale=Math.min(1,1024/Math.max(src.width,src.height));
+   const c=document.createElement('canvas');c.width=Math.max(1,Math.round(src.width*scale));c.height=Math.max(1,Math.round(src.height*scale));
+   const cx=c.getContext('2d');if(!cx)throw new Error('No se pudo preparar la captura.');
+   cx.drawImage(src,0,0,c.width,c.height);
+   const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('No se pudo crear la imagen de la captura.')),'image/jpeg',.9));
+   if(blob.size>5*1024*1024)throw new Error('La captura supera el límite de 5 MB.');
+   if(originalUrl)URL.revokeObjectURL(originalUrl);
+   originalUrl=URL.createObjectURL(blob);$f('fotoIAOriginal').src=originalUrl;
+   if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl='';
+   $f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;
+   $f('fotoIAEstado').textContent='Enviando la captura a Foto IA…';
+   const form=new FormData();form.append('imagen',blob,'vista-3d.jpg');form.append('nivel',$f('fotoIANivel').value);
+   const response=await fetch('/api/ia/editar',{method:'POST',body:form});
+   if(!response.ok){let detail='HTTP '+response.status;try{const j=await response.json();detail=j.error||j.detalle||detail}catch(e){}throw new Error(detail)}
+   const result=await response.blob();if(!result.type.startsWith('image/'))throw new Error('El servidor no ha devuelto una imagen válida.');
+   resultUrl=URL.createObjectURL(result);$f('fotoIAResultado').src=resultUrl;$f('fotoIAResultado').style.display='block';$f('fotoIAVacio').style.display='none';$f('fotoIAGuardar').disabled=false;
+   $f('fotoIAEstado').textContent='¡Imagen generada! Compara el original y el resultado antes de guardarlo.';
+  }catch(err){console.error('Foto IA:',err);$f('fotoIAEstado').textContent='No se pudo generar la imagen: '+err.message}
+  finally{busy=false;$f('fotoIAGenerar').disabled=false}
+ };
+ $f('fotoIAGenerar').onclick=()=>{if(!originalUrl){btn.click();return}btn.click()};
+})();
+
 $('#fm').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(im,0,0,256,256);S.cm.push(c.toDataURL('image/jpeg',.85));commit();libUI()};im.src=r.result};r.readAsDataURL(f)};
 $('#ck').onchange=()=>{};
 /* ===== Paredes conectadas, colisiones, medición, colocación ===== */
