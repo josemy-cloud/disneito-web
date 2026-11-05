@@ -161,18 +161,19 @@ function createCustomFurniture(){
 function libUI(q=''){
  const L=$('#lib');if(q!==undefined)libQuery=q;const query=libQuery||'';L.innerHTML='';
  const rooms=[
-  {n:'Cocina',cats:['Cocina','Electrodomésticos'],sample:['base','alto','columna']},
-  {n:'Baño',cats:['Baño'],sample:['lavabo','inodoro']},
-  {n:'Dormitorio',cats:['Dormitorio'],sample:['armario','cama']},
-  {n:'Vestidor',cats:['Dormitorio'],sample:['armario']},
-  {n:'Salón',cats:['Salón'],sample:['sofa','tv','mesa']},
-  {n:'Recibidor',cats:['Salón'],sample:['mesa','tv']},
-  {n:'Despacho',cats:['Salón'],sample:['mesa']},
-  {n:'Lavadero',cats:['Electrodomésticos'],sample:['lavadora']},
-  {n:'Garaje',cats:['Importados'],sample:['base']},
-  {n:'Trastero',cats:['Importados'],sample:['armario']},
-  {n:'Exterior',cats:['Importados'],sample:['sofa','mesa']}
+  {n:'Cocina',key:'cocina',cats:['Cocina','Electrodomésticos']},
+  {n:'Baño',key:'baño',cats:['Baño']},
+  {n:'Dormitorio',key:'dormitorio',cats:['Dormitorio']},
+  {n:'Vestidor',key:'vestidor',cats:[]},
+  {n:'Salón',key:'salón',cats:['Salón']},
+  {n:'Recibidor',key:'recibidor',cats:[]},
+  {n:'Despacho',key:'despacho',cats:[]},
+  {n:'Lavadero',key:'lavadero',cats:[]},
+  {n:'Garaje',key:'garaje',cats:[]},
+  {n:'Trastero',key:'trastero',cats:[]},
+  {n:'Exterior',key:'exterior',cats:[]}
  ];
+ const belongs=(o,room)=>o.roomType===room.key||room.cats.includes(o.c);
  const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:#191c22;padding:2px 0 8px;z-index:2';
  const title=document.createElement('h4');title.textContent='Mobiliario y objetos';title.style.margin='4px 0 8px';head.append(title);
  const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar en todo el catálogo…';search.value=query;search.style.cssText='width:100%;box-sizing:border-box;margin-bottom:7px';head.append(search);
@@ -188,15 +189,15 @@ function libUI(q=''){
  };
  const render=()=>{
   content.innerHTML='';const qv=(search.value||'').trim().toLowerCase();
-  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>(qv||(!roomF&&!catF)||roomF&&rooms.find(r=>r.n==roomF)?.cats.includes(o.c)||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')).toLowerCase().includes(qv)));
+  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>(qv||(!roomF&&!catF)||roomF&&belongs(o,rooms.find(r=>r.n==roomF))||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')).toLowerCase().includes(qv)));
   if(!catF&&!roomF&&!qv){
    const label=document.createElement('div');label.textContent='Estancias';label.style.cssText='font-size:12px;color:#b8c2d2;margin:4px 0 8px;font-weight:600';content.append(label);
    const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px';content.append(grid);
-   rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>room.sample.includes(x.o.t)||room.cats.includes(x.o.c));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
+   rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
     if(chosen){const im=document.createElement('img');im.src=thumb(chosen.ix);im.alt='Vista previa de '+room.n;im.style.cssText='width:100%;height:82px;object-fit:contain;background:#171a20;border-radius:4px;display:block';card.append(im)}
     else{const blank=document.createElement('div');blank.textContent='＋';blank.style.cssText='height:82px;display:grid;place-items:center;background:#171a20;border-radius:4px;font-size:30px;color:#8fb4ff';card.append(blank)}
     const name=document.createElement('div');name.textContent=room.n;name.style.cssText='font-size:12px;font-weight:600;margin-top:5px';card.append(name);
-    const count=document.createElement('small');count.textContent=LIB.filter(o=>room.cats.includes(o.c)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
+    const count=document.createElement('small');count.textContent=LIB.filter(o=>belongs(o,room)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
     card.onclick=()=>{roomF=room.n;catF='';libUI()};grid.append(card)
    });
    const catTitle=document.createElement('h4');catTitle.textContent='Ver por tipo de producto';content.append(catTitle);
