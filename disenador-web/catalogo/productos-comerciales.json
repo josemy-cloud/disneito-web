@@ -555,6 +555,408 @@
           "notes": "Referencia y dimensiones de la variante Ona."
         }
       ]
+    },
+    {
+      "id": "roca-ona-lavabo-compacto-a327683000",
+      "name": "Lavabo mural compacto Roca Ona Fineceramic 550",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A327683000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales compactos",
+      "status": "Referencia y dimensiones recogidas en el catálogo oficial de la colección",
+      "dimensions_mm": {
+        "length": 550,
+        "width": 360,
+        "height": 150
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar en ficha de la variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico adaptado a medidas de variante",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante en el catálogo oficial de la colección Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-compacto-a327684000",
+      "name": "Lavabo mural compacto Roca Ona Fineceramic 600",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A327684000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales compactos",
+      "status": "Referencia y dimensiones recogidas en el catálogo oficial de la colección",
+      "dimensions_mm": {
+        "length": 600,
+        "width": 360,
+        "height": 150
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar en ficha de la variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico adaptado a medidas de variante",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante en el catálogo oficial de la colección Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-compacto-a32768d000",
+      "name": "Lavabo mural compacto Roca Ona Fineceramic 400",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A32768D000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales compactos",
+      "status": "Referencia y dimensiones recogidas en el catálogo oficial de la colección",
+      "dimensions_mm": {
+        "length": 400,
+        "width": 320,
+        "height": 150
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar en ficha de la variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico adaptado a medidas de variante",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante en el catálogo oficial de la colección Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-compacto-a32768e000",
+      "name": "Lavabo mural compacto Roca Ona Fineceramic 500",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A32768E000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales compactos",
+      "status": "Referencia y dimensiones recogidas en el catálogo oficial de la colección",
+      "dimensions_mm": {
+        "length": 500,
+        "width": 360,
+        "height": 150
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar en ficha de la variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico adaptado a medidas de variante",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante en el catálogo oficial de la colección Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-a32768h000",
+      "name": "Lavabo mural Roca Ona Fineceramic 800",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A32768H000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales",
+      "status": "Referencia y dimensiones recogidas en el catálogo oficial de la colección",
+      "dimensions_mm": {
+        "length": 800,
+        "width": 460,
+        "height": 160
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar en ficha de la variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico adaptado a medidas de variante",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante en el catálogo oficial de la colección Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-a32768a000",
+      "name": "Lavabo mural Roca Ona Fineceramic 1000",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A32768A000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales",
+      "status": "Referencia y dimensiones recogidas en el catálogo oficial de la colección",
+      "dimensions_mm": {
+        "length": 1000,
+        "width": 460,
+        "height": 160
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar en ficha de la variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico adaptado a medidas de variante",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante en el catálogo oficial de la colección Ona."
+        }
+      ]
     }
   ]
 }
