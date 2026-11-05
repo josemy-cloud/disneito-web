@@ -356,7 +356,11 @@ function libUI(q=''){
  const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);head.append(actions);L.append(head);
  const content=document.createElement('div');L.append(content);
  const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
-  MATS.concat(S.cm.map((_,i)=>'img'+i)).forEach(m=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.m==m?' on':'');d.textContent=m.startsWith('img')?'imagen':m;d.style.background=m.startsWith('img')?'url('+S.cm[+m.slice(3)]+') center/cover':MC[m];d.onclick=()=>{armed={m};libUI();hint()};content.append(d)});
+  MATS.concat(S.cm.map((_,i)=>'img'+i)).forEach(m=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.m==m?' on':'');d.textContent=m.startsWith('img')?'imagen':m;d.title=m.startsWith('pbr:')?((pbrDef(m.slice(4))||[])[1]||m):m;
+   if(m.startsWith('img')){d.style.backgroundImage='url('+S.cm[+m.slice(3)]+')';d.style.backgroundPosition='center';d.style.backgroundSize='cover'}
+   else if(m.startsWith('pbr:')){const def=pbrDef(m.slice(4));const thumb=def?pbrThumb(def):null;d.style.backgroundColor=def&&def[4]?def[4]:'#b8b8b8';if(thumb){d.style.backgroundImage='url('+thumb.toDataURL('image/png')+')';d.style.backgroundPosition='center';d.style.backgroundSize='cover'}}
+   else d.style.backgroundColor=MC[m]||'#888';
+   d.onclick=()=>{armed={m};libUI();hint()};content.append(d)});
   const ph=document.createElement('h4');ph.textContent='Pinturas';content.append(ph);PAINT.forEach(c=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>{armed={c};libUI();hint()};content.append(d)});
   const u=document.createElement('button');u.className='it';u.textContent='+ Añadir material desde imagen';u.onclick=()=>$('#fm').click();content.append(u)
  };
