@@ -676,9 +676,26 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
   if(!id){id=crypto.randomUUID();localStorage.setItem('fotoIA_device_id',id)}
   return id;
  };
+ const masterTestStorageKey='fotoIA_master_test_session';
+ const activateAnonymousMaster=async()=>{
+  const secret=prompt('Modo de pruebas MASTER. Introduce la clave privada configurada en Cloudflare:');
+  if(!secret)return false;
+  const response=await fetch('/api/master/test-session',{method:'POST',headers:{
+   'X-FotoIA-Device':fotoIADeviceId(),'X-Master-Test-Key':secret
+  },cache:'no-store'});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||'No se pudo autorizar el modo de pruebas MASTER.');
+  if(!data.token)throw new Error('El servidor no ha devuelto una sesión válida.');
+  sessionStorage.setItem(masterTestStorageKey,data.token);
+  return true;
+ };
  const fotoIAHeaders=async()=>{
   const h={'X-FotoIA-Device':fotoIADeviceId()};
   if(SES)h.Authorization='Bearer '+await sbTok();
+  else{
+   const masterSession=sessionStorage.getItem(masterTestStorageKey);
+   if(masterSession)h['X-Master-Test-Session']=masterSession;
+  }
   return h;
  };
  const refreshFotoIAStats=async()=>{
@@ -687,6 +704,12 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    const r=await fetch('/api/ia/estadisticas',{headers:await fotoIAHeaders(),cache:'no-store'});
    const j=await r.json().catch(()=>({}));
    if(!r.ok)throw new Error(j.error||'No se pudo consultar el contador.');
+   if(j.master){
+    box.textContent='Modo de pruebas MASTER · sin límite interno de la aplicación'+(j.generacionesPrueba==null?'':' · '+j.generacionesPrueba+' generaciones de prueba registradas');
+    box.style.background='#202a39';box.style.borderColor='#536b91';box.style.color='#d7e6ff';
+    return;
+   }
+   box.style.background='#17251f';box.style.borderColor='#315b45';box.style.color='#bfe8cf';
    const tipo=j.registrado?'con cuenta':'sin iniciar sesión';
    box.textContent='Te quedan '+j.disponibles+' de '+j.limite+' imágenes hoy ('+tipo+').';
   }catch(e){box.textContent='No se pudo consultar el límite: '+(e.message||e)}
@@ -697,6 +720,9 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  $f('fotoIANivel').oninput=()=>{const n=+$f('fotoIANivel').value;$f('fotoIANivelTxt').textContent=n<34?'Más libertad para interpretar la apariencia, sin cambiar la distribución.':n<67?'Equilibrado: realismo y fidelidad al diseño.':'Prioridad máxima a conservar geometría, muebles y detalles existentes.'};
  btn.onclick=async()=>{
   if(busy)return;
+  if(!SES&&new URLSearchParams(location.search).get('master-test')==='1'&&!sessionStorage.getItem(masterTestStorageKey)){
+   try{if(!await activateAnonymousMaster())return}catch(error){alert(error.message);return}
+  }
   if(RVo){alert('Cierra primero «Ver en Realidad» y vuelve al modo 3D normal.');return}
   if(walk&&typeof exitWalk==='function')exitWalk();
   if(mode!=='3d')setMode('3d');
