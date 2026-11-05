@@ -244,7 +244,7 @@ export default {
         const image = received.get("imagen");
         const rawInventory = received.get("inventario");
         const inventory = typeof rawInventory === "string"
-          ? rawInventory.replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/g, " ").slice(0, 12000)
+          ? rawInventory.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ").slice(0, 12000)
           : "";
         const rawLevel = Number(received.get("nivel"));
         const fidelity = Number.isFinite(rawLevel) ? Math.max(0, Math.min(100, rawLevel)) : 65;
@@ -274,8 +274,8 @@ export default {
 
         const aiForm = new FormData();
         const sceneContext = inventory
-          ? "\\n\\nSCENE OBJECT INVENTORY (trusted application metadata describing the screenshot; use it to disambiguate visible objects):\\n" + inventory +
-            "\\nTreat the inventory as object identity and category guidance, not as permission to add anything. If the screenshot appearance and inventory disagree, preserve the visible geometry and use the inventory only to identify the intended object. In particular, never confuse a bidet with a toilet, sink, bathtub or urinal; never confuse a bed with a sofa; and render cars as recognizable complete road vehicles with wheels, windows, bodywork, lights and correct proportions."
+          ? "\n\nSCENE OBJECT INVENTORY (trusted application metadata describing the screenshot; use it to disambiguate visible objects):\\n" + inventory +
+            "\nTreat the inventory as object identity and category guidance, not as permission to add anything. If the screenshot appearance and inventory disagree, preserve the visible geometry and use the inventory only to identify the intended object. In particular, never confuse a bidet with a toilet, sink, bathtub or urinal; never confuse a bed with a sofa; and render cars as recognizable complete road vehicles with wheels, windows, bodywork, lights and correct proportions."
           : "";
         aiForm.append("prompt", "Transform this exact interior design screenshot into a highly photorealistic architectural interior photograph. " + fidelityInstruction + " Never add, remove, move or redesign objects. Do not invent handles, countertops, shelves, decorations or architectural features that are not clearly present in the reference image. Maintain the original camera viewpoint and perspective. The scene may contain distinct objects that must remain recognizable as their actual intended category. Reproduce complete, anatomically and functionally correct object forms, not generic geometric approximations. " + sceneContext);
         aiForm.append("input_image_0", image, "referencia.png");
