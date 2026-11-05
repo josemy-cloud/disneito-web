@@ -1518,6 +1518,64 @@ BUILD.rocaOnaWallHungWCCompact=(g,it)=>{
 BUILD.rocaOnaWallHungBidet=(g,it)=>{
  const v={...it,w:36,h:29,d:53};BUILD.rocaOnaBidet(g,v);
 };
+
+/* Lavabo mural Roca Ona Fineceramic A327686000.
+   Medidas oficiales 600×460×160 mm, pared fina 5 mm, cubeta rectangular central. */
+BUILD.rocaOnaFineceramicBasin=(g,it)=>{
+ const w=it.w||60,d=it.d||46,h=it.h||16;
+ const ceramic=ceramicMaterial(it.col||'#f5f4f0'),inside=new T.MeshStandardMaterial({color:'#e6e7e3',roughness:.2,side:T.DoubleSide});
+ const chrome=M('#aeb5b8',.22,.82),dark=M('#3a4144',.3,.3);
+ const outline=(W,D,r,n=8)=>{
+  const pts=[],corners=[
+   [W/2-r,-D/2+r,-Math.PI/2,0],
+   [W/2-r,D/2-r,0,Math.PI/2],
+   [-W/2+r,D/2-r,Math.PI/2,Math.PI],
+   [-W/2+r,-D/2+r,Math.PI,Math.PI*1.5]
+  ];
+  corners.forEach(([x,z,a,b])=>{for(let k=0;k<=n;k++){const t=a+(b-a)*k/n;pts.push([x+r*Math.cos(t),z+r*Math.sin(t)])}});
+  return pts;
+ };
+ const surface=(top,bottom,mat)=>{
+  const verts=[],idx=[];
+  for(let i=0;i<top.length;i++){
+   const j=(i+1)%top.length,base=verts.length/3;
+   verts.push(top[i][0],top[i][1],top[i][2],top[j][0],top[j][1],top[j][2],bottom[j][0],bottom[j][1],bottom[j][2],bottom[i][0],bottom[i][1],bottom[i][2]);
+   idx.push(base,base+1,base+2,base,base+2,base+3);
+  }
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setIndex(idx);geo.computeVertexNormals();
+  const mesh=new T.Mesh(geo,mat);g.add(mesh);return mesh;
+ };
+ const outerTop=outline(w,d,4),outerBottom=outline(w-1,d-1,4);
+ surface(outerTop.map(p=>[p[0],h-1,p[1]]),outerBottom.map(p=>[p[0],1,p[1]]),ceramic);
+ // Interior de cubeta: paredes inclinadas hacia un fondo más estrecho y profundo.
+ const innerTop=outline(w-10,d-10,6),innerBottom=outline(w*.55,d*.48,Math.min(5,w*.07));
+ surface(innerTop.map(p=>[p[0],h-1,p[1]]),innerBottom.map(p=>[p[0],3.2,p[1]]),inside);
+ // Fondo de la cubeta redondeado y plano, con transición visual hacia el desagüe.
+ const floorShape=new T.Shape(),fp=outline(w*.55,d*.48,Math.min(5,w*.07));
+ floorShape.moveTo(fp[0][0],fp[0][1]);for(let i=1;i<fp.length;i++)floorShape.lineTo(fp[i][0],fp[i][1]);floorShape.closePath();
+ const floor=new T.Mesh(new T.ShapeGeometry(floorShape,16),inside);floor.rotation.x=-Math.PI/2;floor.position.y=3.2;g.add(floor);
+ // Borde fino Fineceramic de 5 mm, construido como aro rectangular con hueco.
+ const rimShape=new T.Shape();rimShape.moveTo(-w/2+4,-d/2);rimShape.lineTo(w/2-4,-d/2);
+ rimShape.quadraticCurveTo(w/2,-d/2,w/2,-d/2+4);rimShape.lineTo(w/2,d/2-4);
+ rimShape.quadraticCurveTo(w/2,d/2,w/2-4,d/2);rimShape.lineTo(-w/2+4,d/2);
+ rimShape.quadraticCurveTo(-w/2,d/2,-w/2,d/2-4);rimShape.lineTo(-w/2,-d/2+4);
+ rimShape.quadraticCurveTo(-w/2,-d/2,-w/2+4,-d/2);
+ const holePath=new T.Path();holePath.moveTo(-w*.41,-d*.36);holePath.lineTo(-w*.41,d*.36);
+ holePath.quadraticCurveTo(-w*.41,d*.39,-w*.38,d*.39);holePath.lineTo(w*.38,d*.39);
+ holePath.quadraticCurveTo(w*.41,d*.39,w*.41,d*.36);holePath.lineTo(w*.41,-d*.36);
+ holePath.quadraticCurveTo(w*.41,-d*.39,w*.38,-d*.39);holePath.lineTo(-w*.38,-d*.39);
+ holePath.quadraticCurveTo(-w*.41,-d*.39,-w*.41,-d*.36);rimShape.holes.push(holePath);
+ const rim=new T.Mesh(new T.ExtrudeGeometry(rimShape,{depth:1.3,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.12,bevelThickness:.12,curveSegments:12}),ceramic);
+ rim.rotation.x=-Math.PI/2;rim.position.y=h-1.1;g.add(rim);
+ // Desagüe central, orificio de grifería central y rebosadero.
+ const drain=new T.Mesh(new T.TorusGeometry(2.1,.55,10,36),chrome);drain.rotation.x=Math.PI/2;drain.position.set(0,3.35,0);g.add(drain);
+ const drainHole=new T.Mesh(new T.CircleGeometry(1.6,32),dark);drainHole.rotation.x=-Math.PI/2;drainHole.position.set(0,3.3,0);g.add(drainHole);
+ const tapRing=new T.Mesh(new T.TorusGeometry(2.2,.65,10,32),chrome);tapRing.rotation.x=Math.PI/2;tapRing.position.set(0,h+.05,-d*.39);g.add(tapRing);
+ const tapHole=new T.Mesh(new T.CircleGeometry(1.55,32),dark);tapHole.rotation.x=-Math.PI/2;tapHole.position.set(0,h+.08,-d*.39);g.add(tapHole);
+ const overflow=new T.Mesh(new T.TorusGeometry(1.05,.35,8,24),chrome);overflow.position.set(0,h*.48,d*.34);g.add(overflow);
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+};
+
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}}
 function motionKeysForItem(it){const saved=MV;MV=[];try{const g=new T.Group();buildItemGeometry(g,it,M(it.col||'#ccc',.5,0),M('#999',.3,.9));return [...new Set(MV.map(m=>m.k))]}catch(err){console.warn('No se pudieron identificar las aperturas del mueble',err);return []}finally{MV=saved}}
 function toggleItemMotion(it){it.op=it.op||[];if(mode!=='3d')setMode('3d');const keys=motionKeysForItem(it);if(!keys.length){hint('Este elemento no tiene puertas o cajones animados');return}const open=keys.some(k=>!it.op[k]);keys.forEach(k=>{it.op[k]=open});hint(open?'Puertas y cajones abriéndose':'Puertas y cajones cerrándose')}
