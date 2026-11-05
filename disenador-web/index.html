@@ -254,11 +254,11 @@ LIB.push(
 {t:'roomObject',roomType:"terraza",c:"Exterior",shape:"planter",n:"Jardinera",w:100,h:45,d:38,e:0,col:"#8c9aa5",s:"industrial",variant:0},
 {t:'roomObject',roomType:"terraza",c:"Exterior",shape:"pergola",n:"Pérgola",w:260,h:235,d:220,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
 {t:'roomObject',roomType:"terraza",c:"Exterior",shape:"bbq",n:"Barbacoa",w:110,h:115,d:55,e:0,col:"#d2c8b8",s:"rústico",variant:2},
-{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"tree",n:"Árbol ornamental",w:130,h:260,d:130,e:0,col:"#a88f78",s:"moderno",variant:0},
-{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"planter",n:"Macetero",w:45,h:55,d:45,e:0,col:"#b6a28d",s:"nórdico",variant:1},
-{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"outdoorsofa",n:"Conjunto exterior",w:220,h:80,d:85,e:0,col:"#8c9aa5",s:"industrial",variant:2},
-{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"shower",n:"Ducha exterior",w:100,h:210,d:100,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
-{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"pool",n:"Piscina",w:300,h:100,d:220,e:0,col:"#d2c8b8",s:"rústico",variant:1}
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"tree",n:"Árbol ornamental",w:130,h:260,d:130,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"planter",n:"Macetero",w:45,h:55,d:45,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"outdoorsofa",n:"Conjunto exterior",w:220,h:80,d:85,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"shower",n:"Ducha exterior",w:100,h:210,d:100,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"pool",n:"Piscina",w:300,h:100,d:220,e:0,col:"#d2c8b8",s:"rústico",variant:1}
 );
 const MATS=['madera','mármol','cemento','gres','hidráulico','metro','piedra'],MC={madera:'#b98a5a',mármol:'#e8e6e3',cemento:'#9a9a98',gres:'#b3a592',hidráulico:'#d9d2c0',metro:'#f5f5f3',piedra:'#a89b86'};
 const PAINT=['#f1ede4','#faf7f0','#bfc3c7','#d8c9b0','#b08968','#8aa39b','#c97b63','#37474f'];
@@ -313,7 +313,7 @@ function libUI(q=''){
    const label=document.createElement('div');label.textContent='Estancias';label.style.cssText='font-size:12px;color:#b8c2d2;margin:4px 0 8px;font-weight:600';content.append(label);
    const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px';content.append(grid);
    rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
-    if(chosen){const im=document.createElement('img');im.src=thumb(chosen.ix);im.alt='Vista previa de '+room.n;im.style.cssText='width:100%;height:82px;object-fit:contain;background:#171a20;border-radius:4px;display:block';card.append(im)}
+    if(chosen){const im=document.createElement('img');im.src=room.key==='cocina'?thumb(chosen.ix):roomCover(room);im.alt=room.key==='cocina'?'Portada actual de Cocina, sin modificar':'Vista completa de '+room.n;im.style.cssText='width:100%;height:112px;object-fit:cover;background:#171a20;border-radius:4px;display:block';card.append(im)}
     else{const blank=document.createElement('div');blank.textContent='＋';blank.style.cssText='height:82px;display:grid;place-items:center;background:#171a20;border-radius:4px;font-size:30px;color:#8fb4ff';card.append(blank)}
     const name=document.createElement('div');name.textContent=room.n;name.style.cssText='font-size:12px;font-weight:600;margin-top:5px';card.append(name);
     const count=document.createElement('small');count.textContent=LIB.filter(o=>belongs(o,room)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
@@ -799,6 +799,12 @@ let PV=[],pvIt=null,pvOpen=false;
 function buildPrev(it,room){g4.clear();const sv=MV;MV=PV=[];it.op=it.op||[];const g=new T.Group();buildItemGeometry(g,it,M(it.col,.5,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));MV=sv;g4.add(g);
  if(room){const f=new T.Mesh(new T.PlaneGeometry(400,400),sm(S.fl.m,'#ccc',400,400,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r));f.rotation.x=-Math.PI/2;f.position.set(0,-.1,100);g4.add(f);const wm=sm(null,S.pt);[[150,125,-it.d/2-2,400,250,4],[-it.w/2-2,125,100,4,250,400]].forEach(([x,y,z,w,h,d])=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),wm);m.position.set(x,y,z);g4.add(m)})}}
 const TH=new WeakMap();function thumb(i){if(TH.has(LIB[i]))return TH.get(LIB[i]);const o=LIB[i],it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(LIB[i],u);return u}
+/* Portadas 3D independientes del catálogo: composición de habitación completa. No se ejecuta para Cocina. */
+const ROOM_COVERS=new Map();
+function roomCover(room){if(ROOM_COVERS.has(room.key))return ROOM_COVERS.get(room.key);const savedMV=MV,savedPV=PV;MV=PV=[];g4.clear();const floorMat=M('#b5a18a',.82),wallMat=M('#dedbd3',.9),trim=M('#a68d72',.7);const floor=new T.Mesh(new T.PlaneGeometry(1000,850),floorMat);floor.rotation.x=-Math.PI/2;floor.position.y=-2;g4.add(floor);const back=new T.Mesh(new T.BoxGeometry(1000,390,12),wallMat);back.position.set(0,195,-425);g4.add(back);const side=new T.Mesh(new T.BoxGeometry(12,390,850),wallMat);side.position.set(-500,195,0);g4.add(side);const sk=new T.Mesh(new T.BoxGeometry(1000,12,8),trim);sk.position.set(0,7,-416);g4.add(sk);
+const items=LIB.filter(o=>o.roomType===room.key||o.c===room.n).filter(o=>o.t==='roomObject'||!o.roomType).slice(0,4);const positions=[[-220,90], [110,100],[-210,-190],[170,-190]];
+items.forEach((o,i)=>{const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));const obj=new T.Group();buildItemGeometry(obj,it,M(it.col||'#a88f78',.58,0),M('#999',.3,.8));const [x,z]=positions[i];obj.position.set(x,0,z);if(o.shape==='car'||o.shape==='van')obj.rotation.y=Math.PI/2;g4.add(obj)});
+cam4.aspect=260/150;cam4.position.set(920,700,1120);cam4.lookAt(0,90,0);cam4.updateProjectionMatrix();r4.setSize(260,150);r4.render(sc4,cam4);const url=r4.domElement.toDataURL('image/jpeg',.86);g4.clear();MV=savedMV;PV=savedPV;ROOM_COVERS.set(room.key,url);return url}
 function fitCam(){const it=pvIt,m=Math.max(it.w,it.h,it.d);cam4.position.set(m*.9,it.h*.6+m*.3,m*1.6);oc4.target.set(0,it.h/2,0);oc4.update()}
 function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX='hidden';P2.style.minHeight='90px';P2.style.maxHeight='none';P2.innerHTML='';[['Anchura','w'],['Altura','h'],['Fondo','d']].forEach(([l,f])=>{const i=document.createElement('input');i.type='number';i.value=pvIt[f];i.onchange=()=>{pvIt[f]=Math.max(2,+i.value);buildPrev(pvIt,1);fitCam();pvUI()};P2.append(l+' ',i,' ')});
  if(!pvIt.cfg&&pvIt.t!='model'){const c=document.createElement('input');c.type='color';c.value=pvIt.col;c.oninput=()=>{pvIt.col=c.value;buildPrev(pvIt,1)};P2.append(' Color ',c)}P2.append(document.createElement('br'));
