@@ -705,7 +705,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    const j=await r.json().catch(()=>({}));
    if(!r.ok)throw new Error(j.error||'No se pudo consultar el contador.');
    if(j.master){
-    box.textContent='Modo de pruebas MASTER · sin límite interno de la aplicación'+(j.generacionesPrueba==null?'':' · '+j.generacionesPrueba+' generaciones de prueba registradas');
+    box.textContent='Uso ilimitado de Foto IA'+(j.generacionesPrueba==null?'':' · '+j.generacionesPrueba+' generaciones registradas');
     box.style.background='#202a39';box.style.borderColor='#536b91';box.style.color='#d7e6ff';
     return;
    }
@@ -720,12 +720,6 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  $f('fotoIANivel').oninput=()=>{const n=+$f('fotoIANivel').value;$f('fotoIANivelTxt').textContent=n<34?'Más libertad para interpretar la apariencia, sin cambiar la distribución.':n<67?'Equilibrado: realismo y fidelidad al diseño.':'Prioridad máxima a conservar geometría, muebles y detalles existentes.'};
  btn.onclick=async()=>{
   if(busy)return;
-  if(!SES&&new URLSearchParams(location.search).get('master-test')==='1'&&!sessionStorage.getItem(masterTestStorageKey)){
-   const wantsMaster=confirm('¿Quieres activar el modo de pruebas MASTER? Pulsa Aceptar para introducir la clave privada. Si pulsas Cancelar, entrarás en Foto IA como usuario anónimo normal, con su límite diario y sin necesidad de clave.');
-   if(wantsMaster){
-    try{await activateAnonymousMaster()}catch(error){alert(error.message+' Puedes continuar usando Foto IA como usuario anónimo normal.')}
-   }
-  }
   if(RVo){alert('Cierra primero «Ver en Realidad» y vuelve al modo 3D normal.');return}
   if(walk&&typeof exitWalk==='function')exitWalk();
   if(mode!=='3d')setMode('3d');
