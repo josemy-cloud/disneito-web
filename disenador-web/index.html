@@ -452,7 +452,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  };
  const fotoIAHeaders=async()=>{
   const h={'X-FotoIA-Device':fotoIADeviceId()};
-  try{h.Authorization='Bearer '+await sbTok()}catch(e){}
+  if(SES)h.Authorization='Bearer '+await sbTok();
   return h;
  };
  const refreshFotoIAStats=async()=>{
