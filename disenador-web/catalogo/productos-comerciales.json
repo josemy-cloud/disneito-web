@@ -354,6 +354,207 @@
           "notes": "Otras medidas y variantes de lavabo Ona."
         }
       ]
+    },
+    {
+      "id": "roca-ona-lavabo-compacto-a327682000",
+      "name": "Lavabo mural compacto Roca Ona Fineceramic",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A327682000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales compactos",
+      "status": "Descatalogado según catálogo oficial consultado",
+      "dimensions_mm": {
+        "length": 450,
+        "width": 360,
+        "height": 150
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico de la misma familia",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Medidas exteriores de la variante según catálogo oficial; la geometría interna se adapta proporcionalmente a la familia Ona y no constituye CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_producto_o_coleccion",
+          "url": "https://qr2.roca.com/productos/lavabo-fineceramic-mural-compacto-327682..0",
+          "notes": "Referencia y dimensiones de la variante Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-a327685000",
+      "name": "Lavabo mural Roca Ona Fineceramic 550",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A327685000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales",
+      "status": "Descatalogado según catálogo oficial consultado",
+      "dimensions_mm": {
+        "length": 550,
+        "width": 460,
+        "height": 160
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico de la misma familia",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Medidas exteriores de la variante según catálogo oficial; la geometría interna se adapta proporcionalmente a la familia Ona y no constituye CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_producto_o_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Referencia y dimensiones de la variante Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-lavabo-a327687000",
+      "name": "Lavabo mural Roca Ona Fineceramic 650",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A327687000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales",
+      "status": "Descatalogado según catálogo oficial consultado",
+      "dimensions_mm": {
+        "length": 650,
+        "width": 460,
+        "height": 160
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural (confirmar variante)"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal o semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "bowl_position": "Central",
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico de la misma familia",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Medidas exteriores de la variante según catálogo oficial; la geometría interna se adapta proporcionalmente a la familia Ona y no constituye CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_producto_o_coleccion",
+          "url": "https://qr2.roca.com/productos/lavabo-fineceramic-mural-327687..0",
+          "notes": "Referencia y dimensiones de la variante Ona."
+        }
+      ]
     }
   ]
 }
