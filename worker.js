@@ -214,7 +214,8 @@ export default {
           try {
             await fotoIARpc(reservationToken, "foto_ia_cancelar_generacion", {
               p_reserva_id: reservation.id,
-              p_device_id: deviceId
+              p_device_id: deviceId,
+              p_es_anonima: reservation.es_anonima === true
             });
           } catch (cancelError) {
             // Si la cancelación falla, se conserva la reserva para no permitir superar el límite.
