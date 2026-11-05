@@ -313,6 +313,93 @@ export default {
       }
     }
 
+    // Catálogo compartido: autorización exclusiva mediante sesión real de Supabase.
+    if (url.pathname.startsWith("/api/catalogo/")) {
+      const kv = env.CATALOG_APPROVALS;
+      if (!kv) return Response.json({ error: "El almacenamiento compartido del catálogo no está configurado." }, { status: 503 });
+      const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+      let user = null;
+      if (rawToken) user = await getSupabaseUser(rawToken);
+      const isMaster = !!(user && env.MASTER_USER_ID && user.id === env.MASTER_USER_ID);
+      const denied = () => isMaster ? null : Response.json({ error: "Solo la cuenta MASTER puede importar, modificar o aprobar muebles y objetos." }, { status: rawToken ? 403 : 401 });
+      const noStore = { "Cache-Control": "no-store" };
+      if (url.pathname === "/api/catalogo/permisos" && request.method === "GET") {
+        if (rawToken && !user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar." }, { status: 401, headers: noStore });
+        return Response.json({ ok: true, master: isMaster }, { headers: noStore });
+      }
+      if (url.pathname === "/api/catalogo/aprobaciones" && request.method === "GET") {
+        try {
+          const approvals = {}; let cursor;
+          do {
+            const page = await kv.list({ prefix: "approval:", cursor, limit: 1000 });
+            await Promise.all(page.keys.map(async item => { const value = await kv.get(item.name); if (value) approvals[item.name.slice(9)] = JSON.parse(value); }));
+            cursor = page.list_complete ? undefined : page.cursor;
+          } while (cursor);
+          return Response.json(approvals, { headers: noStore });
+        } catch (error) { return Response.json({ error: "No se pudieron leer las aprobaciones." }, { status: 502 }); }
+      }
+      if (url.pathname === "/api/catalogo/aprobar" && request.method === "POST") {
+        const no = denied(); if (no) return no;
+        try {
+          const body = await request.json(), id = String(body.productId || ""), status = body.status;
+          if (!/^[a-zA-Z0-9_-]{1,120}$/.test(id) || !["approved", "rejected"].includes(status)) return Response.json({ error: "Ficha o estado no válido." }, { status: 400 });
+          await kv.put("approval:" + id, JSON.stringify({ status, updatedAt: new Date().toISOString(), updatedBy: user.id }));
+          return Response.json({ ok: true, productId: id, status }, { headers: noStore });
+        } catch (error) { return Response.json({ error: "No se pudo guardar la aprobación." }, { status: 400 }); }
+      }
+      if (url.pathname === "/api/catalogo/productos" && request.method === "GET") {
+        try {
+          const products = []; let cursor;
+          do {
+            const page = await kv.list({ prefix: "product:", cursor, limit: 1000 });
+            const rows = await Promise.all(page.keys.map(async item => { const value = await kv.get(item.name); return value ? JSON.parse(value) : null; }));
+            products.push(...rows.filter(Boolean)); cursor = page.list_complete ? undefined : page.cursor;
+          } while (cursor);
+          return Response.json({ products }, { headers: noStore });
+        } catch (error) { return Response.json({ error: "No se pudo cargar el catálogo compartido." }, { status: 502 }); }
+      }
+      if (url.pathname === "/api/catalogo/productos" && request.method === "POST") {
+        const no = denied(); if (no) return no;
+        try {
+          const body = await request.json();
+          if (!body || !/^[a-zA-Z0-9_-]{1,120}$/.test(String(body.id || "")) || !String(body.nombre || "").trim()) return Response.json({ error: "Ficha de producto no válida." }, { status: 400 });
+          const product = { ...body, id: String(body.id), visual_review: "pending", updatedAt: new Date().toISOString(), updatedBy: user.id };
+          delete product.docId; delete product.fotos; delete product.commercialData;
+          await kv.put("product:" + product.id, JSON.stringify(product));
+          return Response.json({ ok: true, id: product.id }, { headers: noStore });
+        } catch (error) { return Response.json({ error: "No se pudo guardar el producto compartido." }, { status: 400 }); }
+      }
+      if (url.pathname === "/api/catalogo/modelos" && request.method === "GET") {
+        try {
+          const models = []; let cursor;
+          do {
+            const page = await kv.list({ prefix: "model:", cursor, limit: 1000 });
+            const rows = await Promise.all(page.keys.map(async item => {
+              const value = await kv.get(item.name); if (!value) return null;
+              const m = JSON.parse(value); return { id: m.id, name: m.name, brand: m.brand, ref: m.ref, author: m.author, source: m.source, lic: m.lic, cat: m.cat, units: m.units, ext: m.ext, date: m.date };
+            }));
+            models.push(...rows.filter(Boolean)); cursor = page.list_complete ? undefined : page.cursor;
+          } while (cursor);
+          return Response.json({ models }, { headers: noStore });
+        } catch (error) { return Response.json({ error: "No se pudieron cargar los modelos compartidos." }, { status: 502 }); }
+      }
+      const modelMatch = url.pathname.match(/^\\/api\\/catalogo\\/modelo\\/([a-zA-Z0-9_-]{1,120})$/);
+      if (modelMatch && request.method === "GET") {
+        const value = await kv.get("model:" + modelMatch[1]);
+        return value ? new Response(value, { headers: { ...noStore, "Content-Type": "application/json" } }) : Response.json({ error: "Modelo no encontrado." }, { status: 404 });
+      }
+      if (url.pathname === "/api/catalogo/modelos" && request.method === "POST") {
+        const no = denied(); if (no) return no;
+        try {
+          const body = await request.json();
+          if (!body || !/^[a-zA-Z0-9_-]{1,120}$/.test(String(body.id || "")) || !["glb", "gltf", "obj"].includes(body.ext) || typeof body.data !== "string" || body.data.length > 23 * 1024 * 1024) return Response.json({ error: "Modelo no válido o demasiado grande (máximo aproximado 17 MB)." }, { status: 413 });
+          await kv.put("model:" + body.id, JSON.stringify(body));
+          return Response.json({ ok: true, id: body.id }, { headers: noStore });
+        } catch (error) { return Response.json({ error: "No se pudo compartir el modelo 3D." }, { status: 400 }); }
+      }
+      return Response.json({ error: "Método o ruta de catálogo no admitidos." }, { status: 405 });
+    }
+
     // Rutas API inexistentes
     if (url.pathname.startsWith("/api/")) {
       return Response.json(
