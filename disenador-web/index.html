@@ -260,6 +260,60 @@ LIB.push(
 {t:'roomObject',roomType:"jardin",c:"Exterior",shape:"shower",n:"Ducha exterior",w:100,h:210,d:100,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
 {t:'roomObject',roomType:"jardin",c:"Exterior",shape:"pool",n:"Piscina",w:300,h:100,d:220,e:0,col:"#d2c8b8",s:"rústico",variant:1}
 );
+/* Segunda ampliación de biblioteca: nuevas variantes paramétricas por estancia.
+   Todos los elementos usan BUILD.roomObject, con geometría 3D editable en tamaño y acabado.
+   No se modifica la colección ni los generadores de Cocina. */
+LIB.push(
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"sofa",n:"Sofá modular 4 plazas",w:285,h:88,d:105,e:0,col:"#87939b",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"seat",n:"Sillón orejero",w:88,h:112,d:92,e:0,col:"#a58a70",s:"clásico",variant:0},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"table",n:"Mesa de centro rectangular",w:110,h:38,d:60,e:0,col:"#98724f",s:"industrial",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"sideboard",n:"Mueble bajo de salón",w:200,h:58,d:45,e:0,col:"#a18c75",s:"minimalista",variant:0},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"shelf",n:"Estantería modular alta",w:140,h:225,d:36,e:0,col:"#b99b78",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"lamp",n:"Lámpara de pie de lectura",w:42,h:175,d:42,e:0,col:"#d6c39b",s:"moderno",variant:2},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"mirror",n:"Espejo redondo decorativo",w:85,h:85,d:5,e:0,col:"#b6a28d",s:"minimalista",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"panel",n:"Mueble mural para televisión",w:220,h:205,d:38,e:0,col:"#6f6256",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"bed",n:"Cama matrimonio 135",w:145,h:88,d:200,e:0,col:"#b7a58e",s:"clásico",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"bed",n:"Cama canapé abatible",w:160,h:92,d:205,e:0,col:"#9b8978",s:"moderno",variant:1},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"dresser",n:"Mesita flotante",w:48,h:28,d:38,e:0,col:"#c1ad94",s:"minimalista",variant:0},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"dresser",n:"Cómoda 4 cajones ancha",w:140,h:92,d:48,e:0,col:"#927b65",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"wardrobe",n:"Armario esquinero",w:115,h:225,d:115,e:0,col:"#b5a58f",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"desk",n:"Escritorio juvenil",w:120,h:75,d:60,e:0,col:"#a98965",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"lamp",n:"Lámpara de mesita",w:28,h:42,d:28,e:0,col:"#e4d5b6",s:"clásico",variant:0},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"bath",n:"Bañera rectangular encastrada",w:170,h:55,d:75,e:0,col:"#e5e4df",s:"moderno",variant:0},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Plato de ducha cuadrado",w:100,h:200,d:100,e:0,col:"#cbd8dc",s:"minimalista",variant:1},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"vanity",n:"Mueble lavabo suspendido",w:100,h:52,d:48,e:0,col:"#9c8875",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"basin",n:"Lavabo de apoyo ovalado",w:58,h:18,d:40,e:0,col:"#f1f0eb",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"cabinet",n:"Mueble auxiliar baño",w:45,h:110,d:32,e:0,col:"#b9a58e",s:"clásico",variant:1},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"rail",n:"Toallero de pared",w:55,h:65,d:12,e:0,col:"#b7bdc0",s:"industrial",variant:2},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"table",n:"Mesa comedor extensible 6-8",w:200,h:76,d:100,e:0,col:"#9a7958",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"table",n:"Mesa comedor redonda pequeña",w:110,h:75,d:110,e:0,col:"#c0a27d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"chair",n:"Silla comedor con brazos",w:58,h:88,d:58,e:0,col:"#8f7865",s:"clásico",variant:1},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"chair",n:"Silla comedor tapizada",w:48,h:90,d:54,e:0,col:"#a7a09a",s:"moderno",variant:2},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"lamp",n:"Lámpara comedor suspendida",w:55,h:48,d:55,e:0,col:"#d8c69c",s:"industrial",variant:0},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"console",n:"Consola suspendida",w:110,h:28,d:30,e:0,col:"#b39a7d",s:"minimalista",variant:1},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"cabinet",n:"Zapatero estrecho",w:90,h:125,d:22,e:0,col:"#d0c7ba",s:"moderno",variant:2},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"mirror",n:"Espejo horizontal recibidor",w:110,h:65,d:5,e:0,col:"#9b8874",s:"industrial",variant:1},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Escritorio con ala lateral",w:160,h:76,d:115,e:0,col:"#987d61",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"officechair",n:"Silla de oficina compacta",w:62,h:105,d:62,e:0,col:"#444b55",s:"minimalista",variant:0},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"shelf",n:"Librería con baldas",w:100,h:210,d:32,e:0,col:"#b29b7c",s:"industrial",variant:2},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Lavadora carga superior",w:45,h:90,d:60,e:0,col:"#e2e4e5",s:"moderno",variant:2},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"sink",n:"Fregadero de lavadero doble",w:100,h:90,d:62,e:0,col:"#c2c8ca",s:"industrial",variant:0},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"cabinet",n:"Armario escobero alto",w:60,h:220,d:42,e:0,col:"#e4dfd5",s:"minimalista",variant:1},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"basket",n:"Cesto doble de ropa",w:65,h:65,d:38,e:0,col:"#b79e83",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"wardrobe",n:"Módulo vestidor con cajones",w:100,h:220,d:60,e:0,col:"#b7a58e",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"shelf",n:"Zapatero extraíble",w:85,h:120,d:42,e:0,col:"#927b65",s:"moderno",variant:1},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"workbench",n:"Banco de trabajo con panel",w:180,h:95,d:70,e:0,col:"#8c9298",s:"industrial",variant:2},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"shelf",n:"Estantería garaje reforzada",w:150,h:210,d:55,e:0,col:"#a1a6aa",s:"industrial",variant:1},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"car",n:"Coche berlina",w:185,h:145,d:475,e:0,col:"#7e8994",s:"moderno",variant:0},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"bike",n:"Moto tipo scooter",w:78,h:115,d:190,e:0,col:"#8b9298",s:"urbano",variant:2},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"box",n:"Caja grande de almacenaje",w:60,h:45,d:45,e:0,col:"#b9a88f",s:"industrial",variant:0},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"trunk",n:"Baúl de almacenaje grande",w:120,h:68,d:55,e:0,col:"#927b65",s:"rústico",variant:2},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"sunbed",n:"Tumbona reclinable",w:72,h:48,d:205,e:0,col:"#a9b2a5",s:"mediterráneo",variant:2},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"umbrella",n:"Sombrilla grande",w:280,h:245,d:280,e:0,col:"#d0c6b7",s:"mediterráneo",variant:1},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"pergola",n:"Pérgola bioclimática",w:300,h:245,d:260,e:0,col:"#a8a9a4",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"tree",n:"Árbol frutal",w:160,h:300,d:160,e:0,col:"#56804f",s:"mediterráneo",variant:1},
+{t:'roomObject',roomType:"jardin",c:"Exterior",shape:"planter",n:"Jardinera rectangular grande",w:140,h:55,d:50,e:0,col:"#9b765e",s:"rústico",variant:2}
+);
 const MATS=['madera','mármol','cemento','gres','hidráulico','metro','piedra'],MC={madera:'#b98a5a',mármol:'#e8e6e3',cemento:'#9a9a98',gres:'#b3a592',hidráulico:'#d9d2c0',metro:'#f5f5f3',piedra:'#a89b86'};
 const PAINT=['#f1ede4','#faf7f0','#bfc3c7','#d8c9b0','#b08968','#8aa39b','#c97b63','#37474f'];
 /* ===== Interfaz ===== */
