@@ -317,7 +317,7 @@ export default {
     if (url.pathname.startsWith("/api/catalogo/")) {
       const kv = env.CATALOG_APPROVALS;
       if (!kv) return Response.json({ error: "El almacenamiento compartido del catálogo no está configurado." }, { status: 503 });
-      const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+      const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
       let user = null;
       if (rawToken) user = await getSupabaseUser(rawToken);
       const isMaster = !!(user && env.MASTER_USER_ID && user.id === env.MASTER_USER_ID);
@@ -383,9 +383,9 @@ export default {
           return Response.json({ models }, { headers: noStore });
         } catch (error) { return Response.json({ error: "No se pudieron cargar los modelos compartidos." }, { status: 502 }); }
       }
-      const modelMatch = url.pathname.match(/^\\/api\\/catalogo\\/modelo\\/([a-zA-Z0-9_-]{1,120})$/);
-      if (modelMatch && request.method === "GET") {
-        const value = await kv.get("model:" + modelMatch[1]);
+      const modelId = url.pathname.startsWith("/api/catalogo/modelo/") ? decodeURIComponent(url.pathname.slice("/api/catalogo/modelo/".length)) : "";
+      if (/^[a-zA-Z0-9_-]{1,120}$/.test(modelId) && request.method === "GET") {
+        const value = await kv.get("model:" + modelId);
         return value ? new Response(value, { headers: { ...noStore, "Content-Type": "application/json" } }) : Response.json({ error: "Modelo no encontrado." }, { status: 404 });
       }
       if (url.pathname === "/api/catalogo/modelos" && request.method === "POST") {
