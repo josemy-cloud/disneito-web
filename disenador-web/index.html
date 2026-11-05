@@ -18,21 +18,16 @@ h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;
 .rc{display:inline-block;width:150px;vertical-align:top;margin:4px;padding:5px;background:#2a2e37;border-radius:6px;font-size:11px}.rc img{width:100%;height:110px;object-fit:cover;border-radius:4px;background:#111}
 .rl{display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #333;font-size:12px}.rl span{flex:1}
 .dd{position:relative;display:inline-block}.ddm{display:none;position:absolute;top:100%;left:0;z-index:40;background:#1b1e25;border:1px solid #444;border-radius:8px;padding:4px;min-width:170px;box-shadow:0 8px 24px #000a}.ddm button{display:block;width:100%;text-align:left;margin:1px 0}.dd.open .ddm{display:block}#top button{padding:4px 8px;font-size:12px}.seg{display:inline-flex;border:1px solid #555;border-radius:8px;overflow:hidden;vertical-align:middle}.seg button{border:0;border-radius:0;margin:0;font-size:15px;padding:3px 10px}.seg button.on{background:#3d7be0;color:#fff}
-/* Ajuste de altura: cada zona debe caber en el alto disponible y desplazarse por separado */
-html,body{width:100%;height:100%;min-height:0;overflow:hidden}
-body{display:grid;grid-template-rows:minmax(0,auto) minmax(0,1fr) auto}
-#main{height:auto;flex:none;min-height:0;min-width:0;overflow:hidden}
-#top{min-height:0;max-height:25dvh;overflow-y:auto;overflow-x:hidden}
-#sb{min-height:0;max-height:12dvh;overflow:auto}
-body{height:100vh;height:100dvh;min-height:0;max-height:100dvh}
-#top{flex:0 0 auto;min-height:0;max-height:28dvh;overflow-y:auto;overflow-x:hidden}
-#main{flex:1 1 0;height:0;min-height:0;max-height:100%;align-items:stretch}
-#tools,.side{height:100%;min-height:0;max-height:100%;align-self:stretch;overscroll-behavior:contain}
-#tools,.side{overflow-y:auto;overflow-x:hidden}
-#view{height:100%;max-height:100%;overflow:hidden}
-#sb{flex:0 0 auto;min-height:0}
+/* Distribución vertical segura: cabecera + área de trabajo + barra de estado */
+html,body{width:100%;height:100%;min-height:0;max-height:100%;overflow:hidden}
+body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
+#top{display:flex;flex:0 0 auto;min-height:0;max-height:28dvh;overflow-y:auto;overflow-x:hidden}
+#main{display:flex;flex:1 1 0;height:auto;min-height:0;min-width:0;max-height:none;overflow:hidden;align-items:stretch}
+#tools,.side{height:auto;min-height:0;max-height:none;align-self:stretch;overscroll-behavior:contain;overflow-y:auto;overflow-x:hidden}
+#view{height:auto;max-height:none;min-width:0;min-height:0;flex:1 1 0;position:relative;overflow:hidden}
+#sb{display:block;flex:0 0 auto;min-height:0;max-height:12dvh;overflow:auto}
 @media(max-height:650px){#top{max-height:22dvh}#sb{font-size:11px;padding-top:2px;padding-bottom:2px}}
-@media(max-width:760px){#top{max-height:25dvh}#main{height:0;min-height:0}}
+@media(max-width:760px){#top{max-height:28dvh}#main{height:auto;min-height:0}}
 </style></head><body>
 <div id="top"><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
@@ -1087,7 +1082,7 @@ async function addModel(m){const o=await parseModel(m),w=new T.Group();w.add(o);
 BUILD.model=(g,it)=>{const m=MODS[it.mid];if(!m){B(g,it.w,it.h,it.d,0,it.h/2,0,M('#999'));return}const c=m.obj.clone(true);c.scale.set(it.w/m.W,it.h/m.H,it.d/m.D);g.add(c)};
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin generador 3D; se muestra volumen de reserva:',it.t,it.n);const w=Math.max(1,+it.w||1),h=Math.max(1,+it.h||1),d=Math.max(1,+it.d||1);B(g,w,h,d,0,h/2,0,M('#d58b45',.65,.05))}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}}
 function motionKeysForItem(it){const saved=MV;MV=[];try{const g=new T.Group();buildItemGeometry(g,it,M(it.col||'#ccc',.5,0),M('#999',.3,.9));return [...new Set(MV.map(m=>m.k))]}catch(err){console.warn('No se pudieron identificar las aperturas del mueble',err);return []}finally{MV=saved}}
-function toggleItemMotion(it){it.op=it.op||[];const keys=motionKeysForItem(it);if(!keys.length){hint('Este elemento no tiene puertas o cajones animados');return}const open=keys.some(k=>!it.op[k]);keys.forEach(k=>{it.op[k]=open})}
+function toggleItemMotion(it){it.op=it.op||[];if(mode!=='3d')setMode('3d');const keys=motionKeysForItem(it);if(!keys.length){hint('Este elemento no tiene puertas o cajones animados');return}const open=keys.some(k=>!it.op[k]);keys.forEach(k=>{it.op[k]=open});hint(open?'Puertas y cajones abriéndose':'Puertas y cajones cerrándose')}
 $('#fmod').onchange=async e=>{for(const f of e.target.files){const ext=f.name.split('.').pop().toLowerCase(),name=prompt('Nombre del producto:',f.name.replace(/\.[^.]+$/,''));if(!name)continue;const brand=prompt('Fabricante (opcional):','')||'',ref=prompt('Referencia comercial (opcional; solo si la conoces):','')||'',un=({m:100,cm:1,mm:.1})[prompt('Unidades del modelo: m, cm o mm (los GLB suelen ir en m):','m')]||100;const m={id:'m'+Date.now()+Math.random().toString(36).slice(2,6),name,brand,ref,cat:'Importados',units:un,ext,date:new Date().toISOString().slice(0,10),data:ext=='glb'?await f.arrayBuffer():await f.text()};try{await addModel(m);await idbPut(m)}catch(er){alert('No se pudo leer el modelo: '+er.message)}}libUI();e.target.value=''};
 /* ===== Modo edición con teclado ===== */
 function camFwd(){if(mode!='3d')return[0,-1];const fx=oc.target.x-cam.position.x,fz=oc.target.z-cam.position.z;return Math.abs(fx)>Math.abs(fz)?[Math.sign(fx),0]:[0,Math.sign(fz)||-1]}
