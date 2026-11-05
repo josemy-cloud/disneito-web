@@ -802,18 +802,18 @@ function buildPrev(it,room){g4.clear();const sv=MV;MV=PV=[];it.op=it.op||[];cons
 const TH=new WeakMap();function thumb(i){if(TH.has(LIB[i]))return TH.get(LIB[i]);const o=LIB[i],it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(LIB[i],u);return u}
 /* Portadas 3D independientes del catálogo: composición de habitación completa. No se ejecuta para Cocina. */
 const ROOM_PHOTOS={
-cocina:'https://images.pexels.com/photos/7601136/pexels-photo-7601136.jpeg?auto=compress&cs=tinysrgb&w=1200',
+cocina:'https://images.pexels.com/photos/10827396/pexels-photo-10827396.jpeg?auto=compress&cs=tinysrgb&w=1200',
 baño:'https://images.pexels.com/photos/37760274/pexels-photo-37760274.jpeg?auto=compress&cs=tinysrgb&w=1200',
 dormitorio:'https://images.pexels.com/photos/7546288/pexels-photo-7546288.jpeg?auto=compress&cs=tinysrgb&w=1200',
 vestidor:'https://images.pexels.com/photos/7031843/pexels-photo-7031843.jpeg?auto=compress&cs=tinysrgb&w=1200',
 salón:'https://images.pexels.com/photos/19239903/pexels-photo-19239903.jpeg?auto=compress&cs=tinysrgb&w=1200',
 comedor:'https://images.pexels.com/photos/1543441/pexels-photo-1543441.jpeg?auto=compress&cs=tinysrgb&w=1200',
-recibidor:'https://images.pexels.com/photos/7722148/pexels-photo-7722148.jpeg?auto=compress&cs=tinysrgb&w=1200',
-despacho:'https://images.pexels.com/photos/16501689/pexels-photo-16501689.jpeg?auto=compress&cs=tinysrgb&w=1200',
-lavadero:'https://images.pexels.com/photos/19846402/pexels-photo-19846402.jpeg?auto=compress&cs=tinysrgb&w=1200',
+recibidor:'https://images.pexels.com/photos/6905779/pexels-photo-6905779.jpeg?auto=compress&cs=tinysrgb&w=1200',
+despacho:'https://images.pexels.com/photos/10883157/pexels-photo-10883157.jpeg?auto=compress&cs=tinysrgb&w=1200',
+lavadero:'https://images.pexels.com/photos/19980200/pexels-photo-19980200.jpeg?auto=compress&cs=tinysrgb&w=1200',
 garaje:'https://images.pexels.com/photos/35828176/pexels-photo-35828176.jpeg?auto=compress&cs=tinysrgb&w=1200',
 trastero:'https://images.pexels.com/photos/9736531/pexels-photo-9736531.jpeg?auto=compress&cs=tinysrgb&w=1200',
-terraza:'https://images.pexels.com/photos/37486381/pexels-photo-37486381.jpeg?auto=compress&cs=tinysrgb&w=1200',
+terraza:'https://images.pexels.com/photos/6773798/pexels-photo-6773798.jpeg?auto=compress&cs=tinysrgb&w=1200',
 jardin:'https://images.pexels.com/photos/40310692/pexels-photo-40310692.jpeg?auto=compress&cs=tinysrgb&w=1200'
 };
 const ROOM_COVERS=new Map();
