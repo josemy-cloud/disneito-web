@@ -343,6 +343,15 @@ export default {
         try {
           const body = await request.json(), id = String(body.productId || ""), status = body.status;
           if (!/^[a-zA-Z0-9_-]{1,120}$/.test(id) || !["approved", "rejected"].includes(status)) return Response.json({ error: "Ficha o estado no válido." }, { status: 400 });
+          let exists = await kv.get("product:" + id);
+          if (!exists) {
+            const asset = await env.ASSETS.fetch(new Request(new URL("/catalogo/productos-comerciales.json", url.origin)));
+            if (asset.ok) {
+              const registry = await asset.json();
+              exists = (registry.products || []).some(product => product.id === id) ? "static" : null;
+            }
+          }
+          if (!exists) return Response.json({ error: "No existe esa ficha en el catálogo." }, { status: 404 });
           await kv.put("approval:" + id, JSON.stringify({ status, updatedAt: new Date().toISOString(), updatedBy: user.id }));
           return Response.json({ ok: true, productId: id, status }, { headers: noStore });
         } catch (error) { return Response.json({ error: "No se pudo guardar la aprobación." }, { status: 400 }); }
