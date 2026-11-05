@@ -1607,6 +1607,7 @@ const dbq=(st,mode,fn)=>idb().then(d=>new Promise((res,rej)=>{const t=d.transact
 const saveFabs=()=>localStorage.setItem('fabs',JSON.stringify(FABS)),saveProd=p=>{p.dimensiones_mm={anchura:Number.isFinite(+p.w)&&+p.w>0?Math.round(+p.w*10):null,altura:Number.isFinite(+p.h)&&+p.h>0?Math.round(+p.h*10):null,profundidad:Number.isFinite(+p.d)&&+p.d>0?Math.round(+p.d*10):null};return dbq('p','readwrite',t=>t.objectStore('p').put(p))},saveDoc=b=>{const id='d'+Date.now()+Math.random().toString(36).slice(2,6);return dbq('d','readwrite',t=>t.objectStore('d').put(b,id)).then(()=>id)},getDoc=id=>dbq('d','readonly',t=>t.objectStore('d').get(id));
 function fichaToItem(p){
  if(!p)return null;
+ if(p.id&&p.visual_review!=='approved')return null;
  if(p.modelType){
   if(p.visual_review!=='approved'||typeof BUILD[p.modelType]!=='function')return null;
   return {t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',
@@ -1635,7 +1636,7 @@ async function catLoad(){
    const old=PRODS.find(x=>x.id===p.id);if(old)Object.assign(old,rec);else PRODS.push(rec);
   })}
   if(sr.ok){const shared=await sr.json();(shared.products||[]).forEach(p=>{const old=PRODS.find(x=>x.id===p.id);if(old)Object.assign(old,p);else PRODS.push(p);if(p.fab&&!FABS.includes(p.fab))FABS.push(p.fab)})}
-  PRODS.forEach(p=>{if(p.modelType&&CATALOG_APPROVALS[p.id])p.visual_review=CATALOG_APPROVALS[p.id].status});
+  PRODS.forEach(p=>{if(CATALOG_APPROVALS[p.id])p.visual_review=CATALOG_APPROVALS[p.id].status});
   saveFabs();
  }catch(e){console.warn('No se pudo cargar el catálogo compartido:',e)}
  try{await catalogLoadSharedModels()}catch(e){console.warn('No se pudieron cargar modelos compartidos:',e)}
@@ -1693,8 +1694,8 @@ const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observacione
   (p.sourceList||[]).forEach(src=>{if(src.url)bt('Fuente: '+(src.type||'documentación'),()=>window.open(src.url,'_blank','noopener'))});
  }
  const bt=(t,fn)=>{const b=el('button',{textContent:t,onclick:fn});b.style.marginRight='6px';f.append(b)};
- bt('Previsualizar modelo 3D',()=>{const o=p.modelType?{t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef'}:fichaToItem(p);if(!o)return alert('Esta ficha todavía no tiene un modelo 3D asociado.');openPrevObj(o)});
- if(CATALOG_MASTER&&p.modelType&&p.visual_review!=='approved')bt('Aprobar e incorporar a biblioteca',async()=>{if(!confirm('¿Has comprobado la previsualización desde varios ángulos y confirmas que la geometría, proporciones y materiales son aceptables?'))return;try{await catalogPost('/api/catalogo/aprobar',{productId:p.id,status:'approved'});await catLoad();libUI();fichaUI(PRODS.find(x=>x.id===p.id)||p)}catch(e){alert(e.message)}});
+ bt('Previsualizar modelo 3D',()=>{let o;if(p.modelType)o={t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef'};else if(p.mid){const m=LIB.find(x=>x.t==='model'&&x.mid===p.mid);if(m)o={...m,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat}}else o=fichaToItem(p);if(!o)return alert('Esta ficha todavía no tiene un modelo 3D asociado.');openPrevObj(o)});
+ if(CATALOG_MASTER&&(p.modelType||p.mid)&&p.visual_review!=='approved')bt('Aprobar e incorporar a biblioteca',async()=>{if(!confirm('¿Has comprobado la previsualización desde varios ángulos y confirmas que la geometría, proporciones y materiales son aceptables?'))return;try{await catalogPost('/api/catalogo/aprobar',{productId:p.id,status:'approved'});await catLoad();libUI();fichaUI(PRODS.find(x=>x.id===p.id)||p)}catch(e){alert(e.message)}});
  if(p.modelType&&p.visual_review==='approved'){f.append(el('div','','<small style="color:#7be08b">Modelo aprobado para la biblioteca.</small>'));bt('＋ Añadir al plano',()=>{const o=fichaToItem(p);if(!o)return alert('No se ha podido preparar este modelo para el plano.');place=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#hint').textContent='Mueve el cursor por el plano y haz clic para colocar. Pulsa Esc para cancelar.'})}
  if(p.docId&&p.pagina)bt('Ver página del PDF',async()=>{area.textContent='Cargando…';try{const pdf=await pdfOpen(await getDoc(p.docId)),c=await pdfCanvas(pdf,p.pagina,1.4);c.style.cssText='max-width:100%;background:#fff';area.innerHTML='';area.append(c)}catch(e){area.textContent=e.message}});
  bt('Adjuntar foto / plano…',()=>{const i=el('input',{type:'file',accept:'image/*,.pdf'});i.onchange=async()=>{p.fotos=p.fotos||[];p.fotos.push({nombre:i.files[0].name,id:await saveDoc(i.files[0])});await saveProd(p);fichaUI(p)};i.click()});
