@@ -1232,7 +1232,9 @@ async function accountPanel(){
  const drawProfile=async()=>{
   if(!SES){drawLogin();return}
   content.innerHTML='<p>Consultando los datos de tu cuenta…</p>';
-  let u;try{u=await authFetch('GET')}catch(e){content.innerHTML='';content.append(document.createTextNode('No se ha podido validar la sesión. '+e.message+' '),btn('Volver al inicio de sesión',()=>{sesSave(null);drawLogin()}));return}
+  let u;try{u=await authFetch('GET')}catch(e){content.innerHTML='';content.append(document.createTextNode('No se ha podido validar la sesión. '+e.message+' '),btn('Volver al inicio de sesión',()=>{sesSave(null);CATALOG_MASTER=false;drawLogin()}));return}
+  await catalogLoadPermissions();
+  libUI();
   const meta=u.user_metadata||{},avatar=meta.avatar_data||meta.avatar_url||'';
   content.innerHTML='';
   const profile=document.createElement('div');profile.style.cssText='display:flex;align-items:center;gap:14px;margin:12px 0 20px';
@@ -1244,7 +1246,7 @@ async function accountPanel(){
   photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',.78))};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await authFetch('PUT',{data:{...meta,avatar_data:data}});await drawProfile()};
   content.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value)body.password=pass.input.value;if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
   const note=document.createElement('p');note.style.cssText='color:#9eabbc;font-size:12px';note.textContent='La contraseña se cambia mediante Supabase Auth. El cambio de correo puede requerir confirmación. La foto se guarda en los metadatos de tu cuenta.';content.append(note);
-  content.append(btn('Cerrar sesión',async()=>{sesSave(null);curProj=null;try{localStorage.removeItem('curProj')}catch(e){};await drawLogin();const b=document.getElementById('bAcc');if(b)b.textContent='👤 Mi cuenta'}));
+  content.append(btn('Cerrar sesión',async()=>{sesSave(null);CATALOG_MASTER=false;libUI();curProj=null;try{localStorage.removeItem('curProj')}catch(e){};await drawLogin();const b=document.getElementById('bAcc');if(b)b.textContent='👤 Mi cuenta'}));
   const b=document.getElementById('bAcc');if(b){const label=(meta.full_name||u.email||'Mi cuenta').slice(0,18);if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label}
  };
  await drawProfile();
