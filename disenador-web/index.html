@@ -261,7 +261,7 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  if(tool=='wall'){if(cur&&cur.x2!=null){addW(cur.x1,cur.y1,cur.x2,cur.y2);commit();cur={x1:cur.x2,y1:cur.y2,x2:cur.x2,y2:cur.y2}}else cur={x1:x,y1:y,x2:x,y2:y};buf='';return}
  if(tool=='room'){drag={rm:1,x,y,cx:x,cy:y};return}
  if(tool=='door'||tool=='win'){let b=null;S.w.forEach(w=>{const s=segd(w,wx,wy);if(s.d<w.t+12&&(!b||s.d<b.d))b={w,p:s.p,d:s.d}});if(b){const o={id:nid(),w:b.w.id,p:sn(b.p),ty:tool=='door'?'d':'v'};Object.assign(o,tool=='door'?{wd:80,h:205,s:0}:{wd:100,h:120,s:90});S.o.push(o);sel={k:'o',id:o.id};commit()}return}
- if(tool=='place'&&place){ghostCalc(wx,wy);if(ghost.ok||confirm('No cabe en ese punto. ¿Colocar igualmente?')){const o=JSON.parse(JSON.stringify(ghost));o.id=nid();delete o.ok;o.r=Math.round(o.r*100)/100;o.op=[];S.i.push(o);sel={k:'i',id:o.id};ghost=null;tool='sel';drawTools();hint();commit()}return}
+ if(tool=='place'&&place){ghostCalc(wx,wy);if(ghost.ok){const o=JSON.parse(JSON.stringify(ghost));o.id=nid();delete o.ok;o.r=Math.round(o.r*100)/100;o.op=[];S.i.push(o);sel={k:'i',id:o.id};ghost=null;tool='sel';drawTools();hint();commit()}return}
  // seleccionar
  if(tool=='measure'){S.ms=S.ms||[];for(const m of S.ms){const r=mres(m);if(r&&Math.abs(wx-(r.p[0]+r.q[0])/2)<30/k&&Math.abs(wy-(r.p[1]+r.q[1])/2)<10/k){const v=prompt('Separación exacta (cm):',R(r.d));if(v!==null&&v!==''){setGap(m,r,+v);commit()}return}}const pk=pick(wx,wy);if(!pk)return;if(!measA){measA=pk;$('#hint').textContent='Ahora elige el segundo objeto'}else{S.ms.push({a:measA,b:pk});measA=null;commit()}return}
  if(tool=='sel'){for(const w of S.w){const L=len(w),nx=(w.y2-w.y1)/L,ny=-(w.x2-w.x1)/L,of=w.t/2+22,cx=(w.x1+w.x2)/2+nx*of,cy=(w.y1+w.y2)/2+ny*of;if(Math.abs(wx-cx)<45/k&&Math.abs(wy-cy)<10/k){const v=prompt('Longitud de la pared (cm):',R(L));if(v&&+v>0){setLen(w,+v);sel={k:'w',id:w.id};commit()}return}}}
@@ -273,7 +273,7 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  if(armed&&hit&&hit.k=='rooms'&&armed.m){const R=hit.o;R.floor=R.floor||JSON.parse(JSON.stringify(S.fl));R.floor.m=armed.m;R.floor.pat=null;commit();return}
  if(armed&&hit&&hit.k=='w'){const w=hit.o;if(armed.m){w.m=armed.m}else{w.c=armed.c;w.m=null};commit();return}
  if(armed&&!hit&&armed.m){S.fl.m=armed.m;commit();return}if(armed&&!hit&&armed.c){S.pt=armed.c;commit();return}
- if(hit&&hit.k=='i'&&!hit.o.lk)drag={mv:'i',e:hit.o,dx:wx-hit.o.x,dy:wy-hit.o.y};
+ if(hit&&hit.k=='i'&&!hit.o.lk)drag={mv:'i',e:hit.o,dx:wx-hit.o.x,dy:wy-hit.o.y,x0:hit.o.x,y0:hit.o.y};
  else if(hit&&hit.k=='w'){const w=hit.o,e1=Math.hypot(wx-w.x1,wy-w.y1)<20,e2=Math.hypot(wx-w.x2,wy-w.y2)<20;drag=e1||e2?{ep:1,px:e1?w.x1:w.x2,py:e1?w.y1:w.y2}:{mv:'w',e:w,sx:wx,sy:wy,o:[w.x1,w.y1,w.x2,w.y2]}}
  else if(hit&&hit.k=='o'){drag={op:S.o.find(o=>o.id==hit.id)}}
  refresh(true)};
@@ -286,12 +286,12 @@ c2.onmousemove=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  else if(drag.ep){S.w.forEach(w=>{if(w.x1==drag.px&&w.y1==drag.py){w.x1=x;w.y1=y}if(w.x2==drag.px&&w.y2==drag.py){w.x2=x;w.y2=y}});drag.px=x;drag.py=y;drag.moved=1}
  else if(drag.op){const w=S.w.find(w=>w.id==drag.op.w),s=segd(w,wx,wy);drag.op.p=sn(s.p);drag.moved=1}
  draw()};
-window.onmouseup=()=>{if(!drag)return;const d=drag;drag=null;if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved)commit();else refresh()};
+window.onmouseup=()=>{if(!drag)return;const d=drag;drag=null;if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved&&d.mv=='i'&&!fits(d.e)){d.e.x=d.x0;d.e.y=d.y0;refresh();hint('Movimiento cancelado: el mueble chocaría con una pared u otro objeto')}else if(d.moved)commit();else refresh()};
 c2.onwheel=e=>{e.preventDefault();const r=c2.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,[wx,wy]=W2(mx,my);k=Math.max(.15,Math.min(4,k*(e.deltaY<0?1.1:.9)));ox=mx-wx*k;oy=my-wy*k;draw()};
 c2.ondblclick=()=>{cur=null;draw()};
 /* Los muros/aperturas usan wd (ancho) para la apertura; normalizamos nombres */
 S.o.forEach(o=>{});
-document.addEventListener('keydown',e=>{if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();if(e.target.tagName=='INPUT'&&e.target.type!='range')return;if(['SELECT','TEXTAREA'].includes(e.target.tagName))return;if(editMode&&!walk&&sel&&sel.k=='i'){const it=get();if(it&&!it.lk&&moveStep(it,e.key,e.shiftKey,e.ctrlKey,+$('#bSt').value,camFwd())){e.preventDefault();mvDirty=true;refresh();sbUpdate(fits(it)?'':'⚠ Solapa con una pared u otro objeto');return}}
+document.addEventListener('keydown',e=>{if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();if(e.target.tagName=='INPUT'&&e.target.type!='range')return;if(['SELECT','TEXTAREA'].includes(e.target.tagName))return;if(editMode&&!walk&&sel&&sel.k=='i'){const it=get();if(it&&!it.lk){const before={x:it.x,y:it.y,e:it.e,r:it.r};if(moveStep(it,e.key,e.shiftKey,e.ctrlKey,+$('#bSt').value,camFwd())){e.preventDefault();if(!fits(it)){Object.assign(it,before);sbUpdate('Movimiento cancelado: colisión con pared u objeto');refresh();return}mvDirty=true;refresh();sbUpdate();return}}}
  if(e.ctrlKey&&e.key=='z'){undo();return}if(e.ctrlKey&&e.key=='y'){redo();return}
  if(e.key=='Escape'){ghost=null;place=null;measA=null;smode=false;selPart=null;$('#pv').style.display='none';pvOpen=false;exitWalk();cur=null;armed=null;tool='sel';buf='';drawTools();libUI();hint();draw()}
  if((e.key=='Delete'||e.key=='Backspace')&&sel){const el=get();if(!el)return;if(sel.k=='rooms')return;if(sel.k=='w')S.o=S.o.filter(o=>o.w!=el.id);S[sel.k]=S[sel.k].filter(x=>x!=el);sel=null;commit()}
@@ -593,7 +593,13 @@ function setLen(w,v){const L=len(w);setEnd(w,w.x1+(w.x2-w.x1)/L*v,w.y1+(w.y2-w.y
 const cors=i=>{const c=Math.cos(i.r*D),s=Math.sin(i.r*D);return[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>[i.x+a*i.w/2*c-b*i.d/2*s,i.y+a*i.w/2*s+b*i.d/2*c])};
 const sat=(A,B)=>{for(const P of[A,B])for(let n=0;n<4;n++){const p=P[n],q=P[(n+1)%4],ax=q[1]-p[1],ay=p[0]-q[0];let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;A.forEach(v=>{const d=v[0]*ax+v[1]*ay;a0=Math.min(a0,d);a1=Math.max(a1,d)});B.forEach(v=>{const d=v[0]*ax+v[1]*ay;b0=Math.min(b0,d);b1=Math.max(b1,d)});if(a1<=b0+.01||b1<=a0+.01)return false}return true};
 const wrect=w=>({x:(w.x1+w.x2)/2,y:(w.y1+w.y2)/2,w:len(w),d:w.t,r:Math.atan2(w.y2-w.y1,w.x2-w.x1)/D});
-function fits(g){const A=cors(g);if(S.i.some(o=>!o.hid&&o.id!==g.id&&g.e<o.e+o.h&&o.e<g.e+g.h&&sat(A,cors(o))))return false;return!S.w.some(w=>sat(A,cors(wrect(w))))}
+function fits(g){
+ const w=+g.w,h=+g.h,d=+g.d,e=+(g.e||0);
+ if(![w,h,d,e,g.x,g.y,g.r||0].every(Number.isFinite)||w<=0||h<=0||d<=0||e<0)return false;
+ const A=cors(g);
+ if(S.i.some(o=>!o.hid&&o.id!==g.id&&e<((+o.e||0)+(+o.h||0))&&(+o.e||0)<e+h&&sat(A,cors(o))))return false;
+ return !S.w.some(wall=>e<(+wall.h||250)&&sat(A,cors(wrect(wall))))
+}
 function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place);g.x=sn(wx);g.y=sn(wy);g.r=place.r||0;let b=null;S.w.forEach(w=>{const s=segd(w,wx,wy);if(s.d<w.t/2+g.d/2+25&&(!b||s.d<b.s.d))b={w,s}});
  if(b){const w=b.w,L=len(w),ux=(w.x2-w.x1)/L,uy=(w.y2-w.y1)/L,px=w.x1+ux*b.s.p,py=w.y1+uy*b.s.p;let nx=uy,ny=-ux;if((wx-px)*nx+(wy-py)*ny<0){nx=-nx;ny=-ny}g.r=Math.atan2(-nx,ny)/D;const q=w.t/2+g.d/2;g.x=px+nx*q;g.y=py+ny*q}
  g.ok=fits(g);$('#hint').textContent=g.ok?'✔ Cabe — clic para colocar (se pega a las paredes). Esc cancela':'✖ No cabe: choca con una pared u objeto'}
