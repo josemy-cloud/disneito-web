@@ -810,7 +810,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    ...lines,
    objs.length>80?'Hay '+(objs.length-80)+' objetos adicionales no detallados.':'',
    'Interpreta cada elemento según su nombre y categoría. No confundas sanitarios distintos: bidé, inodoro, lavabo y bañera son piezas diferentes. Distingue también camas, sofás, vehículos y electrodomésticos. Conserva el número, identidad, posición, orientación, dimensiones relativas y función de cada objeto. No sustituyas un objeto por otro parecido ni inventes piezas.'
-  ].filter(Boolean).join('\\n').slice(0,12000);
+  ].filter(Boolean).join('\n').slice(0,12000);
  };
  const fotoIAHeaders=async()=>{
   const h={'X-FotoIA-Device':fotoIADeviceId()};
