@@ -1017,9 +1017,24 @@ function libreUI(it){const c=it.cfg,iw=it.w-4,Hi=ihl(it),K=CB;libMig(c,iw,Hi);co
  const sc=Math.min(190/iw,250/Hi),COL={puerta:'#3d7be0',cajon:'#e0a23d',hueco:'#777',estante:'#9be07b',app:'#c46fe0',barra:'#e0c56b',separador:'#c9c9c9',encimera:'#a78bfa',espejo:'#7dd3fc',lavabo:'#bae6fd'},bad=libBad(c,iw,Hi);let sv='<svg width="'+(iw*sc+2)+'" height="'+(Hi*sc+2)+'" style="background:#0e1014;border:1px solid #555;display:block;margin:4px 0"><rect x="1" y="1" width="'+iw*sc+'" height="'+Hi*sc+'" fill="none" stroke="#888"/>';
  E.forEach((e,i)=>{const w=e.k=='estante'?(e.w>0?e.w:iw):e.w,h=e.k=='estante'?Math.max(e.t||1.6,.8):e.h,px=1+e.x*sc,py=1+(Hi-e.y-h)*sc;sv+='<rect data-i="'+i+'" x="'+px+'" y="'+py+'" width="'+w*sc+'" height="'+Math.max(h*sc,2)+'" fill="'+COL[e.k]+'" fill-opacity="'+(i==elSel?.85:.35)+'" stroke="'+(bad.has(i)?'#ff5252':i==elSel?'#fff':COL[e.k])+'" style="cursor:pointer"/>';if(e.k!='estante')sv+='<text x="'+(px+3)+'" y="'+(py+11)+'" font-size="9" fill="#fff" style="pointer-events:none">'+(i+1)+'· '+w+'×'+h+'</text>'});
  P.insertAdjacentHTML('beforeend',sv+'</svg>');P.lastElementChild.querySelectorAll('rect[data-i]').forEach(r=>r.onclick=()=>{elSel=+r.dataset.i;K()});
- const add=k=>{let y=0;E.forEach(e=>{if(e.k!='estante'&&e.k!='puerta'&&e.k!='hueco')y=Math.max(y,e.y+e.h)});const free=Hi-y,mn={cajon:8,app:37,puerta:10,hueco:5,barra:2,separador:5,encimera:1,espejo:5,lavabo:8}[k]||0;if(k!='estante'&&free<mn&&!['lavabo','separador'].includes(k)){alert('No queda espacio libre arriba ('+free+' cm). Reduce o elimina elementos: no modifico tus medidas automáticamente.');return}
-  let h=k=='lavabo'?Math.min(18,Hi):k=='separador'?Hi:Math.min({puerta:40,cajon:15,hueco:30,app:59,barra:2,encimera:3,espejo:50}[k]||0,free),posY=y;if(['encimera','lavabo','espejo'].includes(k))posY=Math.max(0,Hi-h);if(k=='barra')posY=Math.max(0,Hi-15);if(k=='separador')posY=0;
-  E.push(k=='estante'?{k,x:0,w:0,y:Math.round(Hi/2),t:1.6}:Object.assign({k,x:0,y:posY,w:iw,h},k=='puerta'?{hg:'izq',op:'lateral'}:k=='cajon'?{d:0,ft:2}:k=='app'?{ap:h>=59?'horno':'micro'}:k=='barra'?{t:1.2}:k=='separador'?{w:1.6,x:Math.min(iw-1.6,Math.max(0,(E.filter(q=>q.k=='separador').length+1)*iw/(E.filter(q=>q.k=='separador').length+2)-.8))}:k=='encimera'?{d:it.d-2}:k=='espejo'?{t:.8}:k=='lavabo'?{w:Math.min(50,iw),x:E.some(q=>q.k=='lavabo')?Math.max(0,iw-Math.min(50,iw)):0,d:Math.min(40,it.d-4)}:{}));elSel=E.length-1};
+ const add=k=>{
+  const defaults={puerta:{w:iw,h:Hi,y:0},cajon:{w:iw,h:15,y:0},hueco:{w:iw,h:30,y:0},app:{w:iw,h:59,y:0},barra:{w:iw,h:2,y:Math.max(0,Hi-15)},separador:{w:1.6,h:Hi,y:0},encimera:{w:iw,h:3,y:Hi-3},espejo:{w:iw,h:50,y:Hi},lavabo:{w:Math.min(50,iw),h:18,y:Hi-18}};
+  if(k=='estante'){E.push({k,x:0,w:0,y:Math.round(Hi/2),t:1.6});elSel=E.length-1;return}
+  const z=defaults[k]||{w:iw,h:10,y:0},w=z.w,h=z.h;
+  const surface=['encimera','lavabo','espejo'].includes(k),structural=['cajon','app','hueco','separador','puerta'].includes(k);
+  let x=k=='lavabo'?(E.some(q=>q.k=='lavabo')?Math.max(0,iw-w):Math.max(0,(iw-w)/2)):0,y=z.y;
+  if(surface){if(k=='lavabo'&&E.some(q=>q.k=='lavabo')){const n=E.filter(q=>q.k=='lavabo').length;x=Math.min(iw-w,n*(w+2));} }
+  else if(structural){
+   const blocks=E.filter(q=>['cajon','app','hueco','separador'].includes(q.k));
+   const overlaps=(xx,yy)=>blocks.some(q=>xx<q.x+q.w-.01&&q.x<xx+w-.01&&yy<q.y+q.h-.01&&q.y<yy+h-.01);
+   let found=null;
+   for(let yy=0;yy<=Hi-h+.01&&!found;yy+=2){for(let xx=0;xx<=iw-w+.01;xx+=2){if(!overlaps(xx,yy)){found={x:xx,y:yy};break}}}
+   if(!found){alert('No hay un hueco interior libre para este componente. Puedes reducirlo, mover otros componentes o colocarlo en otra zona. No se han modificado ni eliminado tus elementos.');return}
+   x=found.x;y=found.y;
+  }
+  const extra=k=='puerta'?{hg:'izq',op:'lateral'}:k=='cajon'?{d:0,ft:2}:k=='app'?{ap:h>=59?'horno':'micro'}:k=='barra'?{t:1.2}:k=='separador'?{}:k=='encimera'?{d:it.d-2}:k=='espejo'?{t:.8}:k=='lavabo'?{d:Math.min(40,it.d-4)}:{};
+  E.push(Object.assign({k,x,y,w,h},extra));elSel=E.length-1;
+ };
  const room=it.roomType||'',extra=({baño:['lavabo','espejo','encimera'],vestidor:['barra','separador'],dormitorio:['barra','separador'],salón:['encimera'],despacho:['encimera'],lavadero:['encimera','app'],garaje:['encimera','separador'],trastero:['separador'],exterior:['encimera'],cocina:['encimera','app'],recibidor:['espejo','encimera']})[room]||[],labels={barra:'+ Barra de colgar',separador:'+ Separador',encimera:'+ Encimera',espejo:'+ Espejo',lavabo:'+ Lavabo'},available=[['+ Zona / hueco','hueco'],['+ Puerta','puerta'],['+ Cajón','cajon'],['+ Estante','estante'],['+ Hueco electrodoméstico','app'],...extra.map(k=>[labels[k],k])];available.forEach(([l,k])=>btn(l,()=>add(k)));
  const e=E[elSel];if(e){P.insertAdjacentHTML('beforeend','<h4>'+NMK[e.k]+' '+(elSel+1)+' (seleccionado)</h4>');
   if(e.k=='estante'){row('Altura y (cm)',e.y,v=>e.y=Math.max(0,v));row('Posición x (cm)',e.x,v=>e.x=Math.max(0,v));row('Ancho (0=completo)',e.w||0,v=>e.w=Math.max(0,v));row('Grosor (cm)',e.t||1.6,v=>e.t=Math.max(.5,v))}
