@@ -274,6 +274,86 @@
           "notes": "Referencia y dimensiones de bidé suspendido."
         }
       ]
+    },
+    {
+      "id": "roca-ona-lavabo-fineceramic-a327686000",
+      "name": "Lavabo mural Roca Ona Fineceramic",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A327686000",
+      "category": "Baño",
+      "subcategory": "Lavabos murales",
+      "status": "Descatalogado según ficha oficial consultada",
+      "dimensions_mm": {
+        "length": 600,
+        "width": 460,
+        "height": 160
+      },
+      "weight_kg": 17,
+      "materials": [
+        {
+          "name": "Fineceramic®",
+          "verification": "Declarado por el fabricante; cerámica de pared fina de 5 mm"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijación mural"
+      ],
+      "excluded": [
+        "Grifería",
+        "Pedestal",
+        "Semipedestal",
+        "Desagüe",
+        "Sifón"
+      ],
+      "technical_features": {
+        "installation": "Mural",
+        "shape": "Rectangular",
+        "internal_shape": "Rectangular",
+        "tap_holes": 1,
+        "tap_hole_position": "Central",
+        "bowl_position": "Central",
+        "capacity_l": 8,
+        "wall_thickness_mm": 5
+      },
+      "model": {
+        "type": "rocaOnaFineceramicBasin",
+        "status": "modelo propio paramétrico",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones, material y pared fina de 5 mm documentados por Roca; radios, fondo y pendientes interiores reconstruidos visualmente."
+      },
+      "sources": [
+        {
+          "type": "fabricante_producto",
+          "url": "https://qr2.roca.com/productos/lavabo-fineceramic-mural-327686..0?sku=A327686000",
+          "notes": "Referencia, medidas, peso, instalación, material, capacidad, acabados e inclusiones."
+        },
+        {
+          "type": "fabricante_export",
+          "url": "https://www.export.roca.com/es-ES/productos/lavabo-fineceramic-mural-327686..0",
+          "notes": "Ficha de producto y dimensiones 600 × 460 × 160 mm."
+        },
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/lavabos-muebles",
+          "notes": "Otras medidas y variantes de lavabo Ona."
+        }
+      ]
     }
   ]
 }
