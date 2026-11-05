@@ -3,6 +3,59 @@ const SUPABASE_URL = "https://aqfqwvzbsbjrixzgxtro.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZnF3dnpic2Jqcml4emd4dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTA5MjMsImV4cCI6MjEwOTEyNjkyM30.VWRIowVOECv7ycW3Nnpz-EQNJx2izM7yx7xOxkNWVZo";
 const FOTO_IA_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
 
+function fotoIAB64Url(bytes) {
+  return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function fotoIADecodeB64Url(value) {
+  return Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - value.length % 4) % 4)), ch => ch.charCodeAt(0));
+}
+async function fotoIAHmacKey(secret) {
+  return crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+async function createFotoIAMasterToken(secret, deviceId) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = fotoIAB64Url(new TextEncoder().encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const payload = fotoIAB64Url(new TextEncoder().encode(JSON.stringify({ typ: "fotoia-master-test", aud: "disenito-fotoia", device: deviceId, iat: now, exp: now + 1800 })));
+  const input = header + "." + payload;
+  const signature = await crypto.subtle.sign("HMAC", await fotoIAHmacKey(secret), new TextEncoder().encode(input));
+  return input + "." + fotoIAB64Url(signature);
+}
+async function verifyFotoIAMasterToken(secret, token, deviceId) {
+  if (!secret || !token || typeof token !== "string") return false;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const input = parts[0] + "." + parts[1];
+    const valid = await crypto.subtle.verify("HMAC", await fotoIAHmacKey(secret), fotoIADecodeB64Url(parts[2]), new TextEncoder().encode(input));
+    if (!valid) return false;
+    const payload = JSON.parse(new TextDecoder().decode(fotoIADecodeB64Url(parts[1])));
+    const now = Math.floor(Date.now() / 1000);
+    return payload.typ === "fotoia-master-test" && payload.aud === "disenito-fotoia" && payload.device === deviceId &&
+      Number.isFinite(payload.iat) && Number.isFinite(payload.exp) && payload.iat <= now + 60 && payload.exp > now &&
+      payload.exp - payload.iat === 1800;
+  } catch (error) { return false; }
+}
+async function fotoIAMasterAccess(request, env, user, deviceId) {
+  if (user && env.MASTER_USER_ID && user.id === env.MASTER_USER_ID) return { master: true, mode: "account" };
+  const token = request.headers.get("X-Master-Test-Session") || "";
+  if (token && await verifyFotoIAMasterToken(env.MASTER_TEST_SECRET, token, deviceId)) return { master: true, mode: "anonymous-test" };
+  return { master: false, mode: "normal", attempted: !!token };
+}
+async function fotoIAMasterStats(env) {
+  if (!env.MASTER_TEST_STATS) return null;
+  try { return Number(await env.MASTER_TEST_STATS.get("fotoia:master:total") || 0); }
+  catch (error) { return null; }
+}
+async function fotoIARecordMasterGeneration(env) {
+  if (!env.MASTER_TEST_STATS) return;
+  try {
+    const key = "fotoia:master:total";
+    const value = Number(await env.MASTER_TEST_STATS.get(key) || 0);
+    await env.MASTER_TEST_STATS.put(key, String(value + 1));
+  } catch (error) { console.error("No se pudo registrar el uso de pruebas MASTER:", error); }
+}
+
+
 async function getSupabaseUser(token) {
   const r = await fetch(SUPABASE_URL + "/auth/v1/user", {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
@@ -124,6 +177,20 @@ export default {
       }
     }
 
+    // Autoriza el modo anónimo MASTER mediante un secreto privado del Worker.
+    if (url.pathname === "/api/master/test-session") {
+      if (request.method !== "POST") return Response.json({ error: "Utiliza POST." }, { status: 405 });
+      const deviceId = request.headers.get("X-FotoIA-Device") || "";
+      const suppliedKey = request.headers.get("X-Master-Test-Key") || "";
+      if (!env.MASTER_TEST_SECRET) return Response.json({ error: "El modo de pruebas MASTER no está configurado en el servidor." }, { status: 503 });
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId) ||
+          !suppliedKey || suppliedKey.length > 256 || suppliedKey !== env.MASTER_TEST_SECRET) {
+        return Response.json({ error: "Autorización MASTER no válida." }, { status: 403 });
+      }
+      const session = await createFotoIAMasterToken(env.MASTER_TEST_SECRET, deviceId);
+      return Response.json({ ok: true, token: session, expiresIn: 1800 }, { headers: { "Cache-Control": "no-store" } });
+    }
+
     // Estadísticas personales de Foto IA (día natural de España).
     if (url.pathname === "/api/ia/estadisticas") {
       if (request.method !== "GET") return Response.json({ error: "Utiliza GET." }, { status: 405 });
@@ -138,6 +205,13 @@ export default {
           user = await getSupabaseUser(rawToken);
           if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
         }
+        const master = await fotoIAMasterAccess(request, env, user, deviceId);
+        if (master.master) {
+          return Response.json({ ok: true, master: true, modoPruebas: master.mode, registrado: !!user,
+            ilimitado: true, disponibles: null, limite: null, generacionesPrueba: await fotoIAMasterStats(env) },
+            { headers: { "Cache-Control": "no-store" } });
+        }
+        if (master.attempted) return Response.json({ error: "La sesión de pruebas MASTER ha caducado. Actívala de nuevo." }, { status: 401 });
         const stats = await fotoIARpc(rawToken, "foto_ia_estadisticas", { p_device_id: deviceId });
         return Response.json({ ...stats, ok: true, zonaHoraria: "Europe/Madrid" }, { headers: { "Cache-Control": "no-store" } });
       } catch (error) {
@@ -162,6 +236,8 @@ export default {
           user = await getSupabaseUser(token);
           if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
         }
+        const master = await fotoIAMasterAccess(request, env, user, deviceId);
+        if (master.attempted && !master.master) return Response.json({ error: "La sesión de pruebas MASTER ha caducado. Actívala de nuevo." }, { status: 401 });
         if (!env.AI) return Response.json({ error: "Workers AI no está disponible." }, { status: 503 });
 
         const received = await request.formData();
@@ -178,16 +254,18 @@ export default {
         if (!image.type.startsWith("image/")) return Response.json({ error: "El archivo no es una imagen." }, { status: 400 });
         if (image.size > 5 * 1024 * 1024) return Response.json({ error: "La imagen supera el límite de 5 MB." }, { status: 413 });
 
-        reservationToken = token;
-        reservation = await fotoIARpc(token, "foto_ia_reservar_generacion", { p_device_id: deviceId });
-        if (!reservation || reservation.ok !== true) {
-          return Response.json({
-            error: "Has alcanzado el límite diario de Foto IA.",
-            hoy: reservation?.hoy ?? 0,
-            limite: reservation?.limite ?? (user ? 3 : 1),
-            disponibles: 0,
-            fecha: reservation?.fecha
-          }, { status: 429, headers: { "Cache-Control": "no-store" } });
+        if (!master.master) {
+          reservationToken = token;
+          reservation = await fotoIARpc(token, "foto_ia_reservar_generacion", { p_device_id: deviceId });
+          if (!reservation || reservation.ok !== true) {
+            return Response.json({
+              error: "Has alcanzado el límite diario de Foto IA.",
+              hoy: reservation?.hoy ?? 0,
+              limite: reservation?.limite ?? (user ? 3 : 1),
+              disponibles: 0,
+              fecha: reservation?.fecha
+            }, { status: 429, headers: { "Cache-Control": "no-store" } });
+          }
         }
 
         const aiForm = new FormData();
@@ -202,11 +280,13 @@ export default {
         if (!result || !result.image) throw new Error("El modelo no ha devuelto una imagen.");
         const binary = Uint8Array.from(atob(result.image), c => c.charCodeAt(0));
         reservation = null;
+        if (master.master) await fotoIARecordMasterGeneration(env);
         return new Response(binary, {
           headers: {
             "Content-Type": "image/png",
             "Cache-Control": "no-store",
-            "X-FotoIA-Count-Synced": "true"
+            "X-FotoIA-Count-Synced": "true",
+            "X-FotoIA-Master": master.master ? master.mode : "false"
           }
         });
       } catch (error) {
