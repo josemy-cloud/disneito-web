@@ -329,60 +329,7 @@ function createCustomFurniture(){
  const room=mk('Estancia');Object.keys(data).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;room.append(o)});const kind=mk('Tipo de mueble');const fill=()=>{kind.innerHTML='';data[room.value].items.forEach((a,i)=>{const o=document.createElement('option');o.value=i;o.textContent=a[0];kind.append(o)})};room.onchange=fill;fill();
  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;justify-content:flex-end;margin-top:16px';const cancel=document.createElement('button');cancel.textContent='Cancelar';cancel.onclick=()=>box.remove();const create=document.createElement('button');create.textContent='Crear y editar';create.style.cssText='background:#2f6fd1;color:white;border:0;border-radius:7px;padding:9px 14px;font-weight:600';create.onclick=()=>{const r=room.value,p=data[r],v=p.items[+kind.value];if(!v)return;const [name,w,h,d,top]=v,colors={'Cocina modular':'#8fa58f','Baño':'#d8dfe0','Dormitorio':'#c9bba8','Vestidor':'#c9bba8','Salón':'#9b8268','Recibidor':'#a78d75','Despacho':'#b18c68','Lavadero':'#d5d8d8','Garaje':'#8b9298','Trastero':'#9b9b94','Exterior':'#8d9a87'};const o=base(name,w,'libre',{k:'base',top:r=='Cocina modular'&&top,zoc:0,el:[],shl:[],dvs:[],rods:[],xd:[],cc:'#f1eee8',cf:colors[r],ct:'#252525',cz:'#333333',cn:'#d7d1c7',cm:'laminado',acab:'satinado',fr:'lisa',ti:'barra',tl:30,op:'lateral',mf:'liso'},d);o.c=r;o.roomType=p.key;o.family=name;o.h=h;o.e=0;o.col=colors[r];box.remove();openPrevObj(o)};actions.append(cancel,create);box.append(actions);document.body.append(box);
 }
-async function openPolyhavenCatalog(){
- if($('#phCatalog')){ $('#phCatalog').remove(); }
- const modal=document.createElement('div');modal.id='phCatalog';modal.style.cssText='position:fixed;inset:0;z-index:10050;background:#090b10ed;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
- const panel=document.createElement('div');panel.style.cssText='width:min(920px,96vw);height:min(760px,92vh);background:#1b2029;color:#f3f4f6;border:1px solid #566170;border-radius:12px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px';
- const head=document.createElement('div');head.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap';
- const title=document.createElement('b');title.textContent='Biblioteca 3D real · Poly Haven';title.style.fontSize='18px';
- const credit=document.createElement('span');credit.textContent='Modelos CC0 · uso libre · Powered by Poly Haven';credit.style.cssText='font-size:11px;color:#aab6c5';
- const close=document.createElement('button');close.textContent='Cerrar';close.style.marginLeft='auto';close.onclick=()=>modal.remove();head.append(title,credit,close);
- const search=document.createElement('input');search.type='search';search.placeholder='Buscar sofá, cama, silla, armario…';search.style.cssText='padding:10px;width:100%;box-sizing:border-box';
- const status=document.createElement('div');status.style.cssText='font-size:12px;color:#b9c5d5';
- const list=document.createElement('div');list.style.cssText='overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;align-content:start;padding:2px';
- panel.append(head,search,status,list);modal.append(panel);document.body.append(modal);
- let assets=[];
- const render=()=>{
-  const q=search.value.trim().toLowerCase();list.innerHTML='';
-  const filtered=assets.filter(([id,a])=>(a.name+' '+(a.description||'')+' '+(a.tags||[]).join(' ')).toLowerCase().includes(q));
-  status.textContent=filtered.length+' modelos encontrados · selecciónalos para descargarlos y revisarlos en 3D';
-  filtered.slice(0,100).forEach(([id,a])=>{
-   const card=document.createElement('article');card.style.cssText='background:#252d39;border:1px solid #465365;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:7px;min-width:0';
-   const img=document.createElement('img');img.src=a.thumbnail_url||'';img.alt=a.name;img.loading='lazy';img.style.cssText='width:100%;height:125px;object-fit:contain;background:#151a22;border-radius:5px';
-   const name=document.createElement('b');name.textContent=a.name;
-   const meta=document.createElement('small');meta.style.color='#b8c4d3';meta.textContent=(a.polycount||'?').toLocaleString('es-ES')+' polígonos · CC0 · '+(a.categories||[]).join(', ');
-   const btn=document.createElement('button');btn.textContent='Descargar y previsualizar';btn.style.cssText='margin-top:auto;background:#286baf';
-   btn.onclick=async()=>{
-    btn.disabled=true;btn.textContent='Descargando…';
-    try{
-     const fr=await fetch('https://api.polyhaven.com/files/'+encodeURIComponent(id));
-     if(!fr.ok)throw new Error('Poly Haven no ha facilitado los archivos ('+fr.status+').');
-     const tree=await fr.json(),candidates=[];
-     const walk=(node,path=[])=>{if(!node||typeof node!=='object')return;if(typeof node.url==='string'){if(path.some(x=>String(x).toLowerCase()==='gltf'))candidates.push({url:node.url,path});return}for(const [k,v] of Object.entries(node))walk(v,path.concat(k))};
-     walk(tree);
-     const file=candidates.find(x=>x.path.some(v=>String(v).toLowerCase()==='1k'))||candidates.find(x=>x.path.some(v=>String(v).toLowerCase()==='2k'))||candidates[0];
-     if(!file)throw new Error('Este modelo no tiene un archivo glTF descargable compatible.');
-     const author=Object.keys(a.authors||{})[0]||'Poly Haven contributor';
-     const cat=(a.categories||[]).some(x=>/bed/i.test(x))?'Dormitorio':(a.categories||[]).some(x=>/seating/i.test(x))?'Salón':'Mobiliario';
-     const m={id:'ph_'+id+'_'+Date.now(),name:a.name,brand:'Poly Haven',ref:id,author,source:'https://polyhaven.com/a/'+id,lic:'CC0 1.0',cat,units:100,ext:'gltf',url:file.url,date:new Date().toISOString().slice(0,10)};
-     const result=await addModel(m);
-     pendingModel={data:m,entry:result.entry,quality:result.quality};
-     modal.remove();openPrevObj(result.entry);hint('Modelo descargado. Gíralo y revísalo antes de guardarlo.');
-    }catch(err){alert('No se pudo incorporar este modelo: '+err.message);btn.disabled=false;btn.textContent='Reintentar descarga'}
-   };
-   card.append(img,name,meta,btn);list.append(card)
-  });
- };
- status.textContent='Conectando con el catálogo oficial…';
- try{
-  const response=await fetch('https://api.polyhaven.com/assets?type=models');
-  if(!response.ok)throw new Error('Respuesta '+response.status);
-  const data=await response.json();
-  assets=Object.entries(data).filter(([id,a])=>(a.categories||[]).some(c=>/furniture|seating|bed|table|shelves|cabinet|vehicles|transport/i.test(c))||(a.tags||[]).some(t=>/sofa|bed|chair|furniture|cabinet|car|vehicle/i.test(t)));
-  assets.sort((a,b)=>(b[1].download_count||0)-(a[1].download_count||0));render();
- }catch(err){status.textContent='No se pudo conectar con Poly Haven: '+err.message+'. Comprueba la conexión y vuelve a abrir el catálogo.'}
- search.oninput=render;
-}
+
 function libUI(q=''){
  const L=$('#lib');if(q!==undefined)libQuery=q;const query=libQuery||'';L.innerHTML='';
  const rooms=[
@@ -407,7 +354,7 @@ function libUI(q=''){
  const crumb=document.createElement('div');crumb.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 7px';head.append(crumb);
  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px';
  const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble personalizado';custom.style.cssText='flex:1;background:#2f6fd1;text-align:center';custom.onclick=createCustomFurniture;actions.append(custom);
- const ph=document.createElement('button');ph.className='it';ph.textContent='🌐 Modelos 3D reales CC0';ph.style.cssText='flex:1;text-align:center;background:#245b48';ph.onclick=openPolyhavenCatalog;actions.append(ph);const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);head.append(actions);L.append(head);
+ const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);head.append(actions);L.append(head);
  const content=document.createElement('div');L.append(content);
  const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
   MATS.concat(S.cm.map((_,i)=>'img'+i)).forEach(m=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.m==m?' on':'');d.textContent=m.startsWith('img')?'imagen':m;d.title=m.startsWith('pbr:')?((pbrDef(m.slice(4))||[])[1]||m):m;
@@ -1477,24 +1424,17 @@ const CATS=['mueble bajo','mueble alto','columna','armario','cajonera','horno','
 const CATK=[['columna','columna'],['armario alto','mueble alto'],['mueble alto','mueble alto'],['armario bajo','mueble bajo'],['mueble bajo','mueble bajo'],['cajonera','cajonera'],['cómoda','cajonera'],['armario','armario'],['ropero','armario'],['microondas','microondas'],['horno','horno'],['frigor','frigorífico'],['nevera','frigorífico'],['lavavajillas','lavavajillas'],['lavadora','lavadora'],['secadora','secadora'],['campana','campana'],['placa','placa'],['vitro','placa'],['inducci','placa'],['vinoteca','vinoteca'],['fregadero','fregadero'],['grifo','grifería'],['sofá','sofá'],['cama','cama'],['mesa','mesa']];
 let FABS=[],PRODS=[],fabSel='',IA={servicio:false,configurada:false};
 const dbq=(st,mode,fn)=>idb().then(d=>new Promise((res,rej)=>{const t=d.transaction(st,mode);let o;const r=fn(t);if(r)r.onsuccess=()=>o=r.result;t.oncomplete=()=>res(o);t.onerror=()=>rej(t.error)}));
-const saveFabs=()=>localStorage.setItem('fabs',JSON.stringify(FABS)),saveProd=p=>dbq('p','readwrite',t=>t.objectStore('p').put(p)),saveDoc=b=>{const id='d'+Date.now()+Math.random().toString(36).slice(2,6);return dbq('d','readwrite',t=>t.objectStore('d').put(b,id)).then(()=>id)},getDoc=id=>dbq('d','readonly',t=>t.objectStore('d').get(id));
+const saveFabs=()=>localStorage.setItem('fabs',JSON.stringify(FABS)),saveProd=p=>{p.dimensiones_mm={anchura:Number.isFinite(+p.w)&&+p.w>0?Math.round(+p.w*10):null,altura:Number.isFinite(+p.h)&&+p.h>0?Math.round(+p.h*10):null,profundidad:Number.isFinite(+p.d)&&+p.d>0?Math.round(+p.d*10):null};return dbq('p','readwrite',t=>t.objectStore('p').put(p))},saveDoc=b=>{const id='d'+Date.now()+Math.random().toString(36).slice(2,6);return dbq('d','readwrite',t=>t.objectStore('d').put(b,id)).then(()=>id)},getDoc=id=>dbq('d','readonly',t=>t.objectStore('d').get(id));
 function fichaToItem(p){
- const w=+p.w,h=+p.h,d=+p.d,c=p.cat;
- if(!(w>0&&h>0&&d>0))return null;
- let o;
- const AP={horno:'horno',microondas:'micro',lavadora:'lavadora',secadora:'secadora',lavavajillas:'lavavajillas',vinoteca:'vinoteca',placa:'placa'};
- if(c=='frigorífico')o=appo(p.nombre,h>170&&w>85?'americano':h>150?'combi':'frigo',w,h,d);
- else if(c=='campana')o=appo(p.nombre,'campana_inc',w,h,d,150);
- else if(AP[c])o=appo(p.nombre,AP[c],w,h,d);
- else if(c=='mueble bajo'){o=base(p.nombre,w,p.nc&&!p.nd?'cajones':p.nc?'puertas+cajones':'puertas',{nd:p.nd||(w>60?2:1),nc:p.nc||0},d);o.h=h}
- else if(c=='cajonera'){o=base(p.nombre,w,'cajones',{nc:p.nc||3},d);o.h=h}
- else if(c=='mueble alto')o=alto(p.nombre,w,{nd:p.nd||(w>60?2:1)},h,d);
- else if(c=='columna'){o=colm(p.nombre,w,h,'columna',{nd:p.nd||2,nc:p.nc||2});o.d=d}
- else if(c=='armario'){o=colm(p.nombre,w,h,'puertas',{nd:p.nd||2,sh:3});o.d=d;o.cfg.rods=[{y:h*.9}]}
- else if(c=='fregadero')o={t:'fregadero',w,h,d,e:0,col:'#d8dcde'};
- else if(c=='grifería')o={t:'griferia',w,h,d,e:0,col:'#aeb6bb'};
- else {const t={'sofá':'sofa',cama:'cama',mesa:'mesa'}[c];if(!t)return null;o={t,w,h,d,e:0,col:'#cccccc'}}
- return Object.assign(o,{n:p.nombre,c:'Catálogos',brand:p.fab,ref:p.ref,upd:(p.fecha||'').slice(0,10),prec:p.prec,pid:p.id,w,h,d,s:'catálogo'});
+ // Una ficha comercial no genera un mueble genérico. Solo se convierte en objeto
+ // insertable cuando tiene asociado un modelo 3D propio/importado y validado.
+ if(!p||!p.mid)return null;
+ const model=LIB.find(x=>x.t==='model'&&x.mid===p.mid);
+ if(!model)return null;
+ return {t:'model',mid:p.mid,n:p.nombre||model.n,brand:p.fab||model.brand,ref:p.ref||'',c:p.cat||model.c,
+  w:+p.w||model.w,h:+p.h||model.h,d:+p.d||model.d,e:0,col:p.col||model.col||'#cccccc',
+  pid:p.id,source:p.sourceURL||p.catalogo||model.source};
+}
 }
 function thumbO(o){if(TH.has(o))return TH.get(o);const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(o,u);return u}
 async function catLoad(){try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
@@ -1529,15 +1469,20 @@ function catUI(){const C=$('#cat');C.style.display='block';C.innerHTML='';const 
  L.append(el('button',{textContent:'+ Fabricante / marca',onclick:()=>{const n=(prompt('Nombre del fabricante o marca (ej.: IKEA, Bosch…):')||'').trim();if(n&&!FABS.includes(n)){FABS.push(n);saveFabs();fabSel=n;catUI()}}}));
  if(fabSel)L.append(el('button',{textContent:'Eliminar «'+fabSel+'» y sus fichas',onclick:async()=>{if(!confirm('¿Eliminar el fabricante y TODAS sus fichas?'))return;for(const p of PRODS.filter(p=>p.fab==fabSel))await dbq('p','readwrite',t=>t.objectStore('p').delete(p.id));FABS=FABS.filter(f=>f!=fabSel);saveFabs();fabSel='';await catLoad();libUI();catUI()}}));
  const bar=el('div');bar.style.margin='0 0 8px';const q=el('input',{placeholder:'buscar nombre, referencia…'}),cs=el('select');cs.append(el('option',{value:'',textContent:'todas las categorías'}));CATS.forEach(c=>cs.append(el('option',{value:c,textContent:c})));bar.append(q,' ',cs,' ');
- bar.append(el('button',{textContent:'⬆ Importar PDF / ficha / foto…',onclick:()=>{if(!FABS.length&&!fabSel){alert('Crea primero un fabricante o marca.');return}impUI(Rg)}}),' ',el('button',{textContent:'📦 Importar catálogo propio (JSON)…',onclick:impNob}),' ',el('button',{textContent:'Archivo 3D existente…',onclick:()=>$('#fmod').click()}),' ',el('button',{textContent:'🌐 Explorar modelos 3D CC0 · Poly Haven',onclick:()=>window.open('https://polyhaven.com/models/furniture','_blank','noopener')}));Rg.append(bar);
+ bar.append(el('button',{textContent:'⬆ Importar PDF / ficha / foto…',onclick:()=>{if(!FABS.length&&!fabSel){alert('Crea primero un fabricante o marca.');return}impUI(Rg)}}),' ',el('button',{textContent:'📦 Importar catálogo propio (JSON)…',onclick:impNob}),' ',el('button',{textContent:'Archivo 3D existente…',onclick:()=>$('#fmod').click()}));Rg.append(bar);
  const grid=el('div');Rg.append(grid);const pintar=()=>{grid.innerHTML='';const f=PRODS.filter(p=>(!fabSel||p.fab==fabSel)&&(!cs.value||p.cat==cs.value)&&(p.nombre+' '+p.ref).toLowerCase().includes(q.value.toLowerCase()));if(!f.length)grid.textContent=PRODS.length?'Sin coincidencias.':'Todavía no hay productos. Crea un fabricante e importa un PDF, una ficha o una foto.';
   f.forEach(p=>{const o=fichaToItem(p),c=el('div','', '');c.className='rc';c.style.width='170px';c.innerHTML=(o?'<img src="'+thumbO(o)+'" style="height:96px;object-fit:contain">':'<div style="height:96px;color:#9aa">sin modelo 3D para esta categoría</div>')+'<b>'+p.nombre+'</b><br>'+p.fab+(p.ref?' · '+p.ref:'')+'<br>'+p.w+'×'+p.d+'×'+p.h+' cm<br><span style="color:'+(/^oficial|manual/.test(p.prec)?'#7be08b':'#ffb74d')+'">'+p.prec+'</span>';c.style.cursor='pointer';c.onclick=()=>fichaUI(p);grid.append(c)})};q.oninput=pintar;cs.onchange=pintar;pintar()}
 function fichaUI(p){const C=$('#cat');C.innerHTML='';C.append(el('button',{textContent:'← Volver',onclick:catUI}),el('b','','  Ficha de producto'));const f=el('div');f.style.marginTop='8px';C.append(f);
  fld(f,'Nombre',p.nombre,'text',v=>p.nombre=v);fld(f,'Fabricante',p.fab,'',v=>p.fab=v,FABS);fld(f,'Referencia',p.ref,'text',v=>p.ref=v);fld(f,'Categoría',p.cat,'',v=>p.cat=v,CATS);f.append(el('br'));
  fld(f,'Anchura cm',p.w,'number',v=>p.w=v);fld(f,'Altura cm',p.h,'number',v=>p.h=v);fld(f,'Profundidad cm',p.d,'number',v=>p.d=v);fld(f,'Nº puertas',p.nd||0,'number',v=>p.nd=v);fld(f,'Nº cajones',p.nc||0,'number',v=>p.nc=v);fld(f,'Precisión de medidas',/^oficial/.test(p.prec)?'oficial':/^manual/.test(p.prec)?'manual':'estimada',''
   ,v=>p.prec=v=='oficial'?'oficial (confirmada por ti)':v=='manual'?'manual':'estimada',['oficial','manual','estimada']);f.append(el('br'));
- fld(f,'Materiales',p.mats,'text',v=>p.mats=v);fld(f,'Acabados',p.acabados,'text',v=>p.acabados=v);fld(f,'Colores',p.colores,'text',v=>p.colores=v);f.append(el('br'));const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observaciones'});ob.onchange=()=>p.obs=ob.value;f.append(ob,el('br'));
- f.append(el('div','','<small>Procedencia: '+(p.catalogo||'—')+(p.pagina?' · página '+p.pagina:'')+' · incorporado '+(p.fecha||'').slice(0,10)+(p.prec&&!/^oficial|manual/.test(p.prec)?'<br><span style="color:#ffb74d">Medidas sin confirmar: revísalas contra el plano o la ficha antes de usarlas.</span>':'')+'</small>'));
+ fld(f,'Materiales',p.mats,'text',v=>p.mats=v);fld(f,'Acabados',p.acabados,'text',v=>p.acabados=v);fld(f,'Colores',p.colores,'text',v=>p.colores=v);f.append(el('br'));
+ fld(f,'Peso kg',p.pesoKg,'number',v=>p.pesoKg=v);fld(f,'Texturas',p.texturas,'text',v=>p.texturas=v);f.append(el('br'));
+ fld(f,'URL ficha original',p.sourceURL,'text',v=>p.sourceURL=v);fld(f,'Variantes',p.variantes,'text',v=>p.variantes=v);f.append(el('br'));
+ fld(f,'Identificador del modelo 3D',p.mid,'text',v=>p.mid=v);
+ const assoc=el('button',{textContent:'Asociar modelo 3D validado…',onclick:()=>{const ms=LIB.filter(x=>x.t==='model'&&x.mid);if(!ms.length)return alert('Todavía no hay modelos 3D importados y validados en esta biblioteca.');const opts=ms.map(x=>x.mid+' — '+(x.n||x.mid));const chosen=prompt('Escribe el identificador exacto del modelo:\\n'+opts.join('\\n'),p.mid||ms[0].mid);if(chosen&&ms.some(x=>x.mid===chosen.trim())){p.mid=chosen.trim();fichaUI(p)}}});f.append(assoc,el('br'));
+const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observaciones'});ob.onchange=()=>p.obs=ob.value;f.append(ob,el('br'));
+ f.append(el('div','','<small>Procedencia: '+(p.sourceURL||p.catalogo||'—')+(p.pagina?' · página '+p.pagina:'')+' · incorporado '+(p.fecha||'').slice(0,10)+(p.prec&&!/^oficial|manual/.test(p.prec)?'<br><span style="color:#ffb74d">Medidas sin confirmar: revísalas contra el plano o la ficha antes de usarlas.</span>':'')+'</small>'));
  const area=el('div');area.style.margin='8px 0';
  const bt=(t,fn)=>{const b=el('button',{textContent:t,onclick:fn});b.style.marginRight='6px';f.append(b)};
  bt('Previsualizar 3D / colocar',()=>{const o=fichaToItem(p);if(!o)return alert('Con esta categoría o medidas no se puede generar un modelo paramétrico.');openPrevObj(o)});
