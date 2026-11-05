@@ -483,7 +483,24 @@ const ENC=[['enc-blanco-puro','Blanco puro','lac','#f2f1ee',.35],['enc-blanco-gr
 const PL0=[['roble-natural','Roble natural','Maderas','wood','#b58a58',.55,0,1.2,80],['nogal','Nogal','Maderas','wood','#5b3a24',.5,0,1.2,80],['madera-clara','Madera clara (fresno)','Maderas','wood','#d9bd91',.6,0,1,80],
 ['lacado-blanco','Lacado blanco satinado','Lacados','lac','#f1efe9',.3,0,.1,60],['laca-negra','Laca negra brillante','Lacados','lac','#101012',.12,0,.05,60],['melamina-gris','Melamina gris','Laminados','grain','#8a8d91',.6,0,.3,60],
 ['marmol-blanco','Mármol blanco','Piedras','marble','#ece9e4',.2,0,.5,120],['marmol-negro','Mármol negro','Piedras','marble','#232326',.18,0,.5,120],['granito-gris','Granito gris','Piedras','granite','#7c7c7e',.4,0,.8,60],['microcemento','Microcemento','Piedras','cloud','#a6a39d',.75,0,.6,100],
-['acero-cepillado','Acero cepillado','Metales','brush','#c4c7cc',.35,1,.4,40],['aluminio-cepillado','Aluminio cepillado','Metales','brush','#d0d3d8',.4,1,.4,40]].concat(ENC);
+['acero-cepillado','Acero cepillado','Metales','brush','#c4c7cc',.35,1,.4,40],['aluminio-cepillado','Aluminio cepillado','Metales','brush','#d0d3d8',.4,1,.4,40]].concat(ENC,[
+['porcelanico-caliza','Porcelánico efecto caliza','Porcelánicos','cloud','#c9c1b3',.62,0,.8,60],
+['porcelanico-cemento','Porcelánico efecto cemento','Porcelánicos','grain','#aaa9a4',.58,0,.65,60],
+['porcelanico-piedra','Porcelánico efecto piedra','Porcelánicos','travert','#b6a58e',.7,0,1.1,60],
+['porcelanico-terrazzo','Porcelánico terrazo','Porcelánicos','granite','#d0c8bb',.48,0,.9,60],
+['gres-arena','Gres tono arena','Cerámicas y gres','#cloud','#c8b99f',.72,0,.35,45],
+['ceramica-blanca-mate','Cerámica blanca mate','Cerámicas y gres','lac','#eeeae2',.78,0,.08,30],
+['ceramica-verde','Cerámica verde esmaltada','Cerámicas y gres','lac','#71877a',.22,0,.12,30],
+['travertino-claro','Travertino claro','Piedras naturales','travert','#d0c2aa',.78,0,1.2,80],
+['granito-negro','Granito negro','Piedras naturales','granite','#292a2c',.32,0,1.1,60],
+['terrazo-claro','Terrazo claro','Piedras naturales','granite','#d5d0c5',.58,0,.9,60],
+['microcemento-calido','Microcemento cálido','Cementos y microcementos','cloud','#b6a99a',.82,0,.35,100],
+['cemento-antracita','Cemento antracita','Cementos y microcementos','grain','#55575a',.8,0,.55,100],
+['pizarra-natural','Pizarra natural','Piedras naturales','granite','#44484a',.72,0,1.3,60],
+['roble-cepillado','Roble cepillado','Maderas','wood','#aa8051',.62,0,1.1,80],
+['nogal-oscuro','Nogal oscuro','Maderas','wood','#493020',.5,0,1.1,80],
+['metal-laton','Latón satinado','Metales','brush','#b59a61',.34,1,.3,40]
+]);
 const PL=()=>PL0.concat(S.pbr||[]),pbrDef=id=>PL().find(d=>d[0]==id);
 function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263+s2*982451653+seed*1274126177)|0;h=Math.imul(h^h>>>13,1274126177);return((h^h>>>16)>>>0)/4294967296},
  nz=(u,v,fx,fy,o)=>{const x=u*fx,y=v*fy,xi=Math.floor(x),yi=Math.floor(y),a=x-xi,b=y-yi,sx=a*a*(3-2*a),sy=b*b*(3-2*b),g=(i,j)=>hs(((i%fx)+fx)%fx,((j%fy)+fy)%fy,o);return g(xi,yi)*(1-sx)*(1-sy)+g(xi+1,yi)*sx*(1-sy)+g(xi,yi+1)*(1-sx)*sy+g(xi+1,yi+1)*sx*sy},
