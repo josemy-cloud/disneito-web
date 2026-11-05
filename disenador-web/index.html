@@ -445,17 +445,25 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  document.body.append(modal);
  const $f=id=>modal.querySelector('#'+id);
  let originalBlob=null,originalUrl='',resultUrl='',busy=false;
+ const fotoIADeviceId=()=>{
+  let id=localStorage.getItem('fotoIA_device_id');
+  if(!id){id=crypto.randomUUID();localStorage.setItem('fotoIA_device_id',id)}
+  return id;
+ };
+ const fotoIAHeaders=async()=>{
+  const h={'X-FotoIA-Device':fotoIADeviceId()};
+  try{h.Authorization='Bearer '+await sbTok()}catch(e){}
+  return h;
+ };
  const refreshFotoIAStats=async()=>{
   const box=$f('fotoIAContador');
   try{
-   const token=await sbTok();
-   const r=await fetch('/api/ia/estadisticas',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+   const r=await fetch('/api/ia/estadisticas',{headers:await fotoIAHeaders(),cache:'no-store'});
    const j=await r.json().catch(()=>({}));
    if(!r.ok)throw new Error(j.error||'No se pudo consultar el contador.');
-   box.textContent='Hoy: '+j.hoy+' imágenes · Total: '+j.total+' imágenes (día de España)';
-  }catch(e){
-   box.textContent=e.message&&e.message.includes('Sin sesión')?'Inicia sesión en «Mis proyectos» para activar el contador entre dispositivos.':'Contador no disponible: '+(e.message||e);
-  }
+   const tipo=j.registrado?'con cuenta':'sin iniciar sesión';
+   box.textContent='Te quedan '+j.disponibles+' de '+j.limite+' imágenes hoy ('+tipo+').';
+  }catch(e){box.textContent='No se pudo consultar el límite: '+(e.message||e)}
  };
  const close=()=>{modal.style.display='none';if(originalUrl)URL.revokeObjectURL(originalUrl);if(resultUrl)URL.revokeObjectURL(resultUrl);originalBlob=null;originalUrl='';resultUrl='';$f('fotoIAOriginal').removeAttribute('src');$f('fotoIAResultado').removeAttribute('src');$f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;$f('fotoIAGenerar').disabled=false;$f('fotoIAEstado').textContent='Captura preparada.'};
  $f('fotoIACerrar').onclick=close;
@@ -491,8 +499,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
   busy=true;$f('fotoIAGenerar').disabled=true;$f('fotoIAEstado').textContent='Enviando la captura a Foto IA…';
   try{
    const form=new FormData();form.append('imagen',originalBlob,'vista-3d.jpg');form.append('nivel',$f('fotoIANivel').value);
-   const token=await sbTok();
-   const response=await fetch('/api/ia/editar',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
+   const response=await fetch('/api/ia/editar',{method:'POST',headers:await fotoIAHeaders(),body:form});
    if(!response.ok){let detail='HTTP '+response.status;try{const j=await response.json();detail=j.error||j.detalle||detail}catch(e){}throw new Error(detail)}
    const result=await response.blob();if(!result.type.startsWith('image/'))throw new Error('El servidor no ha devuelto una imagen válida.');
    if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl=URL.createObjectURL(result);
