@@ -353,7 +353,7 @@ function libUI(q=''){
  const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar en todo el catálogo…';search.value=query;search.style.cssText='width:100%;box-sizing:border-box;margin-bottom:7px';head.append(search);
  const crumb=document.createElement('div');crumb.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 7px';head.append(crumb);
  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px';
- if(CATALOG_MASTER){const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble personalizado';custom.style.cssText='flex:1;background:#2f6fd1;text-align:center';custom.onclick=createCustomFurniture;actions.append(custom);}
+ const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble personalizado';custom.style.cssText='flex:1;background:#2f6fd1;text-align:center';custom.onclick=createCustomFurniture;actions.append(custom);
  if(CATALOG_MASTER){const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);}head.append(actions);L.append(head);
  const content=document.createElement('div');L.append(content);
  const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
