@@ -13,6 +13,9 @@
   "previews": {
     "ai": {
       "binding": "AI"
+    },
+    "vars": {
+      "MASTER_USER_ID": "9c79c647-0b20-4be1-8516-3d2a76971b9d"
     }
   },
   "vars": {
