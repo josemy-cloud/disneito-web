@@ -1461,17 +1461,7 @@ BUILD.rocaOnaBidet=(g,it,mt)=>{
  foot.scale.z=d/w;foot.position.z=-d*.035;g.add(foot);
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 };
-if(!LIB.some(x=>x.pid==='roca-ona-bidet-a357687000'))LIB.push({
- t:'rocaOnaBidet',pid:'roca-ona-bidet-a357687000',n:'Bidé Roca Ona adosado a pared sin tapa',
- brand:'Roca',ref:'A357687000',c:'Baño',roomType:'baño',s:'porcelana sanitaria',
- w:36,h:42,d:53,e:0,col:'#f4f3ef',prec:'oficial',
- productUrl:'https://qr2.roca.com/productos/bide-adosado-pared-sin-tapa-357687..0',
- technicalUrl:'https://www.roca.com/documents/20126/44093530/Technical_Specifications_Ona_collection_Roca.pdf/430514c7-8810-7005-7ece-c38ff2f41454?download=true&t=1637866356491',
- dimensionsSource:'Fabricante: 530 × 360 × 420 mm (largo × ancho × alto)',
- geometryNote:'Modelo paramétrico propio. Curvaturas y radios no acotados reconstruidos visualmente; no es CAD oficial.',
- finishes:['Blanco brillo','Blanco mate','Negro mate'],
- includes:['Juego de fijaciones'],excludes:['Grifería','Tapa','Válvula de desagüe']
-});
+
 
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}}
 function motionKeysForItem(it){const saved=MV;MV=[];try{const g=new T.Group();buildItemGeometry(g,it,M(it.col||'#ccc',.5,0),M('#999',.3,.9));return [...new Set(MV.map(m=>m.k))]}catch(err){console.warn('No se pudieron identificar las aperturas del mueble',err);return []}finally{MV=saved}}
@@ -1503,8 +1493,35 @@ function fichaToItem(p){
   pid:p.id,source:p.sourceURL||p.catalogo||model.source};
 }
 function thumbO(o){if(TH.has(o))return TH.get(o);const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(o,u);return u}
-async function catLoad(){try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
- try{IA=await fetch('/api/ia/estado').then(r=>r.json())}catch(e){IA={servicio:false,configurada:false}}}
+async function catLoad(){
+ try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}
+ PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];
+ for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);
+ PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
+ // Registro comercial versionado: cada ficha aporta datos y referencia; el motor
+ // solo la inserta si existe un constructor 3D propio asociado.
+ try{
+  const res=await fetch('/catalogo/productos-comerciales.json',{cache:'no-store'});
+  if(res.ok){
+   const registry=await res.json();
+   (registry.products||[]).forEach(p=>{
+    const model=p.model||{},dims=p.dimensions_mm||{},type=model.type;
+    if(!p.id||!type||typeof BUILD[type]!=='function'||LIB.some(x=>x.pid===p.id))return;
+    const item={t:type,pid:p.id,n:p.name||p.id,brand:p.brand||'',ref:p.reference||'',
+     c:p.category||'Importados',roomType:(p.category||'').toLowerCase()==='baño'?'baño':'',
+     w:(+dims.width||0)/10,h:(+dims.height||0)/10,d:(+dims.length||0)/10,e:0,
+     col:p.finishes&&p.finishes[0]&&/negro/i.test(p.finishes[0].name)?'#171717':'#f4f3ef',
+     productUrl:(p.sources||[]).find(x=>x.type==='fabricante_producto')?.url||'',
+     technicalUrl:(p.sources||[]).find(x=>x.type==='fabricante_pdf_tecnico')?.url||'',
+     dimensionsSource:model.geometry_notes||'',status:p.status,weight_kg:p.weight_kg,
+     materials:p.materials||[],finishes:p.finishes||[],features:p.technical_features||{},
+     includes:p.included||[],excludes:p.excluded||[],geometryNote:model.geometry_notes||''};
+    LIB.push(item);
+   });
+  }
+ }catch(e){console.warn('No se pudo cargar el registro de productos comerciales:',e)}
+ try{IA=await fetch('/api/ia/estado').then(r=>r.json())}catch(e){IA={servicio:false,configurada:false}}
+}
 /* --- lectura de PDF (local, con pdf.js) --- */
 let pdfW=null;
 async function pdfOpen(blob){if(typeof pdfjsLib=='undefined')throw new Error('No se cargó pdf.js (necesita internet la primera vez, o iniciar con iniciar.bat).');if(!pdfW){const u=document.querySelector('script[src*="pdf.min.js"]').src.replace('pdf.min.js','pdf.worker.min.js');pdfW=URL.createObjectURL(new Blob([await(await fetch(u)).text()],{type:'text/javascript'}));pdfjsLib.GlobalWorkerOptions.workerSrc=pdfW}return pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise}
