@@ -162,6 +162,104 @@ const LIB=[
 {t:'planta',n:'Planta',c:'Decoración',s:'nórdico',w:40,h:110,d:40,e:0,col:'#3f7d3a'},
 {t:'alfombra',n:'Alfombra',c:'Decoración',s:'nórdico',w:200,h:2,d:140,e:0,col:'#c9bfae'},
 {t:'lampara',n:'Lámpara de pie',c:'Decoración',s:'moderno',w:35,h:160,d:35,e:0,col:'#f3e7c3'}];
+/* Colección ampliada de modelos paramétricos 3D. Cocina queda deliberadamente excluida. */
+LIB.push(
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"sofa",n:"Sofá 2 plazas",w:175,h:82,d:90,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"sofa",n:"Sofá chaise longue",w:260,h:88,d:150,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"sofa",n:"Sofá rinconero",w:245,h:88,d:205,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"seat",n:"Butaca",w:82,h:92,d:85,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"seat",n:"Puf redondo",w:55,h:42,d:55,e:0,col:"#d2c8b8",s:"rústico",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"table",n:"Mesa de centro ovalada",w:115,h:42,d:65,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"table",n:"Mesa auxiliar",w:48,h:52,d:48,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"panel",n:"Panel de TV",w:190,h:180,d:18,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"sideboard",n:"Aparador",w:165,h:82,d:43,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"shelf",n:"Librería",w:100,h:205,d:34,e:0,col:"#d2c8b8",s:"rústico",variant:0},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"lamp",n:"Lámpara sobremesa",w:32,h:48,d:32,e:0,col:"#a88f78",s:"moderno",variant:1},
+{t:'roomObject',roomType:"salón",c:"Salón",shape:"mirror",n:"Espejo decorativo",w:90,h:130,d:5,e:0,col:"#b6a28d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"bed",n:"Cama individual",w:100,h:75,d:205,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"bed",n:"Cama doble",w:170,h:90,d:210,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"bed",n:"Cama king size",w:210,h:95,d:220,e:0,col:"#d2c8b8",s:"rústico",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"bed",n:"Litera",w:100,h:180,d:205,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"dresser",n:"Mesita 2 cajones",w:48,h:52,d:40,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"dresser",n:"Cómoda 6 cajones",w:120,h:88,d:45,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"wardrobe",n:"Armario corredero",w:200,h:225,d:65,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"wardrobe",n:"Armario abatible",w:150,h:220,d:60,e:0,col:"#d2c8b8",s:"rústico",variant:1},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"mirror",n:"Espejo cuerpo entero",w:55,h:175,d:5,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"desk",n:"Tocador",w:110,h:135,d:45,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"bath",n:"Bañera exenta",w:170,h:58,d:78,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Ducha con mampara",w:120,h:205,d:90,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"vanity",n:"Mueble lavabo doble",w:140,h:58,d:50,e:0,col:"#d2c8b8",s:"rústico",variant:0},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"basin",n:"Lavabo sobre encimera",w:48,h:18,d:48,e:0,col:"#a88f78",s:"moderno",variant:1},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"bidet",n:"Bidé cerámico",w:38,h:40,d:58,e:0,col:"#b6a28d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"rail",n:"Radiador toallero",w:55,h:115,d:12,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"cabinet",n:"Columna baño",w:38,h:175,d:32,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"mirror",n:"Espejo iluminado",w:90,h:75,d:5,e:0,col:"#d2c8b8",s:"rústico",variant:2},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"table",n:"Mesa comedor rectangular",w:180,h:76,d:95,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"table",n:"Mesa comedor redonda",w:130,h:76,d:130,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"table",n:"Mesa extensible",w:220,h:76,d:100,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"chair",n:"Silla tapizada",w:48,h:88,d:52,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"chair",n:"Silla madera",w:46,h:82,d:50,e:0,col:"#d2c8b8",s:"rústico",variant:1},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"bench",n:"Banco comedor",w:140,h:48,d:42,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"sideboard",n:"Aparador comedor",w:170,h:90,d:45,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"comedor",c:"Comedor",shape:"lamp",n:"Lámpara colgante",w:42,h:55,d:42,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"console",n:"Consola",w:100,h:82,d:32,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"cabinet",n:"Zapatero",w:100,h:115,d:28,e:0,col:"#d2c8b8",s:"rústico",variant:0},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"bench",n:"Banco recibidor",w:100,h:48,d:38,e:0,col:"#a88f78",s:"moderno",variant:1},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"coat",n:"Perchero",w:42,h:180,d:42,e:0,col:"#b6a28d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"mirror",n:"Espejo vertical",w:65,h:150,d:5,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Escritorio recto",w:150,h:76,d:70,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Escritorio en L",w:180,h:76,d:150,e:0,col:"#d2c8b8",s:"rústico",variant:2},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Mesa regulable",w:140,h:72,d:70,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"officechair",n:"Silla ergonómica",w:68,h:120,d:68,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"officechair",n:"Silla ejecutiva",w:72,h:115,d:72,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"shelf",n:"Estantería despacho",w:90,h:200,d:35,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"dresser",n:"Cajonera móvil",w:42,h:58,d:52,e:0,col:"#d2c8b8",s:"rústico",variant:1},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"computer",n:"Monitor y teclado",w:65,h:48,d:22,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Lavadora frontal",w:60,h:85,d:62,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Secadora frontal",w:60,h:85,d:62,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"sink",n:"Lavadero con pila",w:80,h:90,d:60,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"cabinet",n:"Armario limpieza",w:65,h:205,d:42,e:0,col:"#d2c8b8",s:"rústico",variant:0},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"basket",n:"Cesto ropa",w:42,h:62,d:42,e:0,col:"#a88f78",s:"moderno",variant:1},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"ironing",n:"Tabla planchar",w:38,h:92,d:125,e:0,col:"#b6a28d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"shelf",n:"Estantería lavandería",w:90,h:185,d:40,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"wardrobe",n:"Módulo vestidor abierto",w:100,h:220,d:60,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"wardrobe",n:"Módulo vestidor cerrado",w:100,h:220,d:60,e:0,col:"#d2c8b8",s:"rústico",variant:2},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"dresser",n:"Isla central cajones",w:110,h:90,d:75,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"shelf",n:"Zapatero",w:90,h:110,d:38,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"mirror",n:"Espejo vestidor",w:65,h:185,d:5,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"vestidor",c:"Vestidor",shape:"bench",n:"Banco vestidor",w:110,h:45,d:42,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"car",n:"Coche compacto",w:180,h:145,d:410,e:0,col:"#d2c8b8",s:"rústico",variant:1},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"car",n:"Coche SUV",w:195,h:180,d:465,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"van",n:"Furgoneta",w:200,h:225,d:500,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"bike",n:"Motocicleta",w:85,h:120,d:215,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"bicycle",n:"Bicicleta",w:58,h:110,d:175,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"shelf",n:"Estantería metálica",w:120,h:200,d:50,e:0,col:"#d2c8b8",s:"rústico",variant:0},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"workbench",n:"Banco trabajo",w:160,h:92,d:65,e:0,col:"#a88f78",s:"moderno",variant:1},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"toolcab",n:"Armario herramientas",w:90,h:185,d:48,e:0,col:"#b6a28d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"compressor",n:"Compresor",w:55,h:85,d:45,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"cart",n:"Carro herramientas",w:75,h:95,d:45,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"garaje",c:"Garaje",shape:"tyres",n:"Neumáticos",w:68,h:68,d:68,e:0,col:"#d2c8b8",s:"rústico",variant:2},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"shelf",n:"Estantería metálica",w:100,h:200,d:45,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"shelf",n:"Estantería madera",w:120,h:190,d:40,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"box",n:"Cajas apilables",w:48,h:35,d:38,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"trunk",n:"Baúl",w:100,h:58,d:48,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"suitcase",n:"Maleta",w:48,h:70,d:28,e:0,col:"#d2c8b8",s:"rústico",variant:1},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"ladder",n:"Escalera plegable",w:48,h:160,d:12,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"trastero",c:"Trastero",shape:"bike",n:"Bicicleta",w:58,h:110,d:175,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"outdoorsofa",n:"Sofá exterior",w:190,h:78,d:82,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"seat",n:"Sillón exterior",w:72,h:82,d:75,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"table",n:"Mesa exterior",w:150,h:74,d:85,e:0,col:"#d2c8b8",s:"rústico",variant:0},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"sunbed",n:"Tumbona",w:70,h:42,d:195,e:0,col:"#a88f78",s:"moderno",variant:1},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"umbrella",n:"Sombrilla",w:220,h:220,d:220,e:0,col:"#b6a28d",s:"nórdico",variant:2},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"planter",n:"Jardinera",w:100,h:45,d:38,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"pergola",n:"Pérgola",w:260,h:235,d:220,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
+{t:'roomObject',roomType:"terraza",c:"Exterior",shape:"bbq",n:"Barbacoa",w:110,h:115,d:55,e:0,col:"#d2c8b8",s:"rústico",variant:2},
+{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"tree",n:"Árbol ornamental",w:130,h:260,d:130,e:0,col:"#a88f78",s:"moderno",variant:0},
+{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"planter",n:"Macetero",w:45,h:55,d:45,e:0,col:"#b6a28d",s:"nórdico",variant:1},
+{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"outdoorsofa",n:"Conjunto exterior",w:220,h:80,d:85,e:0,col:"#8c9aa5",s:"industrial",variant:2},
+{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"shower",n:"Ducha exterior",w:100,h:210,d:100,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
+{t:'roomObject',roomType:"jardín",c:"Exterior",shape:"pool",n:"Piscina",w:300,h:100,d:220,e:0,col:"#d2c8b8",s:"rústico",variant:1}
+);
 const MATS=['madera','mármol','cemento','gres','hidráulico','metro','piedra'],MC={madera:'#b98a5a',mármol:'#e8e6e3',cemento:'#9a9a98',gres:'#b3a592',hidráulico:'#d9d2c0',metro:'#f5f5f3',piedra:'#a89b86'};
 const PAINT=['#f1ede4','#faf7f0','#bfc3c7','#d8c9b0','#b08968','#8aa39b','#c97b63','#37474f'];
 /* ===== Interfaz ===== */
@@ -183,14 +281,16 @@ function libUI(q=''){
   {n:'Cocina',key:'cocina',cats:['Cocina','Electrodomésticos']},
   {n:'Baño',key:'baño',cats:['Baño']},
   {n:'Dormitorio',key:'dormitorio',cats:['Dormitorio']},
-  {n:'Vestidor',key:'vestidor',cats:[]},
+  {n:'Vestidor',key:'vestidor',cats:['Vestidor']},
   {n:'Salón',key:'salón',cats:['Salón']},
-  {n:'Recibidor',key:'recibidor',cats:[]},
-  {n:'Despacho',key:'despacho',cats:[]},
-  {n:'Lavadero',key:'lavadero',cats:[]},
-  {n:'Garaje',key:'garaje',cats:[]},
-  {n:'Trastero',key:'trastero',cats:[]},
-  {n:'Exterior',key:'exterior',cats:[]}
+  {n:'Comedor',key:'comedor',cats:['Comedor']},
+  {n:'Recibidor',key:'recibidor',cats:['Recibidor']},
+  {n:'Despacho',key:'despacho',cats:['Despacho']},
+  {n:'Lavadero',key:'lavadero',cats:['Lavadero']},
+  {n:'Garaje',key:'garaje',cats:['Garaje']},
+  {n:'Trastero',key:'trastero',cats:['Trastero']},
+  {n:'Terraza',key:'terraza',cats:['Terraza']},
+  {n:'Jardín',key:'jardin',cats:['Jardín']}
  ];
  const belongs=(o,room)=>o.roomType===room.key||room.cats.includes(o.c);
  const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:#191c22;padding:2px 0 8px;z-index:2';
@@ -486,7 +586,43 @@ alfombra(g,it,mt){B(g,it.w,it.h,it.d,0,it.h/2,0,mt)},
 lampara(g,it,mt){B(g,3,it.h,3,0,it.h/2,0,M('#555',.3,.8));const s=new T.Mesh(new T.CylinderGeometry(it.w*.4,it.w*.5,it.h*.2,20),new T.MeshStandardMaterial({color:it.col,emissive:it.col,emissiveIntensity:.6}));s.position.y=it.h*.9;g.add(s);if($('#sq').value=='q'){const l=new T.PointLight('#ffd9a0',.4,400);l.position.y=it.h*.85;g.add(l)}}};
 BUILD.fregadero=(g,it)=>{const metal=M(it.col||'#b8c0c5',.22,.82),dark=M('#39434a',.3,.5),w=it.w,d=it.d,h=Math.max(8,it.h);B(g,w,1.1,d,0,.45,0,metal);const bowl=new T.Mesh(new T.CylinderGeometry(w*.43,w*.34,h*.62,32,1,true),metal);bowl.position.y=-h*.31;g.add(bowl);B(g,w*.68,1,d*.58,0,-h*.62,0,dark)};
 BUILD.griferia=(g,it)=>{const chrome=M(it.col||'#b7c0c8',.18,.9),h=Math.max(8,it.h),w=Math.max(3,it.w);const base=new T.Mesh(new T.CylinderGeometry(w*.18,w*.2,1,20),chrome);base.position.y=.5;g.add(base);const stem=new T.Mesh(new T.CylinderGeometry(Math.max(.7,w*.07),Math.max(.7,w*.09),h*.62,16),chrome);stem.position.set(0,h*.31+1,0);g.add(stem);const curve=new T.CatmullRomCurve3([new T.Vector3(0,h*.62+1,0),new T.Vector3(0,h*.78+1,0),new T.Vector3(w*.3,h*.78+1,0),new T.Vector3(w*.3,h*.62+1,0)]);const spout=new T.Mesh(new T.TubeGeometry(curve,24,Math.max(.5,w*.035),8,false),chrome);g.add(spout)};
-function build3d(){root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
+BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o)};switch(it.shape){
+case'sofa':case'outdoorsofa':box(0,h*.17,0,w,h*.32,d*.82);box(0,h*.65,-d*.34,w,h*.58,d*.2);box(-w*.44,h*.42,0,w*.12,h*.6,d*.85);box(w*.44,h*.42,0,w*.12,h*.6,d*.85);for(let k=0;k<3;k++)box(-w*.3+k*w*.3,h*.36,d*.04,w*.28,5,d*.52,M('#d6c9b8',.9));if(v%2)box(w*.23,h*.18,d*.32,w*.52,h*.34,d*.42);break;
+case'seat':case'bench':box(0,h*.43,0,w*.9,5,d*.8);box(0,h*.75,-d*.36,w*.9,h*.45,5);for(let x of [-1,1]){box(x*w*.42,h*.62,0,5,h*.55,5);box(x*w*.4,h*.22,d*.32,4,h*.44,4)}break;
+case'table':if(v%2===0){cyl(0,h-3,0,Math.min(w,d)*.46,6);cyl(0,h*.5,0,Math.min(w,d)*.12,h-8,metal)}else{box(0,h-3,0,w,6,d);for(let x of [-1,1])for(let z of [-1,1])box(x*w*.42,h*.48,z*d*.4,5,h*.92,5)}break;
+case'bed':box(0,h*.14,0,w, h*.25,d);box(0,h*.35,0,w*.96,h*.18,d*.96,M('#e8e2d8',.92));box(0,h*.75,-d*.47,w,h*.45,7);for(let x of [-1,1])box(x*w*.22,h*.49,-d*.31,w*.36,h*.1,d*.17,M('#f4f1eb',.95));if(v===0){box(-w*.46,h*.5,0,4,h,4,metal);box(w*.46,h*.5,0,4,h,4,metal)}break;
+case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':box(0,h*.48,0,w*.94,h*.92,d*.92);for(let k=0;k<4;k++){box(0,h*(.14+k*.2),d*.47,w*.88,h*.16,2,M('#c7b7a4',.7));cyl(w*.25,h*(.14+k*.2),d*.5,1.3,3,metal)}break;
+case'wardrobe':box(0,h*.49,0,w*.96,h*.98,d*.94);for(let k=0;k<2;k++){box(-w*.23+k*w*.46,h*.5,d*.48,w*.44,h*.94,2,k?M('#bba991',.6):mt);cyl(-w*.23+k*w*.46+w*.16,h*.5,d*.5,1.3,4,metal)}for(let y of [.28,.55,.82])box(0,h*y,0,w*.9,2,d*.86,M('#bba991',.7));break;
+case'shelf':for(let x of [-1,1])box(x*w*.47,h/2,0,4,h,d*.9,metal);for(let k=0;k<5;k++){box(0,h*(k+.5)/5,0,w,3,d*.9);for(let j=0;j<3;j++)box(-w*.35+j*w*.25,h*(k+.5)/5+7,0,w*.07,12+(j%2)*6,d*.55,j%2?dark:mt)}break;
+case'desk':box(0,h-3,0,w,6,d);for(let x of [-1,1])box(x*w*.43,h*.48,0,5,h*.94,5,metal);box(-w*.27,h*.68,0,w*.3,h*.25,d*.82,M('#c2b7a8',.7));if(v%2)box(w*.3,h-3,-d*.35,w*.4,6,d*.7);break;
+case'officechair':cyl(0,h*.33,0,w*.23,h*.12);box(0,h*.67,-d*.25,w*.68,h*.42,5);cyl(0,h*.16,0,3,h*.25,metal);for(let k=0;k<5;k++){const a=k*Math.PI*2/5;tube([0,h*.1,0],[Math.cos(a)*w*.4,h*.1,Math.sin(a)*d*.4],2)}break;
+case'mirror':box(0,h/2,0,w,h,3,M('#9c8060',.5));box(0,h/2,2,w*.88,h*.94,1,glass);break;
+case'lamp':cyl(0,h*.45,0,2,h*.88,metal);const sh=new T.Mesh(new T.ConeGeometry(w*.48,h*.32,32,1,true),mt);sh.position.y=h*.82;g.add(sh);cyl(0,h*.63,0,w*.12,3,M('#fff1c9',.2));break;
+case'bath':{const shell=new T.Mesh(new T.CylinderGeometry(w*.47,w*.42,h*.7,48,1,true),mt);shell.scale.z=d/w;shell.position.y=h*.35;g.add(shell);cyl(0,h*.68,0,w*.4,2,M('#f2f1ed',.12));break}
+case'shower':box(0,2,0,w,4,d);box(-w*.48,h/2,0,2,h,d,glass);box(w*.48,h/2,0,2,h,d,glass);box(0,h/2,-d*.48,w,h,2,glass);tube([-w*.45,h*.96,-d*.45],[w*.45,h*.96,-d*.45]);break;
+case'vanity':box(0,h*.4,0,w,h*.76,d);box(0,h*.83,0,w*1.04,3,d*1.04);for(let x of [-1,1]){const b=new T.Mesh(new T.SphereGeometry(1,24,16),M('#f4f2ec',.16));b.scale.set(w*.2,5,d*.28);b.position.set(x*w*.23,h*.88,0);g.add(b)}break;
+case'basin':{const b=new T.Mesh(new T.SphereGeometry(1,32,20),M(it.col,.15));b.scale.set(w*.48,h*.48,d*.46);b.position.y=h*.5;g.add(b);cyl(0,h*.9,0,w*.045,2,metal);break}
+case'bidet':{const b=new T.Mesh(new T.SphereGeometry(1,32,20),M('#f3f2ee',.16));b.scale.set(w*.48,h*.42,d*.48);b.position.y=h*.48;g.add(b);cyl(0,h*.85,d*.2,2,5,metal);break}
+case'rail':for(let x of [-1,1])cyl(x*w*.4,h/2,0,2,h,metal);for(let k=0;k<5;k++)tube([-w*.4,h*(.2+k*.14),0],[w*.4,h*(.2+k*.14),0],1.5);break;
+case'washer':box(0,h/2,0,w,h,d,M('#e6e8e9',.45));const ring=new T.Mesh(new T.TorusGeometry(w*.31,2.8,12,40),metal);ring.position.set(0,h*.46,d*.51);g.add(ring);const win=new T.Mesh(new T.CircleGeometry(w*.27,40),glass);win.position.set(0,h*.46,d*.52);g.add(win);break;
+case'sink':box(0,h*.46,0,w,h*.9,d);box(0,h*.94,0,w*1.04,3,d*1.04);const bowl=new T.Mesh(new T.SphereGeometry(1,24,16),M('#b8c0c5',.2,.8));bowl.scale.set(w*.35,h*.22,d*.34);bowl.position.y=h*.88;g.add(bowl);break;
+case'basket':case'box':case'trunk':case'suitcase':box(0,h*.45,0,w*.92,h*.86,d*.92);box(0,h*.9,0,w*.96,3,d*.96,M('#c3b39f',.7));break;
+case'ironing':box(0,h*.88,0,w,h*.12,d*.92);tube([-w*.38,4,-d*.2],[-w*.2,h*.85,d*.2]);tube([w*.38,4,-d*.2],[w*.2,h*.85,d*.2]);break;
+case'car':case'van':box(0,h*.35,0,w*.94,h*.42,d*.9);box(0,h*.7,-d*.04,w*.7,h*.32,d*.48,glass);for(let x of [-1,1])for(let z of [-1,1]){const wh=new T.Mesh(new T.CylinderGeometry(h*.13,h*.13,w*.08,24),dark);wh.rotation.z=Math.PI/2;wh.position.set(x*w*.47,h*.2,z*d*.29);g.add(wh)}box(0,h*.23,d*.46,w*.75,h*.08,3,dark);break;
+case'bike':case'bicycle':{for(let z of [-d*.34,d*.34]){const wh=new T.Mesh(new T.TorusGeometry(h*.25,2,10,32),dark);wh.rotation.y=Math.PI/2;wh.position.set(0,h*.25,z);g.add(wh)}tube([0,h*.25,-d*.34],[w*.25,h*.55,0]);tube([w*.25,h*.55,0],[0,h*.25,d*.34]);tube([0,h*.25,d*.34],[-w*.25,h*.55,0]);tube([-w*.25,h*.55,0],[0,h*.25,-d*.34]);break}
+case'workbench':box(0,h*.68,0,w,h*.12,d);for(let x of [-1,1])for(let z of [-1,1])box(x*w*.45,h*.32,z*d*.43,5,h*.64,5,metal);box(0,h*.9,-d*.4,w,h*.16,4);break;
+case'compressor':cyl(0,h*.35,0,w*.42,h*.48);cyl(0,h*.65,0,w*.14,h*.28,metal);break;
+case'cart':case'tyres':for(let k=0;k<3;k++){const tor=new T.Mesh(new T.TorusGeometry(w*.25,6,12,32),dark);tor.rotation.x=Math.PI/2;tor.position.y=h*.25+k*12;g.add(tor)}break;
+case'coat':cyl(0,h*.5,0,2,h,metal);for(let k=0;k<6;k++){const a=k*Math.PI/3;tube([0,h*.82,0],[Math.cos(a)*w*.38,h*.96,Math.sin(a)*d*.38])}break;
+case'computer':box(0,h*.65,-d*.2,w*.9,h*.55,3,dark);box(0,h*.65,-d*.17,w*.84,h*.47,1,glass);box(0,h*.18,d*.15,w*.8,2,d*.3,dark);break;
+case'sunbed':box(0,h*.55,0,w,h*.12,d);tube([-w*.4,4,-d*.3],[-w*.4,h*.6,d*.3]);tube([w*.4,4,-d*.3],[w*.4,h*.6,d*.3]);break;
+case'umbrella':cyl(0,h*.48,0,2,h*.94,metal);const canopy=new T.Mesh(new T.ConeGeometry(w*.5,h*.2,40),mt);canopy.position.y=h*.88;g.add(canopy);break;
+case'pergola':for(let x of [-1,1])for(let z of [-1,1])box(x*w*.46,h/2,z*d*.46,7,h,7);box(0,h-4,0,w,8,d);for(let k=0;k<8;k++)box(0,h-12,-d*.42+k*d*.12,w,4,5);break;
+case'planter':case'tree':cyl(0,h*.15,0,w*.32,h*.3,M('#9b765e',.8));if(it.shape==='tree'){cyl(0,h*.52,0,w*.06,h*.65,M('#76553b'));for(let k=0;k<7;k++){const a=k*Math.PI*2/7;const lf=new T.Mesh(new T.SphereGeometry(w*.25,18,14),M(k%2?'#477b4b':'#60905a'));lf.position.set(Math.cos(a)*w*.15,h*.78+(k%3)*h*.04,Math.sin(a)*w*.15);g.add(lf)}}else for(let k=0;k<5;k++){const lf=new T.Mesh(new T.ConeGeometry(w*.12,h*.48,12),M(k%2?'#477b4b':'#60905a'));lf.position.set((k-2)*w*.12,h*.6,0);g.add(lf)}break;
+case'bbq':box(0,h*.55,0,w*.88,h*.5,d*.72,dark);box(0,h*.82,0,w*.94,5,d*.78,metal);break;
+case'pool':box(0,h*.22,0,w,h*.44,d,M('#c3d5d8',.55));box(0,h*.46,0,w*.94,2,d*.94,glass);break;
+case'ladder':for(let x of [-1,1])tube([x*w*.35,0,0],[x*w*.35,h,0]);for(let k=1;k<8;k++)tube([-w*.35,h*k/8,0],[w*.35,h*k/8,0]);break;
+default:box(0,h/2,0,w,h,d);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})};function build3d(){root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.length))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);setSun();
