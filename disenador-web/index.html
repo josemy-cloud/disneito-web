@@ -1510,6 +1510,14 @@ BUILD.rocaOnaWallHungWC=(g,it)=>{
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 };
 
+
+/* Variantes comerciales Ona: conservan la misma familia geométrica y sus cotas. */
+BUILD.rocaOnaWallHungWCCompact=(g,it)=>{
+ const v={...it,w:36,h:29,d:48};BUILD.rocaOnaWallHungWC(g,v);
+};
+BUILD.rocaOnaWallHungBidet=(g,it)=>{
+ const v={...it,w:36,h:29,d:53};BUILD.rocaOnaBidet(g,v);
+};
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}}
 function motionKeysForItem(it){const saved=MV;MV=[];try{const g=new T.Group();buildItemGeometry(g,it,M(it.col||'#ccc',.5,0),M('#999',.3,.9));return [...new Set(MV.map(m=>m.k))]}catch(err){console.warn('No se pudieron identificar las aperturas del mueble',err);return []}finally{MV=saved}}
 function toggleItemMotion(it){it.op=it.op||[];if(mode!=='3d')setMode('3d');const keys=motionKeysForItem(it);if(!keys.length){hint('Este elemento no tiene puertas o cajones animados');return}const open=keys.some(k=>!it.op[k]);keys.forEach(k=>{it.op[k]=open});hint(open?'Puertas y cajones abriéndose':'Puertas y cajones cerrándose')}
