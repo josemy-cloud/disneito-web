@@ -991,7 +991,11 @@ $('#bMo').onclick=()=>{editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate(
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 /* ===== CATÁLOGOS Y FABRICANTES ===== */
 const CATS=['mueble bajo','mueble alto','columna','armario','cajonera','horno','microondas','frigorífico','lavadora','secadora','lavavajillas','campana','placa','vinoteca','sofá','cama','mesa','fregadero','grifería','otro'];
-const CATK=[['columna','columna'],['armario alto','mueble alto'],['mueble alto','mueble alto'],['armario bajo','mueble bajo'],['mueble bajo'function fichaToItem(p){
+const CATK=[['columna','columna'],['armario alto','mueble alto'],['mueble alto','mueble alto'],['armario bajo','mueble bajo'],['mueble bajo','mueble bajo'],['cajonera','cajonera'],['cómoda','cajonera'],['armario','armario'],['ropero','armario'],['microondas','microondas'],['horno','horno'],['frigor','frigorífico'],['nevera','frigorífico'],['lavavajillas','lavavajillas'],['lavadora','lavadora'],['secadora','secadora'],['campana','campana'],['placa','placa'],['vitro','placa'],['inducci','placa'],['vinoteca','vinoteca'],['fregadero','fregadero'],['grifo','grifería'],['sofá','sofá'],['cama','cama'],['mesa','mesa']];
+let FABS=[],PRODS=[],fabSel='',IA={servicio:false,configurada:false};
+const dbq=(st,mode,fn)=>idb().then(d=>new Promise((res,rej)=>{const t=d.transaction(st,mode);let o;const r=fn(t);if(r)r.onsuccess=()=>o=r.result;t.oncomplete=()=>res(o);t.onerror=()=>rej(t.error)}));
+const saveFabs=()=>localStorage.setItem('fabs',JSON.stringify(FABS)),saveProd=p=>dbq('p','readwrite',t=>t.objectStore('p').put(p)),saveDoc=b=>{const id='d'+Date.now()+Math.random().toString(36).slice(2,6);return dbq('d','readwrite',t=>t.objectStore('d').put(b,id)).then(()=>id)},getDoc=id=>dbq('d','readonly',t=>t.objectStore('d').get(id));
+function fichaToItem(p){
  const w=+p.w,h=+p.h,d=+p.d,c=p.cat;
  if(!(w>0&&h>0&&d>0))return null;
  let o;
