@@ -3,8 +3,10 @@
 *{box-sizing:border-box}body{margin:0;font:13px system-ui,sans-serif;background:#1e2128;color:#e8e8e8;display:flex;flex-direction:column;height:100vh}
 #top{display:flex;gap:5px;padding:6px 8px;background:#14161b;align-items:center;flex-wrap:wrap}
 button,select,input{font:inherit}button{background:#2d323c;color:#eee;border:1px solid #444;border-radius:5px;padding:5px 8px;cursor:pointer}button:hover,button.on{background:#3d7be0}
-#main{flex:1;display:flex;min-height:0}#tools{width:112px;display:flex;flex-direction:column;gap:5px;padding:6px;background:#14161b}
-.side{width:230px;background:#191c22;padding:8px;overflow:auto}#view{flex:1;position:relative}
+#main{flex:1 1 0;display:flex;min-height:0;min-width:0;width:100%;overflow:hidden}#tools{width:112px;min-width:0;flex:0 0 112px;display:flex;flex-direction:column;gap:5px;padding:6px;background:#14161b;overflow-y:auto;overflow-x:hidden}
+.side{width:230px;min-width:0;max-width:30vw;flex:0 0 230px;background:#191c22;padding:8px;overflow-y:auto;overflow-x:hidden}#lib,#pr{min-width:0;max-width:100%}#lib * ,#pr *{max-width:100%}#view{flex:1 1 0;min-width:0;min-height:0;position:relative}
+@media(max-width:1050px){#tools{width:88px;flex-basis:88px}.side{width:190px;flex-basis:190px;padding:6px}}
+@media(max-width:760px){#tools{width:64px;flex-basis:64px}.side{width:165px;flex-basis:165px;padding:5px}#main{min-width:0}#top{max-height:28vh;overflow-y:auto}}
 #c2,#d3{position:absolute;inset:0;width:100%;height:100%}#d3{display:none}
 .r{display:flex;justify-content:space-between;align-items:center;margin:4px 0;gap:6px}.r input,.r select{width:92px;background:#2a2e37;color:#fff;border:1px solid #444;border-radius:4px;padding:3px}
 h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;margin:2px 0}
@@ -698,7 +700,7 @@ function libBad(c,iw,Hi){const bad=new Set(),E=c.el||[];E.forEach((e,i)=>{if(e.k
  const surface=['encimera','lavabo','espejo'].includes(e.k),internal=['puerta','cajon','app','separador','hueco'].includes(e.k);
  if(internal&&(e.x<0||e.y<0||e.x+e.w>iw+.01||e.y+e.h>Hi+.01)){bad.add(i);return}
  if(e.k=='puerta'||e.k=='hueco')return;
- for(let j=0;j<i;j++){const b=E[j];if((e.k=='lavabo'&&b.k=='encimera')||(e.k=='encimera'&&b.k=='lavabo')||surface&&['encimera','lavabo','espejo'].includes(b.k))continue;if(b.k!='estante'&&b.k!='puerta'&&b.k!='hueco'&&!bad.has(j)&&e.x<b.x+b.w-.01&&b.x<e.x+e.w-.01&&e.y<b.y+b.h-.01&&b.y<e.y+e.h-.01){bad.add(i);break}}});return bad}
+ for(let j=0;j<i;j++){const b=E[j],bSurface=['encimera','lavabo','espejo'].includes(b.k),bInternal=['cajon','app','hueco','separador','puerta'].includes(b.k);if((surface&&bSurface)||(surface&&bInternal)||(bSurface&&internal)||(e.k=='lavabo'&&b.k=='encimera')||(e.k=='encimera'&&b.k=='lavabo'))continue;if(b.k!='estante'&&b.k!='puerta'&&b.k!='hueco'&&!bad.has(j)&&e.x<b.x+b.w-.01&&b.x<e.x+e.w-.01&&e.y<b.y+b.h-.01&&b.y<e.y+e.h-.01){bad.add(i);break}}});return bad}
 LAY['libre']=(g,it,c,Mx,y0,H,iw)=>{libMig(c,iw,H-2);const bad=libBad(c,iw,H-2),yb=y0+1;c.el.forEach((e,i)=>{if(bad.has(i))return;const X=-iw/2+e.x,Y=yb+e.y;
  if(e.k=='estante'){const w=e.w>0?e.w:iw,t=e.t||1.6,dd=Math.min(e.d||it.d-3,it.d-3);B(g,w,t,dd,X+w/2,Y+t/2,-it.d/2+1.5+dd/2,Mx.mc)}
  else if(e.k=='puerta'){const it2=Object.assign({},it,{cfg:Object.assign({},c,{op:e.op||c.op||'lateral'})});fdoor(g,it2,20+i,X,e.w-.3,Y,e.h-.3,e.hg=='der',Mx)}
