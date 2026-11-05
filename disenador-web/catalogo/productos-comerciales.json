@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "units": "mm",
+  "description": "Registro de productos comerciales investigados y modelos propios. Los datos no documentados se mantienen como null o se identifican como estimaciones.",
+  "products": [
+    {
+      "id": "roca-ona-bidet-a357687000",
+      "name": "Bidé adosado a pared Ona sin tapa",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A357687000",
+      "category": "Baño",
+      "subcategory": "Bidés",
+      "status": "descatalogado según ficha oficial consultada",
+      "dimensions_mm": {
+        "length": 530,
+        "width": 360,
+        "height": 420
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Porcelana sanitaria vitrificada",
+          "verification": "descripción comercial de distribuidor; no se ha encontrado composición detallada del fabricante"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijaciones"
+      ],
+      "excluded": [
+        "Grifería",
+        "Tapa de bidé",
+        "Válvula de desagüe"
+      ],
+      "technical_features": {
+        "installation": "De pie, adosado a pared",
+        "tap_holes": 1,
+        "tap_hole_diameter_mm": 46,
+        "capacity_l": 6,
+        "water_inlet_height_mm": 180,
+        "distance_between_water_inlets_mm": 80
+      },
+      "model": {
+        "type": "rocaOnaBidet",
+        "status": "modelo propio generado mediante malla paramétrica detallada",
+        "units": "cm",
+        "visual_review": "pendiente de comprobación en el navegador",
+        "geometry_notes": "Dimensiones exteriores basadas en la ficha oficial. Las curvaturas internas y radios no acotados se han reconstruido visualmente y son aproximados; no se presentan como geometría CAD oficial."
+      },
+      "sources": [
+        {
+          "type": "fabricante_producto",
+          "url": "https://qr2.roca.com/productos/bide-adosado-pared-sin-tapa-357687..0",
+          "notes": "Referencia, estado, dimensiones, acabados, instalación y elementos incluidos/excluidos."
+        },
+        {
+          "type": "fabricante_pdf_tecnico",
+          "url": "https://www.roca.com/documents/20126/44093530/Technical_Specifications_Ona_collection_Roca.pdf/430514c7-8810-7005-7ece-c38ff2f41454?download=true&t=1637866356491",
+          "notes": "Planos técnicos de planta, alzado y perfil; medidas en milímetros."
+        },
+        {
+          "type": "referencia_visual_distribuidor",
+          "url": "https://gilperez.es/producto/roca-ona-bide-adosado-a-pared-blanco-sin-tapa",
+          "notes": "Fotografías del producto desde distintos ángulos y descripción comercial; usadas solo como referencia visual."
+        }
+      ]
+    }
+  ]
+}
