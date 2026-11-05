@@ -11,17 +11,17 @@
       "reference": "A357687000",
       "category": "Baño",
       "subcategory": "Bidés",
-      "status": "descatalogado según ficha oficial consultada",
+      "status": "Descatalogado según ficha oficial consultada",
       "dimensions_mm": {
         "length": 530,
         "width": 360,
         "height": 420
       },
-      "weight_kg": null,
+      "weight_kg": 22,
       "materials": [
         {
-          "name": "Porcelana sanitaria vitrificada",
-          "verification": "descripción comercial de distribuidor; no se ha encontrado composición detallada del fabricante"
+          "name": "Porcelana sanitaria",
+          "verification": "Descripción comercial del fabricante; composición detallada no publicada en la ficha consultada"
         }
       ],
       "finishes": [
@@ -52,7 +52,9 @@
         "tap_hole_diameter_mm": 46,
         "capacity_l": 6,
         "water_inlet_height_mm": 180,
-        "distance_between_water_inlets_mm": 80
+        "distance_between_water_inlets_mm": 80,
+        "shape": "Redondo",
+        "water_inlet_distance_mm": 80
       },
       "model": {
         "type": "rocaOnaBidet",
