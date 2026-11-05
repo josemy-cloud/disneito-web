@@ -27,6 +27,22 @@ function madridDayBounds(now = new Date()) {
   return { date, start: start.toISOString(), end: end.toISOString() };
 }
 
+
+async function fotoIARpc(token, functionName, args = {}) {
+  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + functionName, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: "Bearer " + (token || SUPABASE_ANON_KEY),
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(args)
+  });
+  const data = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(data?.message || data?.details || data?.error || "Error al consultar el límite de Foto IA (" + r.status + ").");
+  return data;
+}
+
 async function countFotoIARows(token, userId, start, end) {
   const q = new URLSearchParams({ select: "id", user_id: "eq." + userId });
   if (start) q.set("created_at", "gte." + start);
@@ -110,149 +126,101 @@ export default {
 
     // Estadísticas personales de Foto IA (día natural de España).
     if (url.pathname === "/api/ia/estadisticas") {
-      if (request.method !== "GET") {
-        return Response.json({ error: "Utiliza GET." }, { status: 405 });
-      }
+      if (request.method !== "GET") return Response.json({ error: "Utiliza GET." }, { status: 405 });
       try {
-        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
-        if (!token) return Response.json({ error: "Inicia sesión en «Mis proyectos» para consultar el contador." }, { status: 401 });
-        const user = await getSupabaseUser(token);
-        if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
-        const day = madridDayBounds();
-        const [hoy, total] = await Promise.all([
-          countFotoIARows(token, user.id, day.start, day.end),
-          countFotoIARows(token, user.id)
-        ]);
-        return Response.json({ ok: true, hoy, total, fecha: day.date, zonaHoraria: "Europe/Madrid" }, {
-          headers: { "Cache-Control": "no-store" }
-        });
+        const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        const deviceId = request.headers.get("X-FotoIA-Device") || "";
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
+          return Response.json({ error: "No se ha podido identificar este dispositivo. Recarga la aplicación." }, { status: 400 });
+        }
+        let user = null;
+        if (rawToken) {
+          user = await getSupabaseUser(rawToken);
+          if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
+        }
+        const stats = await fotoIARpc(rawToken, "foto_ia_estadisticas", { p_device_id: deviceId });
+        return Response.json({ ...stats, ok: true, zonaHoraria: "Europe/Madrid" }, { headers: { "Cache-Control": "no-store" } });
       } catch (error) {
-        return Response.json({ error: "No se pudieron cargar las estadísticas.", detalle: String(error.message || error) }, { status: 502 });
+        return Response.json({ error: "No se pudo consultar el límite de Foto IA.", detalle: String(error.message || error) }, { status: 502 });
       }
     }
 
     // Edición de una habitación usando una imagen de referencia
     if (url.pathname === "/api/ia/editar") {
-      if (request.method !== "POST") {
-        return Response.json(
-          { error: "Utiliza POST." },
-          { status: 405 }
-        );
-      }
-
+      if (request.method !== "POST") return Response.json({ error: "Utiliza POST." }, { status: 405 });
+      let reservation = null;
+      let reservationToken = "";
+      let deviceId = "";
       try {
-        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
-        if (!token) {
-          return Response.json({ error: "Inicia sesión en «Mis proyectos» para usar Foto IA." }, { status: 401 });
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        deviceId = request.headers.get("X-FotoIA-Device") || "";
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
+          return Response.json({ error: "No se ha podido identificar este dispositivo. Recarga la aplicación." }, { status: 400 });
         }
-        const user = await getSupabaseUser(token);
-        if (!user) {
-          return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
+        let user = null;
+        if (token) {
+          user = await getSupabaseUser(token);
+          if (!user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar en «Mis proyectos»." }, { status: 401 });
         }
-
-        if (!env.AI) {
-          return Response.json(
-            { error: "Workers AI no está disponible." },
-            { status: 503 }
-          );
-        }
+        if (!env.AI) return Response.json({ error: "Workers AI no está disponible." }, { status: 503 });
 
         const received = await request.formData();
         const image = received.get("imagen");
         const rawLevel = Number(received.get("nivel"));
-        const fidelity = Number.isFinite(rawLevel)
-          ? Math.max(0, Math.min(100, rawLevel))
-          : 65;
+        const fidelity = Number.isFinite(rawLevel) ? Math.max(0, Math.min(100, rawLevel)) : 65;
         const fidelityInstruction = fidelity < 34
           ? "Allow stronger photographic interpretation of lighting and surface appearance, but do not change the room layout, architecture, object count or object positions."
           : fidelity < 67
             ? "Balance photorealism with design fidelity. Preserve the exact room layout, architecture, object count, furniture positions and proportions; improve only materials, textures, lighting, shadows and reflections."
             : "Prioritize strict design fidelity over creative interpretation. Preserve the exact geometry, architecture, object count, furniture positions, dimensions, cabinet fronts, handles (only if present), worktops (only if present), doors, windows and camera viewpoint. Do not invent or add any object or detail.";
 
-        if (!image || typeof image === "string") {
-          return Response.json(
-            { error: "No se ha recibido ninguna imagen." },
-            { status: 400 }
-          );
-        }
+        if (!image || typeof image === "string") return Response.json({ error: "No se ha recibido ninguna imagen." }, { status: 400 });
+        if (!image.type.startsWith("image/")) return Response.json({ error: "El archivo no es una imagen." }, { status: 400 });
+        if (image.size > 5 * 1024 * 1024) return Response.json({ error: "La imagen supera el límite de 5 MB." }, { status: 413 });
 
-        if (!image.type.startsWith("image/")) {
-          return Response.json(
-            { error: "El archivo no es una imagen." },
-            { status: 400 }
-          );
-        }
-
-        if (image.size > 5 * 1024 * 1024) {
-          return Response.json(
-            { error: "La imagen supera el límite de 5 MB." },
-            { status: 413 }
-          );
+        reservationToken = token;
+        reservation = await fotoIARpc(token, "foto_ia_reservar_generacion", { p_device_id: deviceId });
+        if (!reservation || reservation.ok !== true) {
+          return Response.json({
+            error: "Has alcanzado el límite diario de Foto IA.",
+            hoy: reservation?.hoy ?? 0,
+            limite: reservation?.limite ?? (user ? 3 : 1),
+            disponibles: 0,
+            fecha: reservation?.fecha
+          }, { status: 429, headers: { "Cache-Control": "no-store" } });
         }
 
         const aiForm = new FormData();
-
-        aiForm.append(
-          "prompt",
-          "Transform this exact interior design screenshot into a highly photorealistic architectural interior photograph. " + fidelityInstruction + " Never add, remove, move or redesign objects. Do not invent handles, countertops, shelves, decorations or architectural features that are not clearly present in the reference image. Maintain the original camera viewpoint and perspective."
-        );
-
+        aiForm.append("prompt", "Transform this exact interior design screenshot into a highly photorealistic architectural interior photograph. " + fidelityInstruction + " Never add, remove, move or redesign objects. Do not invent handles, countertops, shelves, decorations or architectural features that are not clearly present in the reference image. Maintain the original camera viewpoint and perspective.");
         aiForm.append("input_image_0", image, "referencia.png");
         aiForm.append("width", "1024");
         aiForm.append("height", "768");
-
         const serialized = new Response(aiForm);
-
-        const result = await env.AI.run(
-          "@cf/black-forest-labs/flux-2-klein-4b",
-          {
-            multipart: {
-              body: serialized.body,
-              contentType: serialized.headers.get("content-type")
-            }
-          }
-        );
-
-        if (!result || !result.image) {
-          throw new Error("El modelo no ha devuelto una imagen.");
-        }
-
-        const binary = Uint8Array.from(
-          atob(result.image),
-          c => c.charCodeAt(0)
-        );
-
-        // Registrar la generación con el token del usuario: RLS impide escribir en cuentas ajenas.
-        let countSynced = true;
-        try {
-          const saved = await fetch(SUPABASE_URL + "/rest/v1/foto_ia_generaciones", {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: "Bearer " + token,
-              "Content-Type": "application/json",
-              Prefer: "return=minimal"
-            },
-            body: JSON.stringify({ user_id: user.id, modelo: FOTO_IA_MODEL })
-          });
-          if (!saved.ok) countSynced = false;
-        } catch (e) {
-          countSynced = false;
-        }
-
+        const result = await env.AI.run(FOTO_IA_MODEL, {
+          multipart: { body: serialized.body, contentType: serialized.headers.get("content-type") }
+        });
+        if (!result || !result.image) throw new Error("El modelo no ha devuelto una imagen.");
+        const binary = Uint8Array.from(atob(result.image), c => c.charCodeAt(0));
+        reservation = null;
         return new Response(binary, {
           headers: {
             "Content-Type": "image/png",
             "Cache-Control": "no-store",
-            "X-FotoIA-Count-Synced": countSynced ? "true" : "false"
+            "X-FotoIA-Count-Synced": "true"
           }
         });
-
       } catch (error) {
-        return Response.json({
-          error: "Error al editar la habitación.",
-          detalle: String(error.message || error)
-        }, { status: 500 });
+        if (reservation && reservation.id) {
+          try {
+            await fotoIARpc(reservationToken, "foto_ia_cancelar_generacion", {
+              p_reserva_id: reservation.id,
+              p_device_id: deviceId
+            });
+          } catch (cancelError) {
+            // Si la cancelación falla, se conserva la reserva para no permitir superar el límite.
+          }
+        }
+        return Response.json({ error: "Error al editar la habitación.", detalle: String(error.message || error) }, { status: 500 });
       }
     }
 
