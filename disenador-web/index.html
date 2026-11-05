@@ -158,13 +158,53 @@ function createCustomFurniture(){
  const room=mk('Estancia');Object.keys(data).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;room.append(o)});const kind=mk('Tipo de mueble');const fill=()=>{kind.innerHTML='';data[room.value].items.forEach((a,i)=>{const o=document.createElement('option');o.value=i;o.textContent=a[0];kind.append(o)})};room.onchange=fill;fill();
  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;justify-content:flex-end;margin-top:16px';const cancel=document.createElement('button');cancel.textContent='Cancelar';cancel.onclick=()=>box.remove();const create=document.createElement('button');create.textContent='Crear y editar';create.style.cssText='background:#2f6fd1;color:white;border:0;border-radius:7px;padding:9px 14px;font-weight:600';create.onclick=()=>{const r=room.value,p=data[r],v=p.items[+kind.value];if(!v)return;const [name,w,h,d,top]=v,colors={'Cocina modular':'#8fa58f','Baño':'#d8dfe0','Dormitorio':'#c9bba8','Vestidor':'#c9bba8','Salón':'#9b8268','Recibidor':'#a78d75','Despacho':'#b18c68','Lavadero':'#d5d8d8','Garaje':'#8b9298','Trastero':'#9b9b94','Exterior':'#8d9a87'};const o=base(name,w,'libre',{k:'base',top:r=='Cocina modular'&&top,zoc:0,el:[],shl:[],dvs:[],rods:[],xd:[],cc:'#f1eee8',cf:colors[r],ct:'#252525',cz:'#333333',cn:'#d7d1c7',cm:'laminado',acab:'satinado',fr:'lisa',ti:'barra',tl:30,op:'lateral',mf:'liso'},d);o.c=r;o.roomType=p.key;o.family=name;o.h=h;o.e=0;o.col=colors[r];box.remove();openPrevObj(o)};actions.append(cancel,create);box.append(actions);document.body.append(box);
 }
-function libUI(q=''){const L=$('#lib');L.innerHTML='<h4>Mobiliario</h4><input id="q" placeholder="Buscar nombre, categoría, estilo, medidas…" style="width:100%" value="'+q+'">';
- const cs=document.createElement('select');cs.style.width='100%';['','Catálogos','Mi biblioteca','Importados','Cocina modular','Cocina','Electrodomésticos','Salón','Dormitorio','Vestidor','Baño','Recibidor','Despacho','Lavadero','Garaje','Trastero','Exterior','Decoración'].forEach(c=>{const e=document.createElement('option');e.value=c;e.textContent=c||'Todas las categorías';cs.append(e)});cs.value=catF;cs.onchange=()=>{catF=cs.value;libUI($('#q').value)};L.append(cs);{const b0=document.createElement('button');b0.className='it';b0.textContent='＋ Crear mueble personalizado';b0.style.background='#2f6fd1';b0.onclick=createCustomFurniture;L.append(b0);const b1=document.createElement('button');b1.className='it';b1.textContent='⬆ Importar modelo 3D (GLB/GLTF/OBJ)';b1.onclick=()=>$('#fmod').click();L.append(b1)}
- LIB.forEach((o,ix)=>{if(catF&&o.c!=catF||!(o.n+o.c+o.s+o.w+'x'+o.d+'x'+o.h).toLowerCase().includes(q.toLowerCase()))return;const b=document.createElement('button');b.className='it';b.style.cssText='display:flex;gap:6px;align-items:center';b.innerHTML='<img src="'+thumb(ix)+'" width=48 height=48 style="background:#2b303a;border-radius:4px"><span>'+o.n+'<br><small>'+(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+'×'+o.d+'×'+o.h+' · '+o.s+'</small></span>';b.onclick=()=>openPrev(ix);L.append(b)});
- L.insertAdjacentHTML('beforeend','<h4>Suelos y revestimientos</h4>');MATS.concat(S.cm.map((_,i)=>'img'+i)).forEach(m=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.m==m?' on':'');const pe=null;d.textContent=pe?'PBR':m.startsWith('img')?'imagen':m;d.title=pe?pe.nombre+' · '+pe.licencia:'';d.style.background=pe?'url('+((pe.urls||{})[pe.mapas.diff])+') center/cover':m.startsWith('img')?'url('+S.cm[+m.slice(3)]+') center/cover':MC[m];d.onclick=()=>{armed={m};libUI($('#q').value);hint()};L.append(d)});
- L.insertAdjacentHTML('beforeend','<h4>Pinturas</h4>');PAINT.forEach(c=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>{armed={c};libUI($('#q').value);hint()};L.append(d)});
- const u=document.createElement('button');u.className='it';u.textContent='+ Añadir material desde imagen';u.onclick=()=>$('#fm').click();L.append(u);
- $('#q').oninput=e=>{libUI(e.target.value);$('#q').focus();$('#q').setSelectionRange(1e3,1e3)}}
+function libUI(q=''){
+ const L=$('#lib');if(q!==undefined)libQuery=q;const query=libQuery||'';L.innerHTML='';
+ const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:#191c22;padding:2px 0 8px;z-index:2';
+ const title=document.createElement('h4');title.textContent='Mobiliario y objetos';title.style.margin='4px 0 8px';head.append(title);
+ const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar en todo el catálogo…';search.value=query;search.style.cssText='width:100%;box-sizing:border-box;margin-bottom:7px';head.append(search);
+ const crumb=document.createElement('div');crumb.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 7px';head.append(crumb);
+ const actions=document.createElement('div');actions.style.cssText='display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px';
+ const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble personalizado';custom.style.cssText='flex:1;background:#2f6fd1;text-align:center';custom.onclick=createCustomFurniture;actions.append(custom);
+ const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);
+ head.append(actions);L.append(head);
+ const content=document.createElement('div');L.append(content);
+ const materials=()=>{
+  const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
+  MATS.concat(S.cm.map((_,i)=>'img'+i)).forEach(m=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.m==m?' on':'');d.textContent=m.startsWith('img')?'imagen':m;d.style.background=m.startsWith('img')?'url('+S.cm[+m.slice(3)]+') center/cover':MC[m];d.onclick=()=>{armed={m};libUI();hint()};content.append(d)});
+  const ph=document.createElement('h4');ph.textContent='Pinturas';content.append(ph);
+  PAINT.forEach(c=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>{armed={c};libUI();hint()};content.append(d)});
+  const u=document.createElement('button');u.className='it';u.textContent='+ Añadir material desde imagen';u.onclick=()=>$('#fm').click();content.append(u)
+ };
+ const render=()=>{
+  content.innerHTML='';const qv=(search.value||'').trim().toLowerCase();
+  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>(!catF||o.c==catF||catF=='Mi biblioteca'&&o.c=='Mi biblioteca'||catF=='Importados'&&!!o.mid)&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')).toLowerCase().includes(qv)));
+  if(!catF&&!qv){
+   const cats=[...new Set(LIB.map(o=>o.c).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+   const label=document.createElement('div');label.textContent='Explora por estancia o tipo de elemento';label.style.cssText='font-size:12px;color:#b8c2d2;margin:4px 0 8px';content.append(label);
+   const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px';content.append(grid);
+   cats.forEach(c=>{const ix=LIB.findIndex(o=>o.c==c);if(ix<0)return;const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
+    const im=document.createElement('img');im.src=thumb(ix);im.alt='Vista previa 3D de '+c;im.style.cssText='width:100%;height:82px;object-fit:contain;background:#171a20;border-radius:4px;display:block';card.append(im);
+    const name=document.createElement('div');name.textContent=c;name.style.cssText='font-size:12px;font-weight:600;margin-top:5px;white-space:normal';card.append(name);
+    const count=document.createElement('small');count.textContent=LIB.filter(o=>o.c==c).length+' elementos';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
+    card.onclick=()=>{catF=c;libUI()};grid.append(card)
+   });
+   const extra=document.createElement('div');extra.style.cssText='font-size:11px;color:#9ca8b8;margin:9px 0';extra.textContent='También puedes buscar directamente por nombre, marca, referencia o dimensiones.';content.append(extra);
+   materials();return
+  }
+  crumb.textContent=qv?'Resultados en todo el catálogo':('Mobiliario  ›  '+catF);
+  const back=document.createElement('button');back.className='it';back.textContent='← Todas las categorías';back.style.cssText='margin-bottom:7px';back.onclick=()=>{catF='';libUI()};content.append(back);
+  const count=document.createElement('div');count.textContent=matches.length+' elementos';count.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 6px';content.append(count);
+  if(!matches.length){const empty=document.createElement('div');empty.textContent='No hay elementos que coincidan. Prueba otra búsqueda o crea un mueble personalizado.';empty.style.cssText='font-size:12px;color:#aab4c4;padding:12px 4px';content.append(empty)}
+  matches.forEach(({o,ix})=>{const card=document.createElement('button');card.type='button';card.className='it';card.style.cssText='display:flex;gap:8px;align-items:center;padding:6px;text-align:left;width:100%;min-width:0';
+   const im=document.createElement('img');im.src=thumb(ix);im.alt='Vista previa 3D de '+o.n;im.style.cssText='width:68px;height:68px;object-fit:contain;flex:none;background:#252a33;border-radius:5px';card.append(im);
+   const info=document.createElement('span');info.style.cssText='min-width:0;overflow-wrap:anywhere';const nm=document.createElement('strong');nm.textContent=o.n;nm.style.cssText='display:block;font-size:12px';info.append(nm);
+   const sm=document.createElement('small');sm.textContent=(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+' × '+o.d+' × '+o.h+' cm';sm.style.cssText='display:block;color:#aab4c4;font-size:10px;margin-top:3px';info.append(sm);card.append(info);card.onclick=()=>openPrev(ix);content.append(card)
+  });
+  materials()
+ };
+ search.oninput=()=>render();render()
+}
 let P=$('#pr'),CB=()=>commit();
 function row(l,v,cb,t='number'){const K=CB;const d=document.createElement('label');d.className='r';d.innerHTML='<span>'+l+'</span>';const i=document.createElement('input');i.type=t;i.value=v;i.onchange=()=>{cb(t=='number'?+i.value:i.value);K()};d.append(i);P.append(d)}
 function sel2(l,opts,v,cb){const K=CB;const d=document.createElement('label');d.className='r';d.innerHTML='<span>'+l+'</span>';const s=document.createElement('select');opts.forEach(o=>{const e=document.createElement('option');e.value=o;e.textContent=o;s.append(e)});s.value=v;s.onchange=()=>{cb(s.value);K()};d.append(s);P.append(d)}
