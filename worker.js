@@ -315,18 +315,19 @@ export default {
 
     // Catálogo compartido: autorización exclusiva mediante sesión real de Supabase.
     if (url.pathname.startsWith("/api/catalogo/")) {
-      const kv = env.CATALOG_APPROVALS;
-      if (!kv) return Response.json({ error: "El almacenamiento compartido del catálogo no está configurado." }, { status: 503 });
-      const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+      const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
       let user = null;
       if (rawToken) user = await getSupabaseUser(rawToken);
       const isMaster = !!(user && env.MASTER_USER_ID && user.id === env.MASTER_USER_ID);
       const denied = () => isMaster ? null : Response.json({ error: "Solo la cuenta MASTER puede importar, modificar o aprobar muebles y objetos." }, { status: rawToken ? 403 : 401 });
       const noStore = { "Cache-Control": "no-store" };
+      // La identidad MASTER se comprueba independientemente de que la KV esté disponible.
       if (url.pathname === "/api/catalogo/permisos" && request.method === "GET") {
         if (rawToken && !user) return Response.json({ error: "La sesión ha caducado. Vuelve a entrar." }, { status: 401, headers: noStore });
-        return Response.json({ ok: true, master: isMaster }, { headers: noStore });
+        return Response.json({ ok: true, master: isMaster, userId: user?.id || null }, { headers: noStore });
       }
+      const kv = env.CATALOG_APPROVALS;
+      if (!kv) return Response.json({ error: "El almacenamiento compartido del catálogo no está configurado." }, { status: 503, headers: noStore });
       if (url.pathname === "/api/catalogo/aprobaciones" && request.method === "GET") {
         try {
           const approvals = {}; let cursor;
