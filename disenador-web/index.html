@@ -768,8 +768,8 @@ const LOCAL={list:()=>pq('readonly',o=>o.getAll()).then(a=>(a||[]).map(r=>({id:r
 const PST=()=>window.NUBE_STORE||LOCAL;
 /* ===== Nube (Supabase vía API REST, sin librerías): acceso con correo + proyectos en la nube ===== */
 const SBU='https://aqfqwvzbsbjrixzgxtro.supabase.co',SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZnF3dnpic2Jqcml4emd4dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTA5MjMsImV4cCI6MjEwOTEyNjkyM30.VWRIowVOECv7ycW3Nnpz-EQNJx2izM7yx7xOxkNWVZo';
-let SES=null;try{SES=JSON.parse(localStorage.getItem('sbSes')||'null')}catch(e){}
-const sesSave=x=>{SES=x;try{x?localStorage.setItem('sbSes',JSON.stringify(x)):localStorage.removeItem('sbSes')}catch(e){}window.NUBE_STORE=x?CLOUD:null};
+let SES=null,REMEMBER_SESSION=true;try{const savedLocal=localStorage.getItem('sbSes');if(savedLocal){SES=JSON.parse(savedLocal);REMEMBER_SESSION=true}else{const savedTab=sessionStorage.getItem('sbSes');if(savedTab){SES=JSON.parse(savedTab);REMEMBER_SESSION=false}}}catch(e){}
+const sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}window.NUBE_STORE=x?CLOUD:null};
 async function sbAuth(path,body){const r=await fetch(SBU+'/auth/v1/'+path,{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
 const sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
 async function sbTok(){if(!SES)throw new Error('Sin sesión: entra con tu correo en «Mis proyectos».');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token});sesSave(sesFrom(j))}return SES.access_token}
@@ -790,7 +790,8 @@ async function accountPanel(){
  const drawLogin=()=>{
   content.innerHTML='<p style="color:#b9c4d4">Inicia sesión para acceder a tu perfil y a tus diseños guardados en otros dispositivos.</p>';
   const em=field('Correo electrónico','email'),pw=field('Contraseña','password');content.append(em.wrap,pw.wrap);
-  content.append(btn('Iniciar sesión',async()=>{if(!em.input.value||!pw.input.value)throw new Error('Introduce el correo y la contraseña.');const j=await sbAuth('token?grant_type=password',{email:em.input.value,password:pw.input.value});sesSave(sesFrom(j));await drawProfile()}));
+  const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);content.append(rememberWrap);
+  content.append(btn('Iniciar sesión',async()=>{if(!em.input.value||!pw.input.value)throw new Error('Introduce el correo y la contraseña.');const j=await sbAuth('token?grant_type=password',{email:em.input.value,password:pw.input.value});REMEMBER_SESSION=remember.checked;sesSave(sesFrom(j));await drawProfile()}));
   content.append(btn('Crear cuenta',async()=>{if(!em.input.value||pw.input.value.length<6)throw new Error('Introduce un correo y una contraseña de al menos 6 caracteres.');await sbAuth('signup',{email:em.input.value,password:pw.input.value});alert('Cuenta creada. Si se solicita confirmar el correo, revisa tu bandeja de entrada. Después podrás iniciar sesión.')}))
  };
  const drawProfile=async()=>{
