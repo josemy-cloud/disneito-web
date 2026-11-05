@@ -613,8 +613,25 @@ function wvBar(){let b=document.getElementById('wvb');if(!wallVis){if(b)b.remove
  b.innerHTML='<b>Muros</b> · clic en una pared (plano 2D o vista 3D) para '+(wvMode=='hid'?'ocultarla':'hacerla transparente')+' ';const bt=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.onclick=fn;b.append(e)};
  const sm2=document.createElement('select');[['hid','Ocultar'],['tr','Transparente']].forEach(([v,l])=>sm2.add(new Option(l,v)));sm2.value=wvMode;sm2.onchange=()=>{wvMode=sm2.value;wvBar()};b.append(sm2);
  bt('Mostrar todas',()=>{S.w.forEach(w=>{w.hid=false;w.tr=false});commit()});S.w.forEach((w,i)=>{if(w.hid||w.tr)bt('Pared '+(i+1)+' ('+(w.hid?'oculta':'transp.')+') ✕',()=>{w.hid=false;w.tr=false;commit()})});bt('Salir',()=>{$('#ct').checked=false;wallVis=false;wvBar();build3d()})}
-const PTH={};function pbrThumb(d){const k=d.slice(3,8).join('|');if(PTH[k])return PTH[k];const N=40,F=pbrField(d[3],N,[...d[3]].reduce((a,c)=>a*31+c.charCodeAt(0),7)),c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),im=x.createImageData(N,N),hx=parseInt(d[4].slice(1),16),br=hx>>16&255,bg=hx>>8&255,bb=hx&255,dark=(br+bg+bb)/3<110,cl=v=>Math.max(0,Math.min(255,v));
- for(let i=0;i<N*N;i++){const t=F.T0[i]*(d[3]=='marble'&&dark?-1.6:1),o=i*4;if(d[3]=='marbleg'){const vv=Math.min(1,Math.abs(F.T0[i])*1.7);im.data.set([cl(br+(201-br)*vv),cl(bg+(162-bg)*vv),cl(bb+(74-bb)*vv),255],o)}else im.data.set([cl(br*(1+t)),cl(bg*(1+t)),cl(bb*(1+t)),255],o)}x.putImageData(im,0,0);return PTH[k]=c}
+const PTH={};function pbrThumb(d){
+ const k=d.slice(0,9).join('|');if(PTH[k])return PTH[k];
+ const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
+ if(!x)return c;
+ const fallback=()=>{x.fillStyle=/^#[0-9a-f]{6}$/i.test(d[4]||'')?d[4]:'#b8b8b8';x.fillRect(0,0,64,64);x.strokeStyle='rgba(0,0,0,.16)';x.lineWidth=2;x.strokeRect(1,1,62,62);return PTH[k]=c};
+ try{
+  const N=64,F=pbrField(d[3],N,[...String(d[3])].reduce((a,ch)=>a*31+ch.charCodeAt(0),7)),im=x.createImageData(N,N);
+  const hx=parseInt(/^#[0-9a-f]{6}$/i.test(d[4]||'')?d[4].slice(1):'b8b8b8',16),br=hx>>16&255,bg=hx>>8&255,bb=hx&255;
+  const cl=v=>Math.max(0,Math.min(255,Math.round(v)));
+  for(let i=0;i<N*N;i++){
+   const t=Number.isFinite(F.T0[i])?F.T0[i]:0,o=i*4;
+   if(d[3]=='marbleg'){const v=Math.min(1,Math.abs(t)*1.7);im.data.set([cl(br+(201-br)*v),cl(bg+(162-bg)*v),cl(bb+(74-bb)*v),255],o)}
+   else im.data.set([cl(br*(1+t)),cl(bg*(1+t)),cl(bb*(1+t)),255],o);
+  }
+  x.putImageData(im,0,0);
+  if(!im.data.some((v,i)=>i%4===0&&v>0))return fallback();
+  return PTH[k]=c;
+ }catch(e){return fallback()}
+}
 const thumbOf=m=>{if(m.startsWith('pbr:')){const d=pbrDef(m.slice(4));return d?pbrThumb(d):null}const mt=sm(m,'#ccc',60,60,30,.3,'#555',0);return mt&&mt.map?mt.map.image:null};
 function roomUI(R){P.innerHTML='<h4>Habitación</h4>';row('Nombre',R.name,v=>{R.name=v;R.nameAuto=false},'text');sel2('Categoría',['(sin clasificar)',...ROOMCATS],R.cat||'(sin clasificar)',v=>{R.cat=v=='(sin clasificar)'?'':v;R.catAuto=false});
  P.insertAdjacentHTML('beforeend','<small>'+(R.catAuto&&R.cat?'Categoría sugerida por el contenido (puedes cambiarla). ':'')+'Superficie '+(R.area/1e4).toFixed(2)+' m² · perímetro '+(R.per/100).toFixed(2)+' m · dimensiones '+(R.w/100).toFixed(2)+' × '+(R.d/100).toFixed(2)+' m</small>');
