@@ -686,6 +686,9 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
  else if(kd=='vinoteca'){const p=pv(-w/2+1,h/2,k0,{t:'d',sg:-1});shell(0,h/2,w-6,h-8,enam);B(p,w-2,h-4,1.2,(w-2)/2,0,0,GLS);B(p,1.6,h*.4,2.4,w-5,0,2,hd);[-1,1].forEach(q=>B(p,2.5,4,1.6,1.4,q*h*.3,-.2,stl));for(let q=1;q<5;q++)B(a,w-8,.8,d-12,0,h*q/5,zc,M('#7a5a3a',.6))}}
 
 BUILD.app=(g,it)=>{it.op=it.op||[];appl(g,it.cfg.ap,it.w,it.h,it.d,it.cfg.mat||it.cfg.fin,it,0,0,it.d/2)};
+/* Generadores paramétricos para fichas sanitarias importadas */
+BUILD.fregadero=(g,it,mt)=>{const w=Math.max(12,it.w),h=Math.max(2,it.h),d=Math.max(12,it.d),rim=M('#d8dcde',.22,.55),basin=M('#aeb9bf',.16,.35);B(g,w,Math.min(2,h),d,0,h/2,0,rim);const bw=w*.72,bd=d*.68;B(g,bw,Math.max(1,h*.55),bd,0,h*.18,0,basin);B(g,bw+3,1.5,bd+3,0,h*.48,0,rim);const drain=new T.Mesh(new T.CylinderGeometry(Math.max(1,Math.min(w,d)*.035),Math.max(1,Math.min(w,d)*.035),.5,20),M('#555b60',.25,.8));drain.position.set(0,h*.48,0);g.add(drain)};
+BUILD.griferia=(g,it)=>{const m=M('#aeb6bb',.22,.85),baseR=Math.max(2,Math.min(it.w,it.d)*.12),stem=Math.max(2,it.h*.68);const b=new T.Mesh(new T.CylinderGeometry(baseR,baseR,Math.max(1,it.h*.08),20),m);b.position.y=it.h*.04;g.add(b);const p=new T.Mesh(new T.CylinderGeometry(Math.max(1,baseR*.42),Math.max(1,baseR*.42),stem,16),m);p.position.y=stem/2+it.h*.08;g.add(p);const sp=new T.Mesh(new T.CylinderGeometry(Math.max(1,baseR*.35),Math.max(1,baseR*.35),Math.max(2,it.w*.38),16),m);sp.rotation.z=Math.PI/2;sp.position.set(it.w*.16,stem+it.h*.08,0);g.add(sp)};
 /* Catálogo modular generado (parámetros, no modelos externos) */
 function base(n,w,lay,x,d){d=d||60;return{t:'mod',n,c:'Cocina modular',s:'moderno',w,h:87,d,e:0,col:'#8fa58f',cfg:Object.assign({k:'base',lay,nd:w>60?2:1,nc:3,op:'lateral',fr:'lisa',ti:'barra',tl:30,sh:1,zoc:10,acab:'satinado',cc:'#f4f1ea',cf:'#8fa58f',ct:'#111111',cz:'#2f3a40',cn:'#d8d2c4',cm:'cuarzo',mf:'liso',top:true,led:false},x||{})}}
 function alto(n,w,x,h,d){const o=base(n,w,'armario alto',Object.assign({k:'alto',top:false,zoc:0,sh:2,cf:'#f4f1ea'},x||{}),d||35);o.h=h||70;o.e=140;return o}
@@ -988,17 +991,24 @@ $('#bMo').onclick=()=>{editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate(
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 /* ===== CATÁLOGOS Y FABRICANTES ===== */
 const CATS=['mueble bajo','mueble alto','columna','armario','cajonera','horno','microondas','frigorífico','lavadora','secadora','lavavajillas','campana','placa','vinoteca','sofá','cama','mesa','fregadero','grifería','otro'];
-const CATK=[['columna','columna'],['armario alto','mueble alto'],['mueble alto','mueble alto'],['armario bajo','mueble bajo'],['mueble bajo','mueble bajo'],['cajonera','cajonera'],['cómoda','cajonera'],['armario','armario'],['ropero','armario'],['microondas','microondas'],['horno','horno'],['frigor','frigorífico'],['nevera','frigorífico'],['lavavajillas','lavavajillas'],['lavadora','lavadora'],['secadora','secadora'],['campana','campana'],['placa','placa'],['vitro','placa'],['inducci','placa'],['vinoteca','vinoteca'],['fregadero','fregadero'],['grifo','grifería'],['sofá','sofá'],['cama','cama'],['mesa','mesa']];
-let FABS=[],PRODS=[],fabSel='',IA={servicio:false,configurada:false};
-const dbq=(st,mode,fn)=>idb().then(d=>new Promise((res,rej)=>{const t=d.transaction(st,mode);let o;const r=fn(t);if(r)r.onsuccess=()=>o=r.result;t.oncomplete=()=>res(o);t.onerror=()=>rej(t.error)}));
-const saveFabs=()=>localStorage.setItem('fabs',JSON.stringify(FABS)),saveProd=p=>dbq('p','readwrite',t=>t.objectStore('p').put(p)),saveDoc=b=>{const id='d'+Date.now()+Math.random().toString(36).slice(2,6);return dbq('d','readwrite',t=>t.objectStore('d').put(b,id)).then(()=>id)},getDoc=id=>dbq('d','readonly',t=>t.objectStore('d').get(id));
-function fichaToItem(p){const w=+p.w,h=+p.h,d=+p.d,c=p.cat;if(!(w>0&&h>0&&d>0))return null;let o;const AP={horno:'horno',microondas:'micro',lavadora:'lavadora',secadora:'secadora',lavavajillas:'lavavajillas',vinoteca:'vinoteca',placa:'placa'};
- if(c=='frigorífico')o=appo(p.nombre,h>170&&w>85?'americano':h>150?'combi':'frigo',w,h,d);else if(c=='campana')o=appo(p.nombre,'campana_inc',w,h,d,150);else if(AP[c])o=appo(p.nombre,AP[c],w,h,d);
+const CATK=[['columna','columna'],['armario alto','mueble alto'],['mueble alto','mueble alto'],['armario bajo','mueble bajo'],['mueble bajo'function fichaToItem(p){
+ const w=+p.w,h=+p.h,d=+p.d,c=p.cat;
+ if(!(w>0&&h>0&&d>0))return null;
+ let o;
+ const AP={horno:'horno',microondas:'micro',lavadora:'lavadora',secadora:'secadora',lavavajillas:'lavavajillas',vinoteca:'vinoteca',placa:'placa'};
+ if(c=='frigorífico')o=appo(p.nombre,h>170&&w>85?'americano':h>150?'combi':'frigo',w,h,d);
+ else if(c=='campana')o=appo(p.nombre,'campana_inc',w,h,d,150);
+ else if(AP[c])o=appo(p.nombre,AP[c],w,h,d);
  else if(c=='mueble bajo'){o=base(p.nombre,w,p.nc&&!p.nd?'cajones':p.nc?'puertas+cajones':'puertas',{nd:p.nd||(w>60?2:1),nc:p.nc||0},d);o.h=h}
- else if(c=='cajonera'){o=base(p.nombre,w,'cajones',{nc:p.nc||3},d);o.h=h}else if(c=='mueble alto')o=alto(p.nombre,w,{nd:p.nd||(w>60?2:1)},h,d);
- else if(c=='columna'){o=colm(p.nombre,w,h,'columna',{nd:p.nd||2,nc:p.nc||2});o.d=d}else if(c=='armario'){o=colm(p.nombre,w,h,'puertas',{nd:p.nd||2,sh:3});o.d=d;o.cfg.rods=[{y:h*.9}]}
- else{const t={'sofá':'sofa',cama:'cama',mesa:'mesa'}[c];if(!t)return null;o={t,w,h,d,e:0,col:'#cccccc'}}
- return Object.assign(o,{n:p.nombre,c:'Catálogos',brand:p.fab,ref:p.ref,upd:(p.fecha||'').slice(0,10),prec:p.prec,pid:p.id,w,h,d,s:'catálogo'})}
+ else if(c=='cajonera'){o=base(p.nombre,w,'cajones',{nc:p.nc||3},d);o.h=h}
+ else if(c=='mueble alto')o=alto(p.nombre,w,{nd:p.nd||(w>60?2:1)},h,d);
+ else if(c=='columna'){o=colm(p.nombre,w,h,'columna',{nd:p.nd||2,nc:p.nc||2});o.d=d}
+ else if(c=='armario'){o=colm(p.nombre,w,h,'puertas',{nd:p.nd||2,sh:3});o.d=d;o.cfg.rods=[{y:h*.9}]}
+ else if(c=='fregadero')o={t:'fregadero',w,h,d,e:0,col:'#d8dcde'};
+ else if(c=='grifería')o={t:'griferia',w,h,d,e:0,col:'#aeb6bb'};
+ else {const t={'sofá':'sofa',cama:'cama',mesa:'mesa'}[c];if(!t)return null;o={t,w,h,d,e:0,col:'#cccccc'}}
+ return Object.assign(o,{n:p.nombre,c:'Catálogos',brand:p.fab,ref:p.ref,upd:(p.fecha||'').slice(0,10),prec:p.prec,pid:p.id,w,h,d,s:'catálogo'});
+}
 function thumbO(o){if(TH.has(o))return TH.get(o);const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(o,u);return u}
 async function catLoad(){try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
  try{IA=await fetch('/api/ia/estado').then(r=>r.json())}catch(e){IA={servicio:false,configurada:false}}}
