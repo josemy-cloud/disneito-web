@@ -1435,7 +1435,6 @@ function fichaToItem(p){
   w:+p.w||model.w,h:+p.h||model.h,d:+p.d||model.d,e:0,col:p.col||model.col||'#cccccc',
   pid:p.id,source:p.sourceURL||p.catalogo||model.source};
 }
-}
 function thumbO(o){if(TH.has(o))return TH.get(o);const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(o,u);return u}
 async function catLoad(){try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
  try{IA=await fetch('/api/ia/estado').then(r=>r.json())}catch(e){IA={servicio:false,configurada:false}}}
