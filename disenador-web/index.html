@@ -721,7 +721,10 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  btn.onclick=async()=>{
   if(busy)return;
   if(!SES&&new URLSearchParams(location.search).get('master-test')==='1'&&!sessionStorage.getItem(masterTestStorageKey)){
-   try{if(!await activateAnonymousMaster())return}catch(error){alert(error.message);return}
+   const wantsMaster=confirm('¿Quieres activar el modo de pruebas MASTER? Pulsa Aceptar para introducir la clave privada. Si pulsas Cancelar, entrarás en Foto IA como usuario anónimo normal, con su límite diario y sin necesidad de clave.');
+   if(wantsMaster){
+    try{await activateAnonymousMaster()}catch(error){alert(error.message+' Puedes continuar usando Foto IA como usuario anónimo normal.')}
+   }
   }
   if(RVo){alert('Cierra primero «Ver en Realidad» y vuelve al modo 3D normal.');return}
   if(walk&&typeof exitWalk==='function')exitWalk();
