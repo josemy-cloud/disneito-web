@@ -1621,15 +1621,17 @@ async function catLoad(){
    (registry.products||[]).forEach(p=>{
     const dims=p.dimensions_mm||{},model=p.model||{};
     if(!p.id||!model.type||typeof BUILD[model.type]!=='function'||PRODS.some(x=>x.id===p.id))return;
+    if(p.brand&&!FABS.includes(p.brand))FABS.push(p.brand);
     PRODS.push({id:p.id,nombre:p.name,fab:p.brand,ref:p.reference,cat:p.category,
      w:(+dims.width||0)/10,h:(+dims.height||0)/10,d:(+dims.length||0)/10,
      prec:'oficial (ficha del fabricante)',mats:(p.materials||[]).map(x=>x.name).join(', '),
      acabados:(p.finishes||[]).map(x=>x.name).join(', '),col:'#f4f3ef',
      sourceURL:(p.sources||[]).find(x=>x.type==='fabricante_producto')?.url||(p.sources||[])[0]?.url||'',
      modelType:model.type,visual_review:model.visual_review||'pending',
-     modelNotes:model.geometry_notes||'',weightKg:p.weight_kg,commercialData:p});
+     modelNotes:model.geometry_notes||'',weightKg:p.weight_kg,sourceList:p.sources||[],commercialData:p});
    });
   }
+  saveFabs();
  }catch(e){console.warn('No se pudo cargar el registro de productos comerciales:',e)}
  PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
  try{IA=await fetch('/api/ia/estado').then(r=>r.json())}catch(e){IA={servicio:false,configurada:false}}
@@ -1679,6 +1681,11 @@ function fichaUI(p){const C=$('#cat');C.innerHTML='';C.append(el('button',{textC
 const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observaciones'});ob.onchange=()=>p.obs=ob.value;f.append(ob,el('br'));
  f.append(el('div','','<small>Procedencia: '+(p.sourceURL||p.catalogo||'—')+(p.pagina?' · página '+p.pagina:'')+' · incorporado '+(p.fecha||'').slice(0,10)+(p.prec&&!/^oficial|manual/.test(p.prec)?'<br><span style="color:#ffb74d">Medidas sin confirmar: revísalas contra el plano o la ficha antes de usarlas.</span>':'')+'</small>'));
  const area=el('div');area.style.margin='8px 0';
+ if(p.modelType){
+  const meta=el('div','','<small>Modelo propio: '+p.modelType+' · revisión visual: '+(p.visual_review||'pendiente')+'<br>'+((p.modelNotes||'').replace(/</g,'&lt;'))+'</small>');
+  meta.style.cssText='padding:7px;margin:5px 0;background:#252a33;border-radius:5px;color:#cbd5e1';f.append(meta);
+  (p.sourceList||[]).forEach(src=>{if(src.url)bt('Fuente: '+(src.type||'documentación'),()=>window.open(src.url,'_blank','noopener'))});
+ }
  const bt=(t,fn)=>{const b=el('button',{textContent:t,onclick:fn});b.style.marginRight='6px';f.append(b)};
  bt('Previsualizar modelo 3D',()=>{const o=p.modelType?{t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef'}:fichaToItem(p);if(!o)return alert('Esta ficha todavía no tiene un modelo 3D asociado.');openPrevObj(o)});
  if(p.modelType&&p.visual_review!=='approved')bt('Aprobar e incorporar a biblioteca',async()=>{if(!confirm('¿Has comprobado la previsualización desde varios ángulos y confirmas que la geometría, proporciones y materiales son aceptables?'))return;p.visual_review='approved';await saveProd(p);await catLoad();libUI();catUI()});
