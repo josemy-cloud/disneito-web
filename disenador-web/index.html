@@ -789,11 +789,13 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    const lib=LIB.find(x=>x.t===it.t&&(x.n===it.n||x.mid===it.mid))||LIB.find(x=>x.t===it.t&&x.shape===it.shape);
    const name=String(it.n||it.name||lib?.n||nombres[it.t]||it.t||'objeto').replace(/[\\r\\n\\t]/g,' ').slice(0,100);
    const shape=String(it.shape||lib?.shape||'').slice(0,50);
-   const kind=String(nombres[it.t]||it.t||'mobiliario');
+   const semantica={sofa:'sofá',bed:'cama',car:'coche o vehículo',van:'furgoneta',bidet:'bidé',toilet:'inodoro',wc:'inodoro',basin:'lavabo',bath:'bañera',shower:'ducha',table:'mesa',chair:'silla',fridge:'frigorífico',wardrobe:'armario'};
+   const kind=String(semantica[shape]||nombres[it.t]||it.t||'mobiliario');
    const dims=[it.w,it.h,it.d].map(v=>Number.isFinite(+v)?Math.round(+v*10)/10:null);
    const details=[];
    if(shape)details.push('subtipo geométrico '+shape);
    if(dims.every(v=>v!==null))details.push('dimensiones ancho × alto × fondo '+dims.join(' × ')+' cm');
+   if(Number.isFinite(+it.x)&&Number.isFinite(+it.y))details.push('posición en planta X '+Math.round(+it.x*10)/10+' cm, Y '+Math.round(+it.y*10)/10+' cm');
    if(Number.isFinite(+it.r))details.push('orientación '+Math.round(+it.r)+' grados');
    if(Number.isFinite(+it.e)&&+it.e!==0)details.push('elevación '+Math.round(+it.e)+' cm');
    if(it.mid)details.push('modelo 3D importado '+String(it.mid).slice(0,80));
