@@ -128,7 +128,7 @@ export default {
     if (url.pathname === "/api/ia/estadisticas") {
       if (request.method !== "GET") return Response.json({ error: "Utiliza GET." }, { status: 405 });
       try {
-        const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        const rawToken = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
         const deviceId = request.headers.get("X-FotoIA-Device") || "";
         if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
           return Response.json({ error: "No se ha podido identificar este dispositivo. Recarga la aplicación." }, { status: 400 });
@@ -152,7 +152,7 @@ export default {
       let reservationToken = "";
       let deviceId = "";
       try {
-        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "").trim();
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
         deviceId = request.headers.get("X-FotoIA-Device") || "";
         if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
           return Response.json({ error: "No se ha podido identificar este dispositivo. Recarga la aplicación." }, { status: 400 });
