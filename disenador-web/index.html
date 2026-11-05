@@ -18,6 +18,17 @@ h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;
 .rc{display:inline-block;width:150px;vertical-align:top;margin:4px;padding:5px;background:#2a2e37;border-radius:6px;font-size:11px}.rc img{width:100%;height:110px;object-fit:cover;border-radius:4px;background:#111}
 .rl{display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #333;font-size:12px}.rl span{flex:1}
 .dd{position:relative;display:inline-block}.ddm{display:none;position:absolute;top:100%;left:0;z-index:40;background:#1b1e25;border:1px solid #444;border-radius:8px;padding:4px;min-width:170px;box-shadow:0 8px 24px #000a}.ddm button{display:block;width:100%;text-align:left;margin:1px 0}.dd.open .ddm{display:block}#top button{padding:4px 8px;font-size:12px}.seg{display:inline-flex;border:1px solid #555;border-radius:8px;overflow:hidden;vertical-align:middle}.seg button{border:0;border-radius:0;margin:0;font-size:15px;padding:3px 10px}.seg button.on{background:#3d7be0;color:#fff}
+/* Ajuste de altura: cada zona debe caber en el alto disponible y desplazarse por separado */
+html,body{width:100%;height:100%;min-height:0;overflow:hidden}
+body{height:100vh;height:100dvh;min-height:0;max-height:100dvh}
+#top{flex:0 0 auto;min-height:0;max-height:28dvh;overflow-y:auto;overflow-x:hidden}
+#main{flex:1 1 0;height:0;min-height:0;max-height:100%;align-items:stretch}
+#tools,.side{height:100%;min-height:0;max-height:100%;align-self:stretch;overscroll-behavior:contain}
+#tools,.side{overflow-y:auto;overflow-x:hidden}
+#view{height:100%;max-height:100%;overflow:hidden}
+#sb{flex:0 0 auto;min-height:0}
+@media(max-height:650px){#top{max-height:22dvh}#sb{font-size:11px;padding-top:2px;padding-bottom:2px}}
+@media(max-width:760px){#top{max-height:25dvh}#main{height:0;min-height:0}}
 </style></head><body>
 <div id="top"><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
@@ -644,7 +655,7 @@ const TH=new WeakMap();function thumb(i){if(TH.has(LIB[i]))return TH.get(LIB[i])
 function fitCam(){const it=pvIt,m=Math.max(it.w,it.h,it.d);cam4.position.set(m*.9,it.h*.6+m*.3,m*1.6);oc4.target.set(0,it.h/2,0);oc4.update()}
 function pvUI(){const P2=$('#pvp');P2.innerHTML='';[['Anchura','w'],['Altura','h'],['Fondo','d']].forEach(([l,f])=>{const i=document.createElement('input');i.type='number';i.value=pvIt[f];i.onchange=()=>{pvIt[f]=Math.max(2,+i.value);buildPrev(pvIt,1);fitCam();pvUI()};P2.append(l+' ',i,' ')});
  if(!pvIt.cfg&&pvIt.t!='model'){const c=document.createElement('input');c.type='color';c.value=pvIt.col;c.oninput=()=>{pvIt.col=c.value;buildPrev(pvIt,1)};P2.append(' Color ',c)}P2.append(document.createElement('br'));
- const b1=document.createElement('button');b1.textContent='Abrir/cerrar puertas y cajones';b1.onclick=()=>{const o=!pvIt.op[0];for(let q=0;q<14;q++)pvIt.op[q]=o};P2.append(b1,' ');
+ const b1=document.createElement('button');b1.type='button';b1.textContent='Abrir/cerrar puertas y cajones';b1.onclick=()=>{const keys=[...new Set(PV.map(m=>m.k))];if(!keys.length){b1.textContent='Este modelo no tiene aperturas animadas';setTimeout(()=>{if(b1.isConnected)b1.textContent='Abrir/cerrar puertas y cajones'},1800);return}const open=keys.some(k=>!pvIt.op[k]);keys.forEach(k=>{pvIt.op[k]=open});b1.textContent=open?'Cerrar puertas y cajones':'Abrir puertas y cajones'};P2.append(b1,' ');
  const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#hint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};if(pvIt.c=='Mi biblioteca'||pvIt.t=='model'){const bx=document.createElement('button');bx.textContent='Quitar de mi biblioteca';bx.onclick=async()=>{const i=LIB.findIndex(o=>o.n==pvIt.n&&o.c==pvIt.c);if(i>=0)LIB.splice(i,1);if(pvIt.t=='model'){await idbDel(pvIt.mid);delete MODS[pvIt.mid]}else{const j=ML.findIndex(o=>o.n==pvIt.n);if(j>=0)ML.splice(j,1);saveML()}pvOpen=false;$('#pv').style.display='none';libUI();refresh()};P2.append(bx,' ')}
  P2.append(b2,document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · estilo '+pvIt.s+' · arrastra para girar, rueda para zoom');if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}
 function pvLoop(){if(!pvOpen)return;requestAnimationFrame(pvLoop);PV.forEach(m=>stepMV(m));oc4.update();r4.render(sc4,cam4)}
