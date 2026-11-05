@@ -80,6 +80,200 @@
           "notes": "Fotografías del producto desde distintos ángulos y descripción comercial; usadas solo como referencia visual."
         }
       ]
+    },
+    {
+      "id": "roca-ona-wc-suspendido-a346687000",
+      "name": "Taza Roca Rimless suspendida Ona",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A346687000",
+      "category": "Baño",
+      "subcategory": "Inodoros suspendidos",
+      "status": "Descatalogado según ficha oficial consultada",
+      "dimensions_mm": {
+        "length": 530,
+        "width": 360,
+        "height": 290
+      },
+      "weight_kg": 23,
+      "materials": [
+        {
+          "name": "Porcelana sanitaria",
+          "verification": "Material indicado por el fabricante; composición no detallada"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijaciones ocultas"
+      ],
+      "excluded": [
+        "Asiento y tapa (se venden por separado)",
+        "Bastidor/cisterna empotrada"
+      ],
+      "technical_features": {
+        "installation": "Suspendido",
+        "outlet": "Horizontal",
+        "flushing": "Roca Rimless, descarga dual 4,5/3 L",
+        "shape": "Redondo",
+        "fixings": "Ocultas",
+        "compatible_installation_systems": [
+          "Roca Duplo One",
+          "Roca Duplo S"
+        ]
+      },
+      "model": {
+        "type": "rocaOnaWallHungWC",
+        "status": "modelo propio paramétrico",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones exteriores oficiales; perfil y curvaturas no acotadas reconstruidos visualmente."
+      },
+      "sources": [
+        {
+          "type": "fabricante_producto",
+          "url": "https://qr2.roca.com/productos/taza-roca-rimless-suspendida-346687..0",
+          "notes": "Referencia, dimensiones, peso, instalación, sistema Rimless y acabados."
+        },
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/wc-bides",
+          "notes": "Comparativa de tipologías de la colección Ona."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-wc-compacto-suspendido-a346688000",
+      "name": "Taza Roca Rimless suspendida compacta Ona",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A346688000",
+      "category": "Baño",
+      "subcategory": "Inodoros suspendidos compactos",
+      "status": "Descatalogado según catálogo de colección consultado",
+      "dimensions_mm": {
+        "length": 480,
+        "width": 360,
+        "height": 290
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Porcelana sanitaria",
+          "verification": "Material de la familia de producto; detalle de composición no publicado"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [],
+      "excluded": [
+        "Bastidor/cisterna empotrada"
+      ],
+      "technical_features": {
+        "installation": "Suspendido",
+        "shape": "Redondo",
+        "system": "Roca Rimless",
+        "note": "Variante compacta, fondo reducido"
+      },
+      "model": {
+        "type": "rocaOnaWallHungWCCompact",
+        "status": "modelo propio paramétrico derivado de la geometría Ona",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Largo y ancho oficiales; geometría no acotada reconstruida visualmente."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/wc-bides",
+          "notes": "Referencia y dimensiones de la variante compacta."
+        }
+      ]
+    },
+    {
+      "id": "roca-ona-bidet-suspendido-a357685000",
+      "name": "Bidé suspendido Ona",
+      "brand": "Roca",
+      "collection": "Ona",
+      "reference": "A357685000",
+      "category": "Baño",
+      "subcategory": "Bidés suspendidos",
+      "status": "Descatalogado según catálogo de colección consultado",
+      "dimensions_mm": {
+        "length": 530,
+        "width": 360,
+        "height": 290
+      },
+      "weight_kg": null,
+      "materials": [
+        {
+          "name": "Porcelana sanitaria",
+          "verification": "Material de la familia de producto; detalle de composición no publicado"
+        }
+      ],
+      "finishes": [
+        {
+          "name": "Blanco brillo",
+          "code": "00"
+        },
+        {
+          "name": "Blanco mate",
+          "code": "62"
+        },
+        {
+          "name": "Negro mate",
+          "code": "08"
+        }
+      ],
+      "included": [
+        "Juego de fijaciones (verificar en ficha específica)"
+      ],
+      "excluded": [
+        "Grifería"
+      ],
+      "technical_features": {
+        "installation": "Suspendido",
+        "shape": "Redondo",
+        "tap_holes": 1
+      },
+      "model": {
+        "type": "rocaOnaWallHungBidet",
+        "status": "modelo propio paramétrico derivado de la geometría del bidé Ona",
+        "units": "cm",
+        "visual_review": "pendiente",
+        "geometry_notes": "Dimensiones oficiales de colección; radios y cavidad reconstruidos visualmente."
+      },
+      "sources": [
+        {
+          "type": "fabricante_coleccion",
+          "url": "https://www.export.roca.com/es-ES/ona/wc-bides",
+          "notes": "Referencia y dimensiones de bidé suspendido."
+        }
+      ]
     }
   ]
 }
