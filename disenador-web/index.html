@@ -1463,6 +1463,53 @@ BUILD.rocaOnaBidet=(g,it,mt)=>{
 };
 
 
+
+/* Roca Ona WC suspendido A346687000. Dimensiones oficiales 530×360×290 mm.
+   Geometría propia reconstruida desde ficha/fotografías; no es CAD oficial. */
+BUILD.rocaOnaWallHungWC=(g,it)=>{
+ const w=it.w||36,h=it.h||29,d=it.d||53,porcelain=ceramicMaterial(it.col||'#f5f4f0');
+ const seatMat=ceramicMaterial(it.seatColor||it.col||'#f8f7f3');
+ const inner=new T.MeshStandardMaterial({color:'#d9ddda',roughness:.24,side:T.DoubleSide});
+ const metal=M('#aeb4b7',.3,.78),hole=M('#33383b',.28,.2);
+ // Perfil exterior de la taza, con caída frontal y volumen posterior de anclaje.
+ const outer=[new T.Vector2(0,2),new T.Vector2(w*.22,2),new T.Vector2(w*.34,3),
+  new T.Vector2(w*.43,7),new T.Vector2(w*.48,h*.28),new T.Vector2(w*.5,h*.57),
+  new T.Vector2(w*.47,h*.78),new T.Vector2(w*.43,h*.94)];
+ const shell=new T.Mesh(new T.LatheGeometry(outer,72),porcelain);
+ shell.scale.z=d/w*.82;shell.position.set(0,0,d*.04);g.add(shell);
+ // Cuenco interior profundo, abierto y sin reborde convencional (Rimless).
+ const inside=[new T.Vector2(0,h*.25),new T.Vector2(w*.13,h*.25),
+  new T.Vector2(w*.25,h*.3),new T.Vector2(w*.34,h*.43),
+  new T.Vector2(w*.405,h*.62),new T.Vector2(w*.425,h*.82),
+  new T.Vector2(w*.42,h*.91)];
+ const cavity=new T.Mesh(new T.LatheGeometry(inside,72),inner);
+ cavity.scale.z=d/w*.82;cavity.position.set(0,h*.01,d*.04);g.add(cavity);
+ // Aro de asiento ovalado con hueco real, no un disco plano.
+ const ringShape=new T.Shape();
+ ringShape.absellipse(0,0,w*.47,d*.445,0,Math.PI*2,false,0);
+ const ringHole=new T.Path();
+ ringHole.absellipse(0,0,w*.315,d*.285,0,Math.PI*2,true,0);
+ ringShape.holes.push(ringHole);
+ const ringGeo=new T.ExtrudeGeometry(ringShape,{depth:1.35,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.65,bevelThickness:.55,curveSegments:64});
+ const ring=new T.Mesh(ringGeo,seatMat);ring.rotation.x=Math.PI/2;ring.position.set(0,h*.92,d*.045);g.add(ring);
+ // Tapa fina independiente, cerrada, con contorno ovalado y bisel suave.
+ const lidShape=new T.Shape();lidShape.absellipse(0,0,w*.475,d*.45,0,Math.PI*2,false,0);
+ const lidGeo=new T.ExtrudeGeometry(lidShape,{depth:1.6,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.7,bevelThickness:.5,curveSegments:64});
+ const lid=new T.Mesh(lidGeo,seatMat);lid.rotation.x=Math.PI/2;lid.position.set(0,h*.955,d*.045);g.add(lid);
+ // Parte posterior maciza y plano de contacto con bastidor empotrado.
+ const rear=new T.Mesh(new T.BoxGeometry(w*.72,h*.25,d*.17,4,3,3),porcelain);
+ rear.position.set(0,h*.76,-d*.35);g.add(rear);
+ // Dos alojamientos de fijación posteriores, visibles al mirar desde atrás.
+ for(const x of [-1,1]){
+  const washer=new T.Mesh(new T.TorusGeometry(2.1,.65,10,24),metal);
+  washer.rotation.x=Math.PI/2;washer.position.set(x*w*.29,h*.69,-d*.405);g.add(washer);
+  const bore=new T.Mesh(new T.CircleGeometry(1.45,24),hole);
+  bore.rotation.x=-Math.PI/2;bore.position.set(x*w*.29,h*.69+.1,-d*.405);g.add(bore);
+ }
+ // Sombra y superficies físicas.
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+};
+
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}}
 function motionKeysForItem(it){const saved=MV;MV=[];try{const g=new T.Group();buildItemGeometry(g,it,M(it.col||'#ccc',.5,0),M('#999',.3,.9));return [...new Set(MV.map(m=>m.k))]}catch(err){console.warn('No se pudieron identificar las aperturas del mueble',err);return []}finally{MV=saved}}
 function toggleItemMotion(it){it.op=it.op||[];if(mode!=='3d')setMode('3d');const keys=motionKeysForItem(it);if(!keys.length){hint('Este elemento no tiene puertas o cajones animados');return}const open=keys.some(k=>!it.op[k]);keys.forEach(k=>{it.op[k]=open});hint(open?'Puertas y cajones abriéndose':'Puertas y cajones cerrándose')}
