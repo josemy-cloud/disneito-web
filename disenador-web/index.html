@@ -1628,7 +1628,7 @@ async function catLoad(){
      acabados:(p.finishes||[]).map(x=>x.name).join(', '),col:'#f4f3ef',
      sourceURL:(p.sources||[]).find(x=>x.type==='fabricante_producto')?.url||(p.sources||[])[0]?.url||'',
      modelType:model.type,visual_review:model.visual_review||'pending',
-     modelNotes:model.geometry_notes||'',weightKg:p.weight_kg,sourceList:p.sources||[],commercialData:p});
+     modelNotes:model.geometry_notes||'',pesoKg:p.weight_kg,weightKg:p.weight_kg,sourceList:p.sources||[],commercialData:p});
    });
   }
   saveFabs();
@@ -1676,7 +1676,7 @@ function fichaUI(p){const C=$('#cat');C.innerHTML='';C.append(el('button',{textC
  fld(f,'Materiales',p.mats,'text',v=>p.mats=v);fld(f,'Acabados',p.acabados,'text',v=>p.acabados=v);fld(f,'Colores',p.colores,'text',v=>p.colores=v);f.append(el('br'));
  fld(f,'Peso kg',p.pesoKg,'number',v=>p.pesoKg=v);fld(f,'Texturas',p.texturas,'text',v=>p.texturas=v);f.append(el('br'));
  fld(f,'URL ficha original',p.sourceURL,'text',v=>p.sourceURL=v);fld(f,'Variantes',p.variantes,'text',v=>p.variantes=v);f.append(el('br'));
- fld(f,'Identificador del modelo 3D',p.mid,'text',v=>p.mid=v);
+ if(!p.modelType)fld(f,'Identificador del modelo 3D',p.mid,'text',v=>p.mid=v);
  const assoc=el('button',{textContent:'Asociar modelo 3D validado…',onclick:()=>{const ms=LIB.filter(x=>x.t==='model'&&x.mid);if(!ms.length)return alert('Todavía no hay modelos 3D importados y validados en esta biblioteca.');const opts=ms.map(x=>x.mid+' — '+(x.n||x.mid));const chosen=prompt('Escribe el identificador exacto del modelo:\\n'+opts.join('\\n'),p.mid||ms[0].mid);if(chosen&&ms.some(x=>x.mid===chosen.trim())){p.mid=chosen.trim();fichaUI(p)}}});f.append(assoc,el('br'));
 const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observaciones'});ob.onchange=()=>p.obs=ob.value;f.append(ob,el('br'));
  f.append(el('div','','<small>Procedencia: '+(p.sourceURL||p.catalogo||'—')+(p.pagina?' · página '+p.pagina:'')+' · incorporado '+(p.fecha||'').slice(0,10)+(p.prec&&!/^oficial|manual/.test(p.prec)?'<br><span style="color:#ffb74d">Medidas sin confirmar: revísalas contra el plano o la ficha antes de usarlas.</span>':'')+'</small>'));
