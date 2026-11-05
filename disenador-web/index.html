@@ -1590,15 +1590,19 @@ function sbUpdate(msg){const e=get(),el=$('#sb');if(!el)return;el.innerHTML='<b 
 $('#bMo').onclick=()=>{editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 /* ===== CATÁLOGOS Y FABRICANTES ===== */
-const CATS=['mueble bajo','mueble alto','columna','armario','cajonera','horno','microondas','frigorífico','lavadora','secadora','lavavajillas','campana','placa','vinoteca','sofá','cama','mesa','fregadero','grifería','otro'];
+const CATS=['Baño','mueble bajo','mueble alto','columna','armario','cajonera','horno','microondas','frigorífico','lavadora','secadora','lavavajillas','campana','placa','vinoteca','sofá','cama','mesa','fregadero','grifería','otro'];
 const CATK=[['columna','columna'],['armario alto','mueble alto'],['mueble alto','mueble alto'],['armario bajo','mueble bajo'],['mueble bajo','mueble bajo'],['cajonera','cajonera'],['cómoda','cajonera'],['armario','armario'],['ropero','armario'],['microondas','microondas'],['horno','horno'],['frigor','frigorífico'],['nevera','frigorífico'],['lavavajillas','lavavajillas'],['lavadora','lavadora'],['secadora','secadora'],['campana','campana'],['placa','placa'],['vitro','placa'],['inducci','placa'],['vinoteca','vinoteca'],['fregadero','fregadero'],['grifo','grifería'],['sofá','sofá'],['cama','cama'],['mesa','mesa']];
 let FABS=[],PRODS=[],fabSel='',IA={servicio:false,configurada:false};
 const dbq=(st,mode,fn)=>idb().then(d=>new Promise((res,rej)=>{const t=d.transaction(st,mode);let o;const r=fn(t);if(r)r.onsuccess=()=>o=r.result;t.oncomplete=()=>res(o);t.onerror=()=>rej(t.error)}));
 const saveFabs=()=>localStorage.setItem('fabs',JSON.stringify(FABS)),saveProd=p=>{p.dimensiones_mm={anchura:Number.isFinite(+p.w)&&+p.w>0?Math.round(+p.w*10):null,altura:Number.isFinite(+p.h)&&+p.h>0?Math.round(+p.h*10):null,profundidad:Number.isFinite(+p.d)&&+p.d>0?Math.round(+p.d*10):null};return dbq('p','readwrite',t=>t.objectStore('p').put(p))},saveDoc=b=>{const id='d'+Date.now()+Math.random().toString(36).slice(2,6);return dbq('d','readwrite',t=>t.objectStore('d').put(b,id)).then(()=>id)},getDoc=id=>dbq('d','readonly',t=>t.objectStore('d').get(id));
 function fichaToItem(p){
- // Una ficha comercial no genera un mueble genérico. Solo se convierte en objeto
- // insertable cuando tiene asociado un modelo 3D propio/importado y validado.
- if(!p||!p.mid)return null;
+ if(!p)return null;
+ if(p.modelType){
+  if(p.visual_review!=='approved'||typeof BUILD[p.modelType]!=='function')return null;
+  return {t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',
+   w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef',productUrl:p.sourceURL||'',modelReview:'approved'};
+ }
+ if(!p.mid)return null;
  const model=LIB.find(x=>x.t==='model'&&x.mid===p.mid);
  if(!model)return null;
  return {t:'model',mid:p.mid,n:p.nombre||model.n,brand:p.fab||model.brand,ref:p.ref||'',c:p.cat||model.c,
@@ -1610,29 +1614,24 @@ async function catLoad(){
  try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}
  PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];
  for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);
- PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
- // Registro comercial versionado: cada ficha aporta datos y referencia; el motor
- // solo la inserta si existe un constructor 3D propio asociado.
  try{
   const res=await fetch('/catalogo/productos-comerciales.json',{cache:'no-store'});
   if(res.ok){
    const registry=await res.json();
    (registry.products||[]).forEach(p=>{
-    const model=p.model||{},dims=p.dimensions_mm||{},type=model.type;
-    if(!p.id||!type||typeof BUILD[type]!=='function'||LIB.some(x=>x.pid===p.id))return;
-    const item={t:type,pid:p.id,n:p.name||p.id,brand:p.brand||'',ref:p.reference||'',
-     c:p.category||'Importados',roomType:(p.category||'').toLowerCase()==='baño'?'baño':'',
-     w:(+dims.width||0)/10,h:(+dims.height||0)/10,d:(+dims.length||0)/10,e:0,
-     col:p.finishes&&p.finishes[0]&&/negro/i.test(p.finishes[0].name)?'#171717':'#f4f3ef',
-     productUrl:(p.sources||[]).find(x=>x.type==='fabricante_producto')?.url||'',
-     technicalUrl:(p.sources||[]).find(x=>x.type==='fabricante_pdf_tecnico')?.url||'',
-     dimensionsSource:model.geometry_notes||'',status:p.status,weight_kg:p.weight_kg,
-     materials:p.materials||[],finishes:p.finishes||[],features:p.technical_features||{},
-     includes:p.included||[],excludes:p.excluded||[],geometryNote:model.geometry_notes||''};
-    LIB.push(item);
+    const dims=p.dimensions_mm||{},model=p.model||{};
+    if(!p.id||!model.type||typeof BUILD[model.type]!=='function'||PRODS.some(x=>x.id===p.id))return;
+    PRODS.push({id:p.id,nombre:p.name,fab:p.brand,ref:p.reference,cat:p.category,
+     w:(+dims.width||0)/10,h:(+dims.height||0)/10,d:(+dims.length||0)/10,
+     prec:'oficial (ficha del fabricante)',mats:(p.materials||[]).map(x=>x.name).join(', '),
+     acabados:(p.finishes||[]).map(x=>x.name).join(', '),col:'#f4f3ef',
+     sourceURL:(p.sources||[]).find(x=>x.type==='fabricante_producto')?.url||(p.sources||[])[0]?.url||'',
+     modelType:model.type,visual_review:model.visual_review||'pending',
+     modelNotes:model.geometry_notes||'',weightKg:p.weight_kg,commercialData:p});
    });
   }
  }catch(e){console.warn('No se pudo cargar el registro de productos comerciales:',e)}
+ PRODS.forEach(p=>{const o=fichaToItem(p);if(o)LIB.push(o)});
  try{IA=await fetch('/api/ia/estado').then(r=>r.json())}catch(e){IA={servicio:false,configurada:false}}
 }
 /* --- lectura de PDF (local, con pdf.js) --- */
@@ -1667,7 +1666,7 @@ function catUI(){const C=$('#cat');C.style.display='block';C.innerHTML='';const 
  const bar=el('div');bar.style.margin='0 0 8px';const q=el('input',{placeholder:'buscar nombre, referencia…'}),cs=el('select');cs.append(el('option',{value:'',textContent:'todas las categorías'}));CATS.forEach(c=>cs.append(el('option',{value:c,textContent:c})));bar.append(q,' ',cs,' ');
  bar.append(el('button',{textContent:'⬆ Importar PDF / ficha / foto…',onclick:()=>{if(!FABS.length&&!fabSel){alert('Crea primero un fabricante o marca.');return}impUI(Rg)}}),' ',el('button',{textContent:'📦 Importar catálogo propio (JSON)…',onclick:impNob}),' ',el('button',{textContent:'Archivo 3D existente…',onclick:()=>$('#fmod').click()}));Rg.append(bar);
  const grid=el('div');Rg.append(grid);const pintar=()=>{grid.innerHTML='';const f=PRODS.filter(p=>(!fabSel||p.fab==fabSel)&&(!cs.value||p.cat==cs.value)&&(p.nombre+' '+p.ref).toLowerCase().includes(q.value.toLowerCase()));if(!f.length)grid.textContent=PRODS.length?'Sin coincidencias.':'Todavía no hay productos. Crea un fabricante e importa un PDF, una ficha o una foto.';
-  f.forEach(p=>{const o=fichaToItem(p),c=el('div','', '');c.className='rc';c.style.width='170px';c.innerHTML=(o?'<img src="'+thumbO(o)+'" style="height:96px;object-fit:contain">':'<div style="height:96px;color:#9aa">sin modelo 3D para esta categoría</div>')+'<b>'+p.nombre+'</b><br>'+p.fab+(p.ref?' · '+p.ref:'')+'<br>'+p.w+'×'+p.d+'×'+p.h+' cm<br><span style="color:'+(/^oficial|manual/.test(p.prec)?'#7be08b':'#ffb74d')+'">'+p.prec+'</span>';c.style.cursor='pointer';c.onclick=()=>fichaUI(p);grid.append(c)})};q.oninput=pintar;cs.onchange=pintar;pintar()}
+  f.forEach(p=>{const o=fichaToItem(p)||(p.modelType?{t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef'}:null),c=el('div','', '');c.className='rc';c.style.width='170px';c.innerHTML=(o?'<img src="'+thumbO(o)+'" style="height:96px;object-fit:contain">':'<div style="height:96px;color:#9aa">sin modelo 3D asociado</div>')+'<b>'+p.nombre+'</b><br>'+p.fab+(p.ref?' · '+p.ref:'')+'<br>'+p.w+'×'+p.d+'×'+p.h+' cm<br><span style="color:'+(p.modelType&&p.visual_review!=='approved'?'#ffb74d':/^oficial|manual/.test(p.prec)?'#7be08b':'#ffb74d')+'">'+(p.modelType&&p.visual_review!=='approved'?'Pendiente de revisión visual':p.prec)+'</span>';c.style.cursor='pointer';c.onclick=()=>fichaUI(p);grid.append(c)})};q.oninput=pintar;cs.onchange=pintar;pintar()}
 function fichaUI(p){const C=$('#cat');C.innerHTML='';C.append(el('button',{textContent:'← Volver',onclick:catUI}),el('b','','  Ficha de producto'));const f=el('div');f.style.marginTop='8px';C.append(f);
  fld(f,'Nombre',p.nombre,'text',v=>p.nombre=v);fld(f,'Fabricante',p.fab,'',v=>p.fab=v,FABS);fld(f,'Referencia',p.ref,'text',v=>p.ref=v);fld(f,'Categoría',p.cat,'',v=>p.cat=v,CATS);f.append(el('br'));
  fld(f,'Anchura cm',p.w,'number',v=>p.w=v);fld(f,'Altura cm',p.h,'number',v=>p.h=v);fld(f,'Profundidad cm',p.d,'number',v=>p.d=v);fld(f,'Nº puertas',p.nd||0,'number',v=>p.nd=v);fld(f,'Nº cajones',p.nc||0,'number',v=>p.nc=v);fld(f,'Precisión de medidas',/^oficial/.test(p.prec)?'oficial':/^manual/.test(p.prec)?'manual':'estimada',''
@@ -1681,7 +1680,9 @@ const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observacione
  f.append(el('div','','<small>Procedencia: '+(p.sourceURL||p.catalogo||'—')+(p.pagina?' · página '+p.pagina:'')+' · incorporado '+(p.fecha||'').slice(0,10)+(p.prec&&!/^oficial|manual/.test(p.prec)?'<br><span style="color:#ffb74d">Medidas sin confirmar: revísalas contra el plano o la ficha antes de usarlas.</span>':'')+'</small>'));
  const area=el('div');area.style.margin='8px 0';
  const bt=(t,fn)=>{const b=el('button',{textContent:t,onclick:fn});b.style.marginRight='6px';f.append(b)};
- bt('Previsualizar 3D / colocar',()=>{const o=fichaToItem(p);if(!o)return alert('Con esta categoría o medidas no se puede generar un modelo paramétrico.');openPrevObj(o)});
+ bt('Previsualizar modelo 3D',()=>{const o=p.modelType?{t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef'}:fichaToItem(p);if(!o)return alert('Esta ficha todavía no tiene un modelo 3D asociado.');openPrevObj(o)});
+ if(p.modelType&&p.visual_review!=='approved')bt('Aprobar e incorporar a biblioteca',async()=>{if(!confirm('¿Has comprobado la previsualización desde varios ángulos y confirmas que la geometría, proporciones y materiales son aceptables?'))return;p.visual_review='approved';await saveProd(p);await catLoad();libUI();catUI()});
+ if(p.modelType&&p.visual_review==='approved')f.append(el('div','','<small style="color:#7be08b">Modelo aprobado para la biblioteca.</small>'));
  if(p.docId&&p.pagina)bt('Ver página del PDF',async()=>{area.textContent='Cargando…';try{const pdf=await pdfOpen(await getDoc(p.docId)),c=await pdfCanvas(pdf,p.pagina,1.4);c.style.cssText='max-width:100%;background:#fff';area.innerHTML='';area.append(c)}catch(e){area.textContent=e.message}});
  bt('Adjuntar foto / plano…',()=>{const i=el('input',{type:'file',accept:'image/*,.pdf'});i.onchange=async()=>{p.fotos=p.fotos||[];p.fotos.push({nombre:i.files[0].name,id:await saveDoc(i.files[0])});await saveProd(p);fichaUI(p)};i.click()});
  bt('Guardar',async()=>{if(!(p.w>0&&p.h>0&&p.d>0))return alert('Introduce anchura, altura y profundidad.');await saveProd(p);await catLoad();libUI();catUI()});
