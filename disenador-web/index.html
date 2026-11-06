@@ -1328,7 +1328,37 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   // Asa corta integrada en el borde derecho de la escotilla.
   const pHandle=new T.Mesh(new T.CylinderGeometry(1.25,1.25,Math.max(5,pr*.34),12),hd);pHandle.position.set(centerX+pr*.84,0,2.8);p.add(pHandle);
   [-1,1].forEach(side=>B(p,2.4,3.2,1.8,centerX-pr*.9,side*pr*.68,-.15,stl));
- } else if(kd=='americano'){[0,1].forEach(i=>{const s=i?-1:1,p=pv(-s*w/2,h/2,k0+i,{t:'d',sg:-s});B(p,w/2-.5,h-1,2,s*w/4,0,0,mp);B(p,1.6,h*.3,2.4,s*(w/2-4),0,3,hd)})}
+ } else if(kd=='americano'){
+  // Frigorífico side-by-side: dos cámaras, puertas independientes y dispensador de agua/hielo.
+  const innerW=w-8,innerD=d-10;
+  B(a,2.4,h-3,innerD,-w/2+1.2,h/2,-.5,m);B(a,2.4,h-3,innerD,w/2-1.2,h/2,-.5,m);
+  B(a,w-4,2,innerD,0,1,-.5,m);B(a,w-4,2,innerD,0,h-1,-.5,m);
+  B(a,2.2,h-4,innerD,0,h/2,-.5,stl);
+  [-1,1].forEach(side=>{
+   const cw=innerW/2-2,cx=side*(cw/2+1.1);
+   B(a,cw,h-5,1.1,cx,h/2,-d/2+2.1,wht);
+   B(a,1.1,h-5,innerD,cx-side*(cw/2-.5),h/2,-.5,wht);
+   for(let q=1;q<=4;q++){const sy=h*.18+q*h*.145;B(a,cw-3,.9,innerD-3,cx,sy,-.4,glassShelf);B(a,cw-4,.55,1,cx,sy,d/2-7,stl)}
+   for(let q=0;q<2;q++){const yy=h*.105+q*7;B(a,cw*.88,5,innerD-5,cx,yy,-.5,wht);B(a,cw*.86,4,.8,cx,yy,d/2-8,gls)}
+   const left=side<0,p=pv(left?-w/2+1.5:w/2-1.5,h/2,k0+(left?0:1),{t:'d',sg:left?1:-1});
+   const doorX=left?(w/2-3)/2:-(w/2-3)/2;
+   B(p,w/2-3,h-3,3.8,doorX,0,0,doorMat);
+   const handleX=left?w/2-7:-(w/2-7),handleLen=Math.min(h*.62,92);
+   const handle=new T.Mesh(new T.CylinderGeometry(.9,.9,handleLen,20),hd);handle.position.set(handleX,0,3.1);p.add(handle);
+   [-1,1].forEach(q=>{const cap=new T.Mesh(new T.SphereGeometry(1.05,12,10),stl);cap.position.set(handleX,q*handleLen*.5,3.1);p.add(cap)});
+   [-1,1].forEach(q=>B(p,w/2-8,4,7,left?-(w/4-3):w/4-3,q*h*.28,-1.2,gls));
+   if(!left){
+    B(p,w*.22,h*.24,1.2,-w*.13,-h*.06,2.1,rub);
+    B(p,w*.17,h*.17,.8,-w*.13,-h*.055,2.85,M('#202b32',.2,.35));
+    B(p,w*.11,1.5,1.1,-w*.13,-h*.155,3.2,stl);
+    B(p,w*.13,1.2,.8,-w*.13,-h*.185,2.9,lcd);
+   }
+   B(p,1,h-7,.65,left?w/2-3:-w/2+3,0,-2.05,rub);
+   [-1,1].forEach(q=>B(p,2.5,3.2,2,left?1.5:-1.5,q*(h/2-3),-.2,stl));
+  });
+  B(a,w*.32,2,.8,0,h-2,d/2+.3,pn);B(a,w*.18,.8,.5,0,h-1.8,d/2+.8,lcd);
+  B(a,w-5,2.2,d-4,0,1,-.5,stl);
+ }
  else if(kd=='combi'||kd=='frigo'){
   // Frigorífico con construcción por capas: carcasa, cámara, estantes, cajones y puertas funcionales.
   const split=kd=='combi'?h*.35:h-4;
