@@ -354,7 +354,7 @@ function libUI(q=''){
   {n:'Jardín',key:'jardin',cats:['Jardín']}
  ];
  const belongs=(o,room)=>o.roomType===room.key||room.cats.includes(o.c);
- const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:#191c22;padding:2px 0 8px;z-index:2';
+ const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:inherit;padding:2px 0 8px;z-index:2';
  const title=document.createElement('h4');title.textContent='Mobiliario y objetos';title.style.margin='4px 0 8px';head.append(title);
  const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar en todo el catálogo…';search.value=query;search.style.cssText='width:100%;box-sizing:border-box;margin-bottom:7px';head.append(search);
  const crumb=document.createElement('div');crumb.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 7px';head.append(crumb);
