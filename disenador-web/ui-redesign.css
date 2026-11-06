@@ -122,3 +122,25 @@ body:not(.ui-legacy) #top .view-mode.on svg{stroke:#fff}
  body:not(.ui-legacy) #top .view-mode{min-width:55px;padding:5px 6px!important}
  body:not(.ui-legacy) #top .view-mode span{font-size:9px}
 }
+
+
+/* Corrección del encabezado de la biblioteca de mobiliario */
+body:not(.ui-legacy) #lib > div[style*="position:sticky"]{
+  background:var(--ui-panel)!important;
+  border-bottom:1px solid var(--ui-line);
+}
+body:not(.ui-legacy) #lib > div[style*="position:sticky"] h4{
+  color:var(--ui-teal)!important;
+}
+body:not(.ui-legacy) #lib > div[style*="position:sticky"] div{
+  color:var(--ui-muted)!important;
+}
+body:not(.ui-legacy) #lib button.it[style*="background:#2f6fd1"]{
+  background:var(--ui-teal)!important;
+  color:#fff!important;
+  border-color:var(--ui-teal)!important;
+}
+body:not(.ui-legacy) #lib button.it[style*="background:#2f6fd1"]:hover{
+  background:var(--ui-teal-2)!important;
+  border-color:var(--ui-teal-2)!important;
+}
