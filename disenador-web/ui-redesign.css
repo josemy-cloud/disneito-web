@@ -219,3 +219,35 @@ body:not(.ui-legacy) #pr small{
  body:not(.ui-legacy) #tools button svg{width:19px;height:19px}
  body:not(.ui-legacy) #tools button span{font-size:8px}
 }
+
+
+/* Biblioteca: tarjetas de estancias y accesos al catálogo en la nueva paleta */
+body:not(.ui-legacy) #lib button[style*="background:#202d40"],
+body:not(.ui-legacy) #lib button[style*="background:#252a33"]{
+  background:#fff!important;color:var(--ui-ink)!important;
+  border:1px solid var(--ui-line)!important;border-radius:10px!important;
+  box-shadow:0 2px 8px rgba(31,48,44,.045);
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
+}
+body:not(.ui-legacy) #lib button[style*="background:#202d40"]:hover,
+body:not(.ui-legacy) #lib button[style*="background:#252a33"]:hover{
+  background:#fff!important;border-color:#a9c1b5!important;
+  box-shadow:0 5px 14px rgba(31,48,44,.09);transform:translateY(-1px);
+}
+body:not(.ui-legacy) #lib button[style*="background:#202d40"] div[style*="background:#171f2b"],
+body:not(.ui-legacy) #lib button[style*="background:#252a33"] div[style*="background:#171a20"]{
+  background:#edf2ed!important;color:var(--ui-teal)!important;
+}
+body:not(.ui-legacy) #lib button[style*="background:#202d40"] small,
+body:not(.ui-legacy) #lib button[style*="background:#252a33"] small{
+  color:var(--ui-muted)!important;
+}
+body:not(.ui-legacy) #lib img{
+  background:#eeefea!important;border-radius:7px!important;
+}
+body:not(.ui-legacy) #lib .it{
+  color:var(--ui-ink)!important;
+}
+body:not(.ui-legacy) #lib .it img{
+  border:1px solid var(--ui-line);
+}
