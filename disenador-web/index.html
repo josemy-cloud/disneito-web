@@ -741,10 +741,6 @@ function drw(g,it,k,x0,w,y0,h,mt,hm){
  // Correderas telescópicas a ambos lados y pequeños rodillos.
  [-1,1].forEach(q=>{
   B(p,1.8,2.2,dd-7,q*(w/2-4),0,-dd/2,M('#879198',.34,.78));
-  for(const z of [-dd*.38,dd*.32]){
-   const roller=new T.Mesh(new T.CylinderGeometry(1.1,1.1,1.4,12),M('#59636a',.4,.62));
-   roller.rotation.z=Math.PI/2;roller.position.set(q*(w/2-4),-h*.28,z);p.add(roller);
-  }
  });
  const mv={o:p,it,k,v:it.op[k]?1:0,t:'s',z:it.d/2,sl:it.d*.7};p.userData.mv=mv;MV.push(mv)
 }
