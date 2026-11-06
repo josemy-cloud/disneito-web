@@ -1363,13 +1363,14 @@
             "depth": 50
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA. Los cajones frontales son grupos independientes conectados al sistema de apertura/cierre por clic.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
             "frentes de cajón independientes",
             "laterales, trasera, fondos y guías",
-            "encimera y cubetas integradas"
+            "encimera y cubetas integradas",
+            "apertura y cierre de cajones mediante interacción"
           ]
         },
         {
@@ -1499,13 +1500,14 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA. Los cajones frontales son grupos independientes conectados al sistema de apertura/cierre por clic.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
             "frentes de cajón independientes",
             "laterales, trasera, fondos y guías",
-            "encimera y cubetas integradas"
+            "encimera y cubetas integradas",
+            "apertura y cierre de cajones mediante interacción"
           ]
         },
         {
