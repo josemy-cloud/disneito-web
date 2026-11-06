@@ -1422,9 +1422,12 @@
             "height": 115,
             "depth": 12
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "geometría específica de baño; pendiente prueba visual y funcional"
+          ]
         },
         {
           "id": "bano-columna",
@@ -1436,9 +1439,12 @@
             "height": 175,
             "depth": 32
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "geometría específica de baño; pendiente prueba visual y funcional"
+          ]
         },
         {
           "id": "bano-espejo-iluminado",
@@ -1450,9 +1456,12 @@
             "height": 75,
             "depth": 5
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "geometría específica de baño; pendiente prueba visual y funcional"
+          ]
         },
         {
           "id": "bano-banera-encastrada",
@@ -1547,9 +1556,12 @@
             "height": 110,
             "depth": 32
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "geometría específica de baño; pendiente prueba visual y funcional"
+          ]
         },
         {
           "id": "bano-toallero-pared",
@@ -1561,9 +1573,12 @@
             "height": 65,
             "depth": 12
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "geometría específica de baño; pendiente prueba visual y funcional"
+          ]
         },
         {
           "id": "bano-roca-ona-bidet",
