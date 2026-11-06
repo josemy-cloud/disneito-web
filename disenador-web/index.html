@@ -918,11 +918,10 @@ case'desk':{
  const pedX=isL?-width*.31:-width*.32,pedZ=isL?-depth*.22:0,pedBase=topY-pedH;
  if(!isSit&&!isVanity){
   const sideX=pedW/2-1;
-  box(-pedW/2+1,pedBase+pedH/2,pedZ,pedW-2,pedH-2,pedD-2,inside);
+  for(const sx of [-1,1])box(-pedW/2+1+sx*(pedW/2-1.5),pedBase+pedH/2,pedZ,2.4,pedH-3,pedD-2,wood);
+  box(-pedW/2+1,pedBase+pedH/2,pedZ-pedD/2+1,pedW-2,pedH-3,2,wood);
   box(-pedW/2+1,pedBase+1.2,pedZ,pedW-2,2.4,pedD,wood);
-  box(-pedW/2+1,topY-1.2,pedZ,pedW,2.4,pedD,wood);
-  box(-pedW/2+1,pedBase+pedH/2,pedZ-pedD/2+1,2,pedH-3,2,wood);
-  box(-pedW/2+1,pedBase+pedH/2,pedZ+pedD/2-1,2,pedH-3,2,wood);
+  box(-pedW/2+1,topY-1.2,pedZ,pedW-2,2.4,pedD,wood);
   const n=isYouth?2:3,drawerH=(pedH-5)/n;
   for(let k=0;k<n;k++){
    const yy=pedBase+2+drawerH*(k+.5),frontZ=pedZ+pedD/2+1.5;
