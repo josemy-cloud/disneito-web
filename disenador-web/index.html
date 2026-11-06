@@ -933,23 +933,20 @@ case'shelf':{
  for(const x of [-1,1]){if(library)box(x*(w/2-1.5),h/2,0,3,h,d,side);else{tube([x*(w/2-2),3,-d*.42],[x*(w/2-2),h-3,-d*.42],2.2,side);tube([x*(w/2-2),3,d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);tube([x*(w/2-2),h-3,-d*.42],[x*(w/2-2),h-3,d*.42],2.2,side)}}
  if(library)box(0,h/2,-d/2+1.2,w-3,h-3,2.4,back);else for(let y of [.2,.5,.8])box(0,h*y,-d*.42,w-5,1.4,2,side);
  if(library)box(0,h/2,0,2.2,h-4,d-3,side);
- const n=it.variant===2?6:5,step=(h-8)/(n-1);
- for(let k=0;k<n;k++){
-  const y=4+k*step;
-  box(0,y,0,w-3,3.2,d-4,mt);
-  for(const x of [-1,1]){cyl(x*(w/2-5),y+2,0,1.1,2.4,pin);cyl(x*(w/2-5),y+2,d*.28,1.1,2.4,pin)}
-  box(0,y-2,0,w-8,1.2,d-8,side);
-  box(0,y,d/2-2,w-5,1.2,1.4,side);
+ const n=it.variant===2?6:5,step=(h-8)/(n-1),shelfYs=[];
+ for(let k=0;k<n;k++){const y=4+k*step;shelfYs.push(y);box(0,y,0,w-3,3.2,d-4,mt);
+  for(const x of [-1,1]){cyl(x*(w/2-5),y-2,0,1.1,2.4,pin);cyl(x*(w/2-5),y-2,d*.28,1.1,2.4,pin)}
+  box(0,y-2.25,0,w-8,1.1,d-8,side);box(0,y,d/2-2,w-5,1.2,1.4,side);
  }
  for(let shelf=0;shelf<n-1;shelf++){
-  let x=-w*.39;const count=4+(shelf%3);
-  for(let j=0;j<count;j++){
-   const bw=Math.min(7,w*.085),bh=h*(.11+((j*7+shelf*3)%5)*.018),bd=d*.48;
-   if(x+bw>w*.43)break;
-   const book=new T.Mesh(boxGeo(bw,bh,bd),bookSpines[(j+shelf)%bookSpines.length]);book.position.set(x+bw/2,4+(shelf+.5)*step+bh/2,-d*.06);g.add(book);
-   box(x+bw/2,4+(shelf+.5)*step+bh/2,-d*.06+bd/2+.45,bw*.88,bh*.94,.8,M('#e5dfd2',.9,.01));
-   x+=bw+1.2;
-  }
+  const lowerTop=shelfYs[shelf]+1.6,clearance=shelfYs[shelf+1]-lowerTop-1.6;if(clearance<7)continue;
+  const maxBookH=clearance*.76,zones=library?[[-w*.5+5,-3.5],[3.5,w*.5-5]]:[[-w*.5+5,w*.5-5]];
+  zones.forEach((zone,zi)=>{let x=zone[0]+(zi?1:0);const end=zone[1],count=zi===0?4+(shelf%2):3+(shelf%3);
+   for(let j=0;j<count;j++){const bw=Math.min(6.2,Math.max(3.8,(end-zone[0])/(count+1))),bh=Math.min(maxBookH,h*(.085+((j*7+shelf*3)%4)*.012)),bd=Math.min(d*.43,Math.max(8,d-10));if(x+bw>end)break;
+    const z=-d*.04,cy=lowerTop+bh/2,book=new T.Mesh(boxGeo(bw,bh,bd),bookSpines[(j+shelf+zi)%bookSpines.length]);book.position.set(x+bw/2,cy,z);g.add(book);
+    box(x+bw/2,cy,z+bd/2+.18,bw*.86,bh*.94,.35,M('#e5dfd2',.9,.01));x+=bw+1;
+   }
+  });
  }
  break;
 }
@@ -987,16 +984,22 @@ case'desk':{
   box(-pedW/2+1,pedBase+pedH/2,pedZ-pedD/2+1,pedW-2,pedH-3,2,wood);
   box(-pedW/2+1,pedBase+1.2,pedZ,pedW-2,2.4,pedD,wood);
   box(-pedW/2+1,topY-1.2,pedZ,pedW-2,2.4,pedD,wood);
-  const n=isYouth?2:3,drawerH=(pedH-5)/n;
+  const n=isYouth?2:3,drawerH=(pedH-5)/n;it.op=it.op||[];
   for(let k=0;k<n;k++){
-   const yy=pedBase+2+drawerH*(k+.5),frontZ=pedZ+pedD/2+1.5;
-   box(-pedW/2+1,yy,pedZ,pedW-5,drawerH-1,pedD-5,inside);
-   box(-pedW/2+1,yy,frontZ,pedW-1,drawerH-1.4,2.2,drawerFront);
-   // Tirador metálico con dos apoyos y barra separada del frente.
-   const hy=yy,barZ=frontZ+1.8,hx=-pedW/2+1;
-   for(const dx of [-5,5])cyl(hx+dx,hy,barZ,1.15,2,steelHi);
-   tube([hx-5,hy+1,barZ+1],[hx+5,hy+1,barZ+1],1.15,steelHi);
-   box(-pedW/2+1,yy,pedZ-pedD*.22,pedW-7,1.2,pedD*.52,inside);
+   const yy=pedBase+2+drawerH*(k+.5),frontZ=pedZ+pedD/2+1.5,drawerW=pedW-1,drawerD=pedD-5;
+   const dp=new T.Group();dp.position.set(-pedW/2+1,yy,frontZ);g.add(dp);dp.userData.part={t:'cajón escritorio',i:k};
+   B(dp,drawerW,drawerH-1.4,2.2,0,0,0,drawerFront);
+   B(dp,drawerW-5,1.2,drawerD,0,-drawerH*.43,-drawerD*.48,inside);
+   B(dp,1.5,drawerH-3,drawerD,-drawerW/2+2,0,-drawerD*.48,inside);
+   B(dp,1.5,drawerH-3,drawerD,drawerW/2-2,0,-drawerD*.48,inside);
+   B(dp,drawerW-5,drawerH-3,1.5,0,0,-drawerD*.94,inside);
+   B(dp,drawerW-7,1.2,drawerD-5,0,-drawerH*.38,-drawerD*.48,inside);
+   B(dp,2.2,2.2,2.2,-5,0,2,steelHi);B(dp,2.2,2.2,2.2,5,0,2,steelHi);B(dp,12,1.8,1.8,0,1.2,3,steelHi);
+   for(const side of [-1,1]){
+    B(g,1.4,2.2,drawerD*.78,-pedW/2+1+side*(drawerW/2-1),yy,pedZ,steelHi);
+    B(g,.9,1.2,drawerD*.72,-pedW/2+1+side*(drawerW/2+1),yy-1,pedZ,steel);
+   }
+   mv(dp,{it,k,t:'s',z:frontZ,sl:Math.min(24,drawerD*.55)});
   }
   // Patines regulables ocultos bajo el zócalo.
   for(const dx of [-1,1])for(const dz of [-1,1]){
@@ -1021,9 +1024,9 @@ case'desk':{
   // Bastidor perimetral de acero bajo el ala y el retorno, con patas nivelables.
   const leg=(x,z)=>{box(x,topY-7,z,7,14,7,steel);box(x,topY-35,z,4.5,58,4.5,steelHi);box(x,4,z,9,3,9,steel);cyl(x,2.2,z,3,1.4,rubber)};
   leg(width*.43,depth*.38);leg(width*.43,-depth*.38);leg(-width*.43,-depth*.38);
+  // Bastidor en L: dos largueros perpendiculares, sin travesaño duplicado.
   tube([-width*.43,topY-10,-depth*.38],[width*.43,topY-10,-depth*.38],3.2,steel);
   tube([width*.43,topY-10,-depth*.38],[width*.43,topY-10,depth*.38],3.2,steel);
-  tube([-width*.28,topY-10,-depth*.38],[width*.28,topY-10,-depth*.38],2.2,steelHi);
  }else{
   // Escritorio recto con bastidores laterales en U y uniones atornilladas.
   for(const x of [-width*.43,width*.43]){
@@ -1058,7 +1061,7 @@ case'officechair':{
  const name=(it.n||'').toLowerCase(),executive=/ejecutiva/.test(name),compact=/compacta/.test(name),meshMat=M('#343d43',.58,.18),uphol=M(it.col||'#454d55',.82,.02),seam=M('#aeb5bb',.62,.08),steelHi=M('#89949b',.28,.86),baseMat=M('#252b30',.32,.72),rub=M('#171b1f',.72,.04);
  const seatW=w*.72,seatD=d*.55,seatY=h*.39;
  const seat=new T.Shape();seat.moveTo(-seatW*.42,-seatD*.5);seat.quadraticCurveTo(-seatW*.5,-seatD*.5,-seatW*.5,-seatD*.28);seat.lineTo(-seatW*.5,seatD*.22);seat.quadraticCurveTo(-seatW*.48,seatD*.5,-seatW*.25,seatD*.5);seat.lineTo(seatW*.25,seatD*.5);seat.quadraticCurveTo(seatW*.5,seatD*.5,seatW*.5,seatD*.22);seat.lineTo(seatW*.5,-seatD*.28);seat.quadraticCurveTo(seatW*.5,-seatD*.5,seatW*.35,-seatD*.5);seat.closePath();
- const sg=new T.ExtrudeGeometry(seat,{depth:8,bevelEnabled:true,bevelSegments:4,bevelSize:2,bevelThickness:2,curveSegments:12});sg.translate(0,0,-4);const sm=new T.Mesh(sg,uphol);sm.position.y=seatY;g.add(sm);sm.castShadow=sm.receiveShadow=true;
+ const sg=new T.ExtrudeGeometry(seat,{depth:8,bevelEnabled:true,bevelSegments:4,bevelSize:2,bevelThickness:2,curveSegments:12});sg.translate(0,0,-4);sg.rotateX(-Math.PI/2);sg.computeVertexNormals();const sm=new T.Mesh(sg,uphol);sm.position.y=seatY;g.add(sm);sm.castShadow=sm.receiveShadow=true;
  box(0,seatY-7,0,seatW*.62,5,seatD*.58,baseMat);box(0,seatY-11,-seatD*.12,seatW*.34,3,seatD*.42,metal);
  const backW=seatW*(compact?.76:.88),backH=h*(executive?.42:compact?.30:.36),backY=h*(compact?.65:.69),backZ=-d*.31;
  const back=new T.Shape();back.moveTo(-backW*.46,0);back.quadraticCurveTo(-backW*.52,backH*.1,-backW*.45,backH*.25);back.lineTo(-backW*.39,backH*.88);back.quadraticCurveTo(0,backH*1.04,backW*.39,backH*.88);back.lineTo(backW*.45,backH*.25);back.quadraticCurveTo(backW*.52,backH*.1,backW*.46,0);back.quadraticCurveTo(0,-backH*.05,-backW*.46,0);back.closePath();
@@ -1102,6 +1105,21 @@ case'compressor':cyl(0,h*.35,0,w*.42,h*.48);cyl(0,h*.65,0,w*.14,h*.28,metal);bre
 case'cart':case'tyres':for(let k=0;k<3;k++){const tor=new T.Mesh(new T.TorusGeometry(w*.25,6,12,32),dark);tor.rotation.x=Math.PI/2;tor.position.y=h*.25+k*12;g.add(tor)}break;
 case'coat':cyl(0,h*.5,0,2,h,metal);for(let k=0;k<6;k++){const a=k*Math.PI/3;tube([0,h*.82,0],[Math.cos(a)*w*.38,h*.96,Math.sin(a)*d*.38])}break;
 case'computer':{
+ const itemName=(it.n||'').toLowerCase();
+ if(/portátil|portatil|laptop/.test(itemName)){
+  const shell=M('#343a40',.32,.72),baseInner=M('#aeb5ba',.42,.62),keyCap=M('#929ba2',.5,.25),screenFrame=M('#171c21',.24,.4),display=new T.MeshStandardMaterial({color:'#172c3b',roughness:.16,metalness:.18,emissive:'#102535',emissiveIntensity:.22}),track=M('#858e95',.42,.55);
+  const bw=w*.92,bd=d*.64,baseY=h*.13,th=3.2;
+  box(0,baseY,0,bw,th,bd,shell);box(0,baseY+th*.55,0,bw-2,1,bd-2,baseInner);
+  const rows=5,cols=13,gap=1.05,kw=bw*.78,kd=bd*.48,keyW=(kw-(cols-1)*gap)/cols,keyD=(kd-(rows-1)*gap)/rows,kz=-bd*.08;
+  for(let rr=0;rr<rows;rr++)for(let cc=0;cc<cols;cc++){const special=rr===4&&cc>=4&&cc<=8,ww=special?keyW*1.8:keyW,xx=-kw/2+cc*(keyW+gap)+(special?(cc-4)*keyW*.8:0);box(xx+ww/2,baseY+th+0.7,kz-kd*.12+rr*(keyD+gap),ww,.75,keyD*.82,keyCap)}
+  box(0,baseY+th+.7,bd*.31,bw*.23,.55,bd*.17,track);box(-bw*.13,baseY+th+.8,bd*.42,bw*.07,.45,1.1,shell);box(bw*.13,baseY+th+.8,bd*.42,bw*.07,.45,1.1,shell);
+  const hingeZ=-bd/2+1.2,screenH=h*.72,screenW=bw*.94,screenY=baseY+screenH*.52+3,hinge=new T.Mesh(new T.CylinderGeometry(1.8,1.8,screenW*.86,20),track);hinge.rotation.z=Math.PI/2;hinge.position.set(0,baseY+2,hingeZ);g.add(hinge);
+  box(0,screenY,hingeZ,screenW,screenH,3.2,screenFrame);box(0,screenY,hingeZ+1.75,screenW-3,screenH-3,.7,display);
+  const webcam=new T.Mesh(new T.SphereGeometry(.7,12,8),track);webcam.position.set(0,screenY+screenH*.47,hingeZ+2.2);g.add(webcam);
+  box(0,screenY-screenH*.42,hingeZ+2.2,5,1.1,.25,track);
+  for(const side of [-1,1]){for(let q=0;q<3;q++)box(side*(bw/2-1.2),baseY+th*.35,-bd*.18+q*3,1.1,.7,1.6,track);for(let q=0;q<4;q++)box(side*(bw/2-1.2),baseY+th*.35,bd*.18+q*2,1.1,.7,1.2,shell)}
+ }else{
+
  const casing=M('#242a30',.32,.62),bezel=M('#11161b',.28,.24),screen=new T.MeshStandardMaterial({color:'#192c38',roughness:.18,metalness:.22,emissive:'#172d3b',emissiveIntensity:.16}),key=M('#333b42',.55,.22),keyTop=M('#9ba4aa',.55,.18),silver=M('#89949b',.3,.8);
  const monW=w*.88,monH=h*.62,monY=h*.68,monZ=-d*.22,frame=2.8;
  // Monitor: carcasa trasera, bisel frontal, cristal y cámara.
@@ -1130,6 +1148,8 @@ case'computer':{
  const mouse=new T.Mesh(new T.SphereGeometry(1,24,16),casing);mouse.scale.set(w*.055,2.2,d*.075);mouse.position.set(w*.39,ky+2.3,kz);g.add(mouse);
  tube([w*.39,ky+4.4,kz-d*.04],[w*.39,ky+4.4,kz+d*.035],.55,silver);
  const wheel=new T.Mesh(new T.CylinderGeometry(.9,.9,2.5,12),silver);wheel.rotation.x=Math.PI/2;wheel.position.set(w*.39,ky+4.5,kz);g.add(wheel);
+ 
+ }
  break;
 }
 case'sunbed':box(0,h*.55,0,w,h*.12,d);tube([-w*.4,4,-d*.3],[-w*.4,h*.6,d*.3]);tube([w*.4,4,-d*.3],[w*.4,h*.6,d*.3]);break;
