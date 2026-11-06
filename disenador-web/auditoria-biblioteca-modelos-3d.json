@@ -90,6 +90,14 @@
       "impact": "La geometría anterior hacía que lavabos parecieran circulares o poco profundos, mamparas/platos fueran planos, tapas WC sobresalieran y cajones chocaran con el casco.",
       "action": "Se sustituyeron cubetas por superficies de anillos con paredes y fondo, se añadió borde y rebaje al plato, hoja de mampara articulada, tapa ovalada contenida y holguras de cajón. Pendiente verificación visual/funcional real.",
       "verified": false
+    },
+    {
+      "id": "F11",
+      "severity": "high",
+      "finding": "Corrección individual solicitada para columna y mueble auxiliar de baño (cajones sin apertura), muebles lavabo suspendido y doble (cubetas/grifos ausentes y frentes separados del cajón), mampara (piezas flotantes) e inodoro (tapa insuficiente).",
+      "impact": "Problemas de geometría y de interacción que afectan la lectura visual y el uso de los objetos.",
+      "action": "Añadidos cajones animados completos a muebles auxiliares/columna; ajuste de construcción y recorrido de cajones de lavabos; cubetas y grifos integrados; mampara y accesorios anclados a plato/pared; tapa WC ampliada al contorno del asiento. Pendiente verificación visual y funcional real en navegador.",
+      "verified": false
     }
   ],
   "counts_by_room": {
