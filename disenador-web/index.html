@@ -2528,7 +2528,44 @@ BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=
  });
  c.dvs.forEach((q,i)=>tagp(B(g,1.6,H-4,d-3,Math.max(-iw/2+1,Math.min(iw/2-1,q.x)),y0+H/2,0,mc),'separador',i,it));
  c.rods.forEach((q,i)=>{const r=new T.Mesh(new T.CylinderGeometry(1.2,1.2,iw-1,10),M('#aaa',.3,.9));r.rotation.z=Math.PI/2;r.position.set(0,y0+Math.min(q.y,H-4),0);g.add(r);tagp(r,'barra',i,it)});
- if((K=='alto'||K=='col')&&hasTop)tagp(B(g,w,t,d,0,h-t/2,0,mc),'tapa superior');if(K=='base'&&hasTop)worktop(g,it,c,h-3,L=='fregadero'?{w:Math.min(iw-14,76),d:Math.min(d-14,46),t:'s'}:L=='placa'?{w:Math.min(iw-6,58),d:Math.min(d-8,50),t:'p'}:null);
+ 
+ /* Remates de canto ABS en los frentes vistos: protegen los tableros y definen juntas reales. */
+ const edgeBand=M('#b9b5ad',.58,.04);
+ B(g,t-.25,H-.8,.65,-w/2+t/2,y0+H/2,d/2+.18,edgeBand);
+ B(g,t-.25,H-.8,.65,w/2-t/2,y0+H/2,d/2+.18,edgeBand);
+ B(g,iw-.6,.55,.65,0,y0+t/2,d/2+.18,edgeBand);
+ c.shl.forEach(q=>{
+  const sy=y0+Math.min(Math.max(q.y,1),H-1);
+  B(g,iw-.5,.55,.65,0,sy,d/2-.25,edgeBand);
+ });
+ /* Bastidor de apoyo y patas niveladoras ocultas tras el zócalo en bajos y columnas. */
+ if(K=='base'||K=='col'){
+  const footMetal=M('#737d83',.34,.82),footPoly=M('#292e32',.72,.04);
+  for(const sx of [-1,1])for(const sz of [-1,1]){
+   const fx=sx*(w/2-t-4),fz=sz*(d/2-t-5);
+   const pad=new T.Mesh(new T.CylinderGeometry(2.7,3.1,3.2,20),footPoly);pad.position.set(fx,1.6,fz);g.add(pad);
+   const stem=new T.Mesh(new T.CylinderGeometry(1.15,1.35,5.8,16),footMetal);stem.position.set(fx,6.1,fz);g.add(stem);
+   const collar=new T.Mesh(new T.CylinderGeometry(2,2,1.2,16),footMetal);collar.position.set(fx,9.2,fz);g.add(collar);
+  }
+  B(g,iw*.9,2.2,2.2,0,y0-1.1,-d/2+t*1.6,footMetal);
+  B(g,iw*.9,2.2,2.2,0,y0-1.1,d/2-t*1.6,footMetal);
+ }
+ /* Herrajes de suspensión regulable para muebles altos, atornillados a la trasera. */
+ if(K=='alto'){
+  const hanger=M('#8b969d',.32,.84);
+  for(const sx of [-1,1]){
+   const hx=sx*(w/2-t-5);
+   B(g,7,10,2.2,hx,h*.82,-d/2+.9,hanger);
+   B(g,3.5,4,2.6,hx,h*.82,-d/2+2.8,footMetal||hanger);
+   for(const yy of [h*.78,h*.86]){
+    const screw=new T.Mesh(new T.CylinderGeometry(.8,.8,1.2,12),hanger);
+    screw.rotation.x=Math.PI/2;screw.position.set(hx,yy,-d/2+2.1);g.add(screw);
+   }
+  }
+ }
+ if((K=='alto'||K=='col')&&hasTop)tagp(B(g,w,t,d,0,h-t/2,0,mc),'tapa superior');
+ if(K=='base'&&hasTop)worktop(g,it,c,h-3,L=='fregadero'?{w:Math.min(iw-14,76),d:Math.min(d-14,46),t:'s'}:L=='placa'?{w:Math.min(iw-6,58),d:Math.min(d-8,50),t:'p'}:null);
+ g.userData.kitchenConstruction={schemaVersion:2,category:K,layout:L,panelThicknessCm:t,components:['18mm-carcass','captured-back','edge-banding','shelf-supports','hinged-fronts','drawer-runners','adjustable-feet','plinth-frame',...(K=='alto'?['wall-hangers']:[])],status:'integrated-pending-browser-visual-and-interaction-validation'};
  if(c.led&&K=='alto')B(g,iw-8,1,2,0,.6,d/2-6,LEDM);if(LAY[L])LAY[L](g,it,c,Mx,y0,H,iw)};
 /* Electrodomésticos independientes */
 function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0,y0,zf-d/2);g.add(a);const SP=typeof fin=='object'&&fin?fin:{g:fin},pm=(c,def)=>{const f=SP[c]||def||SP.g;return f[0]=='#'?M(f,.4,.1):finM(f)},m=pm('carc'),mp=pm('puerta'),mf=pm('marco'),dk=pm('cristal','cristal oscuro'),pn=pm('panel','cristal oscuro'),hd=pm('tirador','gris metal'),kn=pm('mandos','gris metal');
