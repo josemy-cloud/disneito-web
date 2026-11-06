@@ -10,7 +10,12 @@
     "commercial_registry_unique_model_types": 5,
     "imported_models": "No cuantificables desde el código estático: se cargan dinámicamente desde IndexedDB y el catálogo compartido.",
     "procedural_room_object_types": 50,
-    "procedural_room_object_generators_rebuilt_first_pass": 39
+    "procedural_room_object_generators_rebuilt_first_pass": 39,
+    "legacy_classic_generators_updated": [
+      "sofa",
+      "mesa",
+      "cama"
+    ]
   },
   "standard": {
     "target": "Modelos de producto con silueta y proporciones fieles, geometría constructiva coherente, componentes diferenciados, materiales PBR adecuados, dimensiones reales, pivotes/jerarquía y comportamiento funcional cuando corresponda; rendimiento apto para tiempo real.",
@@ -147,6 +152,14 @@
       "finding": "Primera reconstrucción transversal de 39 familias geométricas compartidas que alimentan los 144 objetos procedurales de 12 estancias. Se separaron tipologías que antes compartían una misma geometría genérica (asiento/banco/silla; caja/baúl/maleta; coche/furgoneta; bicicleta/moto; sofá interior/exterior; cómoda/aparador/armario/console/carro de herramientas).",
       "impact": "La misma geometría simplificada se estaba reutilizando para productos funcionalmente distintos, dando lugar a siluetas incorrectas y componentes ausentes.",
       "action": "Reconstruidos generadores compartidos para sofá interior/exterior, butaca/puf, banco, silla, panel TV, mesas, camas/literas, cómoda, aparador, armario, mueble auxiliar, cajonera de herramientas, consola, carro de transporte, armario ropero, lámparas, lavadora, fregadero, banco de trabajo, compresor, coche, furgoneta, tumbona, sombrilla, pérgola, barbacoa, piscina, maleta, tabla de planchar, cesto, caja, baúl, bicicleta, moto, neumáticos, jardinera, árbol, perchero y escalera. Ajustadas superficies de agua, mesas elípticas y eliminado el fallback de bloques genéricos. Todo queda integrado pero pendiente de validación visual/funcional en navegador.",
+      "verified": false
+    },
+    {
+      "id": "F18",
+      "severity": "medium",
+      "finding": "Además de los modelos de estancia, el catálogo clásico conserva generadores independientes para muebles antiguos y elementos guardados con tipos legacy. Los generadores clásicos de sofá, mesa y cama seguían usando componentes demasiado planos o prismáticos frente a las nuevas familias.",
+      "impact": "Los proyectos y entradas antiguas que usan los tipos clásicos podían conservar un aspecto inferior aunque la biblioteca procedural nueva estuviera mejorada.",
+      "action": "Actualizados también los generadores clásicos de sofá, mesa y cama: cojines volumétricos separados, soportes estructurales, mesa con pedestal o patas diferenciadas y colchón/almohadas/ropa de cama con volumen. Se conserva la compatibilidad de los identificadores y tipos legacy. Pendiente validación visual en navegador.",
       "verified": false
     }
   ],
