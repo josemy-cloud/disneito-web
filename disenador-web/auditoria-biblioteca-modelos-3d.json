@@ -10,7 +10,7 @@
     "commercial_registry_unique_model_types": 5,
     "imported_models": "No cuantificables desde el código estático: se cargan dinámicamente desde IndexedDB y el catálogo compartido.",
     "procedural_room_object_types": 50,
-    "procedural_room_object_generators_rebuilt_first_pass": 38
+    "procedural_room_object_generators_rebuilt_first_pass": 39
   },
   "standard": {
     "target": "Modelos de producto con silueta y proporciones fieles, geometría constructiva coherente, componentes diferenciados, materiales PBR adecuados, dimensiones reales, pivotes/jerarquía y comportamiento funcional cuando corresponda; rendimiento apto para tiempo real.",
@@ -144,9 +144,9 @@
     {
       "id": "F17",
       "severity": "critical",
-      "finding": "Primera reconstrucción transversal de 37 familias geométricas compartidas que alimentan los 144 objetos procedurales de 12 estancias. Se separaron tipologías que antes compartían una misma geometría genérica (asiento/banco/silla; caja/baúl/maleta; coche/furgoneta; bicicleta/moto; sofá interior/exterior; cómoda/aparador/armario/console/carro de herramientas).",
+      "finding": "Primera reconstrucción transversal de 39 familias geométricas compartidas que alimentan los 144 objetos procedurales de 12 estancias. Se separaron tipologías que antes compartían una misma geometría genérica (asiento/banco/silla; caja/baúl/maleta; coche/furgoneta; bicicleta/moto; sofá interior/exterior; cómoda/aparador/armario/console/carro de herramientas).",
       "impact": "La misma geometría simplificada se estaba reutilizando para productos funcionalmente distintos, dando lugar a siluetas incorrectas y componentes ausentes.",
-      "action": "Reconstruidos generadores compartidos para sofá interior/exterior, butaca/puf, banco, silla, panel TV, mesas, camas/literas, cómoda, aparador, armario, mueble auxiliar, cajonera de herramientas, consola, armario ropero, lámparas, lavadora, fregadero, banco de trabajo, compresor, coche, furgoneta, tumbona, sombrilla, pérgola, barbacoa, piscina, maleta, tabla de planchar, cesto, caja, baúl, bicicleta, moto, neumáticos, jardinera, árbol, perchero y escalera. Ajustadas superficies de agua, mesas elípticas y eliminado el fallback de bloques genéricos. Todo queda integrado pero pendiente de validación visual/funcional en navegador.",
+      "action": "Reconstruidos generadores compartidos para sofá interior/exterior, butaca/puf, banco, silla, panel TV, mesas, camas/literas, cómoda, aparador, armario, mueble auxiliar, cajonera de herramientas, consola, carro de transporte, armario ropero, lámparas, lavadora, fregadero, banco de trabajo, compresor, coche, furgoneta, tumbona, sombrilla, pérgola, barbacoa, piscina, maleta, tabla de planchar, cesto, caja, baúl, bicicleta, moto, neumáticos, jardinera, árbol, perchero y escalera. Ajustadas superficies de agua, mesas elípticas y eliminado el fallback de bloques genéricos. Todo queda integrado pero pendiente de validación visual/funcional en navegador.",
       "verified": false
     }
   ],
