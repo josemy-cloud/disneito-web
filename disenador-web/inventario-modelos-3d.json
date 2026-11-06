@@ -1344,14 +1344,15 @@
             "depth": 90
           },
           "status": "integrated_no_verificado",
-          "note": "Plato con borde perimetral y superficie rebajada; mampara con panel fijo y hoja de acceso independiente articulada con bisagras y tirador. Pendiente prueba de apertura.",
+          "note": "Mampara reconstruida con paneles de vidrio apoyados en los bordes del plato, perfiles solo en encuentros y puerta articulada; columna, rociador, mezclador y flexo recolocados sobre pared posterior para evitar piezas suspendidas. Pendiente inspección visual.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "plato de ducha con geometría extruida y perímetro redondeado",
             "desagüe y rejilla",
             "mampara de vidrio y perfilería para variante con mampara",
             "columna de ducha, rociador, mezclador y flexo",
-            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional",
+            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
           ]
         },
         {
@@ -1365,7 +1366,7 @@
             "depth": 50
           },
           "status": "integrated_no_verificado",
-          "note": "Cubetas integradas ovaladas con fondo y paredes; cajones con holgura lateral, fondos/costados contenidos dentro del casco y recorrido de apertura limitado para evitar colisión. Pendiente prueba real.",
+          "note": "Dos cubetas integradas y dos grifos modelados; cajones completos como grupos únicos, con frente unido al interior y holguras laterales/profundidad corregidas. Pendiente prueba real.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
@@ -1373,7 +1374,8 @@
             "laterales, trasera, fondos y guías",
             "encimera y cubetas integradas",
             "apertura y cierre de cajones mediante interacción",
-            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional",
+            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
           ]
         },
         {
@@ -1443,10 +1445,11 @@
             "depth": 32
           },
           "status": "integrated_no_verificado",
-          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "note": "Tres cajones inferiores móviles con guías y holgura respecto al casco; puerta superior independiente articulada. Pendiente prueba real.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
-            "geometría específica de baño; pendiente prueba visual y funcional"
+            "geometría específica de baño; pendiente prueba visual y funcional",
+            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
           ]
         },
         {
@@ -1519,7 +1522,7 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Cubeta integrada y cajones corregidos con holguras y recorrido de apertura reducido; pendiente prueba real.",
+          "note": "Cubeta integrada y grifo con base, caño y aireador; cajón completo como grupo único, con costados/fondo acercados al frontal para evitar separación; recorrido de apertura reducido. Pendiente prueba real.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
@@ -1527,7 +1530,8 @@
             "laterales, trasera, fondos y guías",
             "encimera y cubetas integradas",
             "apertura y cierre de cajones mediante interacción",
-            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional",
+            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
           ]
         },
         {
@@ -1563,10 +1567,11 @@
             "depth": 32
           },
           "status": "integrated_no_verificado",
-          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "note": "Cajones reconstruidos como grupos móviles independientes con frente, costados, fondo y trasera unidos; apertura conectada al sistema MV y recorrido limitado al interior útil. Puerta superior también articulada. Pendiente prueba real.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
-            "geometría específica de baño; pendiente prueba visual y funcional"
+            "geometría específica de baño; pendiente prueba visual y funcional",
+            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
           ]
         },
         {
