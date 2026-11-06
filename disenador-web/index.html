@@ -756,7 +756,7 @@ function toiletGeometry(g,it,mt){
  // WC de suelo compacto: pedestal cerámico continuo, taza ovalada y altura de asiento proporcionada.
  const outer=[new T.Vector2(0,2),new T.Vector2(rx*.46,2),new T.Vector2(rx*.62,h*.06),new T.Vector2(rx*.74,h*.17),new T.Vector2(rx*.86,h*.34),new T.Vector2(rx*.98,seatY-2),new T.Vector2(rx*.98,seatY),new T.Vector2(rx*.90,seatY),new T.Vector2(rx*.78,h*.46),new T.Vector2(rx*.64,h*.29),new T.Vector2(rx*.44,h*.2),new T.Vector2(0,h*.2)];
  const pan=new T.Mesh(new T.LatheGeometry(outer,96),porcelain);pan.scale.z=rz/rx;pan.position.z=bowlZ;g.add(pan);
- const cavityProfile=[new T.Vector2(0,h*.21),new T.Vector2(rx*.60,h*.22),new T.Vector2(rx*.56,h*.3),new T.Vector2(rx*.72,h*.42),new T.Vector2(rx*.82,seatY-2)];
+ const cavityProfile=[new T.Vector2(0,h*.21),new T.Vector2(rx*.30,h*.22),new T.Vector2(rx*.56,h*.3),new T.Vector2(rx*.72,h*.42),new T.Vector2(rx*.82,seatY-2)];
  const cavity=new T.Mesh(new T.LatheGeometry(cavityProfile,80),inner);cavity.scale.z=rz/rx;cavity.position.z=bowlZ;g.add(cavity);
  // Aro con abertura real y tapa ovalada, ambos apoyados sobre la taza.
  const ringShape=new T.Shape();ringShape.absellipse(0,0,rx*.96,rz*.86,0,Math.PI*2,false,0);const hole=new T.Path();hole.absellipse(0,0,rx*.60,rz*.52,0,Math.PI*2,true,0);ringShape.holes.push(hole);
