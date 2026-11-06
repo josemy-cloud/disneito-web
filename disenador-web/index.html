@@ -830,7 +830,36 @@ inodoro(g,it,mt){toiletGeometry(g,it,mt)},
 planta(g,it,mt){const{w,h,d}=it,pot=M('#98745d',.78),soil=M('#42382f',1),stem=M('#557044',.95);const p=new T.Mesh(new T.CylinderGeometry(w*.27,w*.2,h*.19,32),pot);p.position.y=h*.095;g.add(p);const rim=new T.Mesh(new T.TorusGeometry(w*.255,Math.max(.8,w*.018),8,32),pot);rim.rotation.x=Math.PI/2;rim.position.y=h*.18;g.add(rim);const earth=new T.Mesh(new T.CircleGeometry(w*.23,32),soil);earth.rotation.x=-Math.PI/2;earth.position.y=h*.18;g.add(earth);for(let k=0;k<11;k++){const a=k*2.399,hh=h*(.35+(k%4)*.08),rad=w*(.08+(k%3)*.035),x=Math.cos(a)*rad,z=Math.sin(a)*rad;const cv=new T.CatmullRomCurve3([new T.Vector3(0,h*.18,0),new T.Vector3(x*.5,hh*.5,z*.5),new T.Vector3(x,hh,z)]);g.add(new T.Mesh(new T.TubeGeometry(cv,10,Math.max(.35,w*.006),5,false),stem));const leaf=new T.Mesh(new T.SphereGeometry(1,18,12),mt);leaf.scale.set(w*.085,h*.16,d*.055);leaf.position.set(x*1.6,hh+h*.06,z*1.6);leaf.rotation.z=-Math.cos(a)*.65;leaf.rotation.x=Math.sin(a)*.5;g.add(leaf)}},
 alfombra(g,it,mt){B(g,it.w,it.h,it.d,0,it.h/2,0,mt)},
 lampara(g,it,mt){B(g,3,it.h,3,0,it.h/2,0,M('#555',.3,.8));const s=new T.Mesh(new T.CylinderGeometry(it.w*.4,it.w*.5,it.h*.2,20),new T.MeshStandardMaterial({color:it.col,emissive:it.col,emissiveIntensity:.6}));s.position.y=it.h*.9;g.add(s);if($('#sq').value=='q'){const l=new T.PointLight('#ffd9a0',.4,400);l.position.y=it.h*.85;g.add(l)}}};
-BUILD.fregadero=(g,it)=>{const metal=M(it.col||'#b8c0c5',.22,.82),dark=M('#39434a',.3,.5),w=it.w,d=it.d,h=Math.max(8,it.h);B(g,w,1.1,d,0,.45,0,metal);const bowl=new T.Mesh(new T.CylinderGeometry(w*.43,w*.34,h*.62,32,1,true),metal);bowl.position.y=-h*.31;g.add(bowl);B(g,w*.68,1,d*.58,0,-h*.62,0,dark)};
+BUILD.fregadero=(g,it)=>{
+ const w=it.w,d=it.d,h=Math.max(10,it.h),top=h*.84,bottom=h*.18;
+ const steel=new T.MeshStandardMaterial({color:it.col||'#b8c0c5',roughness:.24,metalness:.82,side:T.DoubleSide});
+ const dark=M('#39434a',.3,.5),pad=M('#252a2e',.82,.08);
+ const count=w>=90?2:1,gap=count===2?5:0,bw=(w*.78-gap*(count-1))/count,td=d*.72;
+ const quad=(pts,mat)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pts.flat(),3));geo.setIndex([0,1,2,0,2,3]);geo.computeVertexNormals();const mesh=new T.Mesh(geo,mat);mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);return mesh};
+ for(let n=0;n<count;n++){
+  const cx=count===1?0:(n===0?-w*.205:w*.205),tw=bw*.94,fw=bw*.72,bd=td*.94,fd=td*.70,by=bottom+1;
+  // Cubeta profunda con cuatro paredes inclinadas y fondo plano, no un cilindro hueco.
+  quad([[cx-tw/2,top,-bd/2],[cx+tw/2,top,-bd/2],[cx+fw/2,by,-fd/2],[cx-fw/2,by,-fd/2]],steel);
+  quad([[cx+tw/2,top,bd/2],[cx-tw/2,top,bd/2],[cx-fw/2,by,fd/2],[cx+fw/2,by,fd/2]],steel);
+  quad([[cx-tw/2,top,bd/2],[cx-tw/2,top,-bd/2],[cx-fw/2,by,-fd/2],[cx-fw/2,by,fd/2]],steel);
+  quad([[cx+tw/2,top,-bd/2],[cx+tw/2,top,bd/2],[cx+fw/2,by,fd/2],[cx+fw/2,by,-fd/2]],steel);
+  B(g,fw,.9,fd,cx,by,0,steel);
+  // Marco perimetral doblado en acero y reborde interior.
+  const rim=1.35;
+  B(g,tw,rim,2,cx,top,bd/2,steel);B(g,tw,rim,2,cx,top,-bd/2,steel);
+  B(g,2,rim,bd-2,cx-tw/2,top,0,steel);B(g,2,rim,bd-2,cx+tw/2,top,0,steel);
+  // Desagüe con aro, cestillo y perforaciones.
+  const drain=new T.Mesh(new T.TorusGeometry(Math.max(2,fw*.075),.7,8,36),steel);drain.rotation.x=Math.PI/2;drain.position.set(cx,by+.65,0);g.add(drain);
+  const basket=new T.Mesh(new T.CylinderGeometry(Math.max(1.5,fw*.055),Math.max(1.5,fw*.055),.7,32),dark);basket.position.set(cx,by+.7,0);g.add(basket);
+  for(let q=0;q<8;q++){const a=q*Math.PI/4;const hole=new T.Mesh(new T.SphereGeometry(.42,8,6),dark);hole.scale.set(1,.4,1);hole.position.set(cx+Math.cos(a)*fw*.045,by+1.08,Math.sin(a)*fw*.045);g.add(hole)}
+  // Rebose circular en la pared trasera de la cubeta.
+  const overflow=new T.Mesh(new T.TorusGeometry(Math.max(1.6,fw*.035),.55,8,24),steel);overflow.position.set(cx,by+(top-by)*.56,-bd*.485);g.add(overflow);
+  B(g,fw*.48,.8,fd*.22,cx,by-1.1,0,pad);
+ }
+ // Puente central y faldón inferior que rigidizan el conjunto doble.
+ if(count===2)B(g,3,1.4,td,0,top,0,steel);
+ B(g,w*.9,2,d*.82,0,bottom-2,0,dark);
+}
 BUILD.griferia=(g,it)=>{const chrome=M(it.col||'#b7c0c8',.3,.78),dark=M('#58636b',.42,.35),h=Math.max(8,it.h),w=Math.max(3,it.w),r=Math.max(.65,w*.035);const base=new T.Mesh(new T.CylinderGeometry(w*.19,w*.23,1.5,32),chrome);base.position.y=.75;g.add(base);const collar=new T.Mesh(new T.TorusGeometry(w*.15,.7,8,32),dark);collar.rotation.x=Math.PI/2;collar.position.y=1.5;g.add(collar);const stem=new T.Mesh(new T.CylinderGeometry(Math.max(.8,w*.075),Math.max(1,w*.105),h*.58,24),chrome);stem.position.set(0,h*.29+1.5,0);g.add(stem);const curve=new T.CatmullRomCurve3([new T.Vector3(0,h*.57+1.5,0),new T.Vector3(0,h*.76,0),new T.Vector3(w*.18,h*.83,0),new T.Vector3(w*.34,h*.78,0),new T.Vector3(w*.34,h*.62,0)]);g.add(new T.Mesh(new T.TubeGeometry(curve,40,r,12,false),chrome));const aer=new T.Mesh(new T.CylinderGeometry(r*.9,r*1.1,Math.max(1.6,r*.8),24),dark);aer.position.set(w*.34,h*.61,0);aer.rotation.x=Math.PI/2;g.add(aer);const lever=new T.Mesh(new T.CylinderGeometry(Math.max(.6,w*.025),Math.max(.8,w*.04),h*.2,16),chrome);lever.position.set(-w*.12,h*.69,0);lever.rotation.z=-.55;g.add(lever);const cap=new T.Mesh(new T.SphereGeometry(r*1.4,16,10),chrome);cap.position.set(-w*.12,h*.79,0);g.add(cap)};
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o)};switch(it.shape){
 case'sofa':case'outdoorsofa':{box(0,h*.14,0,w*.94,h*.2,d*.84);box(0,h*.28,d*.04,w*.9,h*.1,d*.68,mt);for(let k=0;k<3;k++){const x=(k-1)*w*.29;box(x,h*.39,d*.06,w*.28,h*.13,d*.6,mt);box(x,h*.68,-d*.34,w*.28,h*.42,d*.16,mt);const seam=new T.Mesh(new T.TorusGeometry(Math.min(w,d)*.07,Math.max(.4,w*.004),6,24),M('#d0c8bd',.95));seam.scale.set(1,.62,.25);seam.position.set(x,h*.46,d*.34);g.add(seam)}for(let x of [-1,1]){box(x*w*.44,h*.4,0,w*.12,h*.56,d*.84,mt);for(let z of [-1,1])cyl(x*w*.4,h*.055,z*d*.34,Math.max(1,w*.012),h*.11,dark)}if(v%2){box(w*.22,h*.51,d*.2,w*.22,h*.2,d*.22,M('#d9c8b4',.96));box(-w*.22,h*.51,d*.2,w*.22,h*.2,d*.22,M('#b8c2bd',.96))}break;}
