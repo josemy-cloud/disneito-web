@@ -897,38 +897,52 @@ case'panel':box(0,h*.5,0,w,h,d*.08,M('#75563f',.62));box(0,h*.52,d*.05,w*.76,h*.
 case'table':if(v%2===0){cyl(0,h-3,0,Math.min(w,d)*.46,6);cyl(0,h*.5,0,Math.min(w,d)*.12,h-8,metal)}else{box(0,h-3,0,w,6,d);for(let x of [-1,1])for(let z of [-1,1])box(x*w*.42,h*.48,z*d*.4,5,h*.92,5)}break;
 case'bed':{box(0,h*.13,0,w*.96,h*.2,d*.94,mt);box(0,h*.32,d*.015,w*.93,h*.15,d*.9,M('#e5e0d7',.96));box(0,h*.72,-d*.46,w,h*.48,6,mt);for(let x of [-1,1]){box(x*w*.22,h*.48,-d*.3,w*.38,h*.12,d*.2,M('#faf8f3',.98));box(x*w*.22,h*.54,-d*.29,w*.34,h*.035,d*.18,M('#d7d0c5',.98))}box(0,h*.42,d*.19,w*.9,h*.07,d*.45,M('#e8e3da',.98));for(let k=0;k<6;k++){const cv=new T.CatmullRomCurve3([new T.Vector3(-w*.4+k*w*.16,h*.46,d*.02),new T.Vector3(-w*.34+k*w*.16,h*.44,d*.22),new T.Vector3(-w*.3+k*w*.16,h*.42,d*.39)]);g.add(new T.Mesh(new T.TubeGeometry(cv,12,.5,5,false),M('#c9c2b8',.98)))}break;}
 case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':{
- const name=(it.n||'').toLowerCase();
- if(name.includes('cajonera móvil')){
+ const name=(it.n||'').toLowerCase(),bathStorage=/mueble auxiliar baño|columna baño/.test(name);
+ if(bathStorage){
+  const shell=M('#c8c0b3',.72,.04),rail=M('#89949b',.32,.82),front=mt,bodyW=w*.94,bodyD=d*.9,th=1.8,frontZ=bodyD/2+1.5,isColumn=name.includes('columna');
+  const drawerCount=isColumn?3:2,lowerH=h*.56,upperH=h-lowerH-5,drawerH=(lowerH-5)/drawerCount;
+  it.op=it.op||[];
+  for(const sx of [-1,1])box(sx*(bodyW/2-th/2),h*.49,0,th,h*.96,bodyD,shell);
+  box(0,1.5,0,bodyW-2*th,3,bodyD,shell);
+  box(0,h-1.5,0,bodyW+2,3,bodyD+2,front);
+  box(0,h*.49,-bodyD/2+th/2,bodyW-2*th,h*.96,th,shell);
+  box(0,lowerH,0,bodyW-2*th,2.4,bodyD-2,shell);
+  for(let k=0;k<drawerCount;k++){
+   const yy=4+drawerH*(k+.5),dw=bodyW-2*th-1,dd=bodyD-5;
+   const dr=new T.Group();dr.position.set(0,yy,frontZ);dr.name='Cajón baño '+(k+1);dr.userData.part={t:'cajón',i:k};g.add(dr);
+   B(dr,dw,drawerH-1.2,2.2,0,0,0,front);
+   for(const sx of [-1,1])B(dr,1.6,drawerH-3,dd,sx*(dw/2-1),0,-dd/2,shell);
+   B(dr,dw-2,drawerH-3,1.6,0,0,-dd+0.8,shell);
+   B(dr,dw-2,1.6,dd,0,-drawerH/2+1.8,-dd/2,shell);
+   const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(dw*.28,22),16),rail);pull.rotation.z=Math.PI/2;pull.position.set(0,1,2.8);dr.add(pull);
+   for(const sx of [-1,1])box(sx*(dw/2+1),yy,-bodyD*.04,1.2,2,dd*.76,rail);
+   mv(dr,{it,k,t:'s',z:frontZ,sl:Math.min(d*.36,dd*.42)});
+  }
+  // Puerta superior independiente: bisagra en un lateral y tirador fijado al frente.
+  const door=new T.Group();door.position.set(-bodyW/2,lowerH+upperH/2,frontZ);g.add(door);door.userData.part={t:'puerta',i:drawerCount};
+  B(door,bodyW-3,upperH-2,2,bodyW/2,0,0,front);
+  B(door,bodyW-8,upperH-7,.35,bodyW/2,0,1.2,M('#ffffff',.92,.08));
+  const handle=new T.Mesh(new T.CylinderGeometry(1,1,Math.max(10,Math.min(upperH*.22,22)),16),rail);handle.rotation.x=Math.PI/2;handle.position.set(bodyW-9,0,3);door.add(handle);
+  mv(door,{it,k:drawerCount,t:'d',sg:-1});
+ }else if(name.includes('cajonera móvil')){
   const shell=M('#c8c0b3',.72,.04),rail=M('#89949b',.32,.82),darkRail=M('#4c555b',.45,.62),front=mt,foot=M('#272d31',.5,.5);
   const sideT=1.8,baseY=3,topY=h-2,bodyD=d*.9,bodyW=w*.94,frontZ=bodyD/2+1.5;
   it.op=it.op||[];
   for(const sx of [-1,1])box(sx*(bodyW/2-sideT/2),h*.48,0,sideT,h*.88,bodyD,shell);
   box(0,h*.48,-bodyD/2+sideT/2,bodyW-2*sideT,h*.88,sideT,shell);
-  box(0,baseY,0,bodyW-2*sideT,2.4,bodyD,shell);
-  box(0,topY,0,bodyW+2,3,bodyD+2,front);
+  box(0,baseY,0,bodyW-2*sideT,2.4,bodyD,shell);box(0,topY,0,bodyW+2,3,bodyD+2,front);
   const n=3,drawerH=(h-11)/n;
   for(let k=0;k<n;k++){
-   const yy=baseY+2+drawerH*(k+.5),dw=bodyW-2*sideT-1,dd=bodyD-5;
-   const dp=new T.Group();dp.position.set(0,yy,frontZ);g.add(dp);dp.userData.part={t:'cajón',i:k};
+   const yy=baseY+2+drawerH*(k+.5),dw=bodyW-2*sideT-1,dd=bodyD-5,dp=new T.Group();dp.position.set(0,yy,frontZ);g.add(dp);dp.userData.part={t:'cajón',i:k};
    B(dp,dw,drawerH-1.2,2.2,0,0,0,front);
    for(const sx of [-1,1])B(dp,1.6,drawerH-3,dd,sx*(dw/2-1),0,-dd/2,shell);
-   B(dp,dw-2,drawerH-3,1.6,0,0,-dd+0.8,shell);
-   B(dp,dw-2,1.6,dd,0,-drawerH/2+1.8,-dd/2,shell);
+   B(dp,dw-2,drawerH-3,1.6,0,0,-dd+0.8,shell);B(dp,dw-2,1.6,dd,0,-drawerH/2+1.8,-dd/2,shell);
    for(const sx of [-1,1]){const post=new T.Mesh(new T.CylinderGeometry(1.1,1.1,2,12),rail);post.rotation.x=Math.PI/2;post.position.set(sx*dw*.13,0,1.7);dp.add(post)}
    const pull=new T.Mesh(new T.CylinderGeometry(1.15,1.15,Math.min(dw*.28,26),16),rail);pull.rotation.z=Math.PI/2;pull.position.set(0,1,2.8);dp.add(pull);
-   for(const sx of [-1,1]){
-    box(sx*(dw/2+0.4),yy,-bodyD*.05,1.2,2.2,dd*.78,rail);
-    box(sx*(dw/2+1.25),yy-1,-bodyD*.05,.8,1.1,dd*.72,darkRail);
-    for(const z of [-dd*.34,dd*.34])cyl(sx*(dw/2+1.25),yy,z,1,1.2,rail);
-   }
+   for(const sx of [-1,1]){box(sx*(dw/2+0.4),yy,-bodyD*.05,1.2,2.2,dd*.78,rail);box(sx*(dw/2+1.25),yy-1,-bodyD*.05,.8,1.1,dd*.72,darkRail);for(const z of [-dd*.34,dd*.34])cyl(sx*(dw/2+1.25),yy,z,1,1.2,rail)}
    mv(dp,{it,k,t:'s',z:frontZ,sl:Math.min(d*.72,dd*.82)});
   }
-  for(const sx of [-1,1])for(const sz of [-1,1]){
-   const x=sx*(bodyW*.36),z=sz*(bodyD*.38),mount=new T.Group();mount.position.set(x,2,z);g.add(mount);
-   box(0,1,0,5,2,5,rail);tube([0,0,0],[0,-3,0],1.2,rail);
-   const wh=new T.Mesh(new T.TorusGeometry(3.2,1.4,10,20),foot);wh.rotation.y=Math.PI/2;wh.position.y=-4;mount.add(wh);
-   const axle=new T.Mesh(new T.CylinderGeometry(1,1,7,12),rail);axle.rotation.z=Math.PI/2;axle.position.y=-4;mount.add(axle);
-  }
+  for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*(bodyW*.36),z=sz*(bodyD*.38),mount=new T.Group();mount.position.set(x,2,z);g.add(mount);box(0,1,0,5,2,5,rail);tube([0,0,0],[0,-3,0],1.2,rail);const wh=new T.Mesh(new T.TorusGeometry(3.2,1.4,10,20),foot);wh.rotation.y=Math.PI/2;wh.position.y=-4;mount.add(wh);const axle=new T.Mesh(new T.CylinderGeometry(1,1,7,12),rail);axle.rotation.z=Math.PI/2;axle.position.y=-4;mount.add(axle)}
  }else{
   box(0,h*.48,0,w*.94,h*.92,d*.92);for(let k=0;k<4;k++){box(0,h*(.14+k*.2),d*.47,w*.88,h*.16,2,M('#c7b7a4',.7));cyl(w*.25,h*(.14+k*.2),d*.5,1.3,3,metal)}
  }
@@ -1168,7 +1182,19 @@ case'vanity':{
  box(0,th/2,-bodyD/2+th/2,bodyW-2*th,th,th,body);
  box(0,topY-th/2,0,bodyW-2*th,th,bodyD,body);
  box(0,topY*.48,-bodyD/2+th/2,bodyW-2*th,topY*.88,th,inside);
- const topMat=M('#d9d3c8',.42,.03);box(0,topY+2,0,w*1.04,4,d*1.02,topMat);
+ const topMat=M('#d9d3c8',.42,.03),counterW=w*1.04,counterD=d*1.02;
+ const bowls=name.includes('doble')?[-w*.25,w*.25]:[0],basinW=w*.19,basinD=d*.28,holeW=basinW*2+5,holeD=basinD*2+5;
+ // Encimera realmente perforada: se construyen los paños alrededor de cada hueco, no una placa maciza que tape la cubeta.
+ let cursor=-counterW/2;
+ for(const bx of bowls){
+  const left=bx-holeW/2,right=bx+holeW/2;
+  if(left>cursor)box((cursor+left)/2,topY+2,0,left-cursor,4,counterD,topMat);
+  const sideDepth=Math.max(2,(counterD-holeD)/2);
+  box(bx,topY+2,-(counterD+holeD)/4,holeW,4,sideDepth,topMat);
+  box(bx,topY+2,(counterD+holeD)/4,holeW,4,sideDepth,topMat);
+  cursor=right;
+ }
+ if(cursor<counterW/2)box((cursor+counterW/2)/2,topY+2,0,counterW/2-cursor,4,counterD,topMat);
  const drawerCount=name.includes('doble')?2:2,drawerGap=2,usableH=topY-th*2;
  for(let k=0;k<drawerCount;k++){
   const dh=(usableH-drawerGap*(drawerCount-1))/drawerCount,yy=th+dh/2+k*(dh+drawerGap);
@@ -1185,15 +1211,14 @@ case'vanity':{
  }
  if(!suspended){for(const x of [-1,1])for(const z of [-1,1]){cyl(x*bodyW*.4,legsY+2,z*bodyD*.38,2,4,metal);}}
  // Lavabos integrados: cubeta cerámica cóncava, rebosadero y desagüe.
- const bowls=name.includes('doble')?[-w*.25,w*.25]:[0];
  for(const x of bowls){
-  const bw=w*.19,bd=d*.28,levels=[[.98,.98,topY+3],[.88,.86,topY+1],[.68,.65,topY-3],[.42,.4,topY-7],[.08,.08,topY-9]],verts=[],idx=[],seg=64;
+  const bw=basinW,bd=basinD,levels=[[.98,.98,topY+4.1],[.88,.86,topY+2],[.68,.65,topY-3],[.42,.4,topY-7],[.08,.08,topY-9]],verts=[],idx=[],seg=64;
   levels.forEach(([ax,az,y])=>{for(let q=0;q<seg;q++){const a=q/seg*Math.PI*2;verts.push(x+Math.cos(a)*bw*ax,y,-d*.02+Math.sin(a)*bd*az)}});
   for(let j=0;j<levels.length-1;j++)for(let q=0;q<seg;q++){const a=j*seg+q,b=j*seg+(q+1)%seg,cc=(j+1)*seg+q,dd=(j+1)*seg+(q+1)%seg;idx.push(a,b,cc,b,dd,cc)}
   const bg=new T.BufferGeometry();bg.setAttribute('position',new T.Float32BufferAttribute(verts,3));bg.setIndex(idx);bg.computeVertexNormals();const bowl=new T.Mesh(bg,ceramic);bowl.material.side=T.DoubleSide;g.add(bowl);
   const rimCurve=new T.EllipseCurve(x,-d*.02,bw,bd,0,Math.PI*2,false,0);const rimPts=rimCurve.getPoints(64).map(p=>new T.Vector3(p.x,topY+3,p.y));g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(rimPts,true),64,1.1,8,true),ceramic));
   const drain=new T.Mesh(new T.CylinderGeometry(2.5,2.5,1,24),metal);drain.position.set(x,topY+1,-d*.02);g.add(drain);
-  const tapBase=new T.Mesh(new T.CylinderGeometry(3.1,3.1,1.6,24),metal);tapBase.position.set(x,topY+4,-d*.39);g.add(tapBase);const tap=cyl(x,topY+13,-d*.39,1.8,18,metal);tube([x,topY+21,-d*.39],[x,topY+21,-d*.2],1.8,metal);const aerator=new T.Mesh(new T.CylinderGeometry(1.8,1.8,2.2,20),dark);aerator.rotation.x=Math.PI/2;aerator.position.set(x,topY+21,-d*.2);g.add(aerator);
+  const tapBase=new T.Mesh(new T.CylinderGeometry(3.1,3.1,1.6,24),metal);tapBase.position.set(x,topY+4.8,-d*.39);g.add(tapBase);const tap=cyl(x,topY+14,-d*.39,1.8,18,metal);tube([x,topY+22,-d*.39],[x,topY+22,-d*.2],1.8,metal);const aerator=new T.Mesh(new T.CylinderGeometry(1.8,1.8,2.2,20),dark);aerator.rotation.x=Math.PI/2;aerator.position.set(x,topY+22,-d*.2);g.add(aerator);
  }
  break;
 }
@@ -1229,18 +1254,23 @@ case'bidet':{
  break;
 }
 case'toilet':case'wc':{
- const porcelain=ceramicMaterial(it.col||'#f5f4f0'),seat=ceramicMaterial('#f8f7f4'),inner=new T.MeshStandardMaterial({color:'#dfe3e0',roughness:.22,side:T.DoubleSide}),rx=w*.5,rz=d*.5;
- const profile=[new T.Vector2(0,2),new T.Vector2(rx*.4,2),new T.Vector2(rx*.68,4),new T.Vector2(rx*.84,h*.18),new T.Vector2(rx*.98,h*.45),new T.Vector2(rx,h*.7),new T.Vector2(rx*.96,h*.9),new T.Vector2(rx*.88,h*.98),new T.Vector2(rx*.8,h*.98),new T.Vector2(rx*.76,h*.82),new T.Vector2(rx*.68,h*.48),new T.Vector2(rx*.45,h*.27),new T.Vector2(0,h*.25)];
- const shell=new T.Mesh(new T.LatheGeometry(profile,80),porcelain);shell.scale.z=rz/rx;g.add(shell);
- const bowlProfile=[new T.Vector2(0,h*.28),new T.Vector2(rx*.22,h*.3),new T.Vector2(rx*.43,h*.42),new T.Vector2(rx*.64,h*.65),new T.Vector2(rx*.72,h*.9)];
- const cavity=new T.Mesh(new T.LatheGeometry(bowlProfile,64),inner);cavity.scale.z=rz/rx;g.add(cavity);
- const seatShape=new T.Shape();seatShape.absellipse(0,0,rx*.98,rz*.98,0,Math.PI*2,false,0);const hole=new T.Path();hole.absellipse(0,0,rx*.64,rz*.65,0,Math.PI*2,true,0);seatShape.holes.push(hole);
- const ring=new T.Mesh(new T.ExtrudeGeometry(seatShape,{depth:1.5,bevelEnabled:true,bevelSegments:3,bevelSize:.5,bevelThickness:.4,curveSegments:64}),seat);ring.rotation.x=-Math.PI/2;ring.position.y=h*.98;g.add(ring);
- // Tapa ovalada independiente, contenida dentro del perímetro del asiento.
- const lidShape=new T.Shape();lidShape.absellipse(0,0,rx*.975,rz*.975,0,Math.PI*2,false,0);
- const lid=new T.Mesh(new T.ExtrudeGeometry(lidShape,{depth:1.1,bevelEnabled:true,bevelSegments:3,bevelSize:.35,bevelThickness:.3,curveSegments:64}),seat);
- lid.rotation.x=-Math.PI/2;lid.position.y=h*1.005;g.add(lid);
- const tank=new T.Mesh(new T.BoxGeometry(w*.78,h*.28,d*.2),porcelain);tank.position.set(0,h*.82,-d*.39);g.add(tank);
+ const porcelain=ceramicMaterial(it.col||'#f5f4f0'),seat=ceramicMaterial('#f8f7f4'),inner=new T.MeshStandardMaterial({color:'#dfe3e0',roughness:.22,side:T.DoubleSide}),rx=w*.5,rz=d*.5,seatY=h*.57,bowlZ=d*.09;
+ // Taza de WC de suelo: pedestal estrecho, hombros redondeados y borde horizontal a altura real de asiento.
+ const profile=[new T.Vector2(0,2),new T.Vector2(rx*.24,2),new T.Vector2(rx*.31,h*.07),new T.Vector2(rx*.38,h*.18),new T.Vector2(rx*.44,h*.38),new T.Vector2(rx*.49,seatY-2),new T.Vector2(rx*.5,seatY),new T.Vector2(rx*.44,seatY),new T.Vector2(rx*.39,h*.47),new T.Vector2(rx*.33,h*.29),new T.Vector2(rx*.23,h*.2),new T.Vector2(0,h*.2)];
+ const shell=new T.Mesh(new T.LatheGeometry(profile,96),porcelain);shell.scale.z=rz/rx;shell.position.z=bowlZ;g.add(shell);
+ const bowlProfile=[new T.Vector2(0,h*.22),new T.Vector2(rx*.16,h*.23),new T.Vector2(rx*.29,h*.31),new T.Vector2(rx*.37,h*.43),new T.Vector2(rx*.41,seatY-2)];
+ const cavity=new T.Mesh(new T.LatheGeometry(bowlProfile,80),inner);cavity.scale.z=rz/rx;cavity.position.z=bowlZ;g.add(cavity);
+ // Aro oval abierto y tapa cerrada, ambos asentados sobre la taza y con bisagras traseras.
+ const seatShape=new T.Shape();seatShape.absellipse(0,0,rx*.48,rz*.43,0,Math.PI*2,false,0);const hole=new T.Path();hole.absellipse(0,0,rx*.30,rz*.26,0,Math.PI*2,true,0);seatShape.holes.push(hole);
+ const ring=new T.Mesh(new T.ExtrudeGeometry(seatShape,{depth:1.8,bevelEnabled:true,bevelSegments:3,bevelSize:.55,bevelThickness:.45,curveSegments:72}),seat);ring.rotation.x=-Math.PI/2;ring.position.set(0,seatY,bowlZ);g.add(ring);
+ const lidShape=new T.Shape();lidShape.absellipse(0,0,rx*.48,rz*.43,0,Math.PI*2,false,0);
+ const lid=new T.Mesh(new T.ExtrudeGeometry(lidShape,{depth:1.6,bevelEnabled:true,bevelSegments:3,bevelSize:.5,bevelThickness:.4,curveSegments:72}),seat);lid.rotation.x=-Math.PI/2;lid.position.set(0,seatY+2,bowlZ);g.add(lid);
+ // Repisa posterior y apoyo macizo: la cisterna queda físicamente unida a la taza, sin efecto flotante.
+ const bridge=new T.Mesh(new T.BoxGeometry(w*.72,h*.075,d*.34,3,2,3),porcelain);bridge.position.set(0,seatY-3,-d*.27);g.add(bridge);
+ const tank=new T.Mesh(new T.BoxGeometry(w*.76,h*.34,d*.27,5,4,4),porcelain);tank.position.set(0,h*.79,-d*.34);g.add(tank);
+ const tankLid=new T.Mesh(new T.BoxGeometry(w*.79,2.4,d*.29,5,1,4),porcelain);tankLid.position.set(0,h*.965,-d*.34);g.add(tankLid);
+ const flush=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,28),M('#aeb5b8',.3,.7));flush.position.set(0,h*.985,-d*.34);g.add(flush);
+ for(const x of [-1,1]){const cap=new T.Mesh(new T.CylinderGeometry(1.4,1.4,1,16),porcelain);cap.position.set(x*w*.27,seatY+1,-d*.27);g.add(cap)}
  break;
 }
 case'rail':{
