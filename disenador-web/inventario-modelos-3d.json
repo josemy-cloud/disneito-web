@@ -479,11 +479,12 @@
           "name": "Columna despensa 60",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -491,11 +492,12 @@
           "name": "Columna 2 cajones + puertas",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -503,11 +505,12 @@
           "name": "Esquinero riñón extraíble (articulado)",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -515,11 +518,12 @@
           "name": "Mueble libre (vacío)",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -527,11 +531,12 @@
           "name": "Columna libre: cajón + horno + micro + puerta",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -539,11 +544,12 @@
           "name": "Torre lavadora + horno + micro + armario",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -551,11 +557,12 @@
           "name": "Torre horno compacto + micro + armarios",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -563,11 +570,12 @@
           "name": "Torre horno + micro",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -575,11 +583,12 @@
           "name": "Columna frigorífico integrable",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
@@ -728,11 +737,12 @@
           "name": "Columna genérica",
           "family": "Mueble modular",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: las columnas también reservan y reciben una tapa superior continua de 18 mm a todo el ancho y profundidad; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm en columnas"
           ]
         },
         {
