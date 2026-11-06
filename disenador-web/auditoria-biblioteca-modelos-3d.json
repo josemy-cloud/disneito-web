@@ -1,0 +1,3328 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-11-06",
+  "branch": "desarrollo-cloudflare",
+  "scope": {
+    "static_library_models": 162,
+    "procedural_room_objects": 144,
+    "legacy_initial_models": 18,
+    "commercial_registry_products": 14,
+    "commercial_registry_unique_model_types": 5,
+    "imported_models": "No cuantificables desde el código estático: se cargan dinámicamente desde IndexedDB y el catálogo compartido."
+  },
+  "standard": {
+    "target": "Modelos de producto con silueta y proporciones fieles, geometría constructiva coherente, componentes diferenciados, materiales PBR adecuados, dimensiones reales, pivotes/jerarquía y comportamiento funcional cuando corresponda; rendimiento apto para tiempo real.",
+    "reference": "Khronos Group, 3D Commerce Real-time Asset Creation Guidelines 2.0 (2025): escala 1:1, geometría y normales, jerarquía, materiales/UV, optimización y rendimiento.",
+    "approval_rule": "No se considera renovado ni aprobado por el mero hecho de tener más polígonos, biseles, color o una miniatura. Requiere revisión visual y funcional."
+  },
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "high",
+      "finding": "144 modelos de estancias usan el mismo generador BUILD.roomObject y un conjunto compartido de primitivas. Muchos se diferencian principalmente por dimensiones, color o variante.",
+      "impact": "Catálogo voluminoso con diferencias nominales mayores que las diferencias geométricas; no alcanza el estándar profesional.",
+      "action": "Reconstruir cada familia por estancia con geometría específica; no borrar ahora."
+    },
+    {
+      "id": "F02",
+      "severity": "high",
+      "finding": "Se detectan múltiples elementos de una misma estancia y subtipo geométrico (por ejemplo mesas, sofás, camas, armarios, estanterías, lámparas y espejos).",
+      "impact": "Parte de la variedad puede ser redundante o meramente cosmética.",
+      "action": "Tras renovar cada estancia, comparar silueta, mecanismo, dimensiones y uso; fusionar o retirar solo los duplicados reales."
+    },
+    {
+      "id": "F03",
+      "severity": "medium",
+      "finding": "Los 18 modelos iniciales heredados siguen coexistiendo con la biblioteca ampliada.",
+      "impact": "Algunos son prototipos antiguos y pueden competir con los modelos renovados cuando estos estén disponibles.",
+      "action": "Mantener como fallback/referencia mientras no exista sustituto verificado; después ocultar o retirar los antiguos."
+    },
+    {
+      "id": "F04",
+      "severity": "medium",
+      "finding": "La cocina contiene modelos con mejoras parciales (casco, electrodomésticos y accesorios), pero la propia auditoría de la fase mantiene la mayoría en proceso.",
+      "impact": "Retirar ahora puede romper opciones de catálogo o eliminar una variante todavía no reconstruida.",
+      "action": "No retirar variantes de cocina hasta cerrar inventario, sustituirlas y verificar equivalencia."
+    },
+    {
+      "id": "F05",
+      "severity": "medium",
+      "finding": "El catálogo comercial dinámico contiene fichas paramétricas asociadas a BUILD y estados de revisión visual; no equivale automáticamente a CAD oficial ni a modelo aprobado.",
+      "impact": "Una ficha comercial puede ser precisa en dimensiones y aun así tener geometría reconstruida o pendiente de revisión.",
+      "action": "Auditar cada referencia por separado; conservar origen, fabricante, medidas y notas de aproximación."
+    }
+  ],
+  "counts_by_room": {
+    "salón": 20,
+    "dormitorio": 17,
+    "baño": 14,
+    "comedor": 13,
+    "recibidor": 8,
+    "despacho": 11,
+    "lavadero": 11,
+    "vestidor": 8,
+    "garaje": 15,
+    "trastero": 9,
+    "terraza": 11,
+    "jardin": 7
+  },
+  "counts_by_shape": {
+    "sofa": 4,
+    "seat": 4,
+    "table": 9,
+    "panel": 2,
+    "sideboard": 3,
+    "shelf": 11,
+    "lamp": 5,
+    "mirror": 7,
+    "bed": 6,
+    "dresser": 6,
+    "wardrobe": 6,
+    "desk": 6,
+    "bath": 2,
+    "shower": 3,
+    "vanity": 2,
+    "basin": 2,
+    "bidet": 1,
+    "rail": 2,
+    "cabinet": 6,
+    "chair": 4,
+    "bench": 3,
+    "console": 2,
+    "coat": 1,
+    "officechair": 3,
+    "computer": 1,
+    "washer": 3,
+    "sink": 2,
+    "basket": 2,
+    "ironing": 1,
+    "car": 3,
+    "van": 1,
+    "bike": 3,
+    "bicycle": 1,
+    "workbench": 2,
+    "toolcab": 1,
+    "compressor": 1,
+    "cart": 1,
+    "tyres": 1,
+    "box": 2,
+    "trunk": 2,
+    "suitcase": 1,
+    "ladder": 1,
+    "outdoorsofa": 2,
+    "sunbed": 2,
+    "umbrella": 2,
+    "planter": 3,
+    "pergola": 2,
+    "bbq": 1,
+    "tree": 2,
+    "pool": 1
+  },
+  "consolidation_candidates": [
+    {
+      "group": "salón::sofa",
+      "items": [
+        "Sofá 2 plazas",
+        "Sofá chaise longue",
+        "Sofá rinconero",
+        "Sofá modular 4 plazas"
+      ],
+      "count": 4,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::seat",
+      "items": [
+        "Butaca",
+        "Puf redondo",
+        "Sillón orejero"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::table",
+      "items": [
+        "Mesa de centro ovalada",
+        "Mesa auxiliar",
+        "Mesa de centro rectangular"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::panel",
+      "items": [
+        "Panel de TV",
+        "Mueble mural para televisión"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::sideboard",
+      "items": [
+        "Aparador",
+        "Mueble bajo de salón"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::shelf",
+      "items": [
+        "Librería",
+        "Estantería modular alta"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::lamp",
+      "items": [
+        "Lámpara sobremesa",
+        "Lámpara de pie de lectura"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "salón::mirror",
+      "items": [
+        "Espejo decorativo",
+        "Espejo redondo decorativo"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "dormitorio::bed",
+      "items": [
+        "Cama individual",
+        "Cama doble",
+        "Cama king size",
+        "Litera",
+        "Cama matrimonio 135",
+        "Cama canapé abatible"
+      ],
+      "count": 6,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "dormitorio::dresser",
+      "items": [
+        "Mesita 2 cajones",
+        "Cómoda 6 cajones",
+        "Mesita flotante",
+        "Cómoda 4 cajones ancha"
+      ],
+      "count": 4,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "dormitorio::wardrobe",
+      "items": [
+        "Armario corredero",
+        "Armario abatible",
+        "Armario esquinero"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "dormitorio::desk",
+      "items": [
+        "Tocador",
+        "Escritorio juvenil"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "baño::bath",
+      "items": [
+        "Bañera exenta",
+        "Bañera rectangular encastrada"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "baño::shower",
+      "items": [
+        "Ducha con mampara",
+        "Plato de ducha cuadrado"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "baño::vanity",
+      "items": [
+        "Mueble lavabo doble",
+        "Mueble lavabo suspendido"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "baño::basin",
+      "items": [
+        "Lavabo sobre encimera",
+        "Lavabo de apoyo ovalado"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "baño::rail",
+      "items": [
+        "Radiador toallero",
+        "Toallero de pared"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "baño::cabinet",
+      "items": [
+        "Columna baño",
+        "Mueble auxiliar baño"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "comedor::table",
+      "items": [
+        "Mesa comedor rectangular",
+        "Mesa comedor redonda",
+        "Mesa extensible",
+        "Mesa comedor extensible 6-8",
+        "Mesa comedor redonda pequeña"
+      ],
+      "count": 5,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "comedor::chair",
+      "items": [
+        "Silla tapizada",
+        "Silla madera",
+        "Silla comedor con brazos",
+        "Silla comedor tapizada"
+      ],
+      "count": 4,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "comedor::lamp",
+      "items": [
+        "Lámpara colgante",
+        "Lámpara comedor suspendida"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "recibidor::console",
+      "items": [
+        "Consola",
+        "Consola suspendida"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "recibidor::cabinet",
+      "items": [
+        "Zapatero",
+        "Zapatero estrecho"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "recibidor::mirror",
+      "items": [
+        "Espejo vertical",
+        "Espejo horizontal recibidor"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "despacho::desk",
+      "items": [
+        "Escritorio recto",
+        "Escritorio en L",
+        "Mesa regulable",
+        "Escritorio con ala lateral"
+      ],
+      "count": 4,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "despacho::officechair",
+      "items": [
+        "Silla ergonómica",
+        "Silla ejecutiva",
+        "Silla de oficina compacta"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "despacho::shelf",
+      "items": [
+        "Estantería despacho",
+        "Librería con baldas"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "lavadero::washer",
+      "items": [
+        "Lavadora frontal",
+        "Secadora frontal",
+        "Lavadora carga superior"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "lavadero::sink",
+      "items": [
+        "Lavadero con pila",
+        "Fregadero de lavadero doble"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "lavadero::cabinet",
+      "items": [
+        "Armario limpieza",
+        "Armario escobero alto"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "lavadero::basket",
+      "items": [
+        "Cesto ropa",
+        "Cesto doble de ropa"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "vestidor::wardrobe",
+      "items": [
+        "Módulo vestidor abierto",
+        "Módulo vestidor cerrado",
+        "Módulo vestidor con cajones"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "vestidor::shelf",
+      "items": [
+        "Zapatero",
+        "Zapatero extraíble"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "garaje::car",
+      "items": [
+        "Coche compacto",
+        "Coche SUV",
+        "Coche berlina"
+      ],
+      "count": 3,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "garaje::bike",
+      "items": [
+        "Motocicleta",
+        "Moto tipo scooter"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "garaje::shelf",
+      "items": [
+        "Estantería metálica",
+        "Estantería garaje reforzada"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "garaje::workbench",
+      "items": [
+        "Banco trabajo",
+        "Banco de trabajo con panel"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "trastero::shelf",
+      "items": [
+        "Estantería metálica",
+        "Estantería madera"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "trastero::box",
+      "items": [
+        "Cajas apilables",
+        "Caja grande de almacenaje"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "trastero::trunk",
+      "items": [
+        "Baúl",
+        "Baúl de almacenaje grande"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "terraza::sunbed",
+      "items": [
+        "Tumbona",
+        "Tumbona reclinable"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "terraza::umbrella",
+      "items": [
+        "Sombrilla",
+        "Sombrilla grande"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "terraza::pergola",
+      "items": [
+        "Pérgola",
+        "Pérgola bioclimática"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "jardin::tree",
+      "items": [
+        "Árbol ornamental",
+        "Árbol frutal"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    },
+    {
+      "group": "jardin::planter",
+      "items": [
+        "Macetero",
+        "Jardinera rectangular grande"
+      ],
+      "count": 2,
+      "decision": "revisar_consolidacion_despues_de_renovar_estancia"
+    }
+  ],
+  "removal_decisions": {
+    "removed_now": 0,
+    "reason": "No se ha retirado ningún modelo. La cocina sigue en proceso y el resto de estancias aún no ha pasado por su renovación; no hay sustitutos completos y verificados para justificar eliminaciones."
+  },
+  "models": [
+    {
+      "id": "static-001",
+      "name": "Mueble bajo cocina 60",
+      "type": "base",
+      "category": "Cocina",
+      "room": "Cocina",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-002",
+      "name": "Mueble bajo cocina 90 (2 puertas)",
+      "type": "base",
+      "category": "Cocina",
+      "room": "Cocina",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-003",
+      "name": "Cajonera cocina",
+      "type": "cajonera",
+      "category": "Cocina",
+      "room": "Cocina",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-004",
+      "name": "Mueble alto cocina",
+      "type": "alto",
+      "category": "Cocina",
+      "room": "Cocina",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-005",
+      "name": "Columna despensa",
+      "type": "columna",
+      "category": "Cocina",
+      "room": "Cocina",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-006",
+      "name": "Frigorífico combi",
+      "type": "frigo",
+      "category": "Electrodomésticos",
+      "room": "Electrodomésticos",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-007",
+      "name": "Frigorífico americano",
+      "type": "frigo",
+      "category": "Electrodomésticos",
+      "room": "Electrodomésticos",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-008",
+      "name": "Lavadora / lavavajillas",
+      "type": "lavadora",
+      "category": "Electrodomésticos",
+      "room": "Electrodomésticos",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_fase_cocina",
+      "reason": "Modelo de cocina/electrodoméstico con mejoras parciales o pendientes; no retirar hasta sustituir y probar su alternativa."
+    },
+    {
+      "id": "static-009",
+      "name": "Sofá 3 plazas",
+      "type": "sofa",
+      "category": "Salón",
+      "room": "Salón",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-010",
+      "name": "Mesa de comedor",
+      "type": "mesa",
+      "category": "Salón",
+      "room": "Salón",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-011",
+      "name": "Mueble de TV",
+      "type": "tv",
+      "category": "Salón",
+      "room": "Salón",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-012",
+      "name": "Armario 2 puertas",
+      "type": "armario",
+      "category": "Dormitorio",
+      "room": "Dormitorio",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-013",
+      "name": "Cama 150",
+      "type": "cama",
+      "category": "Dormitorio",
+      "room": "Dormitorio",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-014",
+      "name": "Mueble de lavabo",
+      "type": "lavabo",
+      "category": "Baño",
+      "room": "Baño",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-015",
+      "name": "Inodoro",
+      "type": "inodoro",
+      "category": "Baño",
+      "room": "Baño",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-016",
+      "name": "Planta",
+      "type": "planta",
+      "category": "Decoración",
+      "room": "Decoración",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-017",
+      "name": "Alfombra",
+      "type": "alfombra",
+      "category": "Decoración",
+      "room": "Decoración",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-018",
+      "name": "Lámpara de pie",
+      "type": "lampara",
+      "category": "Decoración",
+      "room": "Decoración",
+      "shape": null,
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Modelo heredado de una estancia aún no renovada; conservar como referencia y funcionalidad provisional."
+    },
+    {
+      "id": "static-019",
+      "name": "Sofá 2 plazas",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "sofa",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-020",
+      "name": "Sofá chaise longue",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "sofa",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-021",
+      "name": "Sofá rinconero",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "sofa",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-022",
+      "name": "Butaca",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "seat",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-023",
+      "name": "Puf redondo",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "seat",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-024",
+      "name": "Mesa de centro ovalada",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-025",
+      "name": "Mesa auxiliar",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-026",
+      "name": "Panel de TV",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "panel",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-027",
+      "name": "Aparador",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "sideboard",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-028",
+      "name": "Librería",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-029",
+      "name": "Lámpara sobremesa",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "lamp",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-030",
+      "name": "Espejo decorativo",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-031",
+      "name": "Cama individual",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "bed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-032",
+      "name": "Cama doble",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "bed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-033",
+      "name": "Cama king size",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "bed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-034",
+      "name": "Litera",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "bed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-035",
+      "name": "Mesita 2 cajones",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "dresser",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-036",
+      "name": "Cómoda 6 cajones",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "dresser",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-037",
+      "name": "Armario corredero",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "wardrobe",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-038",
+      "name": "Armario abatible",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "wardrobe",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-039",
+      "name": "Espejo cuerpo entero",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-040",
+      "name": "Tocador",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "desk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-041",
+      "name": "Bañera exenta",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "bath",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-042",
+      "name": "Ducha con mampara",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "shower",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-043",
+      "name": "Mueble lavabo doble",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "vanity",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-044",
+      "name": "Lavabo sobre encimera",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "basin",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-045",
+      "name": "Bidé cerámico",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "bidet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-046",
+      "name": "Radiador toallero",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "rail",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-047",
+      "name": "Columna baño",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "cabinet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-048",
+      "name": "Espejo iluminado",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-049",
+      "name": "Mesa comedor rectangular",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-050",
+      "name": "Mesa comedor redonda",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-051",
+      "name": "Mesa extensible",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-052",
+      "name": "Silla tapizada",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "chair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-053",
+      "name": "Silla madera",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "chair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-054",
+      "name": "Banco comedor",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "bench",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-055",
+      "name": "Aparador comedor",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "sideboard",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-056",
+      "name": "Lámpara colgante",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "lamp",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-057",
+      "name": "Consola",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "console",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-058",
+      "name": "Zapatero",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "cabinet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-059",
+      "name": "Banco recibidor",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "bench",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-060",
+      "name": "Perchero",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "coat",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-061",
+      "name": "Espejo vertical",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-062",
+      "name": "Escritorio recto",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "desk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-063",
+      "name": "Escritorio en L",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "desk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-064",
+      "name": "Mesa regulable",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "desk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-065",
+      "name": "Silla ergonómica",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "officechair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-066",
+      "name": "Silla ejecutiva",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "officechair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-067",
+      "name": "Estantería despacho",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-068",
+      "name": "Cajonera móvil",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "dresser",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-069",
+      "name": "Monitor y teclado",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "computer",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-070",
+      "name": "Lavadora frontal",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "washer",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-071",
+      "name": "Secadora frontal",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "washer",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-072",
+      "name": "Lavadero con pila",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "sink",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-073",
+      "name": "Armario limpieza",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "cabinet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-074",
+      "name": "Cesto ropa",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "basket",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-075",
+      "name": "Tabla planchar",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "ironing",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-076",
+      "name": "Estantería lavandería",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-077",
+      "name": "Módulo vestidor abierto",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "wardrobe",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-078",
+      "name": "Módulo vestidor cerrado",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "wardrobe",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-079",
+      "name": "Isla central cajones",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "dresser",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-080",
+      "name": "Zapatero",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-081",
+      "name": "Espejo vestidor",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-082",
+      "name": "Banco vestidor",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "bench",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-083",
+      "name": "Coche compacto",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "car",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-084",
+      "name": "Coche SUV",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "car",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-085",
+      "name": "Furgoneta",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "van",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-086",
+      "name": "Motocicleta",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "bike",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-087",
+      "name": "Bicicleta",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "bicycle",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-088",
+      "name": "Estantería metálica",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-089",
+      "name": "Banco trabajo",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "workbench",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-090",
+      "name": "Armario herramientas",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "toolcab",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-091",
+      "name": "Compresor",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "compressor",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-092",
+      "name": "Carro herramientas",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "cart",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-093",
+      "name": "Neumáticos",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "tyres",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-094",
+      "name": "Estantería metálica",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-095",
+      "name": "Estantería madera",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-096",
+      "name": "Cajas apilables",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "box",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-097",
+      "name": "Baúl",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "trunk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-098",
+      "name": "Maleta",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "suitcase",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-099",
+      "name": "Escalera plegable",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "ladder",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-100",
+      "name": "Bicicleta",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "bike",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-101",
+      "name": "Sofá exterior",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "outdoorsofa",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-102",
+      "name": "Sillón exterior",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "seat",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-103",
+      "name": "Mesa exterior",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-104",
+      "name": "Tumbona",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "sunbed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-105",
+      "name": "Sombrilla",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "umbrella",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-106",
+      "name": "Jardinera",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "planter",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-107",
+      "name": "Pérgola",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "pergola",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-108",
+      "name": "Barbacoa",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "bbq",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-109",
+      "name": "Árbol ornamental",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "tree",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-110",
+      "name": "Macetero",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "planter",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-111",
+      "name": "Conjunto exterior",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "outdoorsofa",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-112",
+      "name": "Ducha exterior",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "shower",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-113",
+      "name": "Piscina",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "pool",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-114",
+      "name": "Sofá modular 4 plazas",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "sofa",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-115",
+      "name": "Sillón orejero",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "seat",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-116",
+      "name": "Mesa de centro rectangular",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-117",
+      "name": "Mueble bajo de salón",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "sideboard",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-118",
+      "name": "Estantería modular alta",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-119",
+      "name": "Lámpara de pie de lectura",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "lamp",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-120",
+      "name": "Espejo redondo decorativo",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-121",
+      "name": "Mueble mural para televisión",
+      "type": "roomObject",
+      "category": "Salón",
+      "room": "salón",
+      "shape": "panel",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-122",
+      "name": "Cama matrimonio 135",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "bed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-123",
+      "name": "Cama canapé abatible",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "bed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-124",
+      "name": "Mesita flotante",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "dresser",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-125",
+      "name": "Cómoda 4 cajones ancha",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "dresser",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-126",
+      "name": "Armario esquinero",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "wardrobe",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-127",
+      "name": "Escritorio juvenil",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "desk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-128",
+      "name": "Lámpara de mesita",
+      "type": "roomObject",
+      "category": "Dormitorio",
+      "room": "dormitorio",
+      "shape": "lamp",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-129",
+      "name": "Bañera rectangular encastrada",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "bath",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-130",
+      "name": "Plato de ducha cuadrado",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "shower",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-131",
+      "name": "Mueble lavabo suspendido",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "vanity",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-132",
+      "name": "Lavabo de apoyo ovalado",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "basin",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-133",
+      "name": "Mueble auxiliar baño",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "cabinet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-134",
+      "name": "Toallero de pared",
+      "type": "roomObject",
+      "category": "Baño",
+      "room": "baño",
+      "shape": "rail",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-135",
+      "name": "Mesa comedor extensible 6-8",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-136",
+      "name": "Mesa comedor redonda pequeña",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "table",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-137",
+      "name": "Silla comedor con brazos",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "chair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-138",
+      "name": "Silla comedor tapizada",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "chair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-139",
+      "name": "Lámpara comedor suspendida",
+      "type": "roomObject",
+      "category": "Comedor",
+      "room": "comedor",
+      "shape": "lamp",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-140",
+      "name": "Consola suspendida",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "console",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-141",
+      "name": "Zapatero estrecho",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "cabinet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-142",
+      "name": "Espejo horizontal recibidor",
+      "type": "roomObject",
+      "category": "Recibidor",
+      "room": "recibidor",
+      "shape": "mirror",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-143",
+      "name": "Escritorio con ala lateral",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "desk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-144",
+      "name": "Silla de oficina compacta",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "officechair",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-145",
+      "name": "Librería con baldas",
+      "type": "roomObject",
+      "category": "Despacho",
+      "room": "despacho",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-146",
+      "name": "Lavadora carga superior",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "washer",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-147",
+      "name": "Fregadero de lavadero doble",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "sink",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-148",
+      "name": "Armario escobero alto",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "cabinet",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-149",
+      "name": "Cesto doble de ropa",
+      "type": "roomObject",
+      "category": "Lavadero",
+      "room": "lavadero",
+      "shape": "basket",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-150",
+      "name": "Módulo vestidor con cajones",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "wardrobe",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-151",
+      "name": "Zapatero extraíble",
+      "type": "roomObject",
+      "category": "Vestidor",
+      "room": "vestidor",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-152",
+      "name": "Banco de trabajo con panel",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "workbench",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-153",
+      "name": "Estantería garaje reforzada",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "shelf",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-154",
+      "name": "Coche berlina",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "car",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-155",
+      "name": "Moto tipo scooter",
+      "type": "roomObject",
+      "category": "Garaje",
+      "room": "garaje",
+      "shape": "bike",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-156",
+      "name": "Caja grande de almacenaje",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "box",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-157",
+      "name": "Baúl de almacenaje grande",
+      "type": "roomObject",
+      "category": "Trastero",
+      "room": "trastero",
+      "shape": "trunk",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-158",
+      "name": "Tumbona reclinable",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "sunbed",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-159",
+      "name": "Sombrilla grande",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "umbrella",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-160",
+      "name": "Pérgola bioclimática",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "terraza",
+      "shape": "pergola",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-161",
+      "name": "Árbol frutal",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "tree",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    },
+    {
+      "id": "static-162",
+      "name": "Jardinera rectangular grande",
+      "type": "roomObject",
+      "category": "Exterior",
+      "room": "jardin",
+      "shape": "planter",
+      "dimensions_cm": {
+        "width": null,
+        "height": null,
+        "depth": null
+      },
+      "audit_status": "no_aprobado",
+      "decision": "conservar_hasta_renovacion_estancia",
+      "reason": "Generador procedural compartido; geometría de formas básicas y variantes insuficientes para certificar realismo de producto. Pendiente de reconstrucción específica de la estancia."
+    }
+  ],
+  "commercial_registry": {
+    "product_count": 14,
+    "products": [
+      {
+        "id": "roca-ona-bidet-a357687000",
+        "name": "Bidé adosado a pared Ona sin tapa",
+        "brand": "Roca",
+        "reference": "A357687000",
+        "category": "Baño",
+        "model_type": "rocaOnaBidet",
+        "visual_review": "pendiente de comprobación en el navegador",
+        "model_status": "modelo propio generado mediante malla paramétrica detallada",
+        "source_count": 3,
+        "notes": "Dimensiones exteriores basadas en la ficha oficial. Las curvaturas internas y radios no acotados se han reconstruido visualmente y son aproximados; no se presentan como geometría CAD oficial."
+      },
+      {
+        "id": "roca-ona-wc-suspendido-a346687000",
+        "name": "Taza Roca Rimless suspendida Ona",
+        "brand": "Roca",
+        "reference": "A346687000",
+        "category": "Baño",
+        "model_type": "rocaOnaWallHungWC",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico",
+        "source_count": 2,
+        "notes": "Dimensiones exteriores oficiales; perfil y curvaturas no acotadas reconstruidos visualmente."
+      },
+      {
+        "id": "roca-ona-wc-compacto-suspendido-a346688000",
+        "name": "Taza Roca Rimless suspendida compacta Ona",
+        "brand": "Roca",
+        "reference": "A346688000",
+        "category": "Baño",
+        "model_type": "rocaOnaWallHungWCCompact",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico derivado de la geometría Ona",
+        "source_count": 1,
+        "notes": "Largo y ancho oficiales; geometría no acotada reconstruida visualmente."
+      },
+      {
+        "id": "roca-ona-bidet-suspendido-a357685000",
+        "name": "Bidé suspendido Ona",
+        "brand": "Roca",
+        "reference": "A357685000",
+        "category": "Baño",
+        "model_type": "rocaOnaWallHungBidet",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico derivado de la geometría del bidé Ona",
+        "source_count": 1,
+        "notes": "Dimensiones oficiales de colección; radios y cavidad reconstruidos visualmente."
+      },
+      {
+        "id": "roca-ona-lavabo-fineceramic-a327686000",
+        "name": "Lavabo mural Roca Ona Fineceramic",
+        "brand": "Roca",
+        "reference": "A327686000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico",
+        "source_count": 3,
+        "notes": "Dimensiones, material y pared fina de 5 mm documentados por Roca; radios, fondo y pendientes interiores reconstruidos visualmente."
+      },
+      {
+        "id": "roca-ona-lavabo-compacto-a327682000",
+        "name": "Lavabo mural compacto Roca Ona Fineceramic",
+        "brand": "Roca",
+        "reference": "A327682000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico de la misma familia",
+        "source_count": 1,
+        "notes": "Medidas exteriores de la variante según catálogo oficial; la geometría interna se adapta proporcionalmente a la familia Ona y no constituye CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-a327685000",
+        "name": "Lavabo mural Roca Ona Fineceramic 550",
+        "brand": "Roca",
+        "reference": "A327685000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico de la misma familia",
+        "source_count": 1,
+        "notes": "Medidas exteriores de la variante según catálogo oficial; la geometría interna se adapta proporcionalmente a la familia Ona y no constituye CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-a327687000",
+        "name": "Lavabo mural Roca Ona Fineceramic 650",
+        "brand": "Roca",
+        "reference": "A327687000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico de la misma familia",
+        "source_count": 1,
+        "notes": "Medidas exteriores de la variante según catálogo oficial; la geometría interna se adapta proporcionalmente a la familia Ona y no constituye CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-compacto-a327683000",
+        "name": "Lavabo mural compacto Roca Ona Fineceramic 550",
+        "brand": "Roca",
+        "reference": "A327683000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico adaptado a medidas de variante",
+        "source_count": 1,
+        "notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-compacto-a327684000",
+        "name": "Lavabo mural compacto Roca Ona Fineceramic 600",
+        "brand": "Roca",
+        "reference": "A327684000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico adaptado a medidas de variante",
+        "source_count": 1,
+        "notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-compacto-a32768d000",
+        "name": "Lavabo mural compacto Roca Ona Fineceramic 400",
+        "brand": "Roca",
+        "reference": "A32768D000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico adaptado a medidas de variante",
+        "source_count": 1,
+        "notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-compacto-a32768e000",
+        "name": "Lavabo mural compacto Roca Ona Fineceramic 500",
+        "brand": "Roca",
+        "reference": "A32768E000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico adaptado a medidas de variante",
+        "source_count": 1,
+        "notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-a32768h000",
+        "name": "Lavabo mural Roca Ona Fineceramic 800",
+        "brand": "Roca",
+        "reference": "A32768H000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico adaptado a medidas de variante",
+        "source_count": 1,
+        "notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      },
+      {
+        "id": "roca-ona-lavabo-a32768a000",
+        "name": "Lavabo mural Roca Ona Fineceramic 1000",
+        "brand": "Roca",
+        "reference": "A32768A000",
+        "category": "Baño",
+        "model_type": "rocaOnaFineceramicBasin",
+        "visual_review": "pendiente",
+        "model_status": "modelo propio paramétrico adaptado a medidas de variante",
+        "source_count": 1,
+        "notes": "Dimensiones exteriores de la variante según catálogo oficial; la forma interna se adapta proporcionalmente a la familia y no es CAD oficial."
+      }
+    ]
+  },
+  "next_steps": [
+    "Terminar renovación y verificación de cocina antes de depurar sus prototipos antiguos.",
+    "Renovar baño y auditar referencias comerciales una a una.",
+    "Continuar con salón/comedor, dormitorios y resto de estancias.",
+    "Al terminar cada estancia, consolidar variantes que solo difieran en color/tamaño sin aportar una función o geometría distinta.",
+    "No borrar modelos vinculados a proyectos guardados ni cambiar IDs/tipos hasta confirmar migración y compatibilidad."
+  ]
+}
