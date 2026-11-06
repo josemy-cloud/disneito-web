@@ -590,7 +590,22 @@ function setQ(){const q=$('#sq').value;r3.shadowMap.enabled=q!='f';sun.castShado
 function resize(){const w=d3.clientWidth,h=d3.clientHeight;if(!w)return;r3.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
 new ResizeObserver(()=>{resize();draw()}).observe($('#view'));
 const M=(c,r=.55,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
-function B(g,w,h,d,x,y,z,mt){const m=new T.Mesh(new T.BoxGeometry(w,h,d),mt);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;g.add(m);return m}
+/* Cajas paramétricas con cantos suavizados: conserva las cotas exteriores y evita el aspecto de bloques CAD sin acabado. */
+const BOX_GEO_CACHE=new Map();
+function boxGeo(w,h,d){
+ const bevel=Math.min(.18,w*.035,h*.035,d*.035);
+ if(!Number.isFinite(bevel)||Math.min(w,h,d)<.8||bevel<.025)return new T.BoxGeometry(w,h,d);
+ const key=[w,h,d].map(v=>Math.round(v*100)/100).join('|');
+ if(BOX_GEO_CACHE.has(key))return BOX_GEO_CACHE.get(key);
+ const shape=new T.Shape(),x=w/2-bevel,y=h/2-bevel;
+ shape.moveTo(-x,-y);shape.lineTo(x,-y);shape.lineTo(x,y);shape.lineTo(-x,y);shape.closePath();
+ const depth=Math.max(.05,d-2*bevel);
+ const geo=new T.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:2});
+ geo.translate(0,0,-depth/2);geo.computeVertexNormals();
+ if(BOX_GEO_CACHE.size>280)BOX_GEO_CACHE.clear();
+ BOX_GEO_CACHE.set(key,geo);return geo;
+}
+function B(g,w,h,d,x,y,z,mt){const m=new T.Mesh(boxGeo(w,h,d),mt);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;g.add(m);return m}
 /*ROOMS_START*/
 /* ===== Esquema v2 · habitaciones · techos · muros ocultos ===== */
 const ROOMCATS=['Cocina','Salón','Sala de estar','Comedor','Dormitorio principal','Dormitorio individual','Baño','Aseo','Lavadero','Vestidor','Pasillo','Recibidor','Despacho','Garaje','Trastero'];
