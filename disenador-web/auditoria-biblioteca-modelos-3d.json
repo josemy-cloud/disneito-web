@@ -3506,6 +3506,13 @@
       "action": "Añadir espacio de trabajo dual con plano 2D y escena 3D simultáneos",
       "verified": false,
       "notes": "Se añade un modo 2D + 3D en el que ambos visores permanecen activos en paralelo. La división vertical es ajustable mediante arrastre; los modos 2D, 3D rápida, materiales y realista se conservan. La sintaxis JavaScript se ha comprobado estáticamente. Falta validación visual y de interacción en navegador real."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "reconstruccion-integral-226",
+      "action": "Correcciones transversales de geometría y mecanismos compartidos",
+      "verified": false,
+      "notes": "Se corrige el selector geométrico de mesas para que nombres explícitamente rectangulares, extensibles, escritorios y auxiliares no hereden una base redonda por variant par. Se incorporan copas y placas de bisagra a las puertas laterales del generador modular. El generador de cajones modular añade carriles exteriores fijos al casco y un perfil intermedio telescópico animado a media carrera, manteniendo el cajón y sus identificadores. BUILD.roomObject registra metadatos de malla, triángulos, normales, bounding boxes y materiales para diagnóstico. Comprobación estática: inventario JSON con 226 registros en 6 grupos; 56 subtipos geométricos, todos con una ruta de generador identificada (52 casos roomObject y 6 generadores específicos). JavaScript inline y módulo superan parseo estático. No se ha ejecutado render, interacción, colisiones ni prueba de proyectos en navegador; por tanto no se aprueba ningún modelo como visual/funcionalmente verificado."
     }
   ],
   "validation": {
@@ -3522,5 +3529,37 @@
     "deployment": "not_deployed",
     "ui_dual_view_static": "passed: button, dual state, split layout and adjustable divider integrated; main inline JavaScript parsed successfully",
     "ui_dual_view_browser": "not_performed: no browser session available in this work context"
+  },
+  "current_execution": {
+    "date": "2026-11-06",
+    "inventory_records": 226,
+    "groups": 6,
+    "procedural_shape_names": 56,
+    "shape_generator_mappings_missing": 0,
+    "shared_generator_changes": [
+      "BUILD.roomObject",
+      "BUILD.mod",
+      "fdoor",
+      "ndrw"
+    ],
+    "verification": {
+      "inventory_json_parse": "passed",
+      "shape_generator_static_mapping": "passed",
+      "inline_javascript_parse": "passed",
+      "module_javascript_parse": "passed",
+      "geometry_runtime": "not_run",
+      "visual_review": "not_run",
+      "animation_runtime": "not_run",
+      "dimensions_runtime": "not_run",
+      "project_persistence": "not_run",
+      "modes_3d_render": "not_run"
+    },
+    "completion": {
+      "processed_models": 0,
+      "rebuilt_models": 0,
+      "improved_models": 0,
+      "verified_models": 0,
+      "note": "No se contabilizan registros individuales como procesados, reconstruidos o verificados: los cambios se aplican a generadores compartidos y aún requieren ejecución y revisión por variante."
+    }
   }
 }
