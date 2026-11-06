@@ -35,7 +35,8 @@ body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
 #pvp{display:block;box-sizing:border-box;width:100%;height:calc(100dvh - clamp(170px,32dvh,300px) - 105px);min-height:90px;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
 #pvp select,#pvp input,#pvp button{max-width:100%;box-sizing:border-box}
 @media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}#pvp{height:calc(100dvh - clamp(150px,27dvh,230px) - 90px)}}
-</style></head><body>
+</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet">
+</head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
 <button id="bU" title="Deshacer (Ctrl+Z)">↶</button><button id="bR" title="Rehacer (Ctrl+Y)">↷</button>
