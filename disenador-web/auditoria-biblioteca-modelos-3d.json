@@ -66,6 +66,14 @@
       "impact": "La biblioteca no representa correctamente la construcción ni las siluetas de los sanitarios y muebles; variantes distintas comparten la misma geometría genérica.",
       "action": "Reconstruir por familias funcionales: bañeras, duchas/platos y mamparas, muebles de lavabo y cajones/puertas, lavabos, bidés, columna auxiliar, espejos y accesorios; mantener los modelos comerciales Roca separados y trazables.",
       "verified": false
+    },
+    {
+      "id": "F08",
+      "severity": "medium",
+      "finding": "Primera reconstrucción geométrica de 8 modelos de baño: 2 bañeras, 2 duchas/platos, 2 muebles de lavabo y 2 lavabos.",
+      "impact": "Se sustituyeron generadores simplificados por componentes diferenciados: cubeta abierta, cuerpo extruido, mampara/perfilería, casco hueco y cajones estructurales.",
+      "action": "Comprobar visualmente proporciones, orientación y materiales en navegador; probar colocación y dimensiones editables en todos los modos de vista y motores de render. No considerar verificados hasta realizar esas pruebas.",
+      "verified": false
     }
   ],
   "counts_by_room": {
