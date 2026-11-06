@@ -1122,9 +1122,51 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
  const rack=(x,y,z,ww,dd,mt)=>{B(a,ww,.5,.5,x,y,z-dd/2,mt);B(a,ww,.5,.5,x,y,z+dd/2,mt);B(a,.5,.5,dd,x-ww/2,y,z,mt);B(a,.5,.5,dd,x+ww/2,y,z,mt);for(let q=1;q<6;q++)B(a,.35,.35,dd,x-ww/2+ww*q/6,y,z,mt)};
  const knob=(x,y,r)=>{const k=new T.Mesh(new T.CylinderGeometry(r,r,1.6,16),kn);k.rotation.x=Math.PI/2;k.position.set(x,y,d/2+1.1);a.add(k)};
  const hinge2=(p,y,hw)=>[-1,1].forEach(q=>B(p,3.5,2.2,1.6,q*hw,y,-.2,stl));
- if(kd=='campana_inc'){const t=B(a,w,2.5,d*.85,0,h*.4,0,dk);t.rotation.x=.55;B(t,w*.7,.3,d*.5,0,-1.4,0,stl);for(let q=-3;q<=3;q++)B(t,.3,.4,d*.5,q*w*.09,-1.6,0,rub);B(a,w*.38,h*.55,d*.4,0,h*.72,-d/2+d*.2,m);B(a,w*.12,1.4,.3,0,h*.58,-d/2+d*.4+.1,lcd);return}
- if(kd=='campana_dec'){const co=new T.Mesh(new T.CylinderGeometry(w*.1,w*.5,h*.35,24),m),ch=new T.Mesh(new T.CylinderGeometry(w*.09,w*.09,h*.55,16),m),ri=new T.Mesh(new T.TorusGeometry(w*.49,.6,8,32),stl);co.position.set(0,h*.2,0);ch.position.set(0,h*.72,0);ri.rotation.x=Math.PI/2;ri.position.set(0,h*.04,0);a.add(co,ch,ri);return}
- if(kd=='campana_int'){B(a,w,h*.6,d*.9,0,h*.3,0,m);B(a,w-4,.6,d*.7,0,.4,2,stl);for(let q=-4;q<=4;q++)B(a,.25,.5,d*.7,q*(w-8)/9,.2,2,rub);return}
+ if(kd=='campana_inc'){
+  // Campana inclinada: cuerpo mural, panel frontal inclinado, marco, filtros, iluminación y mandos.
+  const ductW=w*.34,ductD=d*.34,ductH=h*.58;
+  B(a,ductW,ductH,ductD,0,h*.69,-d*.27,m);
+  B(a,ductW+1,1.2,ductD+1,0,h*.97,-d*.27,stl);
+  const canopy=B(a,w*.96,3.2,d*.72,0,h*.31,d*.015,dk);canopy.rotation.x=-.34;
+  const lower=B(a,w*.9,1.4,d*.68,0,h*.285,d*.02,stl);lower.rotation.x=-.34;
+  // Panel inferior de aspiración con filtros metálicos reales en lugar de una placa lisa.
+  B(a,w*.84,.9,d*.55,0,h*.22,d*.03,rub);
+  for(let q=-5;q<=5;q++){const sl=B(a,.65,.55,d*.48,q*w*.075,h*.225,d*.03,stl);sl.rotation.x=-.34}
+  for(let q=-3;q<=3;q++){const rib=B(a,w*.82,.45,.45,0,h*.205,-d*.2+q*d*.065,stl)}
+  // Dos luces LED empotradas y panel táctil frontal.
+  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,20),lit);led.position.set(side*w*.32,h*.245,d*.23);a.add(led)});
+  B(a,w*.16,1.1,.8,0,h*.36,d*.36,lcd);
+  for(let q=-1;q<=1;q++){const key=new T.Mesh(new T.CircleGeometry(.8,12),stl);key.position.set(q*w*.045,h*.36,d*.37);a.add(key)}
+  return
+ }
+ if(kd=='campana_dec'){
+  // Campana decorativa de pared: chimenea telescópica, cuerpo piramidal y filtros inferiores.
+  const ductW=w*.34,ductD=d*.34;
+  B(a,ductW,h*.62,ductD,0,h*.67,-d*.27,m);
+  B(a,ductW+1,1.1,ductD+1,0,h*.97,-d*.27,stl);
+  const hood=new T.Mesh(new T.CylinderGeometry(w*.48,w*.22,h*.23,4,1,false),m);hood.rotation.y=Math.PI/4;hood.position.set(0,h*.24,0);a.add(hood);
+  B(a,w*.96,2.8,d*.82,0,h*.12,0,stl);
+  B(a,w*.9,.8,d*.72,0,h*.095,0,rub);
+  for(let q=-5;q<=5;q++)B(a,.65,.55,d*.68,q*w*.075,h*.10,0,stl);
+  for(let q=-2;q<=2;q++)B(a,w*.82,.45,.45,0,h*.075,q*d*.12,stl);
+  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2.1,2.1,.8,20),lit);led.position.set(side*w*.31,h*.16,d*.24);a.add(led)});
+  B(a,w*.18,1,.8,0,h*.3,d*.36,lcd);
+  return
+ }
+ if(kd=='campana_int'){
+  // Campana integrada: carcasa bajo mueble, filtros extraíbles, rejilla perimetral, motor y luces.
+  B(a,w,h*.58,d*.9,0,h*.39,0,m);
+  B(a,w*.72,h*.32,d*.48,0,h*.78,-d*.12,stl);
+  const motor=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.16,Math.min(w,d)*.16,h*.2,32),rub);motor.position.set(0,h*.79,-d*.1);a.add(motor);
+  B(a,w-4,.9,d*.76,0,h*.075,0,stl);
+  B(a,w-9,.55,d*.68,0,h*.06,0,rub);
+  for(let q=-5;q<=5;q++)B(a,.55,.45,d*.62,q*(w-10)/11,h*.065,0,stl);
+  for(let q=-3;q<=3;q++)B(a,w*.82,.45,.45,0,h*.055,q*d*.095,stl);
+  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2,2,.7,18),lit);led.position.set(side*w*.34,h*.09,d*.27);a.add(led)});
+  B(a,w*.2,1,.7,0,h*.9,d*.34,pn);
+  B(a,w*.12,.7,.35,0,h*.9,d*.36,lcd);
+  return
+ }
  if(kd=='placa'){const hh=Math.max(h,3);B(a,w,hh,d,0,hh/2,0,M('#0b0e12',.05,.35));[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([x,z])=>{const r=new T.Mesh(new T.TorusGeometry(7,.35,8,28),M('#555',.4,.5));r.rotation.x=Math.PI/2;r.position.set(x*w/4,hh+.2,z*d/4);a.add(r);const r2=new T.Mesh(new T.CylinderGeometry(3,3,.3,20),M('#3a3a3a',.4,.5));r2.position.set(x*w/4,hh+.2,z*d/4);a.add(r2)});B(a,w*.3,.2,2,0,hh+.15,d/2-3,lcd);return}
  const SH={horno:1,micro:1,lavavajillas:1,lavadora:1,secadora:1,combi:1,frigo:1,vinoteca:1};if(!SH[kd])B(a,w,h,d-1,0,h/2,-.5,m);
  if(kd=='horno'){
@@ -1139,7 +1181,7 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
    else{
     B(a,cw-8,.8,1.1,0,yy,-innerD/2+.5,stl);B(a,cw-8,.8,1.1,0,yy,innerD/2-.5,stl);
     [-1,1].forEach(side=>B(a,1,.8,innerD-1,side*(cw/2-4),yy,-.4,stl));
-    for(let q2=1;q2<9;q2++)B(a,.55,.55,innerD-2,0,yy,-innerD/2+q2*innerD/9,stl);
+    for(let q2=1;q2<9;q2++)B(a,cw-12,.65,.65,0,yy,-innerD*.42+q2*innerD*.105,stl);
    }
   });
   const coil=new T.Mesh(new T.TorusGeometry(Math.min(cw,innerD)*.22,.65,8,36),stl);
@@ -1246,11 +1288,17 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   B(a,w-2,9,1.4,0,h-5,d/2+.3,pn);B(a,w*.27,5,.4,-w*.32,h-5,d/2+1.05,wht);B(a,w*.12,2.4,.3,0,h-5,d/2+1.05,lcd);
   const dial=new T.Mesh(new T.CylinderGeometry(3.1,3.1,1.8,28),kn);dial.rotation.x=Math.PI/2;dial.position.set(w*.29,h-5,d/2+1.2);a.add(dial);
   B(a,.5,2.3,.4,w*.29,h-3.8,d/2+1.5,stl);for(let q=0;q<4;q++)B(a,2.2,1.2,.35,w*.12+q*3.2,h-5,d/2+1.1,kn);
-  const p=pv(-w/2+1,h/2-3,k0,{t:'d',sg:-1});B(p,w-2,h-8,2.8,(w-2)/2,0,0,mp);
-  const pr=cs*.405,pTrim=new T.Mesh(new T.TorusGeometry(pr+1.2,1.7,10,44),stl);pTrim.position.set((w-2)/2,0,1.9);p.add(pTrim);
-  const pGlass=new T.Mesh(new T.CircleGeometry(pr,44),new T.MeshPhysicalMaterial({color:'#233743',roughness:.08,metalness:.22,clearcoat:.8,transparent:true,opacity:.8}));pGlass.position.set((w-2)/2,0,2.05);p.add(pGlass);
-  const pInner=new T.Mesh(new T.CircleGeometry(pr*.72,36),new T.MeshStandardMaterial({color:'#8ba0a8',roughness:.13,transparent:true,opacity:.45}));pInner.position.set((w-2)/2,0,2.12);p.add(pInner);
-  [-1,1].forEach(side=>B(p,2.4,4,1.8,1.4,side*h*.3,-.2,stl));B(p,2.2,3.5,2.4,w-5,h*.3,2.2,hd);
+  // Escotilla circular independiente: solo gira el aro y el cristal; el frontal de la lavadora permanece fijo.
+  const pr=cs*.405,hingeX=-pr,centerX=pr;
+  const p=pv(hingeX,cy,k0,{t:'d',sg:-1});
+  const pFrame=new T.Mesh(new T.TorusGeometry(pr+2.4,3.2,14,56),stl);pFrame.position.set(centerX,0,1.8);p.add(pFrame);
+  const pGasket=new T.Mesh(new T.TorusGeometry(pr-2.2,2.1,12,52),rub);pGasket.position.set(centerX,0,2.05);p.add(pGasket);
+  const pGlass=new T.Mesh(new T.CircleGeometry(pr-3.2,52),new T.MeshPhysicalMaterial({color:'#233743',roughness:.08,metalness:.18,clearcoat:.9,clearcoatRoughness:.06,transparent:true,opacity:.48,side:T.DoubleSide}));pGlass.position.set(centerX,0,2.12);p.add(pGlass);
+  const pInner=new T.Mesh(new T.TorusGeometry(pr*.68,1.15,10,44),chrome);pInner.position.set(centerX,0,2.2);p.add(pInner);
+  const pWindow=new T.Mesh(new T.CircleGeometry(pr*.65,44),new T.MeshPhysicalMaterial({color:'#91a8b1',roughness:.14,metalness:.12,transparent:true,opacity:.24,side:T.DoubleSide}));pWindow.position.set(centerX,0,2.18);p.add(pWindow);
+  // Asa corta integrada en el borde derecho de la escotilla.
+  const pHandle=new T.Mesh(new T.CylinderGeometry(1.25,1.25,Math.max(5,pr*.34),12),hd);pHandle.position.set(centerX+pr*.84,0,2.8);p.add(pHandle);
+  [-1,1].forEach(side=>B(p,2.4,3.2,1.8,centerX-pr*.9,side*pr*.68,-.15,stl));
  } else if(kd=='americano'){[0,1].forEach(i=>{const s=i?-1:1,p=pv(-s*w/2,h/2,k0+i,{t:'d',sg:-s});B(p,w/2-.5,h-1,2,s*w/4,0,0,mp);B(p,1.6,h*.3,2.4,s*(w/2-4),0,3,hd)})}
  else if(kd=='combi'||kd=='frigo'){
   // Frigorífico con construcción por capas: carcasa, cámara, estantes, cajones y puertas funcionales.
