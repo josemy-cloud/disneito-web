@@ -1015,7 +1015,7 @@ case'chair':{
 
 
 case'panel':{
- const wood=M(it.col||'#75563f',.62,.08),edge=M('#4b382c',.55,.12),screen=M('#080d12',.12,.28),glass=new T.MeshStandardMaterial({color:'#18232b',roughness:.12,metalness:.35});
+ const wood=M(it.col||'#75563f',.62,.08),edge=M('#4b382c',.55,.12),inside=M('#d0c6b8',.82,.02),screen=M('#080d12',.12,.28),glass=new T.MeshStandardMaterial({color:'#18232b',roughness:.12,metalness:.35});
  // Panel mural con espesor, trasera, listones y fijaciones; pantalla con marco y cristal.
  B(g,w,h,d*.11,0,h/2,0,wood);
  for(let x=-w*.46;x<=w*.46;x+=Math.max(5,w*.045))B(g,1.2,h*.94,1.5,x,h/2,d*.07,edge);
@@ -1143,7 +1143,7 @@ case'wardrobe':{
  if(isSliding){
   // Dos hojas correderas superpuestas, con carriles superior/inferior y perfiles de agarre.
   box(0,h-3,dep/2-2,w-2,2,5,rail);box(0,3,dep/2-2,w-2,2,5,rail);
-  for(let k=0;k<2;k++){const leaf=new T.Group();leaf.position.set((k-.5)*w*.43,0,dep/2+1.5);g.add(leaf);B(leaf,w*.53,h-6,2,0,h/2,0,body);B(leaf,2,h-12,1.2,(k? -1:1)*w*.22,h/2,1.2,rail);leaf.position.x+=(k?1:-1)*w*.2}
+  for(let k=0;k<2;k++){const leaf=new T.Group();leaf.position.set((k-.5)*w*.43,0,dep/2+1.5);g.add(leaf);B(leaf,w*.53,h-6,2,0,h/2,0,body);B(leaf,2,h-12,1.2,(k? -1:1)*w*.22,h/2,1.2,rail);leaf.position.x+=(k?1:-1)*w*.2;mv(leaf,{it,k,t:'x',dx:(k?1:-1)*w*.24,dz:0})}
  }else{
   const doorW=(w-2*th-2)/2;
   for(let k=0;k<2;k++){
