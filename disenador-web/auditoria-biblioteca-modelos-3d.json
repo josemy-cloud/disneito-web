@@ -3573,8 +3573,8 @@
     {
       "date": "2026-11-06",
       "phase": "dormitorios",
-      "action": "Reconstrucción v3 del generador compartido de camas: colchones rectangulares con volumen, ropa de cama proporcionada, bastidores, lamas, patas y apoyos; variantes individual, doble, king size, matrimonio 135, litera y canapé",
-      "commit": "75d2d28b028e55f84a03632e9f5f9dc58cec0d08",
+      "action": "Reconstrucción v3 del generador compartido de camas: colchones rectangulares con volumen, ropa de cama proporcionada, bastidores, lamas, patas y apoyos; variantes individual, doble, king size, matrimonio 135, litera y canapé; ajuste adicional de edredón y almohadas colocados sobre la cara superior y con volumen",
+      "commit": "9643dafc0246efb3740d8f34a5570124d1c112b5",
       "verified": false
     }
   ],
@@ -3605,9 +3605,9 @@
     "dining_seating_table_static_update": "passed: shared chair and table generators updated; rounded upholstered seats, curved backrests, connected legs, distinct round/rectangular bases and three-panel extension layout integrated; 3 inline scripts parse",
     "dining_seating_table_browser_visual_validation": "not_performed: live render and inspection of all chair/table variants still required",
     "dining_seating_table_interaction_validation": "not_performed: extension behavior is represented geometrically; real interaction and project persistence remain to be tested",
-    "bed_family_static_update": "passed: BUILD.roomObject bed rebuilt as schemaVersion 3 with rounded-rectangular mattress geometry, realistic mattress thickness, perimeter rails, slats, four corner legs and center supports for wide beds; bunk and storage-bed branches differentiated. Main inline scripts parse successfully.",
+    "bed_family_static_update": "passed: BUILD.roomObject bed rebuilt as schemaVersion 3. Six inventory variants share a rounded-rectangular mattress with visible thickness, top-positioned duvet and pillows, side drape, perimeter rails, slats, four corner legs and center supports for wide beds; bunk and storage-bed branches are differentiated. Main executable inline scripts parse successfully.",
     "bed_family_browser_visual_validation": "not_performed: live browser render still required to confirm mattress silhouette, proportions, feet contact, bedding and all six variants.",
-    "bed_family_interaction_validation": "not_performed: storage-bed lifting mechanism is represented by hardware only; runtime opening and project persistence remain to be tested."
+    "bed_family_interaction_validation": "not_performed: storage-bed lift mechanism is represented by hardware only; runtime opening and project persistence remain to be tested."
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3624,7 +3624,7 @@
     "verification": {
       "inventory_json_parse": "passed",
       "shape_generator_static_mapping": "passed",
-      "inline_javascript_parse": "passed: executable inline scripts parsed after bed-family reconstruction",
+      "inline_javascript_parse": "passed: 2 executable inline scripts parsed with new Function after bed-family reconstruction; ES module not altered",
       "module_javascript_parse": "passed",
       "geometry_runtime": "not_run",
       "visual_review": "not_run",
