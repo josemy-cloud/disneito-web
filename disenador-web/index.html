@@ -2556,7 +2556,7 @@ BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=
   for(const sx of [-1,1]){
    const hx=sx*(w/2-t-5);
    B(g,7,10,2.2,hx,h*.82,-d/2+.9,hanger);
-   B(g,3.5,4,2.6,hx,h*.82,-d/2+2.8,footMetal||hanger);
+   B(g,3.5,4,2.6,hx,h*.82,-d/2+2.8,hanger);
    for(const yy of [h*.78,h*.86]){
     const screw=new T.Mesh(new T.CylinderGeometry(.8,.8,1.2,12),hanger);
     screw.rotation.x=Math.PI/2;screw.position.set(hx,yy,-d/2+2.1);g.add(screw);
