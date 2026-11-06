@@ -1366,16 +1366,15 @@
             "depth": 50
           },
           "status": "integrated_no_verificado",
-          "note": "Dos cubetas integradas y dos grifos modelados; cajones completos como grupos únicos, con frente unido al interior y holguras laterales/profundidad corregidas. Pendiente prueba real.",
+          "note": "Corrección de encimera: se divide en paños para dejar huecos reales sobre las cubetas; las cubetas cerámicas quedan visibles, con borde, paredes cóncavas, desagüe y grifería. Se conserva la apertura de cajones. Pendiente inspección visual y funcional.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
-            "frentes de cajón independientes",
-            "laterales, trasera, fondos y guías",
-            "encimera y cubetas integradas",
-            "apertura y cierre de cajones mediante interacción",
-            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional",
-            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
+            "encimera construida alrededor de huecos de cubeta, no como placa maciza",
+            "cubeta(s) cerámica(s) cóncava(s) integradas y visibles",
+            "borde cerámico, desagüe y grifo con base, cuerpo, caño y aireador",
+            "cajones independientes con frente, costados, fondo y guías",
+            "pendiente prueba visual y funcional en navegador"
           ]
         },
         {
@@ -1445,11 +1444,14 @@
             "depth": 32
           },
           "status": "integrated_no_verificado",
-          "note": "Tres cajones inferiores móviles con guías y holgura respecto al casco; puerta superior independiente articulada. Pendiente prueba real.",
+          "note": "Corrección de fallo reportado: tres cajones inferiores y puerta superior se registran como aperturas MV independientes. Cajones con frente, costados, fondo, trasera y guías; pendiente comprobar clic real, recorrido y aspecto en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
-            "geometría específica de baño; pendiente prueba visual y funcional",
-            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
+            "casco hueco con compartimentación",
+            "tres cajones inferiores con caja constructiva y guías",
+            "puerta superior independiente articulada",
+            "aperturas registradas en el sistema MV",
+            "pendiente prueba funcional y visual"
           ]
         },
         {
@@ -1522,16 +1524,15 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Cubeta integrada y grifo con base, caño y aireador; cajón completo como grupo único, con costados/fondo acercados al frontal para evitar separación; recorrido de apertura reducido. Pendiente prueba real.",
+          "note": "Corrección de encimera: se divide en paños para dejar huecos reales sobre las cubetas; las cubetas cerámicas quedan visibles, con borde, paredes cóncavas, desagüe y grifería. Se conserva la apertura de cajones. Pendiente inspección visual y funcional.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
-            "frentes de cajón independientes",
-            "laterales, trasera, fondos y guías",
-            "encimera y cubetas integradas",
-            "apertura y cierre de cajones mediante interacción",
-            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional",
-            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
+            "encimera construida alrededor de huecos de cubeta, no como placa maciza",
+            "cubeta(s) cerámica(s) cóncava(s) integradas y visibles",
+            "borde cerámico, desagüe y grifo con base, cuerpo, caño y aireador",
+            "cajones independientes con frente, costados, fondo y guías",
+            "pendiente prueba visual y funcional en navegador"
           ]
         },
         {
@@ -1567,11 +1568,14 @@
             "depth": 32
           },
           "status": "integrated_no_verificado",
-          "note": "Cajones reconstruidos como grupos móviles independientes con frente, costados, fondo y trasera unidos; apertura conectada al sistema MV y recorrido limitado al interior útil. Puerta superior también articulada. Pendiente prueba real.",
+          "note": "Corrección de fallo reportado: cajones inferiores y puerta superior ahora se registran como aperturas MV independientes para este nombre de modelo. Geometría de cajones con frente, laterales, fondo y trasera. Pendiente comprobación de clic y aspecto en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
-            "geometría específica de baño; pendiente prueba visual y funcional",
-            "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
+            "casco hueco con laterales, base, tapa y trasera",
+            "dos cajones inferiores con caja constructiva y guías",
+            "frentes y puerta superior como grupos independientes",
+            "aperturas registradas en el sistema MV",
+            "pendiente prueba funcional y visual"
           ]
         },
         {
@@ -1616,7 +1620,7 @@
             "depth": 53
           },
           "status": "integrated_no_verificado",
-          "note": "Ajuste de asiento y tapa ovalados, contenidos dentro del perímetro de la taza; pendiente inspección visual de proporciones.",
+          "note": "Se corrigió el generador del inodoro genérico clásico que presentaba cisterna visualmente separada: taza ovalada con altura de asiento proporcionada, aro y tapa ajustados, plataforma posterior de apoyo y cisterna apoyada. Esta referencia Roca Ona es otro generador y sigue pendiente de revisión específica; no marcar como verificado.",
           "source_type": "producto comercial con geometría paramétrica reconstruida",
           "implemented_components": [
             "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
