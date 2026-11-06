@@ -4124,6 +4124,54 @@
             "geometría específica pendiente de reconstrucción"
           ],
           "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-zapatero",
+          "name": "Zapatero",
+          "family": "Recibidor",
+          "shape": "cabinet",
+          "room": "recibidor",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 115,
+            "depth": 28
+          },
+          "status": "en_proceso",
+          "note": "Modelo individual pendiente de reconstrucción y validación visual/funcional.",
+          "source_type": "modelo procedural genérico",
+          "target_components": []
+        },
+        {
+          "id": "room-garaje-bicicleta",
+          "name": "Bicicleta",
+          "family": "Garaje",
+          "shape": "bicycle",
+          "room": "garaje",
+          "dimensions_cm": {
+            "width": 58,
+            "height": 110,
+            "depth": 175
+          },
+          "status": "en_proceso",
+          "note": "Modelo individual pendiente de reconstrucción y validación visual/funcional.",
+          "source_type": "modelo procedural genérico",
+          "target_components": []
+        },
+        {
+          "id": "room-garaje-estanteria-metalica",
+          "name": "Estantería metálica",
+          "family": "Garaje",
+          "shape": "shelf",
+          "room": "garaje",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 200,
+            "depth": 50
+          },
+          "status": "en_proceso",
+          "note": "Modelo individual pendiente de reconstrucción y validación visual/funcional.",
+          "source_type": "modelo procedural genérico",
+          "target_components": []
         }
       ]
     }
