@@ -3499,6 +3499,13 @@
       "commit": "edec0ef8e225f0c779ba9fef3a03203f22890a17",
       "verified": false,
       "notes": "Aumento aproximado al doble del radio transversal de la taza y asiento frente a la geometría anterior, ampliación del pedestal, aro y tapa; cisterna ensanchada de forma moderada. Perfil interior revisado para mantener una cavidad coherente. No verificado visualmente."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "interfaz-editor",
+      "action": "Añadir espacio de trabajo dual con plano 2D y escena 3D simultáneos",
+      "verified": false,
+      "notes": "Se añade un modo 2D + 3D en el que ambos visores permanecen activos en paralelo. La división vertical es ajustable mediante arrastre; los modos 2D, 3D rápida, materiales y realista se conservan. La sintaxis JavaScript se ha comprobado estáticamente. Falta validación visual y de interacción en navegador real."
     }
   ],
   "validation": {
@@ -3512,6 +3519,8 @@
       "respaldo-realismo-integral-2026-11-06",
       "respaldo-previo-transformacion-global-2026-11-06"
     ],
-    "deployment": "not_deployed"
+    "deployment": "not_deployed",
+    "ui_dual_view_static": "passed: button, dual state, split layout and adjustable divider integrated; main inline JavaScript parsed successfully",
+    "ui_dual_view_browser": "not_performed: no browser session available in this work context"
   }
 }
