@@ -8,7 +8,9 @@
     "legacy_initial_models": 18,
     "commercial_registry_products": 14,
     "commercial_registry_unique_model_types": 5,
-    "imported_models": "No cuantificables desde el código estático: se cargan dinámicamente desde IndexedDB y el catálogo compartido."
+    "imported_models": "No cuantificables desde el código estático: se cargan dinámicamente desde IndexedDB y el catálogo compartido.",
+    "procedural_room_object_types": 50,
+    "procedural_room_object_generators_rebuilt_first_pass": 17
   },
   "standard": {
     "target": "Modelos de producto con silueta y proporciones fieles, geometría constructiva coherente, componentes diferenciados, materiales PBR adecuados, dimensiones reales, pivotes/jerarquía y comportamiento funcional cuando corresponda; rendimiento apto para tiempo real.",
@@ -121,6 +123,22 @@
       "finding": "La rama activa case'toilet':case'wc' del generador genérico seguía construyendo una taza de aproximadamente la mitad del ancho del parámetro y un aro aún más estrecho, aunque una función auxiliar anterior ya había sido ampliada. Por tanto, el ajuste previo no alcanzaba al generador realmente utilizado por el modelo de biblioteca.",
       "impact": "El inodoro genérico seguía mostrando taza, pedestal, aro y tapa desproporcionadamente pequeños frente a la cisterna; además, la tapa no tenía un pivote/registro de apertura propio.",
       "action": "Reconstruida la rama activa: perfil de taza y pedestal ensanchado, cubeta interior ampliada, aro ovalado dimensionado al contorno, tapa independiente articulada en su borde posterior y registrada mediante MV; cisterna y repisa mantienen unión física. Pendiente prueba visual y funcional real en navegador.",
+      "verified": false
+    },
+    {
+      "id": "F15",
+      "severity": "critical",
+      "finding": "La petición de realismo integral afecta al catálogo compartido de 144 objetos procedurales repartidos en 12 estancias y a sus 51 subtipos geométricos. El inventario anterior no incluía de forma individual todos los objetos de salón, comedor, dormitorios, recibidor, lavadero, vestidor, garaje, trastero, terraza y jardín.",
+      "impact": "Sin inventario por objeto no se puede demostrar cobertura, priorizar familias ni impedir que modelos no revisados se den por terminados.",
+      "action": "Inventariados individualmente los 144 objetos con estancia, subtipo, nombre y dimensiones; se crean fases para salón/comedor, dormitorios y resto de estancias. Se reconstruyeron en primera pasada 16 generadores compartidos (armarios, panel TV, mesas, lámparas, lavadoras, fregaderos, banco de trabajo, compresor, furgoneta, tumbona, sombrilla, pérgola, barbacoa, piscina, maleta y tabla de planchar). Los modelos siguen en proceso y sin verificación visual/funcional.",
+      "verified": false
+    },
+    {
+      "id": "F16",
+      "severity": "high",
+      "finding": "El generador procedural tenía un fallback que dibujaba una caja genérica cuando no existía una rama geométrica específica para un subtipo.",
+      "impact": "Un subtipo desconocido podía presentarse falsamente como un objeto modelado, ocultando una carencia real de catálogo.",
+      "action": "El fallback de caja se sustituyó por una advertencia explícita y la omisión del modelo; los subtipos sin generador quedan detectables para reconstrucción en vez de simularse con un bloque.",
       "verified": false
     }
   ],
