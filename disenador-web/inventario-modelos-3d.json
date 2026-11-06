@@ -1126,14 +1126,16 @@
       ],
       "last_work": {
         "date": "2026-11-06",
-        "commit": "083f1f997b1832fa8ee1ca4979418d1ba69a47f0",
+        "commit": "d651191fe1ab6265806547578923b32334d75bf2",
         "scope": "Reconstrucción geométrica de los 11 modelos estáticos del despacho",
         "implemented": [
           "Escritorios recto, en L, regulable y con ala lateral",
           "Sillas ergonómica, ejecutiva y compacta",
           "Estantería y librería con estructura, baldas y libros diferenciados",
           "Cajonera móvil con casco hueco, cajones, guías y ruedas",
-          "Monitor con bisel, pantalla, cámara, soporte, teclado y ratón"
+          "Monitor con bisel, pantalla, cámara, soporte, teclado y ratón",
+          "variantes diferenciadas de silla ejecutiva, ergonómica y compacta",
+          "estantería abierta de estructura metálica frente a librería con costados, trasera y divisor"
         ],
         "validation": "Dos scripts clásicos inline compilados sin errores. Pendiente inspección visual real, colocación, dimensiones, selección, modos de renderizado y Foto IA.",
         "status": "integrado_no_verificado"
@@ -1205,6 +1207,13 @@
       "phase": "despacho",
       "action": "Integrar reconstrucciones geométricas de escritorios, sillas, estanterías, cajonera y equipo informático; 11/11 integrados, 0 verificados",
       "commit": "083f1f997b1832fa8ee1ca4979418d1ba69a47f0",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Diferenciar geometría de sillas ejecutiva/ergonómica/compacta y estantería abierta/librería",
+      "commit": "d651191fe1ab6265806547578923b32334d75bf2",
       "verified": false
     }
   ]
