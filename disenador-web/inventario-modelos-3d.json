@@ -1610,6 +1610,27 @@
           "source_type": "producto comercial con geometría paramétrica reconstruida"
         },
         {
+          "id": "bano-inodoro-generico",
+          "name": "Inodoro genérico clásico",
+          "family": "Sanitario",
+          "shape": "inodoro",
+          "dimensions_cm": {
+            "width": 38,
+            "height": 78,
+            "depth": 68
+          },
+          "status": "integrated_no_verificado",
+          "note": "Geometría reconstruida: taza ovalada con pedestal continuo, aro y tapa proporcionados, repisa posterior de apoyo y cisterna conectada físicamente. Pendiente prueba visual en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "taza y pedestal cerámicos de perfil curvo",
+            "cavidad interior",
+            "aro abierto y tapa ovalada",
+            "plataforma posterior y cisterna apoyada",
+            "pendiente validación visual y funcional"
+          ]
+        },
+        {
           "id": "bano-roca-ona-wc",
           "name": "Roca Ona A346687000",
           "family": "Sanitario comercial",
@@ -1620,7 +1641,7 @@
             "depth": 53
           },
           "status": "integrated_no_verificado",
-          "note": "Se corrigió el generador del inodoro genérico clásico que presentaba cisterna visualmente separada: taza ovalada con altura de asiento proporcionada, aro y tapa ajustados, plataforma posterior de apoyo y cisterna apoyada. Esta referencia Roca Ona es otro generador y sigue pendiente de revisión específica; no marcar como verificado.",
+          "note": "Generador comercial Roca Ona suspendido independiente; pendiente revisión específica de silueta, asiento, tapa y montaje. La corrección de cisterna apoyada afecta al modelo genérico clásico y no debe atribuirse a esta referencia.",
           "source_type": "producto comercial con geometría paramétrica reconstruida",
           "implemented_components": [
             "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
