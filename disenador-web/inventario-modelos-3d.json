@@ -830,7 +830,7 @@
             "depth": 150
           },
           "status": "integrado",
-          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Canto perimetral de la mesa en L corregido: el tramo del lado ancho comienza en la esquina exterior correcta y no prolonga una línea sobre la parte estrecha. Pendiente verificación visual real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -839,7 +839,8 @@
             "bastidores, patas, travesaños y pies nivelables según tipología",
             "mecanismo telescópico de mesa regulable y pasacables",
             "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
-            "bastidor de escritorio en L sin travesaño duplicado"
+            "bastidor de escritorio en L sin travesaño duplicado",
+            "canto perimetral de la mesa en L corregido para seguir el contorno real de la tapa sin prolongaciones interiores"
           ],
           "verification": {
             "visual": false,
@@ -864,7 +865,7 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Canto perimetral de la mesa en L corregido: el tramo del lado ancho comienza en la esquina exterior correcta y no prolonga una línea sobre la parte estrecha. Pendiente verificación visual real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -873,7 +874,8 @@
             "bastidores, patas, travesaños y pies nivelables según tipología",
             "mecanismo telescópico de mesa regulable y pasacables",
             "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
-            "bastidor de escritorio en L sin travesaño duplicado"
+            "bastidor de escritorio en L sin travesaño duplicado",
+            "canto perimetral de la mesa en L corregido para seguir el contorno real de la tapa sin prolongaciones interiores"
           ],
           "verification": {
             "visual": false,
@@ -898,14 +900,15 @@
             "depth": 68
           },
           "status": "integrado",
-          "note": "Corregida la orientación del asiento para quedar horizontal; respaldo y base conservan sus planos. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Reposabrazos reconstruidos con soportes verticales que conectan desde la parte superior del asiento hasta la cara inferior de las almohadillas. Pendiente verificación visual real.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
             "brazos, soportes metálicos y mecanismo inferior",
             "columna neumática y base de cinco radios",
             "ruedas con horquillas, ejes y banda de goma",
-            "asiento extruido y orientado horizontalmente en el plano XZ"
+            "asiento extruido y orientado horizontalmente en el plano XZ",
+            "soportes de reposabrazos conectados desde la cota superior del asiento hasta la cara inferior de las almohadillas"
           ],
           "verification": {
             "visual": false,
@@ -930,14 +933,15 @@
             "depth": 72
           },
           "status": "integrado",
-          "note": "Corregida la orientación del asiento para quedar horizontal; respaldo y base conservan sus planos. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Reposabrazos reconstruidos con soportes verticales que conectan desde la parte superior del asiento hasta la cara inferior de las almohadillas. Pendiente verificación visual real.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
             "brazos, soportes metálicos y mecanismo inferior",
             "columna neumática y base de cinco radios",
             "ruedas con horquillas, ejes y banda de goma",
-            "asiento extruido y orientado horizontalmente en el plano XZ"
+            "asiento extruido y orientado horizontalmente en el plano XZ",
+            "soportes de reposabrazos conectados desde la cota superior del asiento hasta la cara inferior de las almohadillas"
           ],
           "verification": {
             "visual": false,
@@ -993,12 +997,15 @@
             "depth": 52
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Cajonera móvil reconstruida con tres grupos de cajón independientes, cada uno con frente, caja, tirador y guías fijas; la apertura se vincula al sistema de interacción MV. Pendiente prueba real de clic en navegador.",
           "implemented_components": [
             "casco hueco con costados, trasera, tapa y base",
             "tres cajones con cajas, fondos, frentes y guías",
             "tiradores tubulares con anclajes",
-            "cuatro ruedas con horquilla y ejes"
+            "cuatro ruedas con horquilla y ejes",
+            "tres cajones como grupos independientes seleccionables y animables",
+            "guías telescópicas fijadas al casco, independientes del movimiento de los cajones",
+            "apertura mediante el sistema MV y estado persistente it.op por cajón"
           ],
           "verification": {
             "visual": false,
@@ -1054,7 +1061,7 @@
             "depth": 115
           },
           "status": "integrado",
-          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Canto perimetral de la mesa en L corregido: el tramo del lado ancho comienza en la esquina exterior correcta y no prolonga una línea sobre la parte estrecha. Pendiente verificación visual real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -1063,7 +1070,8 @@
             "bastidores, patas, travesaños y pies nivelables según tipología",
             "mecanismo telescópico de mesa regulable y pasacables",
             "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
-            "bastidor de escritorio en L sin travesaño duplicado"
+            "bastidor de escritorio en L sin travesaño duplicado",
+            "canto perimetral de la mesa en L corregido para seguir el contorno real de la tapa sin prolongaciones interiores"
           ],
           "verification": {
             "visual": false,
@@ -1088,14 +1096,15 @@
             "depth": 62
           },
           "status": "integrado",
-          "note": "Corregida la orientación del asiento para quedar horizontal; respaldo y base conservan sus planos. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Reposabrazos reconstruidos con soportes verticales que conectan desde la parte superior del asiento hasta la cara inferior de las almohadillas. Pendiente verificación visual real.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
             "brazos, soportes metálicos y mecanismo inferior",
             "columna neumática y base de cinco radios",
             "ruedas con horquillas, ejes y banda de goma",
-            "asiento extruido y orientado horizontalmente en el plano XZ"
+            "asiento extruido y orientado horizontalmente en el plano XZ",
+            "soportes de reposabrazos conectados desde la cota superior del asiento hasta la cara inferior de las almohadillas"
           ],
           "verification": {
             "visual": false,
@@ -1238,17 +1247,15 @@
       ],
       "last_work": {
         "date": "2026-11-06",
-        "commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc",
-        "scope": "Correcciones del despacho tras revisión de defectos visuales y de interacción",
+        "commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e",
+        "scope": "Corrección de reposabrazos, canto perimetral de mesa en L y apertura de cajonera móvil",
         "implemented": [
-          "asientos de sillas orientados horizontalmente",
-          "cajones de escritorio independientes con desplazamiento de apertura",
-          "bastidor de mesa en L sin travesaño duplicado",
-          "libros apoyados sobre baldas, dentro de sus huecos y sin atravesar el divisor",
-          "variante geométrica de portátil diferenciada del equipo de sobremesa",
-          "soportes inferiores de baldas ajustados"
+          "soportes de reposabrazos unidos físicamente al asiento y a las almohadillas",
+          "tramo de canto de mesa en L corregido para ajustarse al contorno de la tapa",
+          "cajones de la cajonera móvil convertidos en grupos independientes con frente, caja, tirador y apertura animada",
+          "guías de cajones ancladas al casco fijo"
         ],
-        "validation": "El JavaScript principal inline se compila sin errores tras los cambios. No se ha ejecutado una inspección visual real en navegador ni pruebas de interacción, render tradicional, modo realista o Foto IA. Todos los indicadores de verificación permanecen en false.",
+        "validation": "Los dos scripts clásicos inline se compilan sin errores. La apertura se conecta al mismo sistema MV usado por cajones de cocina y otros elementos, pero aún requiere prueba de clic real en navegador. No se marca ningún modelo como verificado.",
         "status": "integrado_no_verificado"
       },
       "scope_note": "Inventario inicial de 11 modelos estáticos identificados en la auditoría más 4 plantillas del creador de muebles a medida. Pendiente inspección de modelos importados/dinámicos, objetos persistidos en proyectos y cualquier recurso que no esté declarado en LIB."
@@ -1340,6 +1347,13 @@
       "phase": "despacho",
       "action": "Corrección de defectos detectados en sillas, cajones de escritorio, bastidor de mesa en L, libros de estanterías y geometría de portátil",
       "commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Corregir soportes flotantes de reposabrazos, prolongación incorrecta del canto en mesa en L y cajones no interactivos de cajonera móvil",
+      "commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e",
       "verified": false
     }
   ]
