@@ -428,7 +428,7 @@ function libUI(q=''){
     {name:'Muebles bajos estándar',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&o.cfg.lay==='puertas'},
     {name:'Cajoneras',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&o.cfg.lay==='cajones'},
     {name:'Muebles bajos especiales',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&['puertas+cajones','fregadero','placa'].includes(o.cfg.lay)},
-    {name:'Esquineros y muebles configurables',test:o=>o.t==='mod'&&(String(o.cfg?.lay||'').startsWith('esquina')||o.cfg?.lay==='libre')},
+    {name:'Esquineros y muebles configurables',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&(String(o.cfg?.lay||'').startsWith('esquina')||o.cfg?.lay==='libre')},
     {name:'Muebles altos',test:o=>o.t==='mod'&&o.cfg?.k==='alto'},
     {name:'Columnas y torres',test:o=>o.t==='mod'&&o.cfg?.k==='col'},
     {name:'Electrodomésticos',test:o=>o.t==='app'||o.c==='Electrodomésticos'},
