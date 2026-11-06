@@ -1123,46 +1123,48 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
  const knob=(x,y,r)=>{const k=new T.Mesh(new T.CylinderGeometry(r,r,1.6,16),kn);k.rotation.x=Math.PI/2;k.position.set(x,y,d/2+1.1);a.add(k)};
  const hinge2=(p,y,hw)=>[-1,1].forEach(q=>B(p,3.5,2.2,1.6,q*hw,y,-.2,stl));
  if(kd=='campana_inc'){
-  // Campana inclinada: cuerpo mural, panel frontal inclinado, marco, filtros, iluminación y mandos.
-  const ductW=w*.34,ductD=d*.34,ductH=h*.58;
-  B(a,ductW,ductH,ductD,0,h*.69,-d*.27,m);
-  B(a,ductW+1,1.2,ductD+1,0,h*.97,-d*.27,stl);
-  const canopy=B(a,w*.96,3.2,d*.72,0,h*.31,d*.015,dk);canopy.rotation.x=-.34;
-  const lower=B(a,w*.9,1.4,d*.68,0,h*.285,d*.02,stl);lower.rotation.x=-.34;
-  // Panel inferior de aspiración con filtros metálicos reales en lugar de una placa lisa.
-  B(a,w*.84,.9,d*.55,0,h*.22,d*.03,rub);
-  for(let q=-5;q<=5;q++){const sl=B(a,.65,.55,d*.48,q*w*.075,h*.225,d*.03,stl);sl.rotation.x=-.34}
-  for(let q=-3;q<=3;q++){const rib=B(a,w*.82,.45,.45,0,h*.205,-d*.2+q*d*.065,stl)}
-  // Dos luces LED empotradas y panel táctil frontal.
-  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,20),lit);led.position.set(side*w*.32,h*.245,d*.23);a.add(led)});
+  // Campana inclinada con cuerpo unido: chimenea solapada con visera y conjunto inferior alineado.
+  const ductW=w*.36,ductD=d*.38,ductH=h*.72,tilt=-.34;
+  B(a,ductW,ductH,ductD,0,h*.64,-d*.24,m);
+  B(a,ductW+1,1.4,ductD+1,0,h*.985,-d*.24,stl);
+  const canopy=B(a,w*.98,3.6,d*.78,0,h*.29,0,dk);canopy.rotation.x=tilt;
+  const filter=B(a,w*.86,1.1,d*.58,0,h*.265,.015,rub);filter.rotation.x=tilt;
+  const frame=B(a,w*.92,1.2,d*.64,0,h*.27,.02,stl);frame.rotation.x=tilt;
+  // Ranuras paralelas sobre el mismo plano inclinado; todas quedan dentro del marco.
+  for(let q=-5;q<=5;q++){const sl=B(a,.7,.55,d*.51,q*w*.075,h*.265,.015,stl);sl.rotation.x=tilt}
+  // Travesaños cortos que rematan el filtro sin sobresalir del perímetro.
+  for(let q=-2;q<=2;q++){const rib=B(a,w*.78,.45,.45,0,h*.245,q*d*.105,stl);rib.rotation.x=tilt}
+  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,20),lit);led.position.set(side*w*.32,h*.235,d*.22);a.add(led)});
   B(a,w*.16,1.1,.8,0,h*.36,d*.36,lcd);
   for(let q=-1;q<=1;q++){const key=new T.Mesh(new T.CircleGeometry(.8,12),stl);key.position.set(q*w*.045,h*.36,d*.37);a.add(key)}
   return
  }
  if(kd=='campana_dec'){
-  // Campana decorativa de pared: chimenea telescópica, cuerpo piramidal y filtros inferiores.
+  // Campana decorativa piramidal: chimenea conectada al cuerpo y base/filtros continuos.
   const ductW=w*.34,ductD=d*.34;
-  B(a,ductW,h*.62,ductD,0,h*.67,-d*.27,m);
-  B(a,ductW+1,1.1,ductD+1,0,h*.97,-d*.27,stl);
-  const hood=new T.Mesh(new T.CylinderGeometry(w*.48,w*.22,h*.23,4,1,false),m);hood.rotation.y=Math.PI/4;hood.position.set(0,h*.24,0);a.add(hood);
-  B(a,w*.96,2.8,d*.82,0,h*.12,0,stl);
-  B(a,w*.9,.8,d*.72,0,h*.095,0,rub);
-  for(let q=-5;q<=5;q++)B(a,.65,.55,d*.68,q*w*.075,h*.10,0,stl);
-  for(let q=-2;q<=2;q++)B(a,w*.82,.45,.45,0,h*.075,q*d*.12,stl);
-  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2.1,2.1,.8,20),lit);led.position.set(side*w*.31,h*.16,d*.24);a.add(led)});
+  B(a,ductW,h*.66,ductD,0,h*.67,-d*.27,m);
+  B(a,ductW+1,1.2,ductD+1,0,h*.985,-d*.27,stl);
+  // El radio superior es menor que el inferior: pirámide que ensancha hacia la base.
+  const hood=new T.Mesh(new T.CylinderGeometry(w*.22,w*.48,h*.25,4,1,false),m);hood.rotation.y=Math.PI/4;hood.position.set(0,h*.235,0);a.add(hood);
+  B(a,w*.98,3,d*.84,0,h*.105,0,stl);
+  B(a,w*.9,.8,d*.74,0,h*.09,0,rub);
+  for(let q=-5;q<=5;q++)B(a,.65,.55,d*.68,q*w*.075,h*.09,0,stl);
+  for(let q=-2;q<=2;q++)B(a,w*.78,.45,.45,0,h*.075,q*d*.12,stl);
+  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2.1,2.1,.8,20),lit);led.position.set(side*w*.31,h*.15,d*.24);a.add(led)});
   B(a,w*.18,1,.8,0,h*.3,d*.36,lcd);
   return
  }
  if(kd=='campana_int'){
-  // Campana integrada: carcasa bajo mueble, filtros extraíbles, rejilla perimetral, motor y luces.
-  B(a,w,h*.58,d*.9,0,h*.39,0,m);
-  B(a,w*.72,h*.32,d*.48,0,h*.78,-d*.12,stl);
+  // Campana integrada de una sola carcasa inferior, con filtros alineados y motor encajado.
+  B(a,w,h*.62,d*.94,0,h*.40,0,m);
+  B(a,w*.74,h*.34,d*.5,0,h*.78,-d*.12,stl);
   const motor=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.16,Math.min(w,d)*.16,h*.2,32),rub);motor.position.set(0,h*.79,-d*.1);a.add(motor);
-  B(a,w-4,.9,d*.76,0,h*.075,0,stl);
-  B(a,w-9,.55,d*.68,0,h*.06,0,rub);
-  for(let q=-5;q<=5;q++)B(a,.55,.45,d*.62,q*(w-10)/11,h*.065,0,stl);
-  for(let q=-3;q<=3;q++)B(a,w*.82,.45,.45,0,h*.055,q*d*.095,stl);
-  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2,2,.7,18),lit);led.position.set(side*w*.34,h*.09,d*.27);a.add(led)});
+  // Filtro rectangular enrasado; las lamas se limitan estrictamente a su superficie.
+  B(a,w-3,1,d*.78,0,h*.085,0,stl);
+  B(a,w-8,.55,d*.70,0,h*.075,0,rub);
+  for(let q=-5;q<=5;q++)B(a,.55,.45,d*.64,q*(w-12)/11,h*.075,0,stl);
+  for(let q=-2;q<=2;q++)B(a,w*.76,.4,.4,0,h*.06,q*d*.13,stl);
+  [-1,1].forEach(side=>{const led=new T.Mesh(new T.CylinderGeometry(2,2,.7,18),lit);led.position.set(side*w*.34,h*.10,d*.27);a.add(led)});
   B(a,w*.2,1,.7,0,h*.9,d*.34,pn);
   B(a,w*.12,.7,.35,0,h*.9,d*.36,lcd);
   return
@@ -1275,15 +1277,15 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
  } else if(kd=='lavadora'||kd=='secadora'){
   const cs=Math.min(w*.62,h*.52),cy=h*.47,innerR=cs*.43,depth=Math.min(d*.55,d-8);
   // Carcasa hueca con abertura circular real en el frontal; no hay una placa opaca detrás del cristal.
-  const openingR=cs*.49,frontZ=d/2-1.2,sideW=2;
-  B(a,sideW,h,d-2,-w/2+sideW/2,h/2,-.5,m);B(a,sideW,h,d-2,w/2-sideW/2,h/2,-.5,m);
+  const openingR=cs*.49,frontZ=d/2-1.2;
+  // Frontal de una sola pieza con hueco circular: sin juntas ni cortes en la zona inferior.
+  B(a,2.2,h-2,d-2,-w/2+1.1,h/2,-.5,m);B(a,2.2,h-2,d-2,w/2-1.1,h/2,-.5,m);
   B(a,w-4,2,d-2,0,1,-.5,m);B(a,w-4,2,d-2,0,h-1,-.5,m);
   B(a,w-4,h-4,2,0,h/2,-d/2+1,m);
-  const fasciaW=Math.max(2,w-4-2*openingR),topH=Math.max(2,h-(cy+openingR)),bottomH=Math.max(2,cy-openingR-2);
-  B(a,w-4,topH,2,0,cy+openingR+topH/2,frontZ,mp);
-  B(a,w-4,bottomH,2,0,bottomH/2+1,frontZ,mp);
-  B(a,fasciaW/2,openingR*2,2,-(openingR+fasciaW/4),cy,frontZ,mp);
-  B(a,fasciaW/2,openingR*2,2,openingR+fasciaW/4,cy,frontZ,mp);
+  const fasciaShape=new T.Shape();
+  fasciaShape.moveTo(0,0);fasciaShape.lineTo(w-4,0);fasciaShape.lineTo(w-4,h-4);fasciaShape.lineTo(0,h-4);fasciaShape.lineTo(0,0);
+  const fasciaHole=new T.Path();fasciaHole.absarc((w-4)/2,cy-2,openingR,0,Math.PI*2,true);fasciaShape.holes.push(fasciaHole);
+  const fascia=new T.Mesh(new T.ShapeGeometry(fasciaShape,64),mp);fascia.position.set(-w/2+2,2,frontZ);a.add(fascia);
   const apertureRim=new T.Mesh(new T.TorusGeometry(openingR-1,1.1,10,48),chrome);apertureRim.position.set(0,cy,frontZ+1.1);a.add(apertureRim);
   const tub=new T.Mesh(new T.CylinderGeometry(cs*.47,cs*.47,depth,40,1,true),stl);tub.rotation.x=Math.PI/2;tub.position.set(0,cy,-.2);a.add(tub);
   const rear=new T.Mesh(new T.CircleGeometry(cs*.46,40),enam);rear.position.set(0,cy,-depth/2-.3);a.add(rear);
