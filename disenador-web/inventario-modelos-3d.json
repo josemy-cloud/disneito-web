@@ -2,7 +2,7 @@
   "schema_version": 1,
   "created_at": "2026-11-06",
   "branch": "desarrollo-cloudflare",
-  "backup_branch": "respaldo-cocina-2026-11-06",
+  "backup_branch": "respaldo-previo-transformacion-global-2026-11-06",
   "rules": {
     "pending": "Inventariado, aún sin sustitución integrada.",
     "in_process": "Existen mejoras parciales previas; no se considera terminado.",
@@ -812,7 +812,7 @@
           "audit_id": "static-062",
           "id": "escritorio-recto",
           "name": "Escritorio recto",
-          "family": "Escritorio",
+          "family": "Despacho",
           "shape": "desk",
           "dimensions_cm": {
             "width": 150,
@@ -820,7 +820,7 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -840,13 +840,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "tablero y estructura portante",
+            "cajonera y pasacables"
+          ]
         },
         {
           "audit_id": "static-063",
           "id": "escritorio-en-l",
           "name": "Escritorio en L",
-          "family": "Escritorio en L",
+          "family": "Despacho",
           "shape": "desk",
           "dimensions_cm": {
             "width": 180,
@@ -854,7 +859,7 @@
             "depth": 150
           },
           "status": "integrado",
-          "note": "Canto perimetral de la mesa en L corregido: el tramo del lado ancho comienza en la esquina exterior correcta y no prolonga una línea sobre la parte estrecha. Pendiente verificación visual real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -875,13 +880,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "tablero y estructura portante",
+            "cajonera y pasacables"
+          ]
         },
         {
           "audit_id": "static-064",
           "id": "mesa-regulable",
           "name": "Mesa regulable",
-          "family": "Mesa regulable",
+          "family": "Despacho",
           "shape": "desk",
           "dimensions_cm": {
             "width": 140,
@@ -889,7 +899,7 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Canto perimetral de la mesa en L corregido: el tramo del lado ancho comienza en la esquina exterior correcta y no prolonga una línea sobre la parte estrecha. Pendiente verificación visual real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -910,13 +920,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "tablero y estructura portante",
+            "cajonera y pasacables"
+          ]
         },
         {
           "audit_id": "static-065",
           "id": "silla-ergonomica",
           "name": "Silla ergonómica",
-          "family": "Silla de oficina",
+          "family": "Despacho",
           "shape": "officechair",
           "dimensions_cm": {
             "width": 68,
@@ -924,7 +939,7 @@
             "depth": 68
           },
           "status": "integrado",
-          "note": "Reposabrazos reconstruidos con soportes verticales que conectan desde la parte superior del asiento hasta la cara inferior de las almohadillas. Pendiente verificación visual real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
@@ -943,13 +958,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "asiento y respaldo",
+            "mecanismo, brazos, columna y base"
+          ]
         },
         {
           "audit_id": "static-066",
           "id": "silla-ejecutiva",
           "name": "Silla ejecutiva",
-          "family": "Silla de oficina",
+          "family": "Despacho",
           "shape": "officechair",
           "dimensions_cm": {
             "width": 72,
@@ -957,7 +977,7 @@
             "depth": 72
           },
           "status": "integrado",
-          "note": "Reposabrazos reconstruidos con soportes verticales que conectan desde la parte superior del asiento hasta la cara inferior de las almohadillas. Pendiente verificación visual real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
@@ -976,13 +996,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "asiento y respaldo",
+            "mecanismo, brazos, columna y base"
+          ]
         },
         {
           "audit_id": "static-067",
           "id": "estanteria-despacho",
           "name": "Estantería despacho",
-          "family": "Estantería",
+          "family": "Despacho",
           "shape": "shelf",
           "dimensions_cm": {
             "width": 90,
@@ -990,7 +1015,7 @@
             "depth": 35
           },
           "status": "integrado",
-          "note": "Libros reposicionados para apoyarse sobre las baldas, con altura limitada al hueco y separación del divisor central. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "costados y trasera con espesor real",
             "baldas independientes con soportes y anclajes",
@@ -1007,13 +1032,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ]
         },
         {
           "audit_id": "static-068",
           "id": "cajonera-movil",
           "name": "Cajonera móvil",
-          "family": "Cajonera",
+          "family": "Despacho",
           "shape": "dresser",
           "dimensions_cm": {
             "width": 42,
@@ -1021,7 +1051,7 @@
             "depth": 52
           },
           "status": "integrado",
-          "note": "Cajonera móvil reconstruida con tres grupos de cajón independientes, cada uno con frente, caja, tirador y guías fijas; la apertura se vincula al sistema de interacción MV. Pendiente prueba real de clic en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "casco hueco con costados, trasera, tapa y base",
             "tres cajones con cajas, fondos, frentes y guías",
@@ -1040,13 +1070,17 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "casco, cajones y frentes"
+          ]
         },
         {
           "audit_id": "static-069",
           "id": "monitor-teclado",
           "name": "Monitor y teclado",
-          "family": "Equipo informático",
+          "family": "Despacho",
           "shape": "computer",
           "dimensions_cm": {
             "width": 65,
@@ -1054,7 +1088,7 @@
             "depth": 22
           },
           "status": "integrado",
-          "note": "Equipo informático conserva el generador de sobremesa y añade una geometría específica de portátil cuando el nombre del elemento lo identifica. Pendiente validar visualmente el elemento concreto en la biblioteca.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "monitor con carcasa, bisel, cristal, cámara e indicadores",
             "cuello y base de soporte",
@@ -1071,13 +1105,17 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ]
         },
         {
           "audit_id": "static-143",
           "id": "escritorio-ala-lateral",
           "name": "Escritorio con ala lateral",
-          "family": "Escritorio con retorno",
+          "family": "Despacho",
           "shape": "desk",
           "dimensions_cm": {
             "width": 160,
@@ -1085,7 +1123,7 @@
             "depth": 115
           },
           "status": "integrado",
-          "note": "Canto perimetral de la mesa en L corregido: el tramo del lado ancho comienza en la esquina exterior correcta y no prolonga una línea sobre la parte estrecha. Pendiente verificación visual real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
@@ -1106,13 +1144,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "tablero y estructura portante",
+            "cajonera y pasacables"
+          ]
         },
         {
           "audit_id": "static-144",
           "id": "silla-oficina-compacta",
           "name": "Silla de oficina compacta",
-          "family": "Silla de oficina",
+          "family": "Despacho",
           "shape": "officechair",
           "dimensions_cm": {
             "width": 62,
@@ -1120,7 +1163,7 @@
             "depth": 62
           },
           "status": "integrado",
-          "note": "Reposabrazos reconstruidos con soportes verticales que conectan desde la parte superior del asiento hasta la cara inferior de las almohadillas. Pendiente verificación visual real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
@@ -1139,13 +1182,18 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "asiento y respaldo",
+            "mecanismo, brazos, columna y base"
+          ]
         },
         {
           "audit_id": "static-145",
           "id": "libreria-baldas",
           "name": "Librería con baldas",
-          "family": "Librería",
+          "family": "Despacho",
           "shape": "shelf",
           "dimensions_cm": {
             "width": 100,
@@ -1153,7 +1201,7 @@
             "depth": 32
           },
           "status": "integrado",
-          "note": "Libros reposicionados para apoyarse sobre las baldas, con altura limitada al hueco y separación del divisor central. Integrado, pendiente de validación visual y funcional real.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "implemented_components": [
             "costados y trasera con espesor real",
             "baldas independientes con soportes y anclajes",
@@ -1170,7 +1218,12 @@
             "realistic": false,
             "traditional_render": false,
             "photo_ai": false
-          }
+          },
+          "room": "despacho",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ]
         },
         {
           "id": "custom-despacho-escritorio",
@@ -1315,7 +1368,7 @@
         {
           "id": "bano-banera-exenta",
           "name": "Bañera exenta",
-          "family": "Bañera",
+          "family": "Baño",
           "shape": "bath",
           "dimensions_cm": {
             "width": 170,
@@ -1323,7 +1376,7 @@
             "depth": 78
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco exterior con perfil redondeado",
@@ -1331,12 +1384,17 @@
             "rebosadero y desagüe visibles",
             "apoyos para variante exenta o encastrada",
             "segunda revisión de silueta y volumen; pendiente inspección visual"
+          ],
+          "room": "baño",
+          "target_components": [
+            "casco y cubeta interior",
+            "rebosadero y desagüe"
           ]
         },
         {
           "id": "bano-ducha-mampara",
           "name": "Ducha con mampara",
-          "family": "Ducha",
+          "family": "Baño",
           "shape": "shower",
           "dimensions_cm": {
             "width": 120,
@@ -1344,7 +1402,7 @@
             "depth": 90
           },
           "status": "integrated_no_verificado",
-          "note": "Mampara reconstruida con paneles de vidrio apoyados en los bordes del plato, perfiles solo en encuentros y puerta articulada; columna, rociador, mezclador y flexo recolocados sobre pared posterior para evitar piezas suspendidas. Pendiente inspección visual.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "plato de ducha con geometría extruida y perímetro redondeado",
@@ -1353,12 +1411,17 @@
             "columna de ducha, rociador, mezclador y flexo",
             "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional",
             "corrección individual solicitada por usuario; pendiente prueba visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "plato, mampara y perfilería",
+            "grifería y rociador"
           ]
         },
         {
           "id": "bano-mueble-lavabo-doble",
           "name": "Mueble lavabo doble",
-          "family": "Mueble lavabo",
+          "family": "Baño",
           "shape": "vanity",
           "dimensions_cm": {
             "width": 140,
@@ -1366,7 +1429,7 @@
             "depth": 50
           },
           "status": "integrated_no_verificado",
-          "note": "Corrección de encimera: se divide en paños para dejar huecos reales sobre las cubetas; las cubetas cerámicas quedan visibles, con borde, paredes cóncavas, desagüe y grifería. Se conserva la apertura de cajones. Pendiente inspección visual y funcional.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
@@ -1375,12 +1438,17 @@
             "borde cerámico, desagüe y grifo con base, cuerpo, caño y aireador",
             "cajones independientes con frente, costados, fondo y guías",
             "pendiente prueba visual y funcional en navegador"
+          ],
+          "room": "baño",
+          "target_components": [
+            "casco, encimera y cubetas",
+            "cajones y grifería"
           ]
         },
         {
           "id": "bano-lavabo-sobre-encimera",
           "name": "Lavabo sobre encimera",
-          "family": "Lavabo",
+          "family": "Baño",
           "shape": "basin",
           "dimensions_cm": {
             "width": 48,
@@ -1388,7 +1456,7 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión correctiva: cubeta reconstruida mediante anillos elípticos/rectangulares, paredes inclinadas y fondo más estrecho; sin cilindro o esfera plana. Pendiente inspección visual en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "cuerpo de lavabo abierto",
@@ -1397,12 +1465,17 @@
             "grifería y rebosadero",
             "segunda revisión de silueta y volumen; pendiente inspección visual",
             "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "paredes y fondo de cubeta",
+            "borde y desagüe"
           ]
         },
         {
           "id": "bano-bide-ceramico",
           "name": "Bidé cerámico",
-          "family": "Sanitario",
+          "family": "Baño",
           "shape": "bidet",
           "dimensions_cm": {
             "width": 38,
@@ -1410,16 +1483,21 @@
             "depth": 58
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "segunda revisión de silueta y volumen; pendiente inspección visual"
+          ],
+          "room": "baño",
+          "target_components": [
+            "cuerpo cerámico y cubeta",
+            "desagüe y fijaciones"
           ]
         },
         {
           "id": "bano-radiador-toallero",
           "name": "Radiador toallero",
-          "family": "Accesorio",
+          "family": "Baño",
           "shape": "rail",
           "dimensions_cm": {
             "width": 55,
@@ -1427,16 +1505,20 @@
             "depth": 12
           },
           "status": "integrated_no_verificado",
-          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "geometría específica de baño; pendiente prueba visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "estructura tubular y fijaciones"
           ]
         },
         {
           "id": "bano-columna",
           "name": "Columna baño",
-          "family": "Almacenaje",
+          "family": "Baño",
           "shape": "cabinet",
           "dimensions_cm": {
             "width": 38,
@@ -1444,7 +1526,7 @@
             "depth": 32
           },
           "status": "integrated_no_verificado",
-          "note": "Corrección de fallo reportado: tres cajones inferiores y puerta superior se registran como aperturas MV independientes. Cajones con frente, costados, fondo, trasera y guías; pendiente comprobar clic real, recorrido y aspecto en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco hueco con compartimentación",
@@ -1452,12 +1534,16 @@
             "puerta superior independiente articulada",
             "aperturas registradas en el sistema MV",
             "pendiente prueba funcional y visual"
+          ],
+          "room": "baño",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
           ]
         },
         {
           "id": "bano-espejo-iluminado",
           "name": "Espejo iluminado",
-          "family": "Espejo",
+          "family": "Baño",
           "shape": "mirror",
           "dimensions_cm": {
             "width": 90,
@@ -1465,16 +1551,20 @@
             "depth": 5
           },
           "status": "integrated_no_verificado",
-          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "geometría específica de baño; pendiente prueba visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
           ]
         },
         {
           "id": "bano-banera-encastrada",
           "name": "Bañera rectangular encastrada",
-          "family": "Bañera",
+          "family": "Baño",
           "shape": "bath",
           "dimensions_cm": {
             "width": 170,
@@ -1482,7 +1572,7 @@
             "depth": 75
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco exterior con perfil redondeado",
@@ -1490,12 +1580,17 @@
             "rebosadero y desagüe visibles",
             "apoyos para variante exenta o encastrada",
             "segunda revisión de silueta y volumen; pendiente inspección visual"
+          ],
+          "room": "baño",
+          "target_components": [
+            "casco y cubeta interior",
+            "rebosadero y desagüe"
           ]
         },
         {
           "id": "bano-plato-ducha-cuadrado",
           "name": "Plato de ducha cuadrado",
-          "family": "Ducha",
+          "family": "Baño",
           "shape": "shower",
           "dimensions_cm": {
             "width": 100,
@@ -1503,7 +1598,7 @@
             "depth": 100
           },
           "status": "integrated_no_verificado",
-          "note": "Plato con borde perimetral y superficie rebajada, desagüe lineal y detalles de acabado; pendiente inspección visual.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "plato de ducha con geometría extruida y perímetro redondeado",
@@ -1511,12 +1606,17 @@
             "mampara de vidrio y perfilería para variante con mampara",
             "columna de ducha, rociador, mezclador y flexo",
             "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "plato, mampara y perfilería",
+            "grifería y rociador"
           ]
         },
         {
           "id": "bano-mueble-lavabo-suspendido",
           "name": "Mueble lavabo suspendido",
-          "family": "Mueble lavabo",
+          "family": "Baño",
           "shape": "vanity",
           "dimensions_cm": {
             "width": 100,
@@ -1524,7 +1624,7 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Corrección de encimera: se divide en paños para dejar huecos reales sobre las cubetas; las cubetas cerámicas quedan visibles, con borde, paredes cóncavas, desagüe y grifería. Se conserva la apertura de cajones. Pendiente inspección visual y funcional.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
@@ -1533,12 +1633,17 @@
             "borde cerámico, desagüe y grifo con base, cuerpo, caño y aireador",
             "cajones independientes con frente, costados, fondo y guías",
             "pendiente prueba visual y funcional en navegador"
+          ],
+          "room": "baño",
+          "target_components": [
+            "casco, encimera y cubetas",
+            "cajones y grifería"
           ]
         },
         {
           "id": "bano-lavabo-apoyo-ovalado",
           "name": "Lavabo de apoyo ovalado",
-          "family": "Lavabo",
+          "family": "Baño",
           "shape": "basin",
           "dimensions_cm": {
             "width": 58,
@@ -1546,7 +1651,7 @@
             "depth": 40
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión correctiva: cubeta ovalada con sección de pared y fondo cóncavo, proporción ajustada a dimensiones; pendiente inspección visual.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "cuerpo de lavabo abierto",
@@ -1555,12 +1660,17 @@
             "grifería y rebosadero",
             "segunda revisión de silueta y volumen; pendiente inspección visual",
             "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "paredes y fondo de cubeta",
+            "borde y desagüe"
           ]
         },
         {
           "id": "bano-mueble-auxiliar",
           "name": "Mueble auxiliar baño",
-          "family": "Almacenaje",
+          "family": "Baño",
           "shape": "cabinet",
           "dimensions_cm": {
             "width": 45,
@@ -1568,7 +1678,7 @@
             "depth": 32
           },
           "status": "integrated_no_verificado",
-          "note": "Corrección de fallo reportado: cajones inferiores y puerta superior ahora se registran como aperturas MV independientes para este nombre de modelo. Geometría de cajones con frente, laterales, fondo y trasera. Pendiente comprobación de clic y aspecto en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco hueco con laterales, base, tapa y trasera",
@@ -1576,12 +1686,16 @@
             "frentes y puerta superior como grupos independientes",
             "aperturas registradas en el sistema MV",
             "pendiente prueba funcional y visual"
+          ],
+          "room": "baño",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
           ]
         },
         {
           "id": "bano-toallero-pared",
           "name": "Toallero de pared",
-          "family": "Accesorio",
+          "family": "Baño",
           "shape": "rail",
           "dimensions_cm": {
             "width": 55,
@@ -1589,10 +1703,14 @@
             "depth": 12
           },
           "status": "integrated_no_verificado",
-          "note": "Geometría específica reconstruida: estructura tubular con travesaños y fijaciones para toalleros/radiador; casco hueco, baldas y puerta articulada para almacenaje; espejo con marco redondeado e iluminación perimetral. Sintaxis comprobada; pendiente verificación visual y funcional en navegador.",
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "geometría específica de baño; pendiente prueba visual y funcional"
+          ],
+          "room": "baño",
+          "target_components": [
+            "estructura tubular y fijaciones"
           ]
         },
         {
@@ -1700,23 +1818,2314 @@
     {
       "id": "salon-comedor",
       "name": "Salón y comedor",
-      "status": "pending",
+      "status": "in_process",
       "inventory_complete": false,
-      "items": []
+      "items": [
+        {
+          "id": "room-salon-sofa-2-plazas",
+          "name": "Sofá 2 plazas",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 175,
+            "height": 82,
+            "depth": 90
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sofa",
+          "room": "salón",
+          "target_components": [
+            "estructura de asiento y respaldo",
+            "cojines y tapicería",
+            "reposabrazos y apoyos"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-sofa-chaise-longue",
+          "name": "Sofá chaise longue",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 260,
+            "height": 88,
+            "depth": 150
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sofa",
+          "room": "salón",
+          "target_components": [
+            "estructura de asiento y respaldo",
+            "cojines y tapicería",
+            "reposabrazos y apoyos"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-sofa-rinconero",
+          "name": "Sofá rinconero",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 245,
+            "height": 88,
+            "depth": 205
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sofa",
+          "room": "salón",
+          "target_components": [
+            "estructura de asiento y respaldo",
+            "cojines y tapicería",
+            "reposabrazos y apoyos"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-butaca",
+          "name": "Butaca",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 82,
+            "height": 92,
+            "depth": 85
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "seat",
+          "room": "salón",
+          "target_components": [
+            "asiento",
+            "respaldo",
+            "patas y estructura"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-puf-redondo",
+          "name": "Puf redondo",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 55,
+            "height": 42,
+            "depth": 55
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "seat",
+          "room": "salón",
+          "target_components": [
+            "asiento",
+            "respaldo",
+            "patas y estructura"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-mesa-de-centro-ovalada",
+          "name": "Mesa de centro ovalada",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 115,
+            "height": 42,
+            "depth": 65
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "salón",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-mesa-auxiliar",
+          "name": "Mesa auxiliar",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 52,
+            "depth": 48
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "salón",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-panel-de-tv",
+          "name": "Panel de TV",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 190,
+            "height": 180,
+            "depth": 18
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "panel",
+          "room": "salón",
+          "target_components": [
+            "panel mural y pantalla",
+            "mueble inferior y frentes"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-aparador",
+          "name": "Aparador",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 165,
+            "height": 82,
+            "depth": 43
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sideboard",
+          "room": "salón",
+          "target_components": [
+            "casco y compartimentos",
+            "frentes y herrajes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-libreria",
+          "name": "Librería",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 205,
+            "depth": 34
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "salón",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-lampara-sobremesa",
+          "name": "Lámpara sobremesa",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 32,
+            "height": 48,
+            "depth": 32
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "lamp",
+          "room": "salón",
+          "target_components": [
+            "base y estructura",
+            "pantalla, difusor y fuente de luz"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-espejo-decorativo",
+          "name": "Espejo decorativo",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 130,
+            "depth": 5
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "mirror",
+          "room": "salón",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-mesa-comedor-rectangular",
+          "name": "Mesa comedor rectangular",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 180,
+            "height": 76,
+            "depth": 95
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "comedor",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-mesa-comedor-redonda",
+          "name": "Mesa comedor redonda",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 130,
+            "height": 76,
+            "depth": 130
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "comedor",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-mesa-extensible",
+          "name": "Mesa extensible",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 220,
+            "height": 76,
+            "depth": 100
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "comedor",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-silla-tapizada",
+          "name": "Silla tapizada",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 88,
+            "depth": 52
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "chair",
+          "room": "comedor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-silla-madera",
+          "name": "Silla madera",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 46,
+            "height": 82,
+            "depth": 50
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "chair",
+          "room": "comedor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-banco-comedor",
+          "name": "Banco comedor",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 48,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bench",
+          "room": "comedor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-aparador-comedor",
+          "name": "Aparador comedor",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 170,
+            "height": 90,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sideboard",
+          "room": "comedor",
+          "target_components": [
+            "casco y compartimentos",
+            "frentes y herrajes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-lampara-colgante",
+          "name": "Lámpara colgante",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 42,
+            "height": 55,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "lamp",
+          "room": "comedor",
+          "target_components": [
+            "base y estructura",
+            "pantalla, difusor y fuente de luz"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-sofa-modular-4-plazas",
+          "name": "Sofá modular 4 plazas",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 285,
+            "height": 88,
+            "depth": 105
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sofa",
+          "room": "salón",
+          "target_components": [
+            "estructura de asiento y respaldo",
+            "cojines y tapicería",
+            "reposabrazos y apoyos"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-sillon-orejero",
+          "name": "Sillón orejero",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 88,
+            "height": 112,
+            "depth": 92
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "seat",
+          "room": "salón",
+          "target_components": [
+            "asiento",
+            "respaldo",
+            "patas y estructura"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-mesa-de-centro-rectangular",
+          "name": "Mesa de centro rectangular",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 38,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "salón",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-mueble-bajo-de-salon",
+          "name": "Mueble bajo de salón",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 200,
+            "height": 58,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sideboard",
+          "room": "salón",
+          "target_components": [
+            "casco y compartimentos",
+            "frentes y herrajes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-estanteria-modular-alta",
+          "name": "Estantería modular alta",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 225,
+            "depth": 36
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "salón",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-lampara-de-pie-de-lectura",
+          "name": "Lámpara de pie de lectura",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 42,
+            "height": 175,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "lamp",
+          "room": "salón",
+          "target_components": [
+            "base y estructura",
+            "pantalla, difusor y fuente de luz"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-espejo-redondo-decorativo",
+          "name": "Espejo redondo decorativo",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 85,
+            "height": 85,
+            "depth": 5
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "mirror",
+          "room": "salón",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-salon-mueble-mural-para-television",
+          "name": "Mueble mural para televisión",
+          "family": "Salón",
+          "dimensions_cm": {
+            "width": 220,
+            "height": 205,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "panel",
+          "room": "salón",
+          "target_components": [
+            "panel mural y pantalla",
+            "mueble inferior y frentes"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-mesa-comedor-extensible-6-8",
+          "name": "Mesa comedor extensible 6-8",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 200,
+            "height": 76,
+            "depth": 100
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "comedor",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-mesa-comedor-redonda-pequena",
+          "name": "Mesa comedor redonda pequeña",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 75,
+            "depth": 110
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "comedor",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-silla-comedor-con-brazos",
+          "name": "Silla comedor con brazos",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 58,
+            "height": 88,
+            "depth": 58
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "chair",
+          "room": "comedor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-silla-comedor-tapizada",
+          "name": "Silla comedor tapizada",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 90,
+            "depth": 54
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "chair",
+          "room": "comedor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-comedor-lampara-comedor-suspendida",
+          "name": "Lámpara comedor suspendida",
+          "family": "Comedor",
+          "dimensions_cm": {
+            "width": 55,
+            "height": 48,
+            "depth": 55
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "lamp",
+          "room": "comedor",
+          "target_components": [
+            "base y estructura",
+            "pantalla, difusor y fuente de luz"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        }
+      ]
     },
     {
       "id": "dormitorios",
       "name": "Dormitorios",
-      "status": "pending",
+      "status": "in_process",
       "inventory_complete": false,
-      "items": []
+      "items": [
+        {
+          "id": "room-dormitorio-cama-individual",
+          "name": "Cama individual",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 75,
+            "depth": 205
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bed",
+          "room": "dormitorio",
+          "target_components": [
+            "bastidor y cabecero",
+            "colchón y ropa de cama"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-cama-doble",
+          "name": "Cama doble",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 170,
+            "height": 90,
+            "depth": 210
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bed",
+          "room": "dormitorio",
+          "target_components": [
+            "bastidor y cabecero",
+            "colchón y ropa de cama"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-cama-king-size",
+          "name": "Cama king size",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 210,
+            "height": 95,
+            "depth": 220
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bed",
+          "room": "dormitorio",
+          "target_components": [
+            "bastidor y cabecero",
+            "colchón y ropa de cama"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-litera",
+          "name": "Litera",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 180,
+            "depth": 205
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bed",
+          "room": "dormitorio",
+          "target_components": [
+            "bastidor y cabecero",
+            "colchón y ropa de cama"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-mesita-2-cajones",
+          "name": "Mesita 2 cajones",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 52,
+            "depth": 40
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "dresser",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, cajones y frentes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-comoda-6-cajones",
+          "name": "Cómoda 6 cajones",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 88,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "dresser",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, cajones y frentes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-armario-corredero",
+          "name": "Armario corredero",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 200,
+            "height": 225,
+            "depth": 65
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "wardrobe",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, puertas y herrajes",
+            "baldas y barra interior"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-armario-abatible",
+          "name": "Armario abatible",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 150,
+            "height": 220,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "wardrobe",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, puertas y herrajes",
+            "baldas y barra interior"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-espejo-cuerpo-entero",
+          "name": "Espejo cuerpo entero",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 55,
+            "height": 175,
+            "depth": 5
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "mirror",
+          "room": "dormitorio",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-tocador",
+          "name": "Tocador",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 135,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "desk",
+          "room": "dormitorio",
+          "target_components": [
+            "tablero y estructura portante",
+            "cajonera y pasacables"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-cama-matrimonio-135",
+          "name": "Cama matrimonio 135",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 145,
+            "height": 88,
+            "depth": 200
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bed",
+          "room": "dormitorio",
+          "target_components": [
+            "bastidor y cabecero",
+            "colchón y ropa de cama"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-cama-canape-abatible",
+          "name": "Cama canapé abatible",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 160,
+            "height": 92,
+            "depth": 205
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bed",
+          "room": "dormitorio",
+          "target_components": [
+            "bastidor y cabecero",
+            "colchón y ropa de cama"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-mesita-flotante",
+          "name": "Mesita flotante",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 28,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "dresser",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, cajones y frentes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-comoda-4-cajones-ancha",
+          "name": "Cómoda 4 cajones ancha",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 92,
+            "depth": 48
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "dresser",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, cajones y frentes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-armario-esquinero",
+          "name": "Armario esquinero",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 115,
+            "height": 225,
+            "depth": 115
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "wardrobe",
+          "room": "dormitorio",
+          "target_components": [
+            "casco, puertas y herrajes",
+            "baldas y barra interior"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-escritorio-juvenil",
+          "name": "Escritorio juvenil",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 75,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "desk",
+          "room": "dormitorio",
+          "target_components": [
+            "tablero y estructura portante",
+            "cajonera y pasacables"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-dormitorio-lampara-de-mesita",
+          "name": "Lámpara de mesita",
+          "family": "Dormitorio",
+          "dimensions_cm": {
+            "width": 28,
+            "height": 42,
+            "depth": 28
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "lamp",
+          "room": "dormitorio",
+          "target_components": [
+            "base y estructura",
+            "pantalla, difusor y fuente de luz"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        }
+      ]
     },
     {
       "id": "resto",
       "name": "Resto de estancias y exteriores",
-      "status": "pending",
+      "status": "in_process",
       "inventory_complete": false,
-      "items": []
+      "items": [
+        {
+          "id": "room-recibidor-consola",
+          "name": "Consola",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 82,
+            "depth": 32
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "console",
+          "room": "recibidor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-zapatero",
+          "name": "Zapatero",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 110,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "vestidor",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-banco-recibidor",
+          "name": "Banco recibidor",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 48,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bench",
+          "room": "recibidor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-perchero",
+          "name": "Perchero",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 42,
+            "height": 180,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "coat",
+          "room": "recibidor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-espejo-vertical",
+          "name": "Espejo vertical",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 65,
+            "height": 150,
+            "depth": 5
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "mirror",
+          "room": "recibidor",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-lavadora-frontal",
+          "name": "Lavadora frontal",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 60,
+            "height": 85,
+            "depth": 62
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "washer",
+          "room": "lavadero",
+          "target_components": [
+            "carcasa, panel y puerta",
+            "tambor y junta"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-secadora-frontal",
+          "name": "Secadora frontal",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 60,
+            "height": 85,
+            "depth": 62
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "washer",
+          "room": "lavadero",
+          "target_components": [
+            "carcasa, panel y puerta",
+            "tambor y junta"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-lavadero-con-pila",
+          "name": "Lavadero con pila",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 80,
+            "height": 90,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sink",
+          "room": "lavadero",
+          "target_components": [
+            "encimera y cubetas",
+            "desagüe y grifería"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-armario-limpieza",
+          "name": "Armario limpieza",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 65,
+            "height": 205,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "cabinet",
+          "room": "lavadero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-cesto-ropa",
+          "name": "Cesto ropa",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 42,
+            "height": 62,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "basket",
+          "room": "lavadero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-tabla-planchar",
+          "name": "Tabla planchar",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 38,
+            "height": 92,
+            "depth": 125
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "ironing",
+          "room": "lavadero",
+          "target_components": [
+            "tabla acolchada",
+            "patas cruzadas y articulación"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-estanteria-lavanderia",
+          "name": "Estantería lavandería",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 185,
+            "depth": 40
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "lavadero",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-modulo-vestidor-abierto",
+          "name": "Módulo vestidor abierto",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 220,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "wardrobe",
+          "room": "vestidor",
+          "target_components": [
+            "casco, puertas y herrajes",
+            "baldas y barra interior"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-modulo-vestidor-cerrado",
+          "name": "Módulo vestidor cerrado",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 220,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "wardrobe",
+          "room": "vestidor",
+          "target_components": [
+            "casco, puertas y herrajes",
+            "baldas y barra interior"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-isla-central-cajones",
+          "name": "Isla central cajones",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 90,
+            "depth": 75
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "dresser",
+          "room": "vestidor",
+          "target_components": [
+            "casco, cajones y frentes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-espejo-vestidor",
+          "name": "Espejo vestidor",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 65,
+            "height": 185,
+            "depth": 5
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "mirror",
+          "room": "vestidor",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-banco-vestidor",
+          "name": "Banco vestidor",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 45,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bench",
+          "room": "vestidor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-coche-compacto",
+          "name": "Coche compacto",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 180,
+            "height": 145,
+            "depth": 410
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "car",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-coche-suv",
+          "name": "Coche SUV",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 195,
+            "height": 180,
+            "depth": 465
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "car",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-furgoneta",
+          "name": "Furgoneta",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 200,
+            "height": 225,
+            "depth": 500
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "van",
+          "room": "garaje",
+          "target_components": [
+            "carrocería y cabina",
+            "cristales, ruedas y pilotos"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-motocicleta",
+          "name": "Motocicleta",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 85,
+            "height": 120,
+            "depth": 215
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bike",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-bicicleta",
+          "name": "Bicicleta",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 58,
+            "height": 110,
+            "depth": 175
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bike",
+          "room": "trastero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-estanteria-metalica",
+          "name": "Estantería metálica",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 200,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "trastero",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-banco-trabajo",
+          "name": "Banco trabajo",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 160,
+            "height": 92,
+            "depth": 65
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "workbench",
+          "room": "garaje",
+          "target_components": [
+            "tablero y bastidor",
+            "cajones y panel de herramientas"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-armario-herramientas",
+          "name": "Armario herramientas",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 185,
+            "depth": 48
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "toolcab",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-compresor",
+          "name": "Compresor",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 55,
+            "height": 85,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "compressor",
+          "room": "garaje",
+          "target_components": [
+            "depósito, motor y manómetro",
+            "ruedas y conexiones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-carro-herramientas",
+          "name": "Carro herramientas",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 75,
+            "height": 95,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "cart",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-neumaticos",
+          "name": "Neumáticos",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 68,
+            "height": 68,
+            "depth": 68
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "tyres",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-estanteria-madera",
+          "name": "Estantería madera",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 190,
+            "depth": 40
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "trastero",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-cajas-apilables",
+          "name": "Cajas apilables",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 35,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "box",
+          "room": "trastero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-baul",
+          "name": "Baúl",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 58,
+            "depth": 48
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "trunk",
+          "room": "trastero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-maleta",
+          "name": "Maleta",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 70,
+            "depth": 28
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "suitcase",
+          "room": "trastero",
+          "target_components": [
+            "carcasa y junta",
+            "asa, cierres y ruedas"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-escalera-plegable",
+          "name": "Escalera plegable",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 160,
+            "depth": 12
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "ladder",
+          "room": "trastero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-sofa-exterior",
+          "name": "Sofá exterior",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 190,
+            "height": 78,
+            "depth": 82
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "outdoorsofa",
+          "room": "terraza",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-sillon-exterior",
+          "name": "Sillón exterior",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 72,
+            "height": 82,
+            "depth": 75
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "seat",
+          "room": "terraza",
+          "target_components": [
+            "asiento",
+            "respaldo",
+            "patas y estructura"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-mesa-exterior",
+          "name": "Mesa exterior",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 150,
+            "height": 74,
+            "depth": 85
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "table",
+          "room": "terraza",
+          "target_components": [
+            "tablero con grosor y canto",
+            "faldón o bastidor",
+            "patas y uniones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-tumbona",
+          "name": "Tumbona",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 70,
+            "height": 42,
+            "depth": 195
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sunbed",
+          "room": "terraza",
+          "target_components": [
+            "bastidor articulado",
+            "superficie textil"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-sombrilla",
+          "name": "Sombrilla",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 220,
+            "height": 220,
+            "depth": 220
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "umbrella",
+          "room": "terraza",
+          "target_components": [
+            "mástil, cubierta y varillas"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-jardinera",
+          "name": "Jardinera",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 45,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "planter",
+          "room": "terraza",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-pergola",
+          "name": "Pérgola",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 260,
+            "height": 235,
+            "depth": 220
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "pergola",
+          "room": "terraza",
+          "target_components": [
+            "postes y vigas",
+            "lamas y canalones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-barbacoa",
+          "name": "Barbacoa",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 115,
+            "depth": 55
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bbq",
+          "room": "terraza",
+          "target_components": [
+            "cámara de combustión y parrilla",
+            "tapa, mandos y soporte"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-arbol-ornamental",
+          "name": "Árbol ornamental",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 130,
+            "height": 260,
+            "depth": 130
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "tree",
+          "room": "jardin",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-macetero",
+          "name": "Macetero",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 45,
+            "height": 55,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "planter",
+          "room": "jardin",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-conjunto-exterior",
+          "name": "Conjunto exterior",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 220,
+            "height": 80,
+            "depth": 85
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "outdoorsofa",
+          "room": "jardin",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-ducha-exterior",
+          "name": "Ducha exterior",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 210,
+            "depth": 100
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shower",
+          "room": "jardin",
+          "target_components": [
+            "plato, mampara y perfilería",
+            "grifería y rociador"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-piscina",
+          "name": "Piscina",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 300,
+            "height": 100,
+            "depth": 220
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "pool",
+          "room": "jardin",
+          "target_components": [
+            "vaso hueco y coronación",
+            "lámina de agua y escalones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-consola-suspendida",
+          "name": "Consola suspendida",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 28,
+            "depth": 30
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "console",
+          "room": "recibidor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-zapatero-estrecho",
+          "name": "Zapatero estrecho",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 125,
+            "depth": 22
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "cabinet",
+          "room": "recibidor",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-recibidor-espejo-horizontal-recibidor",
+          "name": "Espejo horizontal recibidor",
+          "family": "Recibidor",
+          "dimensions_cm": {
+            "width": 110,
+            "height": 65,
+            "depth": 5
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "mirror",
+          "room": "recibidor",
+          "target_components": [
+            "soporte, marco y superficie reflectante"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-lavadora-carga-superior",
+          "name": "Lavadora carga superior",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 45,
+            "height": 90,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "washer",
+          "room": "lavadero",
+          "target_components": [
+            "carcasa, panel y puerta",
+            "tambor y junta"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-fregadero-de-lavadero-doble",
+          "name": "Fregadero de lavadero doble",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 90,
+            "depth": 62
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sink",
+          "room": "lavadero",
+          "target_components": [
+            "encimera y cubetas",
+            "desagüe y grifería"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-armario-escobero-alto",
+          "name": "Armario escobero alto",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 60,
+            "height": 220,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "cabinet",
+          "room": "lavadero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-lavadero-cesto-doble-de-ropa",
+          "name": "Cesto doble de ropa",
+          "family": "Lavadero",
+          "dimensions_cm": {
+            "width": 65,
+            "height": 65,
+            "depth": 38
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "basket",
+          "room": "lavadero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-modulo-vestidor-con-cajones",
+          "name": "Módulo vestidor con cajones",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 220,
+            "depth": 60
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "wardrobe",
+          "room": "vestidor",
+          "target_components": [
+            "casco, puertas y herrajes",
+            "baldas y barra interior"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-vestidor-zapatero-extraible",
+          "name": "Zapatero extraíble",
+          "family": "Vestidor",
+          "dimensions_cm": {
+            "width": 85,
+            "height": 120,
+            "depth": 42
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "vestidor",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-banco-de-trabajo-con-panel",
+          "name": "Banco de trabajo con panel",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 180,
+            "height": 95,
+            "depth": 70
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "workbench",
+          "room": "garaje",
+          "target_components": [
+            "tablero y bastidor",
+            "cajones y panel de herramientas"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-estanteria-garaje-reforzada",
+          "name": "Estantería garaje reforzada",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 150,
+            "height": 210,
+            "depth": 55
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "shelf",
+          "room": "garaje",
+          "target_components": [
+            "montantes y baldas",
+            "trasera y soportes"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-coche-berlina",
+          "name": "Coche berlina",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 185,
+            "height": 145,
+            "depth": 475
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "car",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-garaje-moto-tipo-scooter",
+          "name": "Moto tipo scooter",
+          "family": "Garaje",
+          "dimensions_cm": {
+            "width": 78,
+            "height": 115,
+            "depth": 190
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "bike",
+          "room": "garaje",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-caja-grande-de-almacenaje",
+          "name": "Caja grande de almacenaje",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 60,
+            "height": 45,
+            "depth": 45
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "box",
+          "room": "trastero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-trastero-baul-de-almacenaje-grande",
+          "name": "Baúl de almacenaje grande",
+          "family": "Trastero",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 68,
+            "depth": 55
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "trunk",
+          "room": "trastero",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-tumbona-reclinable",
+          "name": "Tumbona reclinable",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 72,
+            "height": 48,
+            "depth": 205
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "sunbed",
+          "room": "terraza",
+          "target_components": [
+            "bastidor articulado",
+            "superficie textil"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-sombrilla-grande",
+          "name": "Sombrilla grande",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 280,
+            "height": 245,
+            "depth": 280
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "umbrella",
+          "room": "terraza",
+          "target_components": [
+            "mástil, cubierta y varillas"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-terraza-pergola-bioclimatica",
+          "name": "Pérgola bioclimática",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 300,
+            "height": 245,
+            "depth": 260
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "pergola",
+          "room": "terraza",
+          "target_components": [
+            "postes y vigas",
+            "lamas y canalones"
+          ],
+          "note": "Primera reconstrucción compartida del generador integrada en la rama de desarrollo; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-arbol-frutal",
+          "name": "Árbol frutal",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 160,
+            "height": 300,
+            "depth": 160
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "tree",
+          "room": "jardin",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        },
+        {
+          "id": "room-jardin-jardinera-rectangular-grande",
+          "name": "Jardinera rectangular grande",
+          "family": "Exterior",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 55,
+            "depth": 50
+          },
+          "status": "en_proceso",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [],
+          "shape": "planter",
+          "room": "jardin",
+          "target_components": [
+            "geometría específica pendiente de reconstrucción"
+          ],
+          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+        }
+      ]
     }
   ],
   "notes": [
@@ -1800,5 +4209,30 @@
       "commit": "a3ed34dc0c83928a5cc06a059e1b55eababa8728",
       "verified": false
     }
-  ]
+  ],
+  "transformation_policy": {
+    "target": "Realismo geométrico, constructivo, material y funcional de nivel profesional en el catálogo completo.",
+    "rule": "No marcar un modelo como verificado sin prueba visual y funcional real; conservar versiones anteriores y compatibilidad con proyectos guardados.",
+    "last_global_pass": "2026-11-06",
+    "procedural_room_objects_inventoried": 144,
+    "initially_rebuilt_shared_generators": [
+      "wardrobe",
+      "panel",
+      "table",
+      "lamp",
+      "washer",
+      "sink",
+      "workbench",
+      "compressor",
+      "van",
+      "sunbed",
+      "umbrella",
+      "pergola",
+      "bbq",
+      "pool",
+      "suitcase",
+      "ironing",
+      "toilet"
+    ]
+  }
 }
