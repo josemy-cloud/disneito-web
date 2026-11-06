@@ -969,11 +969,11 @@ case'table':{
  const wood=M(it.col||'#98724f',.48,.12),edge=M('#6f5339',.55,.08),steel=M('#343b40',.32,.78),round=v%2===0||/redond|oval/.test((it.n||'').toLowerCase()),topT=Math.max(2.8,h*.055),topY=h-topT/2;
  if(round){
   const rx=w*.48,rz=d*.48;
-  const top=new T.Mesh(new T.CylinderGeometry(Math.min(rx,rz),Math.min(rx,rz),topT,96,1),wood);top.scale.z=rz/rx;top.position.y=topY;g.add(top);
-  const apron=new T.Mesh(new T.CylinderGeometry(Math.min(rx,rz)*.84,Math.min(rx,rz)*.84,topT*.7,64),edge);apron.scale.z=rz/rx;apron.position.y=topY-topT*.85;g.add(apron);
+  const top=new T.Mesh(new T.CylinderGeometry(rx,rx,topT,96,1),wood);top.scale.z=rz/rx;top.position.y=topY;g.add(top);
+  const apron=new T.Mesh(new T.CylinderGeometry(rx*.84,rx*.84,topT*.7,64),edge);apron.scale.z=rz/rx;apron.position.y=topY-topT*.85;g.add(apron);
   // Pedestal central con columna y base estable, no una pata cilíndrica flotante.
   const col=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.075,Math.min(w,d)*.11,h*.68,32),steel);col.position.y=h*.34;g.add(col);
-  const foot=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.24,Math.min(w,d)*.28,topT*1.8,64),steel);foot.scale.z=rz/rx;foot.position.y=topT*.9;g.add(foot);
+  const foot=new T.Mesh(new T.CylinderGeometry(rx*.24,rx*.28,topT*1.8,64),steel);foot.scale.z=rz/rx;foot.position.y=topT*.9;g.add(foot);
  }else{
   B(g,w,topT,d,0,topY,0,wood);
   // Canto inferior y faldón perimetral estructural.
@@ -1675,14 +1675,14 @@ case'pool':{
  B(g,w,wallH,wallT,0,wallH/2,-d/2+wallT/2,shell);B(g,w,wallH,wallT,0,wallH/2,d/2-wallT/2,shell);
  B(g,wallT,wallH,d-2*wallT,-w/2+wallT/2,wallH/2,0,shell);B(g,wallT,wallH,d-2*wallT,w/2-wallT/2,wallH/2,0,shell);
  B(g,w*.96,3,d*.96,0,wallH+1,0,tile);
- B(g,w*.88,1.4,d*.88,0,wallH*.64,0,water);
+ const waterSurface=new T.Mesh(new T.PlaneGeometry(w*.88,d*.88,1,1),water);waterSurface.rotation.x=-Math.PI/2;waterSurface.position.set(0,wallH*.64,0);g.add(waterSurface);
  // Escalera interior de acceso y rejilla perimetral.
  for(let k=0;k<4;k++)B(g,w*.28,3,d*.14,0,wallH*.18+k*wallH*.12,d*.32-k*d*.1,tile);
  for(const x of [-1,1])B(g,3,1.2,d*.84,x*w*.47,wallH+2,0,dark);
  break;
 }
 case'ladder':for(let x of [-1,1])tube([x*w*.35,0,0],[x*w*.35,h,0]);for(let k=1;k<8;k++)tube([-w*.35,h*k/8,0],[w*.35,h*k/8,0]);break;
-default:box(0,h/2,0,w,h,d);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})};function build3d(){roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
+default:console.warn('Subtipo geométrico sin reconstrucción específica; se omite para evitar bloques genéricos:',it.shape,it.n);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})};function build3d(){roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);setSun();
