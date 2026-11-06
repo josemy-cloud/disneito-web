@@ -1134,7 +1134,7 @@ function topMat(c){const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='márm
 function pan(p,w,h,cx,c,mf){const f=c.fr;if(f=='cristal'){const fr=M('#2a2a2a',.4,.6);B(p,w-.4,3,2,cx,h/2-1.5,1,fr);B(p,w-.4,3,2,cx,-h/2+1.5,1,fr);B(p,3,h,2,cx-w/2+1.5,0,1,fr);B(p,3,h,2,cx+w/2-1.5,0,1,fr);B(p,w-6,h-6,.6,cx,0,1,GLS);return}
  B(p,w-.4,h-.4,PT||2,cx,0,1,mf);if(f=='marco')B(p,w-9,h-9,.8,cx,0,2.2,mf);if(f=='relieve')B(p,w*.6,h*.6,.8,cx,0,2.2,mf);
  if(f=='estriada'||f=='acanalada'){const v=f=='estriada',n=Math.floor((v?w:h)/3.5),o=((v?w:h)-n*3.5)/2;for(let i=0;i<n;i++){if(v)B(p,1.4,h-3,.8,cx-w/2+o+3.5*(i+.5),0,2.2,mf);else B(p,w-3,1.4,.8,cx,-h/2+o+3.5*(i+.5),2.2,mf)}}}
-function hdl(p,c,w,h,cx,vert,mh){
+function hdl(p,c,w,h,cx,vert,mh,hideMounts=false){
  const t=c.ti,L=Math.max(8,c.tl||30);
  if(t=='push'||t=='ninguno')return;
  const yy=vert===true?0:vert==='bot'?-h/2+5:h/2-5;
@@ -1150,7 +1150,7 @@ function hdl(p,c,w,h,cx,vert,mh){
  if(!vertical)bar.rotation.z=Math.PI/2;
  bar.position.set(vertical?cx:0,yy,4.15);p.add(bar);
  const ends=vertical?[-1,1].map(q=>({x:cx,y:yy+q*barLen*.38})): [-1,1].map(q=>({x:q*barLen*.38,y:yy}));
- ends.forEach(e=>{
+ if(!hideMounts)ends.forEach(e=>{
   const post=new T.Mesh(new T.CylinderGeometry(1.05,1.05,2.2,12),mh);post.rotation.x=Math.PI/2;post.position.set(e.x,e.y,3.05);p.add(post);
  });
 }
@@ -1159,7 +1159,7 @@ function fdoor(g,it,k,x0,w,y0,h,fl,Mx){const c=it.cfg,op=c.op||'lateral',mf=Mx.m
  else if(op=='plegable'){p.position.set(fl?x0+w:x0,y0+h/2,sw);const w2=w/2,q=new T.Group();q.position.set(s*w2,0,0);p.add(q);pan(p,w2,h,s*w2/2,c,mf);pan(q,w2,h,s*w2/2,c,mf);hdl(q,c,w2,h,s*(w2-4),true,mh);mv(p,{it,k,t:'f',sg:fl?1:-1,c:q})}
  else if(op=='abatible'){p.position.set(x0+w/2,y0+h,sw);const q=new T.Group();q.position.y=-h/2;p.add(q);pan(q,w,h,0,c,mf);hdl(q,c,w,h,0,'bot',mh);mv(p,{it,k,t:'u'})}
  else{p.position.set(x0+w/2,y0+h/2,sw);pan(p,w,h,0,c,mf);hdl(p,c,w,h,0,'bot',mh);mv(p,{it,k,t:'e',dy:h*.85})}return p}
-function ndrw(g,it,k,x0,w,y0,h,Mx,o){const c=it.cfg,p=new T.Group();p.position.set(x0+w/2,y0+h/2,it.d/2);g.add(p);p.userData.part={t:'cajón',i:k};if(selPart&&selPart.id==it.id&&selPart.t=='cajón'&&selPart.i==k)HL.push(p);pan(p,w,h,0,c,Mx.mf);hdl(p,c,w,h,0,false,Mx.mh);const dd=Math.min(it.d-4,(o&&o.bd)>0?o.bd:1e9),tm=M('#e0dccf');B(p,w-6,1.5,dd,0,-h/2+3,-dd/2,tm);B(p,1.5,h-8,dd,-(w-6)/2,0,-dd/2,tm);B(p,1.5,h-8,dd,(w-6)/2,0,-dd/2,tm);B(p,w-6,h-8,1.5,0,0,-dd,tm);mv(p,{it,k,t:'s',z:it.d/2,sl:it.d*.7})}
+function ndrw(g,it,k,x0,w,y0,h,Mx,o){const c=it.cfg,p=new T.Group();p.position.set(x0+w/2,y0+h/2,it.d/2);g.add(p);p.userData.part={t:'cajón',i:k};if(selPart&&selPart.id==it.id&&selPart.t=='cajón'&&selPart.i==k)HL.push(p);pan(p,w,h,0,c,Mx.mf);hdl(p,c,w,h,0,false,Mx.mh,true);const dd=Math.min(it.d-4,(o&&o.bd)>0?o.bd:1e9),tm=M('#e0dccf');B(p,w-6,1.5,dd,0,-h/2+3,-dd/2,tm);B(p,1.5,h-8,dd,-(w-6)/2,0,-dd/2,tm);B(p,1.5,h-8,dd,(w-6)/2,0,-dd/2,tm);B(p,w-6,h-8,1.5,0,0,-dd,tm);mv(p,{it,k,t:'s',z:it.d/2,sl:it.d*.7})}
 function worktop(g,it,c,y,cut){const mn=topMat(c),w=it.w+1,d=it.d+2;if(!cut){B(g,w,3,d,0,y+1.5,1,mn);return}
  const cw=cut.w,cd=cut.d,fz=(d-cd)/2,sx=(w-cw)/2;B(g,w,3,fz,0,y+1.5,1+cd/2+fz/2,mn);B(g,w,3,fz,0,y+1.5,1-cd/2-fz/2,mn);B(g,sx,3,cd,-cw/2-sx/2,y+1.5,1,mn);B(g,sx,3,cd,cw/2+sx/2,y+1.5,1,mn);
  if(cut.t=='s'){const st=M('#c4c7cc',.25,.9);B(g,cw-4,1,cd-4,0,y-16,1,st);B(g,cw-4,16,1,0,y-8,1+cd/2-2,st);B(g,cw-4,16,1,0,y-8,1-cd/2+2,st);B(g,1,16,cd-4,-cw/2+2,y-8,1,st);B(g,1,16,cd-4,cw/2-2,y-8,1,st);const ft=new T.Mesh(new T.CylinderGeometry(1.2,1.2,26,10),st);ft.position.set(0,y+16,1-cd/2-6);g.add(ft);B(g,2,2,16,0,y+28,1-cd/2+2,st)}
