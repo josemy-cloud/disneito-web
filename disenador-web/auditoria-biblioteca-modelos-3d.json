@@ -50,6 +50,14 @@
       "finding": "El catálogo comercial dinámico contiene fichas paramétricas asociadas a BUILD y estados de revisión visual; no equivale automáticamente a CAD oficial ni a modelo aprobado.",
       "impact": "Una ficha comercial puede ser precisa en dimensiones y aun así tener geometría reconstruida o pendiente de revisión.",
       "action": "Auditar cada referencia por separado; conservar origen, fabricante, medidas y notas de aproximación."
+    },
+    {
+      "id": "F06",
+      "severity": "high",
+      "finding": "La primera corrección de tapa superior se aplicaba solo a K=='alto'; las columnas K=='col' seguían mostrando el casco abierto por arriba, como evidencia la captura del usuario.",
+      "impact": "Las columnas de despensa y torres de electrodomésticos muestran el interior desde arriba y no tienen el cierre estructural completo.",
+      "action": "Aplicar hasTop también a K=='col' y generar una placa superior continua de 18 mm a todo el ancho y profundidad. Pendiente verificación visual en navegador.",
+      "verified": false
     }
   ],
   "counts_by_room": {
