@@ -1265,13 +1265,15 @@ case'bed':{
    tube([-mattressW*.46,my-mattressH*.24,side*mattressD*.48],[mattressW*.46,my-mattressH*.24,side*mattressD*.48],.45,linen);
   }
   // Sábana y edredón con volumen bajo, caída lateral y proporción según el tamaño.
-  pad(g,0,my+mattressH*.39,mattressD*.105,mattressW*.91,mattressH*.19,mattressD*.67,linen,corner*.72);
-  for(const side of [-1,1])pad(g,side*mattressW*.455,my+mattressH*.12,mattressD*.12,mattressW*.075,mattressH*.22,mattressD*.55,linen,3);
-  // Una almohada en cama individual; dos en camas dobles y king size.
-  const pillowCount=w>=135?2:1,pw=mattressW*(pillowCount===2?.39:.62);
+  const mattressTop=my+mattressH/2,duvetH=Math.max(2.4,mattressH*.15);
+  pad(g,0,mattressTop+duvetH*.42,mattressD*.105,mattressW*.94,duvetH,mattressD*.68,linen,corner*.72);
+  // Caída lateral del edredón: dos paños estrechos que bajan por los cantos del colchón.
+  for(const side of [-1,1])pad(g,side*mattressW*.475,mattressTop-3.5,mattressD*.105,Math.max(3.5,mattressW*.035),7,mattressD*.66,linen,2);
+  // Una almohada en cama individual; dos en camas dobles y king size, apoyadas sobre el colchón.
+  const pillowCount=w>=135?2:1,pw=mattressW*(pillowCount===2?.39:.62),pillowH=Math.max(3,mattressH*.2);
   for(let p=0;p<pillowCount;p++){
    const px=pillowCount===1?0:(p===0?-mattressW*.235:mattressW*.235);
-   pad(g,px,my+mattressH*.55,-mattressD*.34,pw,mattressH*.2,mattressD*.2,pillow,Math.min(9,pw*.1));
+   pad(g,px,mattressTop+pillowH*.38,-mattressD*.34,pw,pillowH,mattressD*.2,pillow,Math.min(9,pw*.1));
   }
   if(bunk){
    // Barandilla superior y postes estructurales conectados al bastidor.
