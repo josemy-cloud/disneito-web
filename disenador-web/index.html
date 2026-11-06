@@ -458,11 +458,66 @@ let P=$('#pr'),CB=()=>commit();
 function row(l,v,cb,t='number'){const K=CB;const d=document.createElement('label');d.className='r';d.innerHTML='<span>'+l+'</span>';const i=document.createElement('input');i.type=t;i.value=v;i.onchange=()=>{cb(t=='number'?+i.value:i.value);K()};d.append(i);P.append(d)}
 function sel2(l,opts,v,cb){const K=CB;const d=document.createElement('label');d.className='r';d.innerHTML='<span>'+l+'</span>';const s=document.createElement('select');opts.forEach(o=>{const e=document.createElement('option');e.value=o;e.textContent=o;s.append(e)});s.value=v;s.onchange=()=>{cb(s.value);K()};d.append(s);P.append(d)}
 function btn(l,cb){const K=CB;const b=document.createElement('button');b.textContent=l;b.style.margin='3px 3px 0 0';b.onclick=()=>{cb();K()};P.append(b)}
+/* Componentes cromáticos específicos por familia. Las claves se guardan por objeto. */
+const ITEM_COLOR_PARTS={
+ sofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['arms','Brazos tapizados'],['frame','Estructura y bastidor'],['feet','Patas'],['piping','Ribetes y costuras']],
+ outdoorsofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['rope','Trenzado y cuerda'],['frame','Estructura'],['feet','Patas']],
+ seat:[['seat','Asiento'],['back','Respaldo'],['arms','Brazos'],['frame','Estructura'],['feet','Patas']],
+ chair:[['seat','Asiento'],['back','Respaldo'],['arms','Reposabrazos'],['frame','Estructura'],['feet','Patas']],
+ bench:[['seat','Superficie de asiento'],['back','Respaldo'],['frame','Estructura'],['feet','Patas']],
+ table:[['top','Tablero y canto'],['apron','Faldón'],['legs','Patas'],['base','Pie o pedestal'],['hardware','Herrajes y guías']],
+ desk:[['top','Sobre de escritorio'],['frame','Estructura y patas'],['drawerFronts','Frentes de cajón'],['drawerInterior','Interior de cajones'],['handles','Tiradores']],
+ officechair:[['seat','Asiento tapizado'],['back','Respaldo'],['arms','Reposabrazos'],['base','Base y estrella'],['wheels','Ruedas'],['mechanism','Mecanismo y pistón']],
+ shelf:[['shelves','Baldas'],['sides','Laterales'],['back','Trasera'],['frame','Estructura'],['hardware','Herrajes']],
+ dresser:[['carcass','Casco'],['fronts','Frentes de cajón'],['top','Sobre superior'],['handles','Tiradores'],['feet','Patas']],
+ vanity:[['carcass','Casco del mueble'],['fronts','Frentes de cajón y puertas'],['basin','Lavabo y cubeta'],['tap','Grifería'],['handles','Tiradores'],['feet','Patas y soportes']],
+ basin:[['ceramic','Pieza cerámica'],['tap','Grifería'],['waste','Válvula y desagüe']],
+ bath:[['shell','Cuerpo de bañera'],['inner','Superficie interior'],['panel','Faldón o panel'],['tap','Grifería'],['waste','Desagüe']],
+ shower:[['tray','Plato de ducha'],['glass','Vidrios de mampara'],['profiles','Perfiles y bisagras'],['tap','Grifería'],['showerHead','Rociador y teleducha'],['drain','Canaleta y desagüe']],
+ mirror:[['glass','Espejo'],['frame','Marco'],['light','Iluminación'],['hardware','Soportes']],
+ bidet:[['ceramic','Cerámica'],['tap','Grifería'],['waste','Desagüe']],
+ inodoro:[['ceramic','Cerámica'],['seat','Tapa y asiento'],['flush','Pulsador y mecanismo']],
+ rocaOnaBidet:[['ceramic','Cerámica'],['tap','Grifería']],
+ rocaOnaWallHungWC:[['ceramic','Cerámica'],['seat','Tapa y asiento'],['flush','Pulsador']],
+ rocaOnaWallHungWCCompact:[['ceramic','Cerámica'],['seat','Tapa y asiento'],['flush','Pulsador']],
+ rocaOnaWallHungBidet:[['ceramic','Cerámica'],['tap','Grifería']],
+ rocaOnaFineceramicBasin:[['ceramic','Cerámica'],['tap','Grifería'],['waste','Válvula y desagüe']],
+ wardrobe:[['carcass','Casco y laterales'],['doors','Puertas'],['shelves','Baldas'],['drawers','Cajones'],['rail','Barra de colgar'],['handles','Tiradores'],['hardware','Bisagras y guías']],
+ bed:[['frame','Estructura de cama'],['headboard','Cabecero'],['mattress','Colchón'],['bedding','Edredón y ropa de cama'],['pillows','Almohadas'],['feet','Patas'],['hardware','Herrajes']],
+ washer:[['body','Carcasa'],['door','Puerta y cristal'],['control','Panel y mandos'],['drawer','Cajetín'],['trim','Marcos y embellecedores']],
+ sink:[['basin','Cubeta y fregadero'],['drainer','Escurridor'],['tap','Grifería'],['waste','Válvula y desagüe']],
+ lamp:[['shade','Pantalla o difusor'],['body','Cuerpo y estructura'],['base','Base'],['hardware','Herrajes']],
+ sideboard:[['carcass','Casco'],['doors','Puertas'],['drawers','Cajones'],['top','Sobre superior'],['handles','Tiradores'],['feet','Patas']],
+ panel:[['slats','Listones'],['screen','Pantalla'],['cabinet','Mueble inferior'],['fronts','Frentes'],['handles','Tiradores'],['frame','Estructura']],
+ coat:[['base','Base'],['pole','Columna central'],['hooks','Brazos y colgadores'],['caps','Remates']],
+ computer:[['casing','Carcasa'],['screen','Pantalla'],['bezel','Marco de pantalla'],['keyboard','Teclado'],['keys','Teclas'],['stand','Soporte y base'],['mouse','Ratón']],
+ workbench:[['top','Tablero de trabajo'],['frame','Estructura'],['drawers','Cajones'],['pegboard','Panel perforado'],['hardware','Herrajes']],
+ toolcab:[['carcass','Carcasa'],['drawers','Cajones'],['fronts','Frentes'],['handles','Tiradores'],['wheels','Ruedas']],
+ car:[['body','Carrocería'],['glass','Cristales'],['trim','Molduras'],['wheels','Llantas y neumáticos'],['lights','Faros y pilotos']],
+ van:[['body','Carrocería'],['glass','Cristales'],['trim','Molduras'],['wheels','Llantas y neumáticos'],['lights','Faros y pilotos']],
+ bike:[['frame','Cuadro'],['wheels','Ruedas y neumáticos'],['saddle','Sillín'],['handlebar','Manillar'],['metal','Componentes metálicos']],
+ bicycle:[['frame','Cuadro'],['wheels','Ruedas y neumáticos'],['saddle','Sillín'],['handlebar','Manillar'],['metal','Componentes metálicos']],
+ outdoorsofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['rope','Trenzado y cuerda'],['frame','Estructura'],['feet','Patas']],
+ sunbed:[['fabric','Lona y acolchado'],['frame','Estructura'],['hinges','Articulaciones'],['feet','Patas']],
+ umbrella:[['fabric','Lona'],['ribs','Varillas'],['pole','Mástil'],['base','Base']],
+ pergola:[['frame','Pilares y vigas'],['slats','Lamas orientables'],['hardware','Ejes y herrajes']],
+ planter:[['pot','Macetero'],['soil','Tierra'],['leaves','Plantas']],
+ tree:[['trunk','Tronco y ramas'],['leaves','Follaje']],
+ bbq:[['body','Cuerpo y cámara'],['lid','Tapa'],['grate','Parrilla'],['shelves','Bandejas laterales'],['controls','Mandos'],['frame','Estructura y ruedas']],
+ pool:[['shell','Vaso y paredes'],['coping','Coronación'],['water','Agua'],['steps','Escalones'],['rails','Rejillas y perfiles']],
+ ladder:[['rails','Largueros'],['steps','Peldaños'],['feet','Zapatas'],['hardware','Herrajes']],
+ compressor:[['tank','Calderín'],['motor','Motor'],['gauge','Manómetro'],['pipes','Tuberías'],['wheels','Ruedas'],['frame','Bastidor']],
+ cart:[['deck','Plataforma'],['frame','Estructura'],['handle','Asa'],['wheels','Ruedas']],
+ tyres:[['rubber','Goma del neumático'],['sidewall','Flancos'],['rim','Llantas']],
+ cabinet:[['carcass','Casco y laterales'],['doors','Puertas'],['drawers','Cajones'],['shelves','Baldas'],['handles','Tiradores'],['hardware','Bisagras y guías'],['feet','Patas']]
+};
 function partColorUI(e){
- P.insertAdjacentHTML('beforeend','<h4>Colores por partes</h4><small style="display:block;color:#aab4c4;margin-bottom:6px">Cada acabado se aplica solo a las piezas del objeto que corresponden a ese material.</small>');
- const fields=[['principal','Cuerpo / superficie principal',e.col||'#c9c9c9'],['secondary','Piezas secundarias',e.partColors&&e.partColors.secondary||'#9b8978'],['metal','Metal y herrajes',e.partColors&&e.partColors.metal||'#aeb5bb'],['glass','Cristal y vidrio',e.partColors&&e.partColors.glass||'#b8dce8'],['textile','Tapizados y tejidos',e.partColors&&e.partColors.textile||'#d8d1c7'],['ceramic','Cerámica y porcelana',e.partColors&&e.partColors.ceramic||'#f5f4f0']];
- fields.forEach(([role,label,value])=>{const l=document.createElement('label');l.className='r';const t=document.createElement('span');t.textContent=label;l.append(t);const input=document.createElement('input');input.type='color';input.value=/^#[0-9a-f]{6}$/i.test(value)?value:'#c9c9c9';input.style.cssText='width:54px;height:28px;padding:1px;background:#2a2e37;border:1px solid #444;border-radius:4px';input.onchange=()=>{if(role==='principal')e.col=input.value;else{e.partColors=e.partColors||{};e.partColors[role]=input.value}commit()};l.append(input);P.append(l)});
+ const shape=e.shape||e.t,parts=ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[e.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
+ e.partColors=e.partColors||{};
+ P.insertAdjacentHTML('beforeend','<h4>Acabados por componente</h4><small style="display:block;color:#aab4c4;margin-bottom:6px">Controles específicos de este tipo de objeto. Cada componente conserva su propio color.</small>');
+ parts.forEach(([key,label])=>{const l=document.createElement('label');l.className='r';const t=document.createElement('span');t.textContent=label;l.append(t);const input=document.createElement('input');input.type='color';input.value=/^#[0-9a-f]{6}$/i.test(e.partColors[key])?e.partColors[key]:'#c9c9c9';input.style.cssText='width:54px;height:28px;padding:1px;background:#2a2e37;border:1px solid #444;border-radius:4px';input.onchange=()=>{e.partColors[key]=input.value;commit()};l.append(input);P.append(l)});
 }
+
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
 function props(){P.innerHTML='';const e=get();
  if(sel&&sel.k=='ms'){const m=S.ms[sel.id];P.innerHTML='<h4>Cota manual</h4>';const mr=m&&mres(m);P.insertAdjacentHTML('beforeend','<small>'+(mr?R(mr.d)+' cm':'Los objetos medidos ya no están disponibles')+'</small>');btn(m&&m.visible!==false?'🙈 Ocultar esta medida':'👁 Mostrar esta medida',()=>{m.visible=m.visible===false});btn('Eliminar solo esta medida',()=>{S.ms.splice(sel.id,1);sel=null});return}
@@ -3535,23 +3590,23 @@ BUILD.rocaOnaFineceramicBasin=(g,it)=>{
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 };
 
-function partMaterialRole(mesh,mat,primary){
+function partMaterialRole(mesh,mat,primary,it){
  if(mat===primary)return 'principal';
- const name=((mesh&&mesh.name)||'')+' '+((mat&&mat.name)||'');const n=name.toLowerCase();
- if(/cristal|vidrio|glass|espejo|mirror/.test(n))return 'glass';
- if(/metal|acero|inox|chrome|cromo|hinge|bisagra|handle|tirador|herra|steel/.test(n))return 'metal';
- if(/tapiz|tela|tejido|cojin|cojín|almohad|colchon|colchón|linen|fabric|upholster/.test(n))return 'textile';
+ const p=mesh&&mesh.userData&&mesh.userData.part,tag=(p&&p.t)||'',name=((mesh&&mesh.name)||'')+' '+((mat&&mat.name)||'')+' '+tag,n=name.toLowerCase(),shape=it&&(it.shape||it.t),parts=ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it&&it.t]||[];
+ for(const [key,label] of parts){const aliases={
+ seat:/asiento|seat|cushion/,back:/respaldo|back/,arms:/brazo|arm/,frame:/estructura|bastidor|frame/,feet:/pata|pie|foot/,top:/tablero|encimera|sobre|top/,doors:/puerta|door/,fronts:/frente|front/,drawers:/caj[oó]n|drawer/,handles:/tirador|handle/,glass:/cristal|vidrio|glass|espejo/,tap:/grifer[ií]a|grifo|tap/,ceramic:/cer[aá]mica|porcelana/,mattress:/colch[oó]n|mattress/,bedding:/edred[oó]n|ropa de cama/,pillows:/almohada|pillow/,shelves:/balda|estante|shelf/,hardware:/herra|bisagra|gu[ií]a|hardware/,wheels:/rueda|neum[aá]tico|wheel/,fabric:/lona|tejido|tela|fabric/,body:/carcasa|cuerpo|body/,carcass:/casco|carcasa|carcass/,basin:/cubeta|lavabo|fregadero|basin/,profiles:/perfil|bisagra|profile/,tray:/plato de ducha|tray/,frame:/marco|estructura|frame/,shell:/vaso|cuerpo|shell/};
+  if((p&&p.t&&((key==='doors'&&/puerta|frente/.test(tag))||(key==='drawers'&&/caj[oó]n/.test(tag))||(key==='shelves'&&/balda/.test(tag))||(key==='handles'&&/tirador/.test(tag))||(key==='hardware'&&/herra|bisagra|gu[ií]a/.test(tag))))||((aliases[key]||new RegExp(key,'i')).test(n)))return key;
+ }
+ if(/cristal|vidrio|glass|espejo/.test(n))return 'glass';
+ if(/metal|acero|inox|chrome|cromo|bisagra|tirador|herra|steel/.test(n)||(mat&&mat.metalness>.55))return 'hardware';
+ if(/tapiz|tela|tejido|cojin|cojín|almohad|colchon|colchón|linen|fabric/.test(n))return 'fabric';
  if(mat&&((mat.transparent&&mat.opacity<.99)||mat.transmission>0))return 'glass';
- if(mat&&Number.isFinite(mat.metalness)&&mat.metalness>.55)return 'metal';
- if(mat&&Number.isFinite(mat.roughness)&&mat.roughness>=.88)return 'textile';
- if(mat&&mat.color&&Number.isFinite(mat.roughness)&&mat.roughness<.32&&((mat.color.r+mat.color.g+mat.color.b)/3)>.62)return 'ceramic';
- return 'secondary';
+ return 'body';
 }
 function applyItemPartColors(g,it,primary){
- const colors=it.partColors||{};
- if(!Object.keys(colors).length)return;
+ const colors=it.partColors||{};if(!Object.keys(colors).length)return;
  g.traverse(o=>{if(!o.isMesh||!o.material)return;
-  const apply=(src)=>{if(!src||!src.color)return src;const role=partMaterialRole(o,src,primary),hex=colors[role];if(!hex)return src;const mat=src.clone();mat.color.set(hex);return mat};
+  const apply=(src)=>{if(!src||!src.color)return src;const key=partMaterialRole(o,src,primary,it),hex=colors[key]||colors.body;if(!hex)return src;const mat=src.clone();mat.color.set(hex);return mat};
   o.material=Array.isArray(o.material)?o.material.map(apply):apply(o.material);
  });
 }
