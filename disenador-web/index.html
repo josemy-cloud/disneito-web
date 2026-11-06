@@ -1058,7 +1058,7 @@ case'officechair':{
  const seatW=w*.72,seatD=d*.55,seatY=h*.39;
  const seat=new T.Shape();seat.moveTo(-seatW*.42,-seatD*.5);seat.quadraticCurveTo(-seatW*.5,-seatD*.5,-seatW*.5,-seatD*.28);seat.lineTo(-seatW*.5,seatD*.22);seat.quadraticCurveTo(-seatW*.48,seatD*.5,-seatW*.25,seatD*.5);seat.lineTo(seatW*.25,seatD*.5);seat.quadraticCurveTo(seatW*.5,seatD*.5,seatW*.5,seatD*.22);seat.lineTo(seatW*.5,-seatD*.28);seat.quadraticCurveTo(seatW*.5,-seatD*.5,seatW*.35,-seatD*.5);seat.closePath();
  const sg=new T.ExtrudeGeometry(seat,{depth:8,bevelEnabled:true,bevelSegments:4,bevelSize:2,bevelThickness:2,curveSegments:12});sg.translate(0,0,-4);const sm=new T.Mesh(sg,uphol);sm.position.y=seatY;g.add(sm);sm.castShadow=sm.receiveShadow=true;
- box(0,seatY-7,0,seatW*.62,5,seatD*.58,baseMat);box(0,seatY-11,-seatD*.12,seatW*.34,3,seatD*.42,steel);
+ box(0,seatY-7,0,seatW*.62,5,seatD*.58,baseMat);box(0,seatY-11,-seatD*.12,seatW*.34,3,seatD*.42,metal);
  const backW=seatW*.88,backH=h*(executive?.42:.36),backY=h*.69,backZ=-d*.31;
  const back=new T.Shape();back.moveTo(-backW*.46,0);back.quadraticCurveTo(-backW*.52,backH*.1,-backW*.45,backH*.25);back.lineTo(-backW*.39,backH*.88);back.quadraticCurveTo(0,backH*1.04,backW*.39,backH*.88);back.lineTo(backW*.45,backH*.25);back.quadraticCurveTo(backW*.52,backH*.1,backW*.46,0);back.quadraticCurveTo(0,-backH*.05,-backW*.46,0);back.closePath();
  const bg=new T.ExtrudeGeometry(back,{depth:executive?8:5,bevelEnabled:true,bevelSegments:3,bevelSize:2,bevelThickness:1.5,curveSegments:16});bg.translate(0,0,-(executive?4:2.5));
@@ -1066,8 +1066,8 @@ case'officechair':{
  if(!executive)for(let k=-2;k<=2;k++)tube([k*backW*.13,backY+backH*.2,backZ+3],[k*backW*.13,backY+backH*.78,backZ+3],.55,seam);
  box(0,backY+backH*.22,backZ+4,backW*.58,backH*.08,2,executive?seam:uphol);
  for(const side of [-1,1]){
-  tube([side*seatW*.34,seatY+2,-seatD*.28],[side*backW*.4,backY+backH*.16,backZ],2.6,steel);
-  tube([side*seatW*.36,seatY+12,seatD*.2],[side*seatW*.36,seatY+22,seatD*.2],2.4,steel);
+  tube([side*seatW*.34,seatY+2,-seatD*.28],[side*backW*.4,backY+backH*.16,backZ],2.6,metal);
+  tube([side*seatW*.36,seatY+12,seatD*.2],[side*seatW*.36,seatY+22,seatD*.2],2.4,metal);
   box(side*seatW*.36,seatY+25,seatD*.2,seatW*.22,5,seatD*.34,uphol);
  }
  if(executive){box(0,backY+backH*.99,backZ,backW*.56,backH*.13,8,uphol);for(const x of [-1,1])box(x*backW*.28,backY+backH*.98,backZ,5,backH*.12,10,seam)}
