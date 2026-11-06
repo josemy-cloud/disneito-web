@@ -1055,7 +1055,7 @@ case'desk':{
  break;
 }
 case'officechair':{
- const name=(it.n||'').toLowerCase(),executive=/ejecutiva/.test(name),compact=/compacta/.test(name),meshMat=M('#343d43',.58,.18),uphol=M(it.col||'#454d55',.82,.02),seam=M('#aeb5bb',.62,.08),baseMat=M('#252b30',.32,.72),rub=M('#171b1f',.72,.04);
+ const name=(it.n||'').toLowerCase(),executive=/ejecutiva/.test(name),compact=/compacta/.test(name),meshMat=M('#343d43',.58,.18),uphol=M(it.col||'#454d55',.82,.02),seam=M('#aeb5bb',.62,.08),steelHi=M('#89949b',.28,.86),baseMat=M('#252b30',.32,.72),rub=M('#171b1f',.72,.04);
  const seatW=w*.72,seatD=d*.55,seatY=h*.39;
  const seat=new T.Shape();seat.moveTo(-seatW*.42,-seatD*.5);seat.quadraticCurveTo(-seatW*.5,-seatD*.5,-seatW*.5,-seatD*.28);seat.lineTo(-seatW*.5,seatD*.22);seat.quadraticCurveTo(-seatW*.48,seatD*.5,-seatW*.25,seatD*.5);seat.lineTo(seatW*.25,seatD*.5);seat.quadraticCurveTo(seatW*.5,seatD*.5,seatW*.5,seatD*.22);seat.lineTo(seatW*.5,-seatD*.28);seat.quadraticCurveTo(seatW*.5,-seatD*.5,seatW*.35,-seatD*.5);seat.closePath();
  const sg=new T.ExtrudeGeometry(seat,{depth:8,bevelEnabled:true,bevelSegments:4,bevelSize:2,bevelThickness:2,curveSegments:12});sg.translate(0,0,-4);const sm=new T.Mesh(sg,uphol);sm.position.y=seatY;g.add(sm);sm.castShadow=sm.receiveShadow=true;
