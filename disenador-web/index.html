@@ -1054,58 +1054,59 @@ case'table':{
  break;
 }
 case'bed':{box(0,h*.13,0,w*.96,h*.2,d*.94,mt);box(0,h*.32,d*.015,w*.93,h*.15,d*.9,M('#e5e0d7',.96));box(0,h*.72,-d*.46,w,h*.48,6,mt);for(let x of [-1,1]){box(x*w*.22,h*.48,-d*.3,w*.38,h*.12,d*.2,M('#faf8f3',.98));box(x*w*.22,h*.54,-d*.29,w*.34,h*.035,d*.18,M('#d7d0c5',.98))}box(0,h*.42,d*.19,w*.9,h*.07,d*.45,M('#e8e3da',.98));for(let k=0;k<6;k++){const cv=new T.CatmullRomCurve3([new T.Vector3(-w*.4+k*w*.16,h*.46,d*.02),new T.Vector3(-w*.34+k*w*.16,h*.44,d*.22),new T.Vector3(-w*.3+k*w*.16,h*.42,d*.39)]);g.add(new T.Mesh(new T.TubeGeometry(cv,12,.5,5,false),M('#c9c2b8',.98)))}break;}
-case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':{
- const name=(it.n||'').toLowerCase(),bathStorage=/mueble auxiliar baño|columna baño/.test(name);
- if(bathStorage){
-  const shell=M('#c8c0b3',.72,.04),rail=M('#89949b',.32,.82),front=mt,bodyW=w*.94,bodyD=d*.9,th=1.8,frontZ=bodyD/2+1.5,isColumn=name.includes('columna');
-  const drawerCount=isColumn?3:2,lowerH=h*.56,upperH=h-lowerH-5,drawerH=(lowerH-5)/drawerCount;
-  it.op=it.op||[];
-  for(const sx of [-1,1])box(sx*(bodyW/2-th/2),h*.49,0,th,h*.96,bodyD,shell);
-  box(0,1.5,0,bodyW-2*th,3,bodyD,shell);
-  box(0,h-1.5,0,bodyW+2,3,bodyD+2,front);
-  box(0,h*.49,-bodyD/2+th/2,bodyW-2*th,h*.96,th,shell);
-  box(0,lowerH,0,bodyW-2*th,2.4,bodyD-2,shell);
-  for(let k=0;k<drawerCount;k++){
-   const yy=4+drawerH*(k+.5),dw=bodyW-2*th-1,dd=bodyD-5;
-   const dr=new T.Group();dr.position.set(0,yy,frontZ);dr.name='Cajón baño '+(k+1);dr.userData.part={t:'cajón',i:k};g.add(dr);
-   B(dr,dw,drawerH-1.2,2.2,0,0,0,front);
-   for(const sx of [-1,1])B(dr,1.6,drawerH-3,dd,sx*(dw/2-1),0,-dd/2,shell);
-   B(dr,dw-2,drawerH-3,1.6,0,0,-dd+0.8,shell);
-   B(dr,dw-2,1.6,dd,0,-drawerH/2+1.8,-dd/2,shell);
-   const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(dw*.28,22),16),rail);pull.rotation.z=Math.PI/2;pull.position.set(0,1,2.8);dr.add(pull);
-   for(const sx of [-1,1])box(sx*(dw/2+1),yy,-bodyD*.04,1.2,2,dd*.76,rail);
-   mv(dr,{it,k,t:'s',z:frontZ,sl:Math.min(d*.36,dd*.42)});
-  }
-  // Puerta superior independiente: bisagra en un lateral y tirador fijado al frente.
-  const door=new T.Group();door.position.set(-bodyW/2,lowerH+upperH/2,frontZ);g.add(door);door.userData.part={t:'puerta',i:drawerCount};
-  B(door,bodyW-3,upperH-2,2,bodyW/2,0,0,front);
-  B(door,bodyW-8,upperH-7,.35,bodyW/2,0,1.2,M('#ffffff',.92,.08));
-  const handle=new T.Mesh(new T.CylinderGeometry(1,1,Math.max(10,Math.min(upperH*.22,22)),16),rail);handle.rotation.x=Math.PI/2;handle.position.set(bodyW-9,0,3);door.add(handle);
-  mv(door,{it,k:drawerCount,t:'d',sg:-1});
- }else if(name.includes('cajonera móvil')){
-  const shell=M('#c8c0b3',.72,.04),rail=M('#89949b',.32,.82),darkRail=M('#4c555b',.45,.62),front=mt,foot=M('#272d31',.5,.5);
-  const sideT=1.8,baseY=3,topY=h-2,bodyD=d*.9,bodyW=w*.94,frontZ=bodyD/2+1.5;
-  it.op=it.op||[];
-  for(const sx of [-1,1])box(sx*(bodyW/2-sideT/2),h*.48,0,sideT,h*.88,bodyD,shell);
-  box(0,h*.48,-bodyD/2+sideT/2,bodyW-2*sideT,h*.88,sideT,shell);
-  box(0,baseY,0,bodyW-2*sideT,2.4,bodyD,shell);box(0,topY,0,bodyW+2,3,bodyD+2,front);
-  const n=3,drawerH=(h-11)/n;
-  for(let k=0;k<n;k++){
-   const yy=baseY+2+drawerH*(k+.5),dw=bodyW-2*sideT-1,dd=bodyD-5,dp=new T.Group();dp.position.set(0,yy,frontZ);g.add(dp);dp.userData.part={t:'cajón',i:k};
-   B(dp,dw,drawerH-1.2,2.2,0,0,0,front);
-   for(const sx of [-1,1])B(dp,1.6,drawerH-3,dd,sx*(dw/2-1),0,-dd/2,shell);
-   B(dp,dw-2,drawerH-3,1.6,0,0,-dd+0.8,shell);B(dp,dw-2,1.6,dd,0,-drawerH/2+1.8,-dd/2,shell);
-   for(const sx of [-1,1]){const post=new T.Mesh(new T.CylinderGeometry(1.1,1.1,2,12),rail);post.rotation.x=Math.PI/2;post.position.set(sx*dw*.13,0,1.7);dp.add(post)}
-   const pull=new T.Mesh(new T.CylinderGeometry(1.15,1.15,Math.min(dw*.28,26),16),rail);pull.rotation.z=Math.PI/2;pull.position.set(0,1,2.8);dp.add(pull);
-   for(const sx of [-1,1]){box(sx*(dw/2+0.4),yy,-bodyD*.05,1.2,2.2,dd*.78,rail);box(sx*(dw/2+1.25),yy-1,-bodyD*.05,.8,1.1,dd*.72,darkRail);for(const z of [-dd*.34,dd*.34])cyl(sx*(dw/2+1.25),yy,z,1,1.2,rail)}
-   mv(dp,{it,k,t:'s',z:frontZ,sl:Math.min(d*.72,dd*.82)});
-  }
-  for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*(bodyW*.36),z=sz*(bodyD*.38),mount=new T.Group();mount.position.set(x,2,z);g.add(mount);box(0,1,0,5,2,5,rail);tube([0,0,0],[0,-3,0],1.2,rail);const wh=new T.Mesh(new T.TorusGeometry(3.2,1.4,10,20),foot);wh.rotation.y=Math.PI/2;wh.position.y=-4;mount.add(wh);const axle=new T.Mesh(new T.CylinderGeometry(1,1,7,12),rail);axle.rotation.z=Math.PI/2;axle.position.y=-4;mount.add(axle)}
- }else{
-  box(0,h*.48,0,w*.94,h*.92,d*.92);for(let k=0;k<4;k++){box(0,h*(.14+k*.2),d*.47,w*.88,h*.16,2,M('#c7b7a4',.7));cyl(w*.25,h*(.14+k*.2),d*.5,1.3,3,metal)}
- }
+case'dresser':{
+ const name=(it.n||'').toLowerCase(),body=M(it.col||'#b7a58e',.62,.06),inside=M('#c9c2b8',.82,.02),metal=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.28);
+ const mobile=/móvil|movil/.test(name),count=/6 cajones/.test(name)?6:/2 cajones/.test(name)?2:3,th=2.2,dep=d*.88,frontZ=dep/2+1.5;
+ it.op=it.op||[];
+ for(const x of [-1,1])B(g,th,h*.94,dep,x*(w/2-th/2),h*.48,0,body);
+ B(g,w-2*th,th,dep,0,th/2,0,inside);B(g,w-2*th,th,dep,0,h-th/2,0,body);B(g,w-2*th,h*.94,th,0,h*.48,-dep/2+th/2,inside);
+ const gap=1.5,dh=(h-2*th-(count-1)*gap)/count;
+ for(let k=0;k<count;k++){const yy=th+dh/2+k*(dh+gap),drawer=new T.Group();drawer.position.set(0,yy,frontZ);g.add(drawer);drawer.name='Cajón '+(k+1);B(drawer,w-2*th-1,dh-1.2,2.2,0,0,0,body);B(drawer,w-2*th-5,1.5,dep*.82,0,-dh*.42,-dep*.4,inside);for(const x of [-1,1])B(drawer,1.6,dh-3,dep*.82,x*(w/2-th*1.7),0,-dep*.4,inside);B(drawer,w-2*th-5,dh-3,1.6,0,0,-dep*.8,inside);const pull=new T.Mesh(new T.CylinderGeometry(1.2,1.2,Math.min(22,w*.18),16),metal);pull.rotation.z=Math.PI/2;pull.position.set(0,0,2.8);drawer.add(pull);mv(drawer,{it,k,t:'s',z:frontZ,sl:Math.min(28,dep*.42)})}
+ if(mobile){for(const x of [-1,1])for(const z of [-1,1]){const wheel=new T.Mesh(new T.TorusGeometry(3.2,1.4,10,20),dark);wheel.rotation.y=Math.PI/2;wheel.position.set(x*w*.38,3,z*dep*.36);g.add(wheel)}}
  break;
 }
+case'sideboard':{
+ const body=M(it.col||'#a18c75',.58,.08),inside=M('#d0c6b8',.82,.02),metal=M('#aeb5b8',.28,.82),th=2.2,dep=d*.9,frontZ=dep/2+1.5;
+ it.op=it.op||[];
+ for(const x of [-1,1])B(g,th,h*.92,dep,x*(w/2-th/2),h*.48,0,body);
+ B(g,w-2*th,th,dep,0,th/2,0,inside);B(g,w-2*th,th,dep,0,h-th/2,0,body);B(g,w-2*th,h*.9,th,0,h*.48,-dep/2+th/2,inside);
+ B(g,w,3,d,0,h-1.5,0,body);
+ for(let k=0;k<2;k++){const door=new T.Group(),sg=k?1:-1;door.position.set(sg*(w/2-th),0,frontZ);g.add(door);B(door,w*.48,h*.62,2,-sg*w*.24,h*.64,0,body);const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(18,h*.12),16),metal);pull.rotation.x=Math.PI/2;pull.position.set(-sg*w*.08,h*.64,2.8);door.add(pull);mv(door,{it,k,t:'d',sg:sg===1?-1:1})}
+ for(let k=0;k<2;k++){const yy=h*.18+k*h*.16,dr=new T.Group();dr.position.set(0,yy,frontZ);g.add(dr);B(dr,w*.94,h*.14,2,0,0,0,body);B(dr,w*.9,1.4,dep*.72,0,-h*.08,-dep*.36,inside);mv(dr,{it,k:2+k,t:'s',z:frontZ,sl:Math.min(20,dep*.35)})}
+ for(const x of [-1,1])for(const z of [-1,1])B(g,5,5,5,x*w*.42,2,z*dep*.4,metal);
+ break;
+}
+case'cabinet':{
+ const name=(it.n||'').toLowerCase(),body=M(it.col||'#d7d2c9',.62,.04),inside=M('#b8b4ac',.8,.02),hardware=M('#aeb5b8',.28,.82),th=Math.max(1.6,w*.035),dep=d*.9,frontZ=dep/2+1.2;
+ const isColumn=name.includes('columna'),isBath=/baño|bano/.test(name),isShoe=/zapatero/.test(name),drawers=isBath?(isColumn?3:2):isShoe?0:1;
+ it.op=it.op||[];
+ for(const x of [-1,1])B(g,th,h,dep,x*(w/2-th/2),h/2,0,body);
+ B(g,w-2*th,th,dep,0,th/2,0,body);B(g,w-2*th,th,dep,0,h-th/2,0,body);B(g,w-2*th,h-2*th,th,0,h/2,-dep/2+th/2,inside);
+ for(let k=1;k<=3;k++)B(g,w-2*th-2,1.8,dep-2*th-3,0,h*k/4,0,inside);
+ if(drawers){const zone=isBath?h*.55:h*.28,dh=zone/drawers;for(let k=0;k<drawers;k++){const yy=dh*(k+.5),dr=new T.Group();dr.position.set(0,yy,frontZ);g.add(dr);B(dr,w-2*th-2,dh-1.5,2.2,0,0,0,body);B(dr,w-2*th-5,1.4,dep*.72,0,-dh*.4,-dep*.36,inside);for(const x of [-1,1])B(dr,1.5,dh-3,dep*.72,x*(w/2-th*1.7),0,-dep*.36,inside);const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(18,w*.16),16),hardware);pull.rotation.z=Math.PI/2;pull.position.set(0,0,2.8);dr.add(pull);mv(dr,{it,k,t:'s',z:frontZ,sl:Math.min(22,dep*.4)})}}
+ const door=new T.Group();door.position.set(-w/2+th,0,frontZ);g.add(door);B(door,w-2*th,h-zoneHeight(name,h,drawers),2,(w-2*th)/2,h*.7,0,body);B(door,2,12,3,w*.35,h*.7,2.8,hardware);mv(door,{it,k:drawers,t:'d',sg:-1});
+ break;
+}
+case'toolcab':{
+ const body=M('#59636a',.38,.72),inside=M('#c0c4c4',.52,.42),metal=M('#b5bdc1',.28,.86),dark=M('#272d31',.62,.22),frontZ=d*.46;
+ it.op=it.op||[];B(g,w*.94,h*.94,d*.88,0,h*.48,0,body);B(g,w*.9,2,d*.84,0,h*.95,0,metal);
+ const n=4,dh=h*.78/n;
+ for(let k=0;k<n;k++){const dr=new T.Group();dr.position.set(0,h*.08+dh*(k+.5),frontZ);g.add(dr);B(dr,w*.88,dh-1.5,2,0,0,0,body);B(dr,w*.84,1.2,d*.68,0,-dh*.4,-d*.32,inside);for(const x of [-1,1])B(dr,1.5,dh-3,d*.68,x*w*.4,0,-d*.32,inside);B(dr,w*.18,2,2,0,0,2.5,metal);mv(dr,{it,k,t:'s',z:frontZ,sl:d*.38})}
+ for(const x of [-1,1])for(const z of [-1,1]){const wheel=new T.Mesh(new T.TorusGeometry(4,1.7,10,20),dark);wheel.rotation.y=Math.PI/2;wheel.position.set(x*w*.39,4,z*d*.35);g.add(wheel)}
+ break;
+}
+case'console':{
+ const wood=M(it.col||'#9d8264',.55,.1),metal=M('#aeb5b8',.3,.82),inside=M('#cfc5b7',.82,.02),topT=Math.max(2.5,h*.06),topY=h-topT/2;
+ B(g,w,topT,d,0,topY,0,wood);
+ const suspended=/suspend/.test((it.n||'').toLowerCase());
+ if(suspended){B(g,w*.88,h*.3,d*.78,0,h*.7,-d*.04,wood);for(const x of [-1,1])B(g,4,h*.18,3,x*w*.38,h*.78,-d*.3,metal)}
+ else{for(const x of [-1,1])for(const z of [-1,1])tube([x*w*.42,topY-topT/2,z*d*.38],[x*w*.42,3,z*d*.38],Math.max(2,w*.018),wood);B(g,w*.82,2,d*.65,0,h*.22,0,inside)}
+ // Cajón fino con caja interior, guías y tirador.
+ it.op=it.op||[];const dr=new T.Group();dr.position.set(0,h*.72,d*.42);g.add(dr);B(dr,w*.78,h*.16,2,0,0,0,wood);B(dr,w*.72,1.2,d*.3,0,-h*.1,-d*.15,inside);const pull=new T.Mesh(new T.CylinderGeometry(1,1,Math.min(16,w*.12),16),metal);pull.rotation.z=Math.PI/2;pull.position.z=2.5;dr.add(pull);mv(dr,{it,k:0,t:'s',z:d*.42,sl:Math.min(18,d*.32)});
+ break;
+}
+
+
 case'wardrobe':{
  const body=M(it.col||'#b7a58e',.58,.08),inside=M('#d0c7ba',.82,.02),rail=M('#aeb5b8',.28,.82),dark=M('#30363b',.45,.22),th=Math.max(1.8,w*.025),dep=d*.92;
  it.op=it.op||[];
@@ -1668,7 +1669,20 @@ case'compressor':{
  for(const z of [-1,1])B(g,8,4,8,w*.2,2,z*d*.25,dark);
  break;
 }
-case'cart':case'tyres':for(let k=0;k<3;k++){const tor=new T.Mesh(new T.TorusGeometry(w*.25,6,12,32),dark);tor.rotation.x=Math.PI/2;tor.position.y=h*.25+k*12;g.add(tor)}break;
+case'cart':{
+ const frame=M('#aeb5b8',.32,.82),deck=M('#525b61',.48,.58),rubber=M('#24292d',.86,.02);
+ B(g,w*.9,4,d*.78,0,h*.32,0,deck);
+ for(const x of [-1,1]){tube([x*w*.4,h*.34,-d*.34],[x*w*.4,h*.9,-d*.42],2.8,frame);tube([x*w*.4,h*.9,-d*.42],[-x*w*.4,h*.9,-d*.42],2.8,frame);B(g,3,h*.08,d*.72,x*w*.4,h*.37,0,frame)}
+ for(const x of [-1,1]){const wheel=new T.Mesh(new T.TorusGeometry(5,2,10,24),rubber);wheel.rotation.y=Math.PI/2;wheel.position.set(x*w*.4,5,d*.34);g.add(wheel);const axle=new T.Mesh(new T.CylinderGeometry(1.5,1.5,7,16),frame);axle.rotation.z=Math.PI/2;axle.position.copy(wheel.position);g.add(axle)}
+ break;
+}
+case'tyres':{
+ const rubber=M('#24282b',.9,.01),side=M('#343a3d',.7,.04),rim=M('#858d91',.38,.65);
+ for(let k=0;k<3;k++){const y=h*.2+k*h*.25,tire=new T.Mesh(new T.TorusGeometry(w*.34,Math.max(4,w*.085),18,64),rubber);tire.rotation.x=Math.PI/2;tire.position.y=y;g.add(tire);const hub=new T.Mesh(new T.CylinderGeometry(w*.23,w*.23,w*.09,48),side);hub.position.y=y;g.add(hub);for(let n=0;n<24;n++){const a=n*Math.PI/12;const tread=B(g,w*.04,1.2,3,Math.cos(a)*w*.4,y,Math.sin(a)*w*.4,side);tread.rotation.y=a}}
+ break;
+}
+
+
 case'coat':cyl(0,h*.5,0,2,h,metal);for(let k=0;k<6;k++){const a=k*Math.PI/3;tube([0,h*.82,0],[Math.cos(a)*w*.38,h*.96,Math.sin(a)*d*.38])}break;
 case'computer':{
  const itemName=(it.n||'').toLowerCase();
