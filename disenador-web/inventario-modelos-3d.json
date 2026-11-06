@@ -1152,15 +1152,20 @@
           "id": "custom-despacho-escritorio",
           "name": "Plantilla de escritorio a medida",
           "family": "Plantilla de mobiliario personalizado",
-          "shape": "custom_template",
+          "shape": "desk",
           "dimensions_cm": {
             "width": 140,
             "height": 75,
             "depth": 70
           },
-          "status": "pendiente",
-          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Geometría específica integrada en el creador de muebles a medida. El modelo se genera como roomObject con su forma propia, no como un módulo de cocina genérico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "Generador BUILD.roomObject dedicado a escritorio, con tablero extruido continuo, estructura portante y cajones móviles",
+            "Se crea desde el selector de muebles a medida y abre la previsualización 3D real",
+            "Anchura, altura, fondo y color editables en la previsualización",
+            "Colocación en el plano mediante el flujo existente, conservando el tipo y la estancia"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1176,15 +1181,20 @@
           "id": "custom-despacho-escritorio-compacto",
           "name": "Plantilla de escritorio compacto a medida",
           "family": "Plantilla de mobiliario personalizado",
-          "shape": "custom_template",
+          "shape": "desk",
           "dimensions_cm": {
             "width": 120,
             "height": 75,
             "depth": 60
           },
-          "status": "pendiente",
-          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Geometría específica integrada en el creador de muebles a medida. El modelo se genera como roomObject con su forma propia, no como un módulo de cocina genérico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "Generador BUILD.roomObject dedicado a escritorio, con tablero extruido continuo, estructura portante y cajones móviles",
+            "Se crea desde el selector de muebles a medida y abre la previsualización 3D real",
+            "Anchura, altura, fondo y color editables en la previsualización",
+            "Colocación en el plano mediante el flujo existente, conservando el tipo y la estancia"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1200,15 +1210,20 @@
           "id": "custom-despacho-cajonera",
           "name": "Plantilla de cajonera a medida",
           "family": "Plantilla de mobiliario personalizado",
-          "shape": "custom_template",
+          "shape": "dresser",
           "dimensions_cm": {
             "width": 45,
             "height": 65,
             "depth": 55
           },
-          "status": "pendiente",
-          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Geometría específica integrada en el creador de muebles a medida. El modelo se genera como roomObject con su forma propia, no como un módulo de cocina genérico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "Generador BUILD.roomObject dedicado a cajonera móvil con casco, tres cajones independientes, guías y ruedas",
+            "Se crea desde el selector de muebles a medida y abre la previsualización 3D real",
+            "Anchura, altura, fondo y color editables en la previsualización",
+            "Colocación en el plano mediante el flujo existente, conservando el tipo y la estancia"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1224,15 +1239,20 @@
           "id": "custom-despacho-libreria",
           "name": "Plantilla de librería a medida",
           "family": "Plantilla de mobiliario personalizado",
-          "shape": "custom_template",
+          "shape": "shelf",
           "dimensions_cm": {
             "width": 90,
             "height": 200,
             "depth": 32
           },
-          "status": "pendiente",
-          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Geometría específica integrada en el creador de muebles a medida. El modelo se genera como roomObject con su forma propia, no como un módulo de cocina genérico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "Generador BUILD.roomObject dedicado a librería con costados, trasera, baldas regulables, soportes y libros",
+            "Se crea desde el selector de muebles a medida y abre la previsualización 3D real",
+            "Anchura, altura, fondo y color editables en la previsualización",
+            "Colocación en el plano mediante el flujo existente, conservando el tipo y la estancia"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1247,15 +1267,17 @@
       ],
       "last_work": {
         "date": "2026-11-06",
-        "commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e",
-        "scope": "Corrección de reposabrazos, canto perimetral de mesa en L y apertura de cajonera móvil",
+        "commit": "c2b60a4270b2af80082a5617e8a2ed044908016e",
+        "scope": "Reconstrucción específica de las cuatro plantillas de despacho del creador de muebles a medida",
         "implemented": [
-          "soportes de reposabrazos unidos físicamente al asiento y a las almohadillas",
-          "tramo de canto de mesa en L corregido para ajustarse al contorno de la tapa",
-          "cajones de la cajonera móvil convertidos en grupos independientes con frente, caja, tirador y apertura animada",
-          "guías de cajones ancladas al casco fijo"
+          "escritorio 140 × 75 × 70 cm generado como forma desk",
+          "escritorio compacto 120 × 75 × 60 cm generado como forma desk",
+          "cajonera móvil 45 × 65 × 55 cm generada como forma dresser con cajones interactivos",
+          "librería 90 × 200 × 32 cm generada como forma shelf",
+          "selector de muebles a medida prioriza Despacho cuando se abre desde esa estancia",
+          "las cuatro plantillas usan la previsualización y colocación 3D existentes, con dimensiones y color editables"
         ],
-        "validation": "Los dos scripts clásicos inline se compilan sin errores. La apertura se conecta al mismo sistema MV usado por cajones de cocina y otros elementos, pero aún requiere prueba de clic real en navegador. No se marca ningún modelo como verificado.",
+        "validation": "El bloque createCustomFurniture compila con new Function y las cuatro plantillas apuntan a BUILD.roomObject con shapes desk/dresser/shelf existentes. No se ha probado visualmente el navegador ni se marcan como verificadas.",
         "status": "integrado_no_verificado"
       },
       "scope_note": "Inventario inicial de 11 modelos estáticos identificados en la auditoría más 4 plantillas del creador de muebles a medida. Pendiente inspección de modelos importados/dinámicos, objetos persistidos en proyectos y cualquier recurso que no esté declarado en LIB."
@@ -1354,6 +1376,13 @@
       "phase": "despacho",
       "action": "Corregir soportes flotantes de reposabrazos, prolongación incorrecta del canto en mesa en L y cajones no interactivos de cajonera móvil",
       "commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Reconstruir las cuatro plantillas del creador de muebles a medida con geometrías específicas de escritorio, cajonera y librería",
+      "commit": "c2b60a4270b2af80082a5617e8a2ed044908016e",
       "verified": false
     }
   ]
