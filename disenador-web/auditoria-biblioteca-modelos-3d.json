@@ -3355,7 +3355,13 @@
       "Corrección posterior: asiento de sillas rotado al plano horizontal XZ; cajones de escritorios convertidos en grupos desplazables y vinculados al sistema de apertura; bastidor de la mesa en L depurado; libros elevados para apoyar sobre las baldas y separados del divisor central; generador informático con variante específica de portátil cuando el nombre lo identifica.",
       "Estas correcciones solo están integradas y compiladas. La verificación visual y funcional en navegador sigue pendiente; no se marcan modelos como verificados.",
       "Corrección adicional: reposabrazos con soportes verticales que conectan asiento y almohadillas; canto de la mesa en L ajustado a su contorno real; cajonera móvil con tres grupos de cajón independientes vinculados al sistema MV y con guías fijas al casco.",
-      "Compilación de los dos scripts clásicos inline correcta. La interacción de apertura de la cajonera móvil aún debe comprobarse con clic real en navegador; no se declara verificada."
-    ]
+      "Compilación de los dos scripts clásicos inline correcta. La interacción de apertura de la cajonera móvil aún debe comprobarse con clic real en navegador; no se declara verificada.",
+      "Las cuatro plantillas del creador a medida se han conectado a geometrías específicas BUILD.roomObject: dos escritorios (desk), una cajonera móvil (dresser) y una librería (shelf). Sus dimensiones y color se editan desde la previsualización existente. Pendiente validación visual y funcional real; 0/4 verificadas."
+    ],
+    "custom_templates_total": 4,
+    "custom_templates_integrated": 4,
+    "custom_templates_verified": 0,
+    "custom_templates_pending_visual_functional_validation": 4,
+    "last_template_commit": "c2b60a4270b2af80082a5617e8a2ed044908016e"
   }
 }
