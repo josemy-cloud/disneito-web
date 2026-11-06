@@ -451,7 +451,7 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  let hit=null;for(const i of S.i.slice().reverse()){if(i.hid)continue;const dx=wx-i.x,dy=wy-i.y,c=Math.cos(-i.r*D),s=Math.sin(-i.r*D),lx=dx*c-dy*s,ly=dx*s+dy*c;if(Math.abs(lx)<i.w/2&&Math.abs(ly)<i.d/2){hit={k:'i',id:i.id,o:i};break}}
  if(!hit)for(const w of S.w){const s=segd(w,wx,wy);if(s.d<Math.max(w.t,14)/2+3){const o=S.o.find(o=>o.w==w.id&&Math.abs(o.p-s.p)<o.wd/2);hit=o?{k:'o',id:o.id}:{k:'w',id:w.id,o:w};break}}
  if(!hit){const R=(S.rooms||[]).find(r=>r.poly&&inPoly(wx,wy,r.poly));if(R)hit={k:'rooms',id:R.id,o:R}}
- sel=hit?{k:hit.k,id:hit.id}:null;
+ sel=hit?{k:hit.k,id:hit.id}:null;selPart=null;
  if(wallVis&&hit&&hit.k=='w'){wvToggle(hit.o);sel=null;commit();return}
  if(armed&&hit&&hit.k=='rooms'&&armed.m){const R=hit.o;R.floor=R.floor||JSON.parse(JSON.stringify(S.fl));R.floor.m=armed.m;R.floor.pat=null;commit();return}
  if(armed&&hit&&hit.k=='w'){const w=hit.o;if(armed.m){w.m=armed.m}else{w.c=armed.c;w.m=null};commit();return}
@@ -725,7 +725,7 @@ default:box(0,h/2,0,w,h,d);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);setSun();
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#9aa58f',1));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;root.add(gnd);
- S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(sel&&sel.k=='i'&&sel.id==it.id){g.updateMatrixWorld(true);root.add(new T.BoxHelper(g,0x3d7be0))}});root.updateMatrixWorld(true);HL.forEach(o=>root.add(new T.BoxHelper(o,0xffaa00)))}
+ S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(sel&&sel.k=='i'&&sel.id==it.id){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)})}
 function animate(){requestAnimationFrame(animate);if(mode!='3d')return;
  MV.forEach(m=>stepMV(m));
  if(walk){const sp=+$('#sp').value*(walkK.shift?2.2:1),y=cam.rotation.y;let fx=0,fz=0;if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
@@ -735,13 +735,13 @@ let pd=null;r3.domElement.addEventListener('pointerdown',e=>{pd=[e.clientX,e.cli
 r3.domElement.addEventListener('pointermove',e=>{if(walk&&(e.buttons||document.pointerLockElement)){cam.rotation.y-=e.movementX*.004;cam.rotation.x=Math.max(-1,Math.min(1,cam.rotation.x-e.movementY*.003))}});
 r3.domElement.addEventListener('pointerup',e=>{if(!pd||Math.hypot(e.clientX-pd[0],e.clientY-pd[1])>4)return;const rc=new T.Raycaster(),r=r3.domElement.getBoundingClientRect();rc.setFromCamera(document.pointerLockElement?new T.Vector2(0,0):new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
  const pkb=o=>{for(let q=o;q;q=q.parent){if(q.visible===false||(q.userData&&q.userData.noPick))return false}if(o.material&&!Array.isArray(o.material)&&o.material.visible===false)return false;if(o.userData&&o.userData.ceil&&!showCeil)return false;return true};
- const h=rc.intersectObjects(root.children,true).find(h=>pkb(h.object)&&(h.object.type=='Mesh'&&h.object.geometry.type!='PlaneGeometry'||h.object.userData.fl));if(!h)return;let mv=null,it=null,wl=null,fl=0,rm=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.fl)fl=1;if(u.room)rm=u.room}
+ const h=rc.intersectObjects(root.children,true).find(h=>pkb(h.object)&&(h.object.type=='Mesh'&&h.object.geometry.type!='PlaneGeometry'||h.object.userData.fl));if(!h){if(sel||selPart){sel=null;selPart=null;refresh()}return}let mv=null,it=null,wl=null,fl=0,rm=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.fl)fl=1;if(u.room)rm=u.room}
  if(wallVis&&wl&&!it){const w=S.w.find(x=>x.id==wl);if(w){wvToggle(w);commit()}return}
  if(armed){if(wl){const w=S.w.find(w=>w.id==wl);if(armed.m)w.m=armed.m;else{w.c=armed.c;w.m=null}commit()}else if(fl){const R=rm&&S.rooms.find(q=>q.id==rm);if(R&&armed.m){R.floor=R.floor||JSON.parse(JSON.stringify(S.fl));R.floor.m=armed.m;R.floor.pat=null}else if(armed.m)S.fl.m=armed.m;else S.pt=armed.c;commit()}return}
- if(smode){let pt=null,pit=null;for(let o=h.object;o;o=o.parent){if(o.userData.part&&!pt)pt=o.userData.part;if(o.userData.id)pit=o.userData.id}if(pit){sel={k:'i',id:pit};selPart=pt?Object.assign({id:pit},pt):null;refresh();return}}
- if(rm&&!it&&!mv&&!wl){sel={k:'rooms',id:rm};refresh();return}
+ if(smode){let pt=null,pit=null;for(let o=h.object;o;o=o.parent){if(o.userData.part&&!pt)pt=o.userData.part;if(o.userData.id)pit=o.userData.id}if(pit){sel={k:'i',id:pit};selPart=pt?Object.assign({id:pit},pt):null;refresh();return}if(selPart){selPart=null;refresh()}return}
+ if(rm&&!it&&!mv&&!wl){sel={k:'rooms',id:rm};selPart=null;refresh();return}
  if(mv&&!it){mv.it.op[mv.k]=!mv.it.op[mv.k];commitQ();return}
- if(it){sel={k:'i',id:it};const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){e2.op[mv.k]=!e2.op[mv.k];commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};refresh()}});
+ if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){e2.op[mv.k]=!e2.op[mv.k];commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
 /* ===== Control general ===== */
 function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;$('#pn').textContent=S.nm;sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
 function setMode(m){mode=m;$('#c2').style.display=m=='2d'?'block':'none';d3.style.display=m=='3d'?'block':'none';$('#v3').style.display=m=='3d'?'inline':'none';$('#bM').textContent=m=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;oc.enabled=true;if(m=='3d'){resize();build3d()}else draw()}
@@ -856,7 +856,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
   refreshFotoIAStats();
   $f('fotoIAGenerar').disabled=true;
   try{
-   await new Promise(requestAnimationFrame);r3.render(sc,cam);
+   await new Promise(requestAnimationFrame);const editorOverlays=[];root.traverse(o=>{if(o.userData&&o.userData.editorOverlay){editorOverlays.push([o,o.visible]);o.visible=false}});try{r3.render(sc,cam)}finally{editorOverlays.forEach(([o,v])=>o.visible=v)}
    const src=r3.domElement;if(!src.width||!src.height)throw new Error('La vista 3D todavía no está disponible.');
    const scale=Math.min(1,1024/Math.max(src.width,src.height)),c=document.createElement('canvas');
    c.width=Math.max(1,Math.round(src.width*scale));c.height=Math.max(1,Math.round(src.height*scale));
