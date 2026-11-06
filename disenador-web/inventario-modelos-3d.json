@@ -796,14 +796,16 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
             "casco hueco de cajonera con laterales, tapa, base y trasera",
             "frentes de cajón independientes con tiradores y anclajes",
             "bastidores, patas, travesaños y pies nivelables según tipología",
-            "mecanismo telescópico de mesa regulable y pasacables"
+            "mecanismo telescópico de mesa regulable y pasacables",
+            "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
+            "bastidor de escritorio en L sin travesaño duplicado"
           ],
           "verification": {
             "visual": false,
@@ -828,14 +830,16 @@
             "depth": 150
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
             "casco hueco de cajonera con laterales, tapa, base y trasera",
             "frentes de cajón independientes con tiradores y anclajes",
             "bastidores, patas, travesaños y pies nivelables según tipología",
-            "mecanismo telescópico de mesa regulable y pasacables"
+            "mecanismo telescópico de mesa regulable y pasacables",
+            "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
+            "bastidor de escritorio en L sin travesaño duplicado"
           ],
           "verification": {
             "visual": false,
@@ -860,14 +864,16 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
             "casco hueco de cajonera con laterales, tapa, base y trasera",
             "frentes de cajón independientes con tiradores y anclajes",
             "bastidores, patas, travesaños y pies nivelables según tipología",
-            "mecanismo telescópico de mesa regulable y pasacables"
+            "mecanismo telescópico de mesa regulable y pasacables",
+            "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
+            "bastidor de escritorio en L sin travesaño duplicado"
           ],
           "verification": {
             "visual": false,
@@ -892,13 +898,14 @@
             "depth": 68
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Corregida la orientación del asiento para quedar horizontal; respaldo y base conservan sus planos. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
             "brazos, soportes metálicos y mecanismo inferior",
             "columna neumática y base de cinco radios",
-            "ruedas con horquillas, ejes y banda de goma"
+            "ruedas con horquillas, ejes y banda de goma",
+            "asiento extruido y orientado horizontalmente en el plano XZ"
           ],
           "verification": {
             "visual": false,
@@ -923,13 +930,14 @@
             "depth": 72
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Corregida la orientación del asiento para quedar horizontal; respaldo y base conservan sus planos. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
             "brazos, soportes metálicos y mecanismo inferior",
             "columna neumática y base de cinco radios",
-            "ruedas con horquillas, ejes y banda de goma"
+            "ruedas con horquillas, ejes y banda de goma",
+            "asiento extruido y orientado horizontalmente en el plano XZ"
           ],
           "verification": {
             "visual": false,
@@ -954,11 +962,13 @@
             "depth": 35
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Libros reposicionados para apoyarse sobre las baldas, con altura limitada al hueco y separación del divisor central. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "costados y trasera con espesor real",
             "baldas independientes con soportes y anclajes",
-            "libros de diferentes alturas y lomos"
+            "libros de diferentes alturas y lomos",
+            "libros apoyados sobre la cara superior de cada balda y confinados a cada hueco",
+            "soportes de balda recolocados bajo la superficie"
           ],
           "verification": {
             "visual": false,
@@ -1013,12 +1023,13 @@
             "depth": 22
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Equipo informático conserva el generador de sobremesa y añade una geometría específica de portátil cuando el nombre del elemento lo identifica. Pendiente validar visualmente el elemento concreto en la biblioteca.",
           "implemented_components": [
             "monitor con carcasa, bisel, cristal, cámara e indicadores",
             "cuello y base de soporte",
             "teclado con teclas individuales",
-            "ratón con carcasa, rueda y separación de botones"
+            "ratón con carcasa, rueda y separación de botones",
+            "variante de portátil con chasis, teclado, panel táctil, bisagra y pantalla diferenciada por nombre"
           ],
           "verification": {
             "visual": false,
@@ -1043,14 +1054,16 @@
             "depth": 115
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Geometría corregida: cajones independientes con apertura por desplazamiento; bastidor de mesa en L depurado. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "tablero continuo extruido con espesor y canto perimetral",
             "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
             "casco hueco de cajonera con laterales, tapa, base y trasera",
             "frentes de cajón independientes con tiradores y anclajes",
             "bastidores, patas, travesaños y pies nivelables según tipología",
-            "mecanismo telescópico de mesa regulable y pasacables"
+            "mecanismo telescópico de mesa regulable y pasacables",
+            "cajones de escritorio como conjuntos móviles con guías fijas y apertura interactiva",
+            "bastidor de escritorio en L sin travesaño duplicado"
           ],
           "verification": {
             "visual": false,
@@ -1075,13 +1088,14 @@
             "depth": 62
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Corregida la orientación del asiento para quedar horizontal; respaldo y base conservan sus planos. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "asiento acolchado con contorno anatómico y volumen",
             "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
             "brazos, soportes metálicos y mecanismo inferior",
             "columna neumática y base de cinco radios",
-            "ruedas con horquillas, ejes y banda de goma"
+            "ruedas con horquillas, ejes y banda de goma",
+            "asiento extruido y orientado horizontalmente en el plano XZ"
           ],
           "verification": {
             "visual": false,
@@ -1106,11 +1120,13 @@
             "depth": 32
           },
           "status": "integrado",
-          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "note": "Libros reposicionados para apoyarse sobre las baldas, con altura limitada al hueco y separación del divisor central. Integrado, pendiente de validación visual y funcional real.",
           "implemented_components": [
             "costados y trasera con espesor real",
             "baldas independientes con soportes y anclajes",
-            "libros de diferentes alturas y lomos"
+            "libros de diferentes alturas y lomos",
+            "libros apoyados sobre la cara superior de cada balda y confinados a cada hueco",
+            "soportes de balda recolocados bajo la superficie"
           ],
           "verification": {
             "visual": false,
@@ -1222,18 +1238,17 @@
       ],
       "last_work": {
         "date": "2026-11-06",
-        "commit": "d651191fe1ab6265806547578923b32334d75bf2",
-        "scope": "11 modelos estáticos reconstruidos e integrados; 4 plantillas del creador a medida añadidas al inventario como pendientes de auditoría",
+        "commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc",
+        "scope": "Correcciones del despacho tras revisión de defectos visuales y de interacción",
         "implemented": [
-          "Escritorios recto, en L, regulable y con ala lateral",
-          "Sillas ergonómica, ejecutiva y compacta",
-          "Estantería y librería con estructura, baldas y libros diferenciados",
-          "Cajonera móvil con casco hueco, cajones, guías y ruedas",
-          "Monitor con bisel, pantalla, cámara, soporte, teclado y ratón",
-          "variantes diferenciadas de silla ejecutiva, ergonómica y compacta",
-          "estantería abierta de estructura metálica frente a librería con costados, trasera y divisor"
+          "asientos de sillas orientados horizontalmente",
+          "cajones de escritorio independientes con desplazamiento de apertura",
+          "bastidor de mesa en L sin travesaño duplicado",
+          "libros apoyados sobre baldas, dentro de sus huecos y sin atravesar el divisor",
+          "variante geométrica de portátil diferenciada del equipo de sobremesa",
+          "soportes inferiores de baldas ajustados"
         ],
-        "validation": "Dos scripts clásicos inline compilados sin errores. Pendiente inspección visual real, colocación, dimensiones, selección, modos de renderizado y Foto IA.",
+        "validation": "El JavaScript principal inline se compila sin errores tras los cambios. No se ha ejecutado una inspección visual real en navegador ni pruebas de interacción, render tradicional, modo realista o Foto IA. Todos los indicadores de verificación permanecen en false.",
         "status": "integrado_no_verificado"
       },
       "scope_note": "Inventario inicial de 11 modelos estáticos identificados en la auditoría más 4 plantillas del creador de muebles a medida. Pendiente inspección de modelos importados/dinámicos, objetos persistidos en proyectos y cualquier recurso que no esté declarado en LIB."
@@ -1318,6 +1333,13 @@
       "phase": "despacho",
       "action": "Ampliar inventario con 4 plantillas del creador de muebles a medida; marcar inventario global como incompleto hasta auditar importados y objetos persistidos",
       "commit": "d651191fe1ab6265806547578923b32334d75bf2",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Corrección de defectos detectados en sillas, cajones de escritorio, bastidor de mesa en L, libros de estanterías y geometría de portátil",
+      "commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc",
       "verified": false
     }
   ]
