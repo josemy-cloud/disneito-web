@@ -1051,7 +1051,7 @@ case'panel':{
  break;
 }
 case'table':{
- const wood=M(it.col||'#98724f',.48,.12),edge=M('#6f5339',.55,.08),steel=M('#343b40',.32,.78),round=v%2===0||/redond|oval/.test((it.n||'').toLowerCase()),topT=Math.max(2.8,h*.055),topY=h-topT/2;
+ const wood=M(it.col||'#98724f',.48,.12),edge=M('#6f5339',.55,.08),steel=M('#343b40',.32,.78),tableName=(it.n||'').toLowerCase(),explicitRound=/redond|oval|circular/.test(tableName),explicitRect=/rectang|extensible|escritorio|auxiliar/.test(tableName),round=explicitRound||(!explicitRect&&v%2===0),topT=Math.max(2.8,h*.055),topY=h-topT/2;
  if(round){
   const rx=w*.48,rz=d*.48;
   const top=new T.Mesh(new T.CylinderGeometry(rx,rx,topT,96,1),wood);top.scale.z=rz/rx;top.position.y=topY;g.add(top);
@@ -1890,7 +1890,19 @@ case'ladder':{
  break;
 }
 
-default:console.warn('Subtipo geométrico sin reconstrucción específica; se omite para evitar bloques genéricos:',it.shape,it.n);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})};function build3d(){roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
+default:console.warn('Subtipo geométrico sin reconstrucción específica; se omite para evitar bloques genéricos:',it.shape,it.n);break;}
+ const audit={shape:it.shape,meshes:0,triangles:0,missingGeometry:0,missingMaterial:0,invalidBounds:0};
+ g.traverse(o=>{if(!o.isMesh)return;audit.meshes++;o.castShadow=true;o.receiveShadow=true;
+  const geo=o.geometry;if(!geo||!geo.attributes||!geo.attributes.position){audit.missingGeometry++;return}
+  if(!geo.attributes.normal)geo.computeVertexNormals();
+  if(!geo.boundingBox)geo.computeBoundingBox();if(!geo.boundingSphere)geo.computeBoundingSphere();
+  const bb=geo.boundingBox;if(!bb||![bb.min.x,bb.min.y,bb.min.z,bb.max.x,bb.max.y,bb.max.z].every(Number.isFinite))audit.invalidBounds++;
+  audit.triangles+=geo.index?Math.floor(geo.index.count/3):Math.floor(geo.attributes.position.count/3);
+  const mats=Array.isArray(o.material)?o.material:[o.material];if(!mats.length||mats.some(m=>!m))audit.missingMaterial++;
+  mats.forEach(m=>{if(m&&('roughness'in m)&&!Number.isFinite(m.roughness))m.roughness=.65;if(m&&('metalness'in m)&&!Number.isFinite(m.metalness))m.metalness=0});
+ });
+ g.userData.geometryAudit=audit;
+};function build3d(){roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);setSun();
