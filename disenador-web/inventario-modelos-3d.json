@@ -1344,13 +1344,14 @@
             "depth": 90
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Plato con borde perimetral y superficie rebajada; mampara con panel fijo y hoja de acceso independiente articulada con bisagras y tirador. Pendiente prueba de apertura.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "plato de ducha con geometría extruida y perímetro redondeado",
             "desagüe y rejilla",
             "mampara de vidrio y perfilería para variante con mampara",
-            "columna de ducha, rociador, mezclador y flexo"
+            "columna de ducha, rociador, mezclador y flexo",
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
           ]
         },
         {
@@ -1364,14 +1365,15 @@
             "depth": 50
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA. Los cajones frontales son grupos independientes conectados al sistema de apertura/cierre por clic.",
+          "note": "Cubetas integradas ovaladas con fondo y paredes; cajones con holgura lateral, fondos/costados contenidos dentro del casco y recorrido de apertura limitado para evitar colisión. Pendiente prueba real.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
             "frentes de cajón independientes",
             "laterales, trasera, fondos y guías",
             "encimera y cubetas integradas",
-            "apertura y cierre de cajones mediante interacción"
+            "apertura y cierre de cajones mediante interacción",
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
           ]
         },
         {
@@ -1385,14 +1387,15 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
+          "note": "Revisión correctiva: cubeta reconstruida mediante anillos elípticos/rectangulares, paredes inclinadas y fondo más estrecho; sin cilindro o esfera plana. Pendiente inspección visual en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "cuerpo de lavabo abierto",
             "paredes inclinadas y cubeta interior",
             "borde perimetral y desagüe",
             "grifería y rebosadero",
-            "segunda revisión de silueta y volumen; pendiente inspección visual"
+            "segunda revisión de silueta y volumen; pendiente inspección visual",
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
           ]
         },
         {
@@ -1495,13 +1498,14 @@
             "depth": 100
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Plato con borde perimetral y superficie rebajada, desagüe lineal y detalles de acabado; pendiente inspección visual.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "plato de ducha con geometría extruida y perímetro redondeado",
             "desagüe y rejilla",
             "mampara de vidrio y perfilería para variante con mampara",
-            "columna de ducha, rociador, mezclador y flexo"
+            "columna de ducha, rociador, mezclador y flexo",
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
           ]
         },
         {
@@ -1515,14 +1519,15 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA. Los cajones frontales son grupos independientes conectados al sistema de apertura/cierre por clic.",
+          "note": "Cubeta integrada y cajones corregidos con holguras y recorrido de apertura reducido; pendiente prueba real.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco estructural hueco",
             "frentes de cajón independientes",
             "laterales, trasera, fondos y guías",
             "encimera y cubetas integradas",
-            "apertura y cierre de cajones mediante interacción"
+            "apertura y cierre de cajones mediante interacción",
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
           ]
         },
         {
@@ -1536,14 +1541,15 @@
             "depth": 40
           },
           "status": "integrated_no_verificado",
-          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
+          "note": "Revisión correctiva: cubeta ovalada con sección de pared y fondo cóncavo, proporción ajustada a dimensiones; pendiente inspección visual.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "cuerpo de lavabo abierto",
             "paredes inclinadas y cubeta interior",
             "borde perimetral y desagüe",
             "grifería y rebosadero",
-            "segunda revisión de silueta y volumen; pendiente inspección visual"
+            "segunda revisión de silueta y volumen; pendiente inspección visual",
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
           ]
         },
         {
@@ -1605,8 +1611,11 @@
             "depth": 53
           },
           "status": "integrated_no_verificado",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos. El generador genérico de inodoro dispone ahora de una geometría sanitaria específica; el modelo comercial Roca Ona mantiene su generador propio. Pendiente validación visual.",
-          "source_type": "producto comercial con geometría paramétrica reconstruida"
+          "note": "Ajuste de asiento y tapa ovalados, contenidos dentro del perímetro de la taza; pendiente inspección visual de proporciones.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida",
+          "implemented_components": [
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+          ]
         },
         {
           "id": "bano-roca-ona-wc-compacto",
@@ -1618,9 +1627,12 @@
             "height": 29,
             "depth": 48
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "producto comercial con geometría paramétrica reconstruida"
+          "status": "integrated_no_verificado",
+          "note": "Ajuste de asiento y tapa ovalados, contenidos dentro del perímetro de la taza; pendiente inspección visual de proporciones.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida",
+          "implemented_components": [
+            "corrección de silueta, holguras y/o apertura; pendiente verificación visual y funcional"
+          ]
         },
         {
           "id": "bano-roca-ona-bidet-compacto",
