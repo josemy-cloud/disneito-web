@@ -2265,7 +2265,16 @@ function hdl(p,c,w,h,cx,vert,mh,hideMounts=false){
  });
 }
 function fdoor(g,it,k,x0,w,y0,h,fl,Mx){const c=it.cfg,op=c.op||'lateral',mf=Mx.mf,mh=Mx.mh,p=new T.Group(),s=fl?-1:1,sw=it.d/2;g.add(p);p.userData.part={t:'puerta',i:k};if(selPart&&selPart.id==it.id&&selPart.t=='puerta'&&selPart.i==k)HL.push(p);
- if(op=='lateral'){p.position.set(fl?x0+w:x0,y0+h/2,sw);pan(p,w,h,s*w/2,c,mf);hdl(p,c,w,h,s*(w-5),true,mh);mv(p,{it,k,t:'d',sg:fl?1:-1})}
+ if(op=='lateral'){p.position.set(fl?x0+w:x0,y0+h/2,sw);pan(p,w,h,s*w/2,c,mf);hdl(p,c,w,h,s*(w-5),true,mh);
+  // Bisagras de cazoleta: copas, brazos y placas montadas en el canto interior de la hoja.
+  const hingeMetal=M('#aeb6bb',.34,.82),hingeDark=M('#626c72',.42,.72);
+  [-1,1].forEach(end=>{const hy=end*(h/2-Math.min(8,h*.12));
+   B(p,5.5,6.5,1.5,s*7,hy,-1.15,hingeMetal);
+   const cup=new T.Mesh(new T.CylinderGeometry(2.25,2.25,1.2,24),hingeMetal);cup.rotation.x=Math.PI/2;cup.position.set(s*5,hy,-.45);p.add(cup);
+   B(p,5,2.2,1.3,s*10,hy,-1.05,hingeDark);
+   B(p,3.2,2.2,1.2,s*12,hy,-.45,hingeMetal);
+  });
+  mv(p,{it,k,t:'d',sg:fl?1:-1})}
  else if(op=='plegable'){p.position.set(fl?x0+w:x0,y0+h/2,sw);const w2=w/2,q=new T.Group();q.position.set(s*w2,0,0);p.add(q);pan(p,w2,h,s*w2/2,c,mf);pan(q,w2,h,s*w2/2,c,mf);hdl(q,c,w2,h,s*(w2-4),true,mh);mv(p,{it,k,t:'f',sg:fl?1:-1,c:q})}
  else if(op=='abatible'){p.position.set(x0+w/2,y0+h,sw);const q=new T.Group();q.position.y=-h/2;p.add(q);pan(q,w,h,0,c,mf);hdl(q,c,w,h,0,'bot',mh);mv(p,{it,k,t:'u'})}
  else{p.position.set(x0+w/2,y0+h/2,sw);pan(p,w,h,0,c,mf);hdl(p,c,w,h,0,'bot',mh);mv(p,{it,k,t:'e',dy:h*.85})}return p}
@@ -2274,6 +2283,19 @@ function ndrw(g,it,k,x0,w,y0,h,Mx,o){
  if(selPart&&selPart.id==it.id&&selPart.t=='cajón'&&selPart.i==k)HL.push(p);
  pan(p,w,h,0,c,Mx.mf);hdl(p,c,w,h,0,false,Mx.mh,true);
  const dd=Math.min(it.d-4,(o&&o.bd)>0?o.bd:1e9),tm=M('#e0dccf',.72,.06),rail=M('#89949b',.32,.82),inner=M('#c3c9cc',.28,.86),dark=M('#515b62',.48,.55);
+ // Guía exterior fija al casco y perfil intermedio telescópico: no viajan todos con el cajón.
+ const span=Math.max(8,dd-9),railY=y0+h/2-h*.18,railZ=it.d/2-dd*.48;
+ [-1,1].forEach(side=>{
+  B(g,1.3,3.1,span+5,x0+w/2+side*(w/2-2.7),railY,railZ,rail);
+ });
+ const midRail=new T.Group();midRail.position.set(x0+w/2,railY,railZ);g.add(midRail);
+ [-1,1].forEach(side=>{
+  const rx=side*(w/2-2.85);
+  B(midRail,1.05,2.1,span*.92,rx,0,0,inner);
+  B(midRail,.75,1.05,span*.78,rx+side*.55,.95,0,dark);
+  for(let q=0;q<4;q++){const ball=new T.Mesh(new T.SphereGeometry(.65,10,8),rail);ball.position.set(rx,1.65,-span*.35+q*span*.22);midRail.add(ball)}
+ });
+ mv(midRail,{it,k,t:'s',z:railZ,sl:it.d*.35});
  // Caja interior del cajón con fondo, laterales y trasera independientes.
  B(p,w-6,1.5,dd,0,-h/2+3,-dd/2,tm);
  B(p,1.5,h-8,dd,-(w-6)/2,0,-dd/2,tm);B(p,1.5,h-8,dd,(w-6)/2,0,-dd/2,tm);
