@@ -3521,6 +3521,14 @@
       "commit": "dbf89b24173305870e929bec0258cb71c9d61c8b",
       "verified": false,
       "notes": "Se sustituye la rama geométrica compartida anterior por un constructor de cascos huecos con paneles de 16–22 mm según escala, trasera encastrada, baldas con soportes, cajones con caja y guías, bisagras, frentes y tiradores independientes, apoyos niveladores y zócalo frontal. Los zapateros incorporan tres compartimentos basculantes animados. Prueba aislada del constructor con doble de Three.js: 6/6 registros generan geometría y mecanismos esperados; parseo del JavaScript completo correcto. Esta prueba no equivale a renderizado Three.js ni a comprobación visual, colisiones, persistencia o animación en navegador. Se mantienen estados no verificados."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "bano-ducha-y-mampara",
+      "action": "Añadir perfilería inferior, juntas, placas de fijación y estabilizador superior a la mampara de ducha",
+      "commit": "cec246397ff444c701caa9172a55858b7afbca24",
+      "verified": false,
+      "notes": "Se añaden perfiles y juntas de apoyo al conjunto móvil de vidrio, placas de herraje y tornillería, además de una barra estabilizadora superior con abrazadera mural. Es una mejora constructiva del generador compartido shape=shower; no se ha ejecutado render real ni se ha inspeccionado el modelo en navegador. Debe comprobarse que los perfiles queden alineados con el vidrio y el plato en ambas variantes de ducha."
     }
   ],
   "validation": {
@@ -3539,7 +3547,8 @@
     "ui_dual_view_browser": "not_performed: no browser session available in this work context",
     "cabinetry_geometry_harness": "passed: 6/6 inventory records with shape=cabinet generated mesh hierarchies and expected motion registrations in an isolated constructor harness; this is not a real Three.js/WebGL browser test",
     "cabinetry_browser_visual_validation": "not_performed: no live browser render or visual inspection; do not approve these models yet",
-    "cabinetry_browser_interaction_validation": "not_performed: drawer, hinge and tilt-out movement still require real browser interaction testing"
+    "cabinetry_browser_interaction_validation": "not_performed: drawer, hinge and tilt-out movement still require real browser interaction testing",
+    "shower_enclosure_static_update": "integrated: lower glass channel, seal, hinge plates, fixings and upper stabilizer added; browser visual and interaction validation not performed"
   },
   "current_execution": {
     "date": "2026-11-06",
