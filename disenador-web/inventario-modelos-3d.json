@@ -481,7 +481,7 @@
           "name": "Fregaderos",
           "family": "Fregadero",
           "status": "en_proceso",
-          "note": "Generador específico existente; pendiente de rediseño de geometría y variantes."
+          "note": "Generador sustituido por cubeta(s) de acero con paredes inclinadas, reborde, desagüe y rebosadero; pendiente verificación visual y dimensional."
         },
         {
           "id": "griferia",
@@ -552,6 +552,7 @@
     "Las variantes paramétricas se cuentan como entradas de biblioteca aunque compartan un generador geométrico.",
     "No se marca ningún elemento como verificado sin pruebas en navegador.",
     "Primera sustitución geométrica integrada: cascos de módulos bajos, cajoneras, altos y columnas reconstruidos con tableros de 18 mm, trasera encastrada, travesaños y cantos; aplicada tanto a BUILD.mod (catálogo Cocina modular) como a los generadores independientes.",
-    "Los estados renovado no son verificado: falta comprobar en navegador las distribuciones de puertas, cajones, rinconeros, zócalos, encimeras, dimensiones y aperturas."
+    "Los estados renovado no son verificado: falta comprobar en navegador las distribuciones de puertas, cajones, rinconeros, zócalos, encimeras, dimensiones y aperturas.",
+    "Fregadero: el generador cilíndrico se ha sustituido por una cubeta de geometría rectangular formada; se genera doble seno en anchuras de 90 cm o superiores."
   ]
 }
