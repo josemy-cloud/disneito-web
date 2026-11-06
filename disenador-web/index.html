@@ -419,11 +419,24 @@ function libUI(q=''){
   if(roomF){const room=rooms.find(r=>r.n==roomF);const intro=document.createElement('div');intro.style.cssText='font-size:12px;color:#c4cedc;margin:3px 0 8px';intro.textContent='Elementos disponibles en '+roomF+'. Para ampliar el mobiliario, utiliza «Crear mueble personalizado».';content.append(intro)}
   const count=document.createElement('div');count.textContent=matches.length+' elementos';count.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 6px';content.append(count);
   if(!matches.length){const empty=document.createElement('div');empty.textContent='Todavía no hay modelos de catálogo para esta estancia. Puedes crear un mueble a medida o importar un modelo 3D.';empty.style.cssText='font-size:12px;color:#aab4c4;padding:12px 4px';content.append(empty)}
-  matches.forEach(({o,ix})=>{const card=document.createElement('button');card.type='button';card.className='it';card.style.cssText='display:flex;gap:8px;align-items:center;padding:6px;text-align:left;width:100%;min-width:0';
+  const renderItem=({o,ix},parent)=>{const card=document.createElement('button');card.type='button';card.className='it';card.style.cssText='display:flex;gap:8px;align-items:center;padding:6px;text-align:left;width:100%;min-width:0';
    const im=document.createElement('img');im.src=thumb(ix);im.alt='Vista previa 3D de '+o.n;im.style.cssText='width:68px;height:68px;object-fit:contain;flex:none;background:#252a33;border-radius:5px';card.append(im);
    const info=document.createElement('span');info.style.cssText='min-width:0;overflow-wrap:anywhere';const nm=document.createElement('strong');nm.textContent=o.n;nm.style.cssText='display:block;font-size:12px';info.append(nm);
-   const sm=document.createElement('small');sm.textContent=(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+' × '+o.d+' × '+o.h+' cm';sm.style.cssText='display:block;color:#aab4c4;font-size:10px;margin-top:3px';info.append(sm);card.append(info);card.onclick=()=>openPrev(ix);content.append(card)
-  });materials()
+   const sm=document.createElement('small');sm.textContent=(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+' × '+o.d+' × '+o.h+' cm';sm.style.cssText='display:block;color:#aab4c4;font-size:10px;margin-top:3px';info.append(sm);card.append(info);card.onclick=()=>openPrev(ix);parent.append(card)};
+  if(roomF==='Cocina'){
+   const groups=[
+    {name:'Muebles bajos y cajoneras',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&!String(o.cfg.lay||'').startsWith('esquina')&&o.cfg.lay!=='libre'},
+    {name:'Muebles esquineros y soluciones especiales',test:o=>o.t==='mod'&&(String(o.cfg?.lay||'').startsWith('esquina')||o.cfg?.lay==='libre')},
+    {name:'Muebles altos',test:o=>o.t==='mod'&&o.cfg?.k==='alto'},
+    {name:'Columnas y torres',test:o=>o.t==='mod'&&o.cfg?.k==='col'},
+    {name:'Electrodomésticos',test:o=>o.t==='app'||o.c==='Electrodomésticos'},
+    {name:'Otros productos',test:o=>o.t!=='mod'&&o.t!=='app'&&o.c!=='Electrodomésticos'}
+   ];
+   groups.forEach((group,gi)=>{const items=matches.filter(x=>group.test(x.o));if(!items.length)return;const section=document.createElement('details');section.open=gi===0;section.style.cssText='margin:5px 0 8px;border:1px solid #414957;border-radius:7px;background:#202630;overflow:hidden';
+    const summary=document.createElement('summary');summary.textContent=group.name+' · '+items.length;summary.style.cssText='padding:10px 9px;cursor:pointer;font-size:12px;font-weight:600;color:#e5eaf1;list-style-position:inside';section.append(summary);
+    const list=document.createElement('div');list.style.cssText='padding:4px 6px 7px';items.forEach(x=>renderItem(x,list));section.append(list);content.append(section)
+   });
+  }else matches.forEach(x=>renderItem(x,content));materials()
  };
  search.oninput=()=>render();render()
 }
