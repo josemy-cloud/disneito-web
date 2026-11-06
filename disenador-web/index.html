@@ -1630,7 +1630,7 @@ BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=
  });
  c.dvs.forEach((q,i)=>tagp(B(g,1.6,H-4,d-3,Math.max(-iw/2+1,Math.min(iw/2-1,q.x)),y0+H/2,0,mc),'separador',i,it));
  c.rods.forEach((q,i)=>{const r=new T.Mesh(new T.CylinderGeometry(1.2,1.2,iw-1,10),M('#aaa',.3,.9));r.rotation.z=Math.PI/2;r.position.set(0,y0+Math.min(q.y,H-4),0);g.add(r);tagp(r,'barra',i,it)});
- if(K=='alto'&&hasTop)tagp(B(g,iw,t,d-t,0,y0+H+t/2,0,mc),'tapa superior');if(K=='base'&&hasTop)worktop(g,it,c,h-3,L=='fregadero'?{w:Math.min(iw-14,76),d:Math.min(d-14,46),t:'s'}:L=='placa'?{w:Math.min(iw-6,58),d:Math.min(d-8,50),t:'p'}:null);
+ if(K=='alto'&&hasTop)tagp(B(g,w,t,d,0,h-t/2,0,mc),'tapa superior');if(K=='base'&&hasTop)worktop(g,it,c,h-3,L=='fregadero'?{w:Math.min(iw-14,76),d:Math.min(d-14,46),t:'s'}:L=='placa'?{w:Math.min(iw-6,58),d:Math.min(d-8,50),t:'p'}:null);
  if(c.led&&K=='alto')B(g,iw-8,1,2,0,.6,d/2-6,LEDM);if(LAY[L])LAY[L](g,it,c,Mx,y0,H,iw)};
 /* Electrodomésticos independientes */
 function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0,y0,zf-d/2);g.add(a);const SP=typeof fin=='object'&&fin?fin:{g:fin},pm=(c,def)=>{const f=SP[c]||def||SP.g;return f[0]=='#'?M(f,.4,.1):finM(f)},m=pm('carc'),mp=pm('puerta'),mf=pm('marco'),dk=pm('cristal','cristal oscuro'),pn=pm('panel','cristal oscuro'),hd=pm('tirador','gris metal'),kn=pm('mandos','gris metal');
