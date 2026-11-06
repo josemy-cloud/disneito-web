@@ -779,6 +779,326 @@
       }
     },
     {
+      "id": "despacho",
+      "name": "Despacho",
+      "status": "in_process",
+      "inventory_complete": true,
+      "items": [
+        {
+          "audit_id": "static-062",
+          "id": "escritorio-recto",
+          "name": "Escritorio recto",
+          "family": "Escritorio",
+          "shape": "desk",
+          "dimensions_cm": {
+            "width": 150,
+            "height": 76,
+            "depth": 70
+          },
+          "status": "integrado",
+          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "implemented_components": [
+            "tablero continuo extruido en planta con espesor real",
+            "estructura portante diferenciada según tipología",
+            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
+            "herrajes y pasacables geométricos"
+          ],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-063",
+          "id": "escritorio-en-l",
+          "name": "Escritorio en L",
+          "family": "Escritorio en L",
+          "shape": "desk",
+          "dimensions_cm": {
+            "width": 180,
+            "height": 76,
+            "depth": 150
+          },
+          "status": "integrado",
+          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "implemented_components": [
+            "tablero continuo extruido en planta con espesor real",
+            "estructura portante diferenciada según tipología",
+            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
+            "herrajes y pasacables geométricos"
+          ],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-064",
+          "id": "mesa-regulable",
+          "name": "Mesa regulable",
+          "family": "Mesa regulable",
+          "shape": "desk",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 72,
+            "depth": 70
+          },
+          "status": "integrado",
+          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "implemented_components": [
+            "tablero continuo extruido en planta con espesor real",
+            "estructura portante diferenciada según tipología",
+            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
+            "herrajes y pasacables geométricos"
+          ],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-065",
+          "id": "silla-ergonomica",
+          "name": "Silla ergonómica",
+          "family": "Silla de oficina",
+          "shape": "officechair",
+          "dimensions_cm": {
+            "width": 68,
+            "height": 120,
+            "depth": 68
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-066",
+          "id": "silla-ejecutiva",
+          "name": "Silla ejecutiva",
+          "family": "Silla de oficina",
+          "shape": "officechair",
+          "dimensions_cm": {
+            "width": 72,
+            "height": 115,
+            "depth": 72
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-067",
+          "id": "estanteria-despacho",
+          "name": "Estantería despacho",
+          "family": "Estantería",
+          "shape": "shelf",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 200,
+            "depth": 35
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-068",
+          "id": "cajonera-movil",
+          "name": "Cajonera móvil",
+          "family": "Cajonera",
+          "shape": "dresser",
+          "dimensions_cm": {
+            "width": 42,
+            "height": 58,
+            "depth": 52
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-069",
+          "id": "monitor-teclado",
+          "name": "Monitor y teclado",
+          "family": "Equipo informático",
+          "shape": "computer",
+          "dimensions_cm": {
+            "width": 65,
+            "height": 48,
+            "depth": 22
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-143",
+          "id": "escritorio-ala-lateral",
+          "name": "Escritorio con ala lateral",
+          "family": "Escritorio con retorno",
+          "shape": "desk",
+          "dimensions_cm": {
+            "width": 160,
+            "height": 76,
+            "depth": 115
+          },
+          "status": "integrado",
+          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "implemented_components": [
+            "tablero continuo extruido en planta con espesor real",
+            "estructura portante diferenciada según tipología",
+            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
+            "herrajes y pasacables geométricos"
+          ],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-144",
+          "id": "silla-oficina-compacta",
+          "name": "Silla de oficina compacta",
+          "family": "Silla de oficina",
+          "shape": "officechair",
+          "dimensions_cm": {
+            "width": 62,
+            "height": 105,
+            "depth": 62
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "audit_id": "static-145",
+          "id": "libreria-baldas",
+          "name": "Librería con baldas",
+          "family": "Librería",
+          "shape": "shelf",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 210,
+            "depth": 32
+          },
+          "status": "pendiente",
+          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        }
+      ],
+      "last_work": {
+        "date": "2026-11-06",
+        "commit": "6384d14afef310ec6629c032a01fd2df664c6937",
+        "scope": "Reconstrucción geométrica de escritorios, con mesa en L como primer modelo de referencia",
+        "implemented": [
+          "tablero en L de una sola pieza mediante geometría extruida en planta",
+          "retorno continuo sin bloque superpuesto",
+          "canto perimetral con espesor",
+          "pedestal de cajones construido con laterales, tapa, base, trasera y frentes independientes",
+          "tiradores con soportes y barra",
+          "bastidor de acero, patas y travesaños según tipología",
+          "mesa regulable con columnas telescópicas y pies",
+          "pasacables geométrico"
+        ],
+        "validation": "Compilación de scripts inline correcta. Pendiente visualización en navegador y pruebas interactivas.",
+        "status": "integrado_no_verificado"
+      }
+    },
+    {
       "id": "bano",
       "name": "Cuartos de baño",
       "status": "pending",
@@ -830,6 +1150,13 @@
       "phase": "cocina",
       "action": "Restaurar visibilidad de los 8 modelos legacy; no se ocultan ni eliminan antes de verificar sustitutos",
       "commit": "2a056411ec09082b25948379daff14d4aac42780",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Inventario específico de 11 modelos y reconstrucción integrada de 4 escritorios mediante generador geométrico dedicado",
+      "commit": "6384d14afef310ec6629c032a01fd2df664c6937",
       "verified": false
     }
   ]
