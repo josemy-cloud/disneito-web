@@ -1223,31 +1223,42 @@ case'table':{
  break;
 }
 case'bed':{
- const name=(it.n||'').toLowerCase(),frame=M(it.col||'#9b8978',.54,.1),mattress=M('#e8e4dc',.94,.01),linen=M('#d7d0c5',.96,.01),pillow=M('#f4f1ea',.98,.01),metal=M('#777f82',.38,.7);
- const bunk=/litera/.test(name),levels=bunk?2:1,baseY=h*.12,levelGap=bunk?h*.42:0;
+ const name=(it.n||'').toLowerCase(),frame=M(it.col||'#9b8978',.54,.12),mattress=M('#e8e4dc',.94,.01),linen=M('#d7d0c5',.96,.01),pillow=M('#f4f1ea',.98,.01),metal=M('#777f82',.38,.7),dark=M('#343a3d',.48,.35);
+ const bunk=/litera/.test(name),canape=/canap[eé]/.test(name),levels=bunk?2:1,baseY=h*.14,levelGap=bunk?h*.43:0,matH=h*.11;
+ const pad=(parent,x,y,z,sx,sy,sz,mat,rad=4)=>{const r=Math.min(rad,sx*.2,sz*.2),s=new T.Shape();s.moveTo(-sx/2+r,-sz/2);s.lineTo(sx/2-r,-sz/2);s.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);s.lineTo(sx/2,sz/2-r);s.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);s.lineTo(-sx/2+r,sz/2);s.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);s.lineTo(-sx/2,-sz/2+r);s.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:sy,bevelEnabled:true,bevelSegments:4,bevelSize:Math.min(2,sy*.18),bevelThickness:Math.min(1.8,sy*.16),curveSegments:14});geo.rotateX(Math.PI/2);const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy/2,z);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
  for(let level=0;level<levels;level++){
-  const y=baseY+level*levelGap;
-  B(g,w*.96,Math.max(4,h*.08),d*.94,0,y,0,frame);
-  const mattressBody=new T.Mesh(new T.SphereGeometry(1,40,24),mattress);mattressBody.scale.set(w*.46,h*.065,d*.44);mattressBody.position.set(0,y+h*.1,d*.015);g.add(mattressBody);
-  const duvet=new T.Mesh(new T.SphereGeometry(1,40,24),linen);duvet.scale.set(w*.44,h*.045,d*.31);duvet.position.set(0,y+h*.17,d*.13);g.add(duvet);
-  for(const x of [-1,1]){const p=new T.Mesh(new T.SphereGeometry(1,32,20),pillow);p.scale.set(w*.19,h*.045,d*.105);p.position.set(x*w*.22,y+h*.2,-d*.29);g.add(p)}
-  for(let k=0;k<5;k++){const seam=tube([-w*.36+k*w*.18,y+h*.19,d*.08],[-w*.36+k*w*.18,y+h*.19,d*.37],.45,M('#c5beb3',.98,.01))}
+  const y=baseY+level*levelGap,baseH=h*.12,mattressY=y+baseH*.55+matH*.15;
+  // Somier/base perimetral, travesaños interiores y patas de apoyo.
+  B(g,w*.96,baseH,d*.94,0,y,0,frame);
+  for(const x of [-1,1])B(g,3,baseH*.72,d*.82,x*w*.46,y,0,dark);
+  for(let k=0;k<5;k++)B(g,w*.84,2.2,2.2,0,y+baseH*.25,-d*.36+k*d*.18,metal);
+  // Colchón de espesor real, ribete lateral y panel superior acolchado.
+  pad(g,0,mattressY,0,w*.94,matH,d*.92,mattress,Math.min(6,w*.025));
+  B(g,w*.9,1.2,d*.86,0,mattressY+matH*.12,0,linen);
+  // Edredón con caída hacia el pie, costuras discretas y dos almohadas independientes.
+  pad(g,0,mattressY+matH*.72,d*.13,w*.88,matH*.22,d*.58,linen,5);
+  for(const x of [-1,1]){pad(g,x*w*.22,mattressY+matH*.85,-d*.31,w*.38,matH*.22,d*.19,pillow,5);tube([x*w*.22-w*.13,mattressY+matH*.96,-d*.31],[x*w*.22+w*.13,mattressY+matH*.96,-d*.31],.45,M('#d0c9bf',.9,.01))}
+  if(bunk){for(const x of [-1,1])B(g,4,h*.96,4,x*w*.46,h*.48,d*.43,metal);for(const x of [-1,1])tube([x*w*.46,y+h*.5,d*.44],[x*w*.46,y+h*.98,d*.44],2.4,metal);tube([-w*.46,y+h*.92,d*.44],[w*.46,y+h*.92,d*.44],2.2,metal)}
  }
- // Cabecero tapizado y patas con apoyo real.
- B(g,w*.98,h*.48,5,0,bunk?h*.94:h*.72,-d*.47,frame);
- B(g,w*.9,h*.36,3,0,bunk?h*.94:h*.72,-d*.43,linen);
- for(const x of [-1,1])for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2.8,3.4,h*.12,16),frame);leg.position.set(x*w*.43,h*.06,z*d*.42);g.add(leg)}
+ // Cabecero con panel tapizado, marco perimetral y divisiones de paños.
+ const headY=bunk?h*.94:h*.72,headH=bunk?h*.22:h*.42;
+ B(g,w*.99,headH,5,0,headY,-d*.47,frame);
+ B(g,w*.91,headH*.82,2.4,0,headY,-d*.435,linen);
+ for(let x=-w*.36;x<=w*.36;x+=w*.24)B(g,1.1,headH*.72,1.2,x,headY,-d*.417,frame);
+ if(!bunk){for(const x of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2.8,3.4,h*.1,20),frame);leg.position.set(x*w*.43,h*.05,d*.41);g.add(leg)}}
+ if(canape){
+  // Herrajes visibles de elevación del arcón; no se simula apertura hasta validar el pivote en runtime.
+  for(const x of [-1,1]){tube([x*w*.37,baseY+h*.08,-d*.28],[x*w*.37,baseY+h*.42,-d*.12],2.2,metal);tube([x*w*.37,baseY+h*.08,d*.25],[x*w*.37,baseY+h*.42,d*.08],1.6,dark);B(g,5,3,8,x*w*.37,baseY+h*.06,-d*.28,metal)}
+  B(g,w*.9,3,d*.86,0,baseY-h*.08,0,dark);
+ }
  if(bunk){
-  for(const x of [-1,1])B(g,3,h*.38,3,x*w*.46,h*.79,d*.38,metal);
-  for(const z of [-1,1])tube([-w*.46,h*.62,z*d*.38],[w*.46,h*.62,z*d*.38],2.2,metal);
-  // Escalera frontal con peldaños y apoyos.
-  for(const x of [-1,1])tube([x*w*.38,2,d*.47],[x*w*.38,h*.94,d*.47],2.4,metal);
-  for(let k=1;k<6;k++)tube([-w*.38,h*k*.15,d*.47],[w*.38,h*k*.15,d*.47],1.8,metal);
+  // Escalera frontal con peldaños y anclajes en ambos extremos.
+  for(const x of [-1,1])tube([x*w*.37,2,d*.47],[x*w*.37,h*.96,d*.47],2.8,metal);
+  for(let k=1;k<6;k++)tube([-w*.37,h*k*.15,d*.47],[w*.37,h*k*.15,d*.47],2.1,metal);
  }
+ g.userData.bedConstruction={schemaVersion:2,levels,storageCanape:canape,upholsteredHeadboard:true,mattressPanels:true,status:'integrated-pending-visual-and-mechanism-validation'};
  break;
 }
-
-
 case'dresser':{
  const name=(it.n||'').toLowerCase(),body=M(it.col||'#b7a58e',.62,.06),inside=M('#c9c2b8',.82,.02),metal=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.28);
  const mobile=/móvil|movil/.test(name),count=/6 cajones/.test(name)?6:/2 cajones/.test(name)?2:3,th=2.2,dep=d*.88,frontZ=dep/2+1.5;
