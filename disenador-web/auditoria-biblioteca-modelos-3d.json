@@ -74,6 +74,14 @@
       "impact": "Se sustituyeron generadores simplificados por componentes diferenciados: cubeta abierta, cuerpo extruido, mampara/perfilería, casco hueco y cajones estructurales.",
       "action": "Comprobar visualmente proporciones, orientación y materiales en navegador; probar colocación y dimensiones editables en todos los modos de vista y motores de render. No considerar verificados hasta realizar esas pruebas.",
       "verified": false
+    },
+    {
+      "id": "F09",
+      "severity": "high",
+      "finding": "La primera reconstrucción de baño no alcanzaba el estándar solicitado: la bañera mezclaba un volumen rectangular con una cubeta cilíndrica, el lavabo ovalado se resolvía con cilindro/esfera y no existían ramas geométricas específicas para bidé e inodoro genéricos.",
+      "impact": "La silueta y el volumen de los sanitarios no eran reconocibles ni fieles a su tipología.",
+      "action": "Segunda revisión: perfil lathe continuo para bañera ovalada y lavabo de apoyo; lavabo rectangular con perímetro redondeado y paredes interiores; geometría sanitaria específica para bidé e inodoro. Pendiente revisión visual real y ajuste de proporciones.",
+      "verified": false
     }
   ],
   "counts_by_room": {
