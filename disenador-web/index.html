@@ -150,14 +150,14 @@ const nid=()=>S.id++,get=()=>sel&&S[sel.k].find(e=>e.id==sel.id);
 const len=w=>Math.hypot(w.x2-w.x1,w.y2-w.y1);
 /* ===== Biblioteca inicial (modelos paramétricos propios) ===== */
 const LIB=[
-{t:'base',n:'Mueble bajo cocina 60',c:'Cocina',s:'moderno',w:60,h:87,d:60,e:0,col:'#e9e6df'},
-{t:'base',n:'Mueble bajo cocina 90 (2 puertas)',c:'Cocina',s:'moderno',w:90,h:87,d:60,e:0,col:'#3b4a5a'},
-{t:'cajonera',n:'Cajonera cocina',c:'Cocina',s:'minimalista',w:60,h:87,d:60,e:0,col:'#f2f2f0'},
-{t:'alto',n:'Mueble alto cocina',c:'Cocina',s:'moderno',w:60,h:70,d:35,e:140,col:'#e9e6df'},
-{t:'columna',n:'Columna despensa',c:'Cocina',s:'moderno',w:60,h:210,d:60,e:0,col:'#e9e6df'},
-{t:'frigo',n:'Frigorífico combi',c:'Electrodomésticos',s:'moderno',w:60,h:185,d:65,e:0,col:'#d8dadd'},
-{t:'frigo',n:'Frigorífico americano',c:'Electrodomésticos',s:'industrial',w:90,h:178,d:70,e:0,col:'#b9bcc2'},
-{t:'lavadora',n:'Lavadora / lavavajillas',c:'Electrodomésticos',s:'moderno',w:60,h:85,d:60,e:0,col:'#f4f4f4'},
+{t:'base',n:'Mueble bajo cocina 60',c:'Cocina',s:'moderno',w:60,h:87,d:60,e:0,col:'#e9e6df',libraryHidden:true},
+{t:'base',n:'Mueble bajo cocina 90 (2 puertas)',c:'Cocina',s:'moderno',w:90,h:87,d:60,e:0,col:'#3b4a5a',libraryHidden:true},
+{t:'cajonera',n:'Cajonera cocina',c:'Cocina',s:'minimalista',w:60,h:87,d:60,e:0,col:'#f2f2f0',libraryHidden:true},
+{t:'alto',n:'Mueble alto cocina',c:'Cocina',s:'moderno',w:60,h:70,d:35,e:140,col:'#e9e6df',libraryHidden:true},
+{t:'columna',n:'Columna despensa',c:'Cocina',s:'moderno',w:60,h:210,d:60,e:0,col:'#e9e6df',libraryHidden:true},
+{t:'frigo',n:'Frigorífico combi',c:'Electrodomésticos',s:'moderno',w:60,h:185,d:65,e:0,col:'#d8dadd',libraryHidden:true},
+{t:'frigo',n:'Frigorífico americano',c:'Electrodomésticos',s:'industrial',w:90,h:178,d:70,e:0,col:'#b9bcc2',libraryHidden:true},
+{t:'lavadora',n:'Lavadora / lavavajillas',c:'Electrodomésticos',s:'moderno',w:60,h:85,d:60,e:0,col:'#f4f4f4',libraryHidden:true},
 {t:'sofa',n:'Sofá 3 plazas',c:'Salón',s:'nórdico',w:210,h:85,d:92,e:0,col:'#8a98a8'},
 {t:'mesa',n:'Mesa de comedor',c:'Salón',s:'rústico',w:160,h:75,d:90,e:0,col:'#a9784a'},
 {t:'tv',n:'Mueble de TV',c:'Salón',s:'contemporáneo',w:180,h:50,d:42,e:0,col:'#5b4636'},
@@ -398,18 +398,18 @@ function libUI(q=''){
  };
  const render=()=>{
   content.innerHTML='';const qv=(search.value||'').trim().toLowerCase();
-  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>(qv||(!roomF&&!catF)||roomF&&belongs(o,rooms.find(r=>r.n==roomF))||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')).toLowerCase().includes(qv)));
+  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>!o.libraryHidden&&((qv||(!roomF&&!catF)||roomF&&belongs(o,rooms.find(r=>r.n==roomF))||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')).toLowerCase().includes(qv))));
   if(!catF&&!roomF&&!qv){
    const label=document.createElement('div');label.textContent='Estancias';label.style.cssText='font-size:12px;color:#b8c2d2;margin:4px 0 8px;font-weight:600';content.append(label);
    const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px';content.append(grid);
    const catalogCard=document.createElement('button');catalogCard.type='button';catalogCard.style.cssText='padding:5px;background:#202d40;border:1px solid #3d7be0;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff;grid-column:1 / -1;display:flex;align-items:center;gap:10px';
    const catalogIcon=document.createElement('div');catalogIcon.textContent='📚';catalogIcon.style.cssText='width:48px;height:48px;display:grid;place-items:center;background:#171f2b;border-radius:5px;font-size:25px;flex:none';catalogCard.append(catalogIcon);
    const catalogInfo=document.createElement('div');const catalogName=document.createElement('div');catalogName.textContent='Catálogos y fabricantes';catalogName.style.cssText='font-size:12px;font-weight:600';catalogInfo.append(catalogName);const catalogDesc=document.createElement('small');catalogDesc.textContent='Productos reales, marcas y modelos 3D';catalogDesc.style.cssText='font-size:10px;color:#aab4c4';catalogInfo.append(catalogDesc);catalogCard.append(catalogInfo);catalogCard.onclick=async()=>{await catLoad();catUI()};grid.append(catalogCard);
-   rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
+   rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>!x.o.libraryHidden&&belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
     if(chosen){const im=document.createElement('img');im.src=ROOM_PHOTOS[room.key]||ROOM_PHOTOS.exterior;im.alt='Fotografía real de '+room.n;im.loading='lazy';im.decoding='async';im.referrerPolicy='no-referrer';im.style.cssText='width:100%;height:112px;object-fit:cover;object-position:center;background:#171a20;border-radius:4px;display:block';im.onerror=()=>{im.removeAttribute('src');im.alt='Fotografía de portada no disponible';im.style.background='linear-gradient(135deg,#303945,#596575)'};card.append(im)}
     else{const blank=document.createElement('div');blank.textContent='＋';blank.style.cssText='height:82px;display:grid;place-items:center;background:#171a20;border-radius:4px;font-size:30px;color:#8fb4ff';card.append(blank)}
     const name=document.createElement('div');name.textContent=room.n;name.style.cssText='font-size:12px;font-weight:600;margin-top:5px';card.append(name);
-    const count=document.createElement('small');count.textContent=LIB.filter(o=>belongs(o,room)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
+    const count=document.createElement('small');count.textContent=LIB.filter(o=>!o.libraryHidden&&belongs(o,room)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
     card.onclick=()=>{roomF=room.n;catF='';libUI()};grid.append(card)
    });
    const extra=document.createElement('div');extra.style.cssText='font-size:11px;color:#9ca8b8;margin:9px 0';extra.textContent='Todas las categorías de producto están integradas en su estancia correspondiente. Usa el buscador para localizar cualquier modelo, fabricante, referencia o dimensión.';content.append(extra);materials();return
