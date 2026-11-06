@@ -703,14 +703,104 @@ function ceramicMaterial(color){return new T.MeshStandardMaterial({color:color||
 function ceramicBasin(width,height,depth,mat){const w=Math.max(5,width),h=Math.max(4,height),profile=[new T.Vector2(0,.6),new T.Vector2(w*.12,.6),new T.Vector2(w*.3,1),new T.Vector2(w*.55,2.2),new T.Vector2(w*.78,4.5),new T.Vector2(w*.94,h*.48),new T.Vector2(w,h*.76),new T.Vector2(w*.99,h*.88),new T.Vector2(w*.94,h*.94),new T.Vector2(w*.86,h*.87),new T.Vector2(w*.72,h*.62),new T.Vector2(w*.5,h*.34),new T.Vector2(w*.25,h*.18),new T.Vector2(0,h*.16)];const mesh=new T.Mesh(new T.LatheGeometry(profile,48),mat);mesh.scale.z=Math.max(.25,depth/w);mesh.castShadow=mesh.receiveShadow=true;return mesh}
 function toiletGeometry(g,it,mt){const w=it.w,h=it.h,d=it.d,porcelain=ceramicMaterial(it.col||'#fafafa'),shadow=M('#c7c9c8',.35,.05),inner=M('#aeb7b8',.3,.02);/* pedestal and curved pan */const basePts=[new T.Vector2(0,1),new T.Vector2(w*.22,1),new T.Vector2(w*.34,3),new T.Vector2(w*.4,h*.22),new T.Vector2(w*.47,h*.48),new T.Vector2(w*.5,h*.54),new T.Vector2(w*.46,h*.58),new T.Vector2(w*.38,h*.49),new T.Vector2(w*.28,h*.25),new T.Vector2(w*.16,5),new T.Vector2(0,5)];const pan=new T.Mesh(new T.LatheGeometry(basePts,48),porcelain);pan.scale.z=d/w;pan.position.set(0,0,d*.13);g.add(pan);const seat=new T.Mesh(new T.TorusGeometry(w*.39,Math.max(1,w*.035),10,48),porcelain);seat.rotation.x=Math.PI/2;seat.scale.z=d/w*.76;seat.position.set(0,h*.57,d*.02);g.add(seat);const bowl=new T.Mesh(new T.SphereGeometry(1,32,20),inner);bowl.scale.set(w*.31,1.5,d*.27);bowl.position.set(0,h*.51,d*.02);g.add(bowl);/* cistern with softened edges */const tank=new T.Mesh(new T.BoxGeometry(w*.88,h*.34,d*.3,4,3,3),porcelain);tank.position.set(0,h*.82,-d*.31);g.add(tank);const lid=new T.Mesh(new T.BoxGeometry(w*.92,2,d*.34,4,1,3),porcelain);lid.position.set(0,h*.99,-d*.31);g.add(lid);const flush=new T.Mesh(new T.CylinderGeometry(2,2,.6,24),shadow);flush.position.set(0,h+1,-d*.31);g.add(flush);g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})}
 
-function door(g,it,k,x0,w,y0,h,mt,hm,fl){const hx=fl?x0+w:x0,p=new T.Group(),s=fl?-1:1;p.position.set(hx,y0+h/2,it.d/2);g.add(p);B(p,w-.4,h-.4,2,s*w/2,0,1,mt);B(p,1.8,Math.min(h*.4,30),2,s*(w-5),0,3.5,hm);[-1,1].forEach(q=>B(p,2.4,5,1,s*1.5,q*(h/2-9),-.5,hm));const mv={o:p,it,k,v:it.op[k]?1:0,t:'d',sg:fl?1:-1};p.userData.mv=mv;MV.push(mv)}
-function drw(g,it,k,x0,w,y0,h,mt,hm){const p=new T.Group();p.position.set(x0+w/2,y0+h/2,it.d/2);g.add(p);B(p,w-.4,h-.4,2,0,0,1,mt);B(p,Math.min(w*.5,30),1.8,2,0,0,3.5,hm);const dd=it.d-4,tm=M('#d8d4cb');B(p,w-6,1.5,dd,0,-h/2+3,-dd/2,tm);B(p,1.5,h-8,dd,-(w-6)/2,0,-dd/2,tm);B(p,1.5,h-8,dd,(w-6)/2,0,-dd/2,tm);B(p,w-6,h-8,1.5,0,0,-dd,tm);const mv={o:p,it,k,v:it.op[k]?1:0,t:'s',z:it.d/2,sl:it.d*.7};p.userData.mv=mv;MV.push(mv)}
+function door(g,it,k,x0,w,y0,h,mt,hm,fl){
+ const hx=fl?x0+w:x0,p=new T.Group(),s=fl?-1:1;
+ p.position.set(hx,y0+h/2,it.d/2);g.add(p);
+ // Frente de puerta con canto y panel interior sutil.
+ B(p,w-.4,h-.4,2,s*w/2,0,1,mt);
+ B(p,w-3,h-3,.35,s*w/2,0,2.15,M('#ffffff',.92,.08));
+ // Tirador tubular horizontal con anclajes metálicos, situado cerca del canto.
+ const handleLen=Math.max(8,Math.min(w*.28,24)),handleX=s*(w-12),handleY=h*.31;
+ const bar=new T.Mesh(new T.CylinderGeometry(.9,.9,handleLen,16),hm);
+ bar.rotation.z=Math.PI/2;bar.position.set(handleX,handleY,3.9);p.add(bar);
+ [-1,1].forEach(q=>{
+  const post=new T.Mesh(new T.CylinderGeometry(1.05,1.05,2.4,12),hm);
+  post.position.set(handleX+q*handleLen*.38,handleY,3.1);p.add(post);
+ });
+ // Bisagras de cazoleta y placas de montaje visibles en el interior.
+ [-1,1].forEach(q=>{
+  const hingeY=q*(h/2-8);
+  B(p,3.2,5.5,3.2,s*1.6,hingeY,-.5,hm);
+  const cup=new T.Mesh(new T.CylinderGeometry(2.1,2.1,.8,20),M('#aeb6bb',.38,.72));
+  cup.rotation.x=Math.PI/2;cup.position.set(s*4.2,hingeY,-.1);p.add(cup);
+ });
+ const mv={o:p,it,k,v:it.op[k]?1:0,t:'d',sg:fl?1:-1};p.userData.mv=mv;MV.push(mv)
+}
+function drw(g,it,k,x0,w,y0,h,mt,hm){
+ const p=new T.Group();p.position.set(x0+w/2,y0+h/2,it.d/2);g.add(p);
+ const dd=it.d-5,side=M('#c7c9c7',.48,.42),bottom=M('#e2e0da',.78,.08);
+ // Frente, costados, trasera y fondo: cajón como conjunto constructivo.
+ B(p,w-.4,h-.4,2,0,0,1,mt);
+ B(p,w-3,h-3,.35,0,0,2.15,M('#ffffff',.92,.08));
+ const bar=new T.Mesh(new T.CylinderGeometry(.9,.9,Math.max(8,Math.min(w*.3,26)),16),hm);
+ bar.rotation.z=Math.PI/2;bar.position.set(0,0,3.9);p.add(bar);
+ B(p,w-7,1.5,dd,0,-h/2+2.5,-dd/2,bottom);
+ B(p,1.5,h-5,dd,-(w-7)/2,0,-dd/2,side);
+ B(p,1.5,h-5,dd,(w-7)/2,0,-dd/2,side);
+ B(p,w-7,h-5,1.5,0,0,-dd,side);
+ // Correderas telescópicas a ambos lados y pequeños rodillos.
+ [-1,1].forEach(q=>{
+  B(p,1.8,2.2,dd-7,q*(w/2-4),0,-dd/2,M('#879198',.34,.78));
+  for(const z of [-dd*.38,dd*.32]){
+   const roller=new T.Mesh(new T.CylinderGeometry(1.1,1.1,1.4,12),M('#59636a',.4,.62));
+   roller.rotation.z=Math.PI/2;roller.position.set(q*(w/2-4),-h*.28,z);p.add(roller);
+  }
+ });
+ const mv={o:p,it,k,v:it.op[k]?1:0,t:'s',z:it.d/2,sl:it.d*.7};p.userData.mv=mv;MV.push(mv)
+}
 function doors(g,it,mt,hm,y0,h,k0){const w=it.w-4;if(it.w>80){door(g,it,k0,-w/2,w/2,y0,h,mt,hm,false);door(g,it,k0+1,0,w/2,y0,h,mt,hm,true)}else door(g,it,k0,-w/2,w,y0,h,mt,hm,it.fl)}
 const BUILD={
-base(g,it,mt,hm){carc(g,it,mt);B(g,it.w+1,3,it.d+2,0,it.h-1.5,1,M('#555',.3,.1));B(g,it.w-4,1.5,it.d-4,0,30,0,mt);doors(g,it,mt,hm,6,it.h-10,0)},
+base(g,it,mt,hm){
+ carc(g,it,mt);
+ // Zócalo retranqueado y patas regulables.
+ B(g,it.w-8,7,it.d-8,0,5,-2,M('#454b4f',.38,.25));
+ for(const x of [-1,1])for(const z of [-1,1]){
+  const foot=new T.Mesh(new T.CylinderGeometry(2.4,2.8,5,16),M('#343a3e',.55,.25));
+  foot.position.set(x*(it.w/2-7),2.5,z*(it.d/2-7));g.add(foot);
+ }
+ // Balda interior regulable, soportes y perforaciones de sistema 32.
+ const shelfY=it.h*.52;
+ B(g,it.w-7,1.8,it.d-8,0,shelfY,-.5,mt);
+ [-1,1].forEach(x=>{
+  for(let q=0;q<5;q++){
+   const pin=new T.Mesh(new T.CylinderGeometry(.65,.65,1.8,10),M('#aeb6bb',.38,.72));
+   pin.rotation.x=Math.PI/2;pin.position.set(x*(it.w/2-3.1),shelfY-4+q*2,it.d*.12);g.add(pin);
+  }
+ });
+ // Travesaño frontal superior para rigidez del casco.
+ B(g,it.w-5,3,2,0,it.h-3,it.d/2-2,M('#b8b8b2',.62,.12));
+ doors(g,it,mt,hm,6,it.h-10,0)
+},
 cajonera(g,it,mt,hm){carc(g,it,mt);B(g,it.w+1,3,it.d+2,0,it.h-1.5,1,M('#555',.3,.1));const a=(it.h-10)/3;for(let i=0;i<3;i++)drw(g,it,i,-it.w/2+2,it.w-4,5+i*a,a-.5,mt,hm)},
-alto(g,it,mt,hm){carc(g,it,mt);doors(g,it,mt,hm,2,it.h-4,0)},
-columna(g,it,mt,hm){carc(g,it,mt);const a=it.h*.4;doors(g,it,mt,hm,4,a-3,0);doors(g,it,mt,hm,a+3,it.h-a-8,2)},
+alto(g,it,mt,hm){
+ carc(g,it,mt);
+ // Dos baldas interiores con apoyos metálicos y perforaciones de regulación.
+ for(const yy of [it.h*.34,it.h*.67]){
+  B(g,it.w-7,1.8,it.d-8,0,yy,-.5,mt);
+  [-1,1].forEach(x=>{
+   const pin=new T.Mesh(new T.CylinderGeometry(.65,.65,1.8,10),M('#aeb6bb',.38,.72));
+   pin.rotation.x=Math.PI/2;pin.position.set(x*(it.w/2-3.1),yy-3,it.d*.12);g.add(pin);
+  });
+ }
+ B(g,it.w-5,3,2,0,it.h-3,it.d/2-2,M('#b8b8b2',.62,.12));
+ doors(g,it,mt,hm,2,it.h-4,0)
+},
+columna(g,it,mt,hm){
+ carc(g,it,mt);
+ const lower=it.h*.4,upper=it.h-lower-8;
+ // Compartimento inferior y superior separados por un travesaño estructural.
+ B(g,it.w-6,2.4,it.d-7,0,lower+1,-.5,M('#c9c6bf',.72,.1));
+ [lower*.5,lower+4+upper*.34,lower+4+upper*.68].forEach(yy=>{
+  B(g,it.w-8,1.8,it.d-9,0,yy,-.5,mt);
+  [-1,1].forEach(x=>{
+   const pin=new T.Mesh(new T.CylinderGeometry(.65,.65,1.8,10),M('#aeb6bb',.38,.72));
+   pin.rotation.x=Math.PI/2;pin.position.set(x*(it.w/2-3.5),yy-3,it.d*.12);g.add(pin);
+  });
+ });
+ // Bisagras y puertas diferenciadas para cada zona.
+ doors(g,it,mt,hm,4,lower-3,0);
+ doors(g,it,mt,hm,lower+5,upper-3,2)
+},
 frigo(g,it,mt,hm){carc(g,it,mt);const a=it.h*.62;door(g,it,0,-it.w/2+2,it.w-4,3,a-3,mt,hm,it.fl);door(g,it,1,-it.w/2+2,it.w-4,a+1,it.h-a-4,mt,hm,it.fl)},
 lavadora(g,it,mt,hm){carc(g,it,mt);door(g,it,0,-it.w/2+2,it.w-4,3,it.h-6,mt,M('#222',.3,.08),it.fl);const cx=0,cy=it.h*.47,z=it.d/2+3,chrome=M('#aeb7bd',.28,.72),rubber=M('#252b30',.82),glass=new T.MeshPhysicalMaterial({color:'#78909b',roughness:.16,metalness:.12,transparent:true,opacity:.78});const outer=new T.Mesh(new T.TorusGeometry(it.w*.315,Math.max(2,it.w*.027),16,56),chrome);outer.position.set(cx,cy,z);g.add(outer);const seal=new T.Mesh(new T.TorusGeometry(it.w*.275,Math.max(2,it.w*.035),14,56),rubber);seal.position.set(cx,cy,z+.5);g.add(seal);const pane=new T.Mesh(new T.SphereGeometry(1,40,24),glass);pane.scale.set(it.w*.235,it.w*.235,Math.max(2,it.d*.035));pane.position.set(cx,cy,z+2);g.add(pane);const drum=new T.Mesh(new T.CylinderGeometry(it.w*.205,it.w*.205,it.d*.13,40,1,true),M('#8d999f',.48,.55));drum.rotation.x=Math.PI/2;drum.position.set(cx,cy,z+it.d*.1);g.add(drum);for(let k=0;k<12;k++){const a=k*Math.PI/6;const pin=new T.Mesh(new T.CylinderGeometry(.7,.7,it.d*.075,8),chrome);pin.rotation.x=Math.PI/2;pin.position.set(Math.cos(a)*it.w*.17,cy+Math.sin(a)*it.w*.17,z+it.d*.12);g.add(pin)}B(g,it.w*.46,2,it.d*.012,0,it.h*.88,z-2,chrome);for(let k=0;k<3;k++){const knob=new T.Mesh(new T.CylinderGeometry(2.5,2.5,2,20),chrome);knob.rotation.x=Math.PI/2;knob.position.set(-it.w*.28+k*it.w*.13,it.h*.88,z);g.add(knob)}},
 armario(g,it,mt,hm){carc(g,it,mt);B(g,it.w-4,2,it.d-4,0,it.h*.6,0,mt);B(g,it.w-4,2,it.d-4,0,it.h*.3,0,mt);doors(g,it,mt,hm,3,it.h-6,0)},
