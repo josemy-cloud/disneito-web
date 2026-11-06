@@ -890,32 +890,28 @@ case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':{
  if(name.includes('cajonera móvil')){
   const shell=M('#c8c0b3',.72,.04),rail=M('#89949b',.32,.82),darkRail=M('#4c555b',.45,.62),front=mt,foot=M('#272d31',.5,.5);
   const sideT=1.8,baseY=3,topY=h-2,bodyD=d*.9,bodyW=w*.94,frontZ=bodyD/2+1.5;
-  // Casco abierto y ensamblado: dos costados, trasera, tapa y base.
+  it.op=it.op||[];
   for(const sx of [-1,1])box(sx*(bodyW/2-sideT/2),h*.48,0,sideT,h*.88,bodyD,shell);
   box(0,h*.48,-bodyD/2+sideT/2,bodyW-2*sideT,h*.88,sideT,shell);
   box(0,baseY,0,bodyW-2*sideT,2.4,bodyD,shell);
   box(0,topY,0,bodyW+2,3,bodyD+2,front);
-  const n=3,drawerGap=1.4,drawerH=(h-11)/n;
+  const n=3,drawerH=(h-11)/n;
   for(let k=0;k<n;k++){
    const yy=baseY+2+drawerH*(k+.5),dw=bodyW-2*sideT-1,dd=bodyD-5;
-   box(0,yy,-1,dw,drawerH-2,dd,shell);
-   box(0,yy,frontZ,dw,drawerH-1.2,2.2,front);
-   // Caja real del cajón con laterales, trasera y fondo.
-   for(const sx of [-1,1])box(sx*(dw/2-1),yy+1,0,1.6,drawerH-3,dd-3,shell);
-   box(0,yy+1,-dd/2+2,dw-2,drawerH-3,1.6,shell);
-   box(0,yy-drawerH*.42,0,dw-2,1.2,dd-4,shell);
-   // Tirador tubular horizontal y dos anclajes.
-   const pullY=yy,pullZ=frontZ+1.6;
-   for(const sx of [-1,1])cyl(sx*dw*.13,pullY,pullZ,1.1,2,rail);
-   tube([-dw*.13,pullY+1,pullZ+1],[dw*.13,pullY+1,pullZ+1],1.15,rail);
-   // Guías laterales con perfiles y puntos de fijación.
+   const dp=new T.Group();dp.position.set(0,yy,frontZ);g.add(dp);dp.userData.part={t:'cajón',i:k};
+   B(dp,dw,drawerH-1.2,2.2,0,0,0,front);
+   for(const sx of [-1,1])B(dp,1.6,drawerH-3,dd,sx*(dw/2-1),0,-dd/2,shell);
+   B(dp,dw-2,drawerH-3,1.6,0,0,-dd+0.8,shell);
+   B(dp,dw-2,1.6,dd,0,-drawerH/2+1.8,-dd/2,shell);
+   for(const sx of [-1,1]){const post=new T.Mesh(new T.CylinderGeometry(1.1,1.1,2,12),rail);post.rotation.x=Math.PI/2;post.position.set(sx*dw*.13,0,1.7);dp.add(post)}
+   const pull=new T.Mesh(new T.CylinderGeometry(1.15,1.15,Math.min(dw*.28,26),16),rail);pull.rotation.z=Math.PI/2;pull.position.set(0,1,2.8);dp.add(pull);
    for(const sx of [-1,1]){
-    box(sx*(dw/2+0.2),yy,0,1.2,2,dd*.78,rail);
-    box(sx*(dw/2+1.1),yy-1,0,.8,1,dd*.72,darkRail);
-    for(const z of [-dd*.32,dd*.32])cyl(sx*(dw/2+1.1),yy,z,1,1.2,rail);
+    box(sx*(dw/2+0.4),yy,-bodyD*.05,1.2,2.2,dd*.78,rail);
+    box(sx*(dw/2+1.25),yy-1,-bodyD*.05,.8,1.1,dd*.72,darkRail);
+    for(const z of [-dd*.34,dd*.34])cyl(sx*(dw/2+1.25),yy,z,1,1.2,rail);
    }
+   mv(dp,{it,k,t:'s',z:frontZ,sl:Math.min(d*.72,dd*.82)});
   }
-  // Cuatro ruedas giratorias con horquilla, eje y banda de goma.
   for(const sx of [-1,1])for(const sz of [-1,1]){
    const x=sx*(bodyW*.36),z=sz*(bodyD*.38),mount=new T.Group();mount.position.set(x,2,z);g.add(mount);
    box(0,1,0,5,2,5,rail);tube([0,0,0],[0,-3,0],1.2,rail);
@@ -970,7 +966,7 @@ case'desk':{
  const edgeLine=(x1,z1,x2,z2,r=0.7,mat=edge)=>tube([x1,topY-1.2,z1],[x2,topY-1.2,z2],r,mat);
  if(isL){
   const x0=-width/2,x1=width/2,xr=width*.16,z0=-depth/2,z1=depth/2,zn=z0+depth*.53;
-  edgeLine(x0,z1,xr,z1);edgeLine(xr,z1,xr,zn);edgeLine(xr,zn,x0,zn);
+  edgeLine(x1,z1,xr,z1);edgeLine(xr,z1,xr,zn);edgeLine(xr,zn,x0,zn);
   edgeLine(x0,z0,x1,z0);edgeLine(x1,z0,x1,z1);
  }else{
   edgeLine(-width/2,depth/2,width/2,depth/2);edgeLine(width/2,-depth/2,width/2,depth/2);
@@ -1071,7 +1067,7 @@ case'officechair':{
  box(0,backY+backH*.22,backZ+4,backW*.58,backH*.08,2,executive?seam:uphol);
  if(!compact)for(const side of [-1,1]){
   tube([side*seatW*.34,seatY+2,-seatD*.28],[side*backW*.4,backY+backH*.16,backZ],2.6,metal);
-  tube([side*seatW*.36,seatY+12,seatD*.2],[side*seatW*.36,seatY+22,seatD*.2],2.4,metal);
+  tube([side*seatW*.36,seatY+4.2,seatD*.2],[side*seatW*.36,seatY+22.5,seatD*.2],2.8,metal);
   box(side*seatW*.36,seatY+25,seatD*.2,seatW*.22,5,seatD*.34,uphol);
  }
  if(executive){box(0,backY+backH*.99,backZ,backW*.56,backH*.13,8,uphol);for(const x of [-1,1])box(x*backW*.28,backY+backH*.98,backZ,5,backH*.12,10,seam)}
