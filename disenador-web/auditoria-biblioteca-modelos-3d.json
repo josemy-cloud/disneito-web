@@ -3537,6 +3537,14 @@
       "commit": "4ad4b9edb9896046823ed209fe43174f3c917721",
       "verified": false,
       "notes": "Actualización única del constructor compartido de módulos de cocina: remates de canto ABS en paneles y baldas, patas niveladoras con apoyos poliméricos y collar, bastidor de apoyo bajo zócalo y herrajes regulables de suspensión para muebles altos. Se aplica a las variantes construidas mediante BUILD.mod (familias de bajos, altos y columnas), sin sustituir configuraciones de puertas, cajones, esquinas, fregaderos, placas ni torres. Se añade metadato kitchenConstruction schemaVersion 2 con estado pendiente. Los tres scripts inline se han parseado correctamente; todavía no hay validación visual/funcional real en navegador ni prueba de todas las configuraciones. No marcar como modelos terminados."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "salon-comedor-asientos",
+      "action": "Reconstrucción transversal de sofás, chaise longue, rinconero, modular, butaca, puf y sillón orejero",
+      "commit": "e600f5aabe83885cec5716d18249f9be61a1b9d6",
+      "verified": false,
+      "notes": "Se sustituye la cojinería elipsoidal genérica por paneles acolchados de contorno redondeado y volumen extruido con bisel, separando asiento y respaldo. Se diferencia la distribución de sofás rectos, chaise longue, rinconeros y modulares; se incorporan estructura inferior, brazos acolchados, apoyos y costuras de referencia. Butacas y sillones reciben asiento/respaldo panelados y brazos constructivos; el puf conserva tipología sin respaldo. El código se integró en las ramas compartidas shape=sofa y shape=seat, afectando a todas sus variantes enlazadas. Los tres scripts inline se parsean correctamente. Pendiente render real, revisión visual de proporciones, colisiones y comprobación en navegador; ningún modelo se declara verificado."
     }
   ],
   "validation": {
@@ -3559,7 +3567,10 @@
     "shower_enclosure_static_update": "integrated: lower channel aligned to glass bottom at 1.5 cm, glass seal, hinge plates, fixings and upper stabilizer added; browser visual and interaction validation not performed",
     "kitchen_modular_static_update": "passed: shared BUILD.mod constructor extended with edge banding, adjustable feet, plinth support frame and upper-cabinet suspension hardware; all 3 inline scripts parse successfully",
     "kitchen_modular_browser_visual_validation": "not_performed: all 72 kitchen inventory records and their configured variants require live browser visual inspection",
-    "kitchen_modular_interaction_validation": "not_performed: doors, drawers, corner mechanisms, lift-up fronts and appliance integrations require browser interaction tests"
+    "kitchen_modular_interaction_validation": "not_performed: doors, drawers, corner mechanisms, lift-up fronts and appliance integrations require browser interaction tests",
+    "seating_family_static_update": "passed: shared sofa and seat generators now use rounded extruded upholstery panels, distinct straight/chaise/corner/modular layouts, and constructed armchair/pouf variants; 3 inline scripts parse",
+    "seating_family_browser_visual_validation": "not_performed: live browser render and per-variant visual inspection still required",
+    "seating_family_interaction_validation": "not_performed: placement, dimensions, project persistence and interaction still require browser tests"
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3576,7 +3587,7 @@
     "verification": {
       "inventory_json_parse": "passed",
       "shape_generator_static_mapping": "passed",
-      "inline_javascript_parse": "passed",
+      "inline_javascript_parse": "passed: 3 executable inline scripts parsed after seating-family reconstruction",
       "module_javascript_parse": "passed",
       "geometry_runtime": "not_run",
       "visual_review": "not_run",
