@@ -98,6 +98,14 @@
       "impact": "Problemas de geometría y de interacción que afectan la lectura visual y el uso de los objetos.",
       "action": "Añadidos cajones animados completos a muebles auxiliares/columna; ajuste de construcción y recorrido de cajones de lavabos; cubetas y grifos integrados; mampara y accesorios anclados a plato/pared; tapa WC ampliada al contorno del asiento. Pendiente verificación visual y funcional real en navegador.",
       "verified": false
+    },
+    {
+      "id": "F12",
+      "severity": "critical",
+      "finding": "La revisión visual del usuario confirmó que el mueble auxiliar y la columna seguían sin aperturas reconocidas; los nombres reales de esos modelos no coincidían con la condición usada por el generador. También se detectó que la encimera maciza ocultaba las cubetas de los muebles de lavabo y que el inodoro clásico genérico presentaba cisterna sin apoyo visual suficiente.",
+      "impact": "Los cajones no podían abrirse desde la previsualización; los muebles parecían carecer de lavabo; el inodoro no se reconocía como un conjunto sanitario correctamente ensamblado.",
+      "action": "Corrección adicional: ramas específicas por nombre para mueble auxiliar y columna con cajones y puerta registrados en MV; encimeras perforadas mediante paños alrededor de las cubetas, cubetas cerámicas y grifería; reconstrucción de BUILD.lavabo clásico; reconstrucción de toiletGeometry con pedestal, aro, tapa, plataforma posterior y cisterna apoyada. Sintaxis de scripts comprobada; sigue pendiente prueba visual y de clic en navegador.",
+      "verified": false
     }
   ],
   "counts_by_room": {
@@ -3420,6 +3428,14 @@
       "commit": "a3ed34dc0c83928a5cc06a059e1b55eababa8728",
       "verified": false,
       "notes": "El generador BUILD.mod crea una tapa estructural continua de 18 mm sobre el casco alto. Pendiente validación visual real."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "baño",
+      "action": "Corregir aperturas de muebles auxiliares/columna, cubetas visibles en muebles de lavabo e inodoro genérico clásico",
+      "commit": "7a0b9b31f9094695139ac90e2b9869f5192d328b",
+      "verified": false,
+      "notes": "Se corrigió la detección de los nombres reales de los dos muebles de baño para registrar cajones y puerta en MV. Se abrieron huecos en las encimeras y se reconstruyó también el generador legacy BUILD.lavabo, que no usaba la rama vanity. Se sustituyó toiletGeometry, usado por BUILD.inodoro, para que la cisterna tenga apoyo y conexión con la taza. No se declara verificado: falta comprobación visual y de interacción real."
     }
   ]
 }
