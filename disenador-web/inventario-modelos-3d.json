@@ -21,281 +21,323 @@
           "id": "bajo-30-puertas",
           "name": "Mueble bajo 30 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-40-puertas",
           "name": "Mueble bajo 40 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-45-puertas",
           "name": "Mueble bajo 45 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-50-puertas",
           "name": "Mueble bajo 50 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-60-puertas",
           "name": "Mueble bajo 60 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-80-puertas",
           "name": "Mueble bajo 80 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-90-puertas",
           "name": "Mueble bajo 90 cm",
           "family": "Mueble bajo",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "cajonera-1",
           "name": "Cajonera 1 cajón",
           "family": "Cajonera",
-          "status": "en_proceso",
-          "note": "Generador paramétrico mejorado; pendiente revisión geométrica y visual completa."
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "cajonera-2",
           "name": "Cajonera 2 cajónes",
           "family": "Cajonera",
-          "status": "en_proceso",
-          "note": "Generador paramétrico mejorado; pendiente revisión geométrica y visual completa."
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "cajonera-3",
           "name": "Cajonera 3 cajónes",
           "family": "Cajonera",
-          "status": "en_proceso",
-          "note": "Generador paramétrico mejorado; pendiente revisión geométrica y visual completa."
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "cajonera-4",
           "name": "Cajonera 4 cajónes",
           "family": "Cajonera",
-          "status": "en_proceso",
-          "note": "Generador paramétrico mejorado; pendiente revisión geométrica y visual completa."
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-1",
           "name": "Bajo puerta + 1 cajón",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-2",
           "name": "Bajo 2 puertas + 2 cajones",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-3",
           "name": "Bajo fregadero 80",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-4",
           "name": "Bajo fregadero 120",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-5",
           "name": "Bajo placa 60",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-6",
           "name": "Bajo placa 90",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-7",
           "name": "Bajo push (sin tirador)",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-8",
           "name": "Bajo tirador integrado",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-9",
           "name": "Bajo frente estriado",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-10",
           "name": "Esquinero 90° puerta",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-11",
           "name": "Esquinero 90° plegable",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-12",
           "name": "Esquinero riñonera",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "bajo-especial-13",
           "name": "Esquinero carrusel",
           "family": "Mueble bajo especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-30-70",
           "name": "Mueble alto 30 × 70 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-40-70",
           "name": "Mueble alto 40 × 70 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-45-70",
           "name": "Mueble alto 45 × 70 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-60-70",
           "name": "Mueble alto 60 × 70 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-80-70",
           "name": "Mueble alto 80 × 70 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-60-90",
           "name": "Mueble alto 60 × 90 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-60-35",
           "name": "Mueble alto 60 × 35 cm",
           "family": "Mueble alto",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-especial-1",
           "name": "Alto abatible horizontal",
           "family": "Mueble alto especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-especial-2",
           "name": "Alto elevable",
           "family": "Mueble alto especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-especial-3",
           "name": "Alto plegable",
           "family": "Mueble alto especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-especial-4",
           "name": "Vitrina con cristal",
           "family": "Mueble alto especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-especial-5",
           "name": "Alto con LED",
           "family": "Mueble alto especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "alto-especial-6",
           "name": "Alto profundo 45",
           "family": "Mueble alto especial",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-1",
           "name": "Columna despensa 60",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-2",
           "name": "Columna 2 cajones + puertas",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-3",
           "name": "Esquinero riñón extraíble (articulado)",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-4",
           "name": "Mueble libre (vacío)",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-5",
           "name": "Columna libre: cajón + horno + micro + puerta",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-6",
           "name": "Torre lavadora + horno + micro + armario",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-7",
           "name": "Torre horno compacto + micro + armarios",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-8",
           "name": "Torre horno + micro",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-especial-9",
           "name": "Columna frigorífico integrable",
           "family": "Columnas y sistemas",
-          "status": "pendiente"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "electro-1",
@@ -417,19 +459,22 @@
           "id": "mueble-bajo-base",
           "name": "Mueble bajo genérico",
           "family": "Mueble modular",
-          "status": "en_proceso"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "mueble-alto-base",
           "name": "Mueble alto genérico",
           "family": "Mueble modular",
-          "status": "en_proceso"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "columna-base",
           "name": "Columna genérica",
           "family": "Mueble modular",
-          "status": "en_proceso"
+          "status": "renovado",
+          "note": "Nueva construcción de casco integrada en el generador; pendiente verificación visual y funcional en navegador."
         },
         {
           "id": "fregadero",
@@ -469,7 +514,8 @@
           "family": "Decoración",
           "status": "pendiente"
         }
-      ]
+      ],
+      "last_update": "2026-11-06"
     },
     {
       "id": "bano",
@@ -504,6 +550,8 @@
     "El inventario de cocina recoge los módulos y variantes estáticas detectados en LIB, los electrodomésticos appo y los generadores específicos de fregadero, grifería y encimera.",
     "El catálogo de fabricante y los modelos importados por el usuario son datos dinámicos; deberán inventariarse por identificador y referencia sin alterar sus registros.",
     "Las variantes paramétricas se cuentan como entradas de biblioteca aunque compartan un generador geométrico.",
-    "No se marca ningún elemento como verificado sin pruebas en navegador."
+    "No se marca ningún elemento como verificado sin pruebas en navegador.",
+    "Primera sustitución geométrica integrada: cascos de módulos bajos, cajoneras, altos y columnas reconstruidos con tableros de 18 mm, trasera encastrada, travesaños y cantos; aplicada tanto a BUILD.mod (catálogo Cocina modular) como a los generadores independientes.",
+    "Los estados renovado no son verificado: falta comprobar en navegador las distribuciones de puertas, cajones, rinconeros, zócalos, encimeras, dimensiones y aperturas."
   ]
 }
