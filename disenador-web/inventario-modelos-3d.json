@@ -310,11 +310,12 @@
           "name": "Mueble alto 30 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -322,11 +323,12 @@
           "name": "Mueble alto 40 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -334,11 +336,12 @@
           "name": "Mueble alto 45 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -346,11 +349,12 @@
           "name": "Mueble alto 60 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -358,11 +362,12 @@
           "name": "Mueble alto 80 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -370,11 +375,12 @@
           "name": "Mueble alto 60 × 90 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -382,11 +388,12 @@
           "name": "Mueble alto 60 × 35 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -394,11 +401,12 @@
           "name": "Alto abatible horizontal",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -406,11 +414,12 @@
           "name": "Alto elevable",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -418,11 +427,12 @@
           "name": "Alto plegable",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -430,11 +440,12 @@
           "name": "Vitrina con cristal",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -442,11 +453,12 @@
           "name": "Alto con LED",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -454,11 +466,12 @@
           "name": "Alto profundo 45",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -702,11 +715,12 @@
           "name": "Mueble alto genérico",
           "family": "Mueble modular",
           "status": "en_proceso",
-          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado. Corrección estructural: se añade una tapa superior continua de tablero de 18 mm que cierra el casco del mueble alto; pendiente comprobación visual en navegador.",
           "implemented_components": [
             "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
             "detalles de canto y junquillo",
-            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles",
+            "tapa superior estructural continua de 18 mm, enrasada con los laterales y el fondo"
           ]
         },
         {
@@ -1383,6 +1397,13 @@
       "phase": "despacho",
       "action": "Reconstruir las cuatro plantillas del creador de muebles a medida con geometrías específicas de escritorio, cajonera y librería",
       "commit": "c2b60a4270b2af80082a5617e8a2ed044908016e",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "cocina",
+      "action": "Añadir tapa superior estructural continua a todos los muebles altos",
+      "commit": "a3ed34dc0c83928a5cc06a059e1b55eababa8728",
       "verified": false
     }
   ]
