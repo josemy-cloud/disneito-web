@@ -3344,12 +3344,14 @@
     "models_integrated": 11,
     "models_verified": 0,
     "models_pending_visual_functional_validation": 11,
-    "commit": "083f1f997b1832fa8ee1ca4979418d1ba69a47f0",
+    "commit": "d651191fe1ab6265806547578923b32334d75bf2",
     "notes": [
       "El escritorio en L utiliza un tablero continuo extruido en planta, no dos bloques superpuestos.",
       "Los cuatro modelos de escritorio usan estructuras diferentes según tipología.",
       "Sillas, estanterías, cajonera y equipo informático cuentan con generadores específicos reconstruidos.",
-      "No se ha retirado el respaldo de los modelos antiguos; no se han marcado como verificados."
+      "No se ha retirado el respaldo de los modelos antiguos; no se han marcado como verificados.",
+      "La silla ejecutiva incorpora respaldo alto y reposacabezas; la ergonómica usa respaldo de malla y la compacta tiene respaldo reducido y sin brazos.",
+      "La estantería abierta usa bastidor metálico; la librería incorpora costados, trasera y divisor central."
     ]
   }
 }
