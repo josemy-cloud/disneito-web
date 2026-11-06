@@ -888,7 +888,108 @@ case'bed':{box(0,h*.13,0,w*.96,h*.2,d*.94,mt);box(0,h*.32,d*.015,w*.93,h*.15,d*.
 case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':box(0,h*.48,0,w*.94,h*.92,d*.92);for(let k=0;k<4;k++){box(0,h*(.14+k*.2),d*.47,w*.88,h*.16,2,M('#c7b7a4',.7));cyl(w*.25,h*(.14+k*.2),d*.5,1.3,3,metal)}break;
 case'wardrobe':box(0,h*.49,0,w*.96,h*.98,d*.94);for(let k=0;k<2;k++){box(-w*.23+k*w*.46,h*.5,d*.48,w*.44,h*.94,2,k?M('#bba991',.6):mt);cyl(-w*.23+k*w*.46+w*.16,h*.5,d*.5,1.3,4,metal)}for(let y of [.28,.55,.82])box(0,h*y,0,w*.9,2,d*.86,M('#bba991',.7));break;
 case'shelf':for(let x of [-1,1])box(x*w*.47,h/2,0,4,h,d*.9,metal);for(let k=0;k<5;k++){box(0,h*(k+.5)/5,0,w,3,d*.9);for(let j=0;j<3;j++)box(-w*.35+j*w*.25,h*(k+.5)/5+7,0,w*.07,12+(j%2)*6,d*.55,j%2?dark:mt)}break;
-case'desk':box(0,h-3,0,w,6,d);for(let x of [-1,1])box(x*w*.43,h*.48,0,5,h*.94,5,metal);box(-w*.27,h*.68,0,w*.3,h*.25,d*.82,M('#c2b7a8',.7));if(v%2)box(w*.3,h-3,-d*.35,w*.4,6,d*.7);break;
+case'desk':{
+ const name=(it.n||'').toLowerCase(),isL=/en l|ala lateral/.test(name),isSit=/regulable/.test(name),isVanity=/tocador/.test(name),isYouth=/juvenil/.test(name);
+ const wood=mt,edge=M('#b8a995',.62,.08),inside=M('#c9c3b8',.78,.025),steel=M('#343b40',.34,.78),steelHi=M('#89949b',.28,.86),rubber=M('#20262a',.82,.02),drawerFront=mt;
+ const topT=3.4,topY=h-topT,depth=Math.max(35,d),width=Math.max(55,w);
+ // La tapa se construye como una pieza continua extruida en planta, no como dos cajas solapadas.
+ const plan=new T.Shape();
+ if(isL){
+  const x0=-width/2,x1=width/2,xr=width*.16,z0=-depth/2,z1=depth/2,neck=depth*.53;
+  plan.moveTo(x0,z0);plan.lineTo(x1,z0);plan.lineTo(x1,z1);plan.lineTo(xr,z1);plan.lineTo(xr,z0+neck);plan.lineTo(x0,z0+neck);plan.closePath();
+ }else{
+  const x0=-width/2,x1=width/2,z0=-depth/2,z1=depth/2;
+  plan.moveTo(x0,z0);plan.lineTo(x1,z0);plan.lineTo(x1,z1);plan.lineTo(x0,z1);plan.closePath();
+ }
+ const topGeo=new T.ExtrudeGeometry(plan,{depth:topT,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.28,bevelThickness:.22,curveSegments:12});
+ topGeo.rotateX(Math.PI/2);topGeo.computeVertexNormals();
+ const topMesh=new T.Mesh(topGeo,wood);topMesh.position.y=h;topMesh.castShadow=topMesh.receiveShadow=true;g.add(topMesh);
+ // Canto inferior continuo, separado del tablero y visible en el perímetro.
+ const edgeLine=(x1,z1,x2,z2,r=0.7,mat=edge)=>tube([x1,topY-1.2,z1],[x2,topY-1.2,z2],r,mat);
+ if(isL){
+  const x0=-width/2,x1=width/2,xr=width*.16,z0=-depth/2,z1=depth/2,zn=z0+depth*.53;
+  edgeLine(x0,z1,xr,z1);edgeLine(xr,z1,xr,zn);edgeLine(xr,zn,x0,zn);
+  edgeLine(x0,z0,x1,z0);edgeLine(x1,z0,x1,z1);
+ }else{
+  edgeLine(-width/2,depth/2,width/2,depth/2);edgeLine(width/2,-depth/2,width/2,depth/2);
+ }
+ // Pedestal de cajones completo: costados, tapa, base, trasera y frentes independientes.
+ const pedW=Math.min(width*.31,48),pedD=Math.min(depth*.62,48),pedH=Math.min(h*.72,58);
+ const pedX=isL?-width*.31:-width*.32,pedZ=isL?-depth*.22:0,pedBase=topY-pedH;
+ if(!isSit&&!isVanity){
+  const sideX=pedW/2-1;
+  box(-pedW/2+1,pedBase+pedH/2,pedZ,pedW-2,pedH-2,pedD-2,inside);
+  box(-pedW/2+1,pedBase+1.2,pedZ,pedW-2,2.4,pedD,wood);
+  box(-pedW/2+1,topY-1.2,pedZ,pedW,2.4,pedD,wood);
+  box(-pedW/2+1,pedBase+pedH/2,pedZ-pedD/2+1,2,pedH-3,2,wood);
+  box(-pedW/2+1,pedBase+pedH/2,pedZ+pedD/2-1,2,pedH-3,2,wood);
+  const n=isYouth?2:3,drawerH=(pedH-5)/n;
+  for(let k=0;k<n;k++){
+   const yy=pedBase+2+drawerH*(k+.5),frontZ=pedZ+pedD/2+1.5;
+   box(-pedW/2+1,yy,pedZ,pedW-5,drawerH-1,pedD-5,inside);
+   box(-pedW/2+1,yy,frontZ,pedW-1,drawerH-1.4,2.2,drawerFront);
+   // Tirador metálico con dos apoyos y barra separada del frente.
+   const hy=yy,barZ=frontZ+1.8,hx=-pedW/2+1;
+   for(const dx of [-5,5])cyl(hx+dx,hy,barZ,1.15,2,steelHi);
+   tube([hx-5,hy+1,barZ+1],[hx+5,hy+1,barZ+1],1.15,steelHi);
+   box(-pedW/2+1,yy,pedZ-pedD*.22,pedW-7,1.2,pedD*.52,inside);
+  }
+  // Patines regulables ocultos bajo el zócalo.
+  for(const dx of [-1,1])for(const dz of [-1,1]){
+   cyl(-pedW/2+1+dx*(pedW/2-5),pedBase-1,pedZ+dz*(pedD/2-5),2,2,steel);
+   cyl(-pedW/2+1+dx*(pedW/2-5),pedBase-2.5,pedZ+dz*(pedD/2-5),2.5,1.2,rubber);
+  }
+ }
+ // Estructura portante distinta según el tipo de escritorio.
+ if(isSit){
+  // Dos columnas telescópicas, placas de anclaje, pies y travesaño de sincronización.
+  for(const x of [-width*.34,width*.34]){
+   box(x,topY-12,0,12,24,12,steel);
+   box(x,topY-30,0,8,38,8,steelHi);
+   box(x,5,0,58,8,12,steel);
+   box(x,11,0,42,3,9,rubber);
+   for(const dx of [-18,18])cyl(x+dx,13,0,1.5,2,steelHi);
+   box(x,topY-2,0,22,2.4,24,steel);
+  }
+  tube([-width*.34,topY-26,-depth*.32],[width*.34,topY-26,-depth*.32],2.8,steel);
+  box(width*.42,topY-9,depth*.18,3,12,12,steel);
+ }else if(isL){
+  // Bastidor perimetral de acero bajo el ala y el retorno, con patas nivelables.
+  const leg=(x,z)=>{box(x,topY-7,z,7,14,7,steel);box(x,topY-35,z,4.5,58,4.5,steelHi);box(x,4,z,9,3,9,steel);cyl(x,2.2,z,3,1.4,rubber)};
+  leg(width*.43,depth*.38);leg(width*.43,-depth*.38);leg(-width*.43,-depth*.38);
+  tube([-width*.43,topY-10,-depth*.38],[width*.43,topY-10,-depth*.38],3.2,steel);
+  tube([width*.43,topY-10,-depth*.38],[width*.43,topY-10,depth*.38],3.2,steel);
+  tube([-width*.28,topY-10,-depth*.38],[width*.28,topY-10,-depth*.38],2.2,steelHi);
+ }else{
+  // Escritorio recto con bastidores laterales en U y uniones atornilladas.
+  for(const x of [-width*.43,width*.43]){
+   tube([x,topY-2,-depth*.37],[x,5,-depth*.37],2.7,steel);
+   tube([x,5,-depth*.37],[x,5,depth*.37],2.7,steel);
+   tube([x,5,depth*.37],[x,topY-2,depth*.37],2.7,steel);
+   for(const z of [-depth*.32,depth*.32])cyl(x,topY-1,z,2,2,steelHi);
+  }
+  tube([-width*.42,topY-10,-depth*.37],[width*.42,topY-10,-depth*.37],2.4,steel);
+ }
+ // Pasacables mecanizado, aro y tapa enrasada en la zona posterior.
+ if(!isVanity){
+  const gx=isL?width*.31:width*.36,gz=-depth*.34;
+  const ring=new T.Mesh(new T.TorusGeometry(3.3,.65,10,32),steelHi);ring.rotation.x=Math.PI/2;ring.position.set(gx,topY-.35,gz);g.add(ring);
+  const cap=new T.Mesh(new T.CylinderGeometry(2.7,2.7,.7,32),rubber);cap.rotation.x=Math.PI/2;cap.position.set(gx,topY-.4,gz);g.add(cap);
+ }
+ // Tocador: espejo de sobremesa y cajón fino; escritorio juvenil: bandeja inferior.
+ if(isVanity){
+  box(0,h*.76,-depth*.42,width*.72,h*.42,2,wood);
+  box(0,h*.77,-depth*.405,width*.62,h*.34,1,glass);
+  for(const x of [-width*.37,width*.37])box(x,h*.75,-depth*.42,3,h*.46,4,steel);
+  box(0,topY-8,depth*.2,width*.42,10,depth*.48,inside);
+ }
+ if(isYouth){
+  const trayY=topY-16;
+  box(0,trayY,0,width*.48,2,depth*.48,inside);
+  for(const x of [-1,1])box(x*width*.24,trayY-5,0,2,8,depth*.48,steel);
+ }
+ break;
+}
 case'officechair':cyl(0,h*.33,0,w*.23,h*.12);box(0,h*.67,-d*.25,w*.68,h*.42,5);cyl(0,h*.16,0,3,h*.25,metal);for(let k=0;k<5;k++){const a=k*Math.PI*2/5;tube([0,h*.1,0],[Math.cos(a)*w*.4,h*.1,Math.sin(a)*d*.4],2)}break;
 case'mirror':box(0,h/2,0,w,h,3,M('#9c8060',.5));box(0,h/2,2,w*.88,h*.94,1,glass);break;
 case'lamp':cyl(0,h*.45,0,2,h*.88,metal);const sh=new T.Mesh(new T.ConeGeometry(w*.48,h*.32,32,1,true),mt);sh.position.y=h*.82;g.add(sh);cyl(0,h*.63,0,w*.12,3,M('#fff1c9',.2));break;
