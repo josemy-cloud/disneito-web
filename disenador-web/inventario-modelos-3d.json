@@ -22,322 +22,552 @@
           "name": "Mueble bajo 30 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-40-puertas",
           "name": "Mueble bajo 40 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-45-puertas",
           "name": "Mueble bajo 45 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-50-puertas",
           "name": "Mueble bajo 50 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-60-puertas",
           "name": "Mueble bajo 60 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-80-puertas",
           "name": "Mueble bajo 80 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-90-puertas",
           "name": "Mueble bajo 90 cm",
           "family": "Mueble bajo",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "cajonera-1",
           "name": "Cajonera 1 cajón",
           "family": "Cajonera",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "cajonera-2",
           "name": "Cajonera 2 cajónes",
           "family": "Cajonera",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "cajonera-3",
           "name": "Cajonera 3 cajónes",
           "family": "Cajonera",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "cajonera-4",
           "name": "Cajonera 4 cajónes",
           "family": "Cajonera",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-1",
           "name": "Bajo puerta + 1 cajón",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-2",
           "name": "Bajo 2 puertas + 2 cajones",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-3",
           "name": "Bajo fregadero 80",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-4",
           "name": "Bajo fregadero 120",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-5",
           "name": "Bajo placa 60",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-6",
           "name": "Bajo placa 90",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-7",
           "name": "Bajo push (sin tirador)",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-8",
           "name": "Bajo tirador integrado",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-9",
           "name": "Bajo frente estriado",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-10",
           "name": "Esquinero 90° puerta",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-11",
           "name": "Esquinero 90° plegable",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-12",
           "name": "Esquinero riñonera",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "bajo-especial-13",
           "name": "Esquinero carrusel",
           "family": "Mueble bajo especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-30-70",
           "name": "Mueble alto 30 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-40-70",
           "name": "Mueble alto 40 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-45-70",
           "name": "Mueble alto 45 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-60-70",
           "name": "Mueble alto 60 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-80-70",
           "name": "Mueble alto 80 × 70 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-60-90",
           "name": "Mueble alto 60 × 90 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-60-35",
           "name": "Mueble alto 60 × 35 cm",
           "family": "Mueble alto",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-especial-1",
           "name": "Alto abatible horizontal",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-especial-2",
           "name": "Alto elevable",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-especial-3",
           "name": "Alto plegable",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-especial-4",
           "name": "Vitrina con cristal",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-especial-5",
           "name": "Alto con LED",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "alto-especial-6",
           "name": "Alto profundo 45",
           "family": "Mueble alto especial",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-1",
           "name": "Columna despensa 60",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-2",
           "name": "Columna 2 cajones + puertas",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-3",
           "name": "Esquinero riñón extraíble (articulado)",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-4",
           "name": "Mueble libre (vacío)",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-5",
           "name": "Columna libre: cajón + horno + micro + puerta",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-6",
           "name": "Torre lavadora + horno + micro + armario",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-7",
           "name": "Torre horno compacto + micro + armarios",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-8",
           "name": "Torre horno + micro",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-especial-9",
           "name": "Columna frigorífico integrable",
           "family": "Columnas y sistemas",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "electro-1",
@@ -460,21 +690,36 @@
           "name": "Mueble bajo genérico",
           "family": "Mueble modular",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "mueble-alto-base",
           "name": "Mueble alto genérico",
           "family": "Mueble modular",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "columna-base",
           "name": "Columna genérica",
           "family": "Mueble modular",
           "status": "en_proceso",
-          "note": "Casco/estructura principal actualizado e integrado; el modelo completo aún requiere renovar frentes, componentes, variantes y superar verificación visual/funcional."
+          "note": "Casco estructural y mejora de frentes/cajones integrados en el generador paramétrico. Pendiente completar variantes constructivas, revisar cada configuración, materiales, medidas y pruebas visuales/funcionales; no verificado.",
+          "implemented_components": [
+            "frentes paramétricos con geometría diferenciada (liso, marco, relieve, cristal y estriado)",
+            "detalles de canto y junquillo",
+            "cajones con caja constructiva y correderas telescópicas de tres perfiles"
+          ]
         },
         {
           "id": "fregadero",
@@ -515,7 +760,22 @@
           "status": "pendiente"
         }
       ],
-      "last_update": "2026-11-06"
+      "last_update": "2026-11-06",
+      "last_work": {
+        "date": "2026-11-06",
+        "commit": "5e49a59c6e318942ff836a83ef252f72faa6fbb1",
+        "scope": "Frentes y cajones de mobiliario modular de cocina",
+        "implemented": [
+          "paneles de puerta con geometría diferenciada según acabado",
+          "marcos y junquillos con profundidad",
+          "frentes de cristal con bastidor y perfilería",
+          "frentes estriados/acanalados con relieve geométrico",
+          "cajas de cajón con fondo, laterales y trasera",
+          "correderas telescópicas de tres perfiles, rodamientos y fijaciones"
+        ],
+        "validation": "Los dos scripts clásicos inline se compilan sin errores. No se ha realizado comprobación visual en navegador ni pruebas de interacción en los cuatro modos.",
+        "status": "en_proceso"
+      }
     },
     {
       "id": "bano",
@@ -555,5 +815,14 @@
     "Los estados renovado no son verificado: falta comprobar en navegador las distribuciones de puertas, cajones, rinconeros, zócalos, encimeras, dimensiones y aperturas.",
     "Fregadero: el generador cilíndrico se ha sustituido por una cubeta de geometría rectangular formada; se genera doble seno en anchuras de 90 cm o superiores.",
     "Criterio conservador: los módulos de cocina permanecen en proceso porque la renovación de sus cascos es solo una parte del modelo completo; no se contabilizan como renovados hasta sustituir y comprobar también frentes, herrajes, mecanismos y variantes."
+  ],
+  "work_log": [
+    {
+      "date": "2026-11-06",
+      "phase": "cocina",
+      "action": "Mejora geométrica integrada en el generador paramétrico",
+      "commit": "5e49a59c6e318942ff836a83ef252f72faa6fbb1",
+      "verified": false
+    }
   ]
 }
