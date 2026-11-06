@@ -966,6 +966,129 @@ BUILD.fregadero=(g,it)=>{
  B(g,w*.9,2,d*.82,0,bottom-2,0,dark);
 }
 BUILD.griferia=(g,it)=>{const chrome=M(it.col||'#b7c0c8',.3,.78),dark=M('#58636b',.42,.35),h=Math.max(8,it.h),w=Math.max(3,it.w),r=Math.max(.65,w*.035);const base=new T.Mesh(new T.CylinderGeometry(w*.19,w*.23,1.5,32),chrome);base.position.y=.75;g.add(base);const collar=new T.Mesh(new T.TorusGeometry(w*.15,.7,8,32),dark);collar.rotation.x=Math.PI/2;collar.position.y=1.5;g.add(collar);const stem=new T.Mesh(new T.CylinderGeometry(Math.max(.8,w*.075),Math.max(1,w*.105),h*.58,24),chrome);stem.position.set(0,h*.29+1.5,0);g.add(stem);const curve=new T.CatmullRomCurve3([new T.Vector3(0,h*.57+1.5,0),new T.Vector3(0,h*.76,0),new T.Vector3(w*.18,h*.83,0),new T.Vector3(w*.34,h*.78,0),new T.Vector3(w*.34,h*.62,0)]);g.add(new T.Mesh(new T.TubeGeometry(curve,40,r,12,false),chrome));const aer=new T.Mesh(new T.CylinderGeometry(r*.9,r*1.1,Math.max(1.6,r*.8),24),dark);aer.position.set(w*.34,h*.61,0);aer.rotation.x=Math.PI/2;g.add(aer);const lever=new T.Mesh(new T.CylinderGeometry(Math.max(.6,w*.025),Math.max(.8,w*.04),h*.2,16),chrome);lever.position.set(-w*.12,h*.69,0);lever.rotation.z=-.55;g.add(lever);const cap=new T.Mesh(new T.SphereGeometry(r*1.4,16,10),chrome);cap.position.set(-w*.12,h*.79,0);g.add(cap)};
+/* ===== Construcción paramétrica de armarios y muebles de almacenaje =====
+   Piezas físicas independientes, espesores reales, trasera encastrada,
+   herrajes, baldas regulables y mecanismos animables. Dimensiones en cm. */
+function buildCabinetConstruction(g,it,baseMaterial){
+ const w=Math.max(24,+it.w||60),h=Math.max(30,+it.h||80),d=Math.max(20,+it.d||40);
+ const t=Math.min(2.2,Math.max(1.6,Math.min(w,h,d)*.025));
+ const name=(it.n||'').toLowerCase();
+ const isColumn=/columna|despensa|torre/.test(name);
+ const isBath=/baño|bano|lavabo|auxiliar/.test(name);
+ const isShoe=/zapatero/.test(name);
+ const isTall=h>150||isColumn;
+ const carcass=baseMaterial||M(it.col||'#d8d3c9',.62,.025);
+ const interior=M('#c5c0b7',.78,.015);
+ const edge=M(it.col||'#d8d3c9',.48,.025);
+ const metal=M('#aeb5b8',.28,.84);
+ const dark=M('#343a3e',.42,.55);
+ const frontZ=d/2+1.35;
+ const innerW=w-2*t,innerD=d-2*t;
+ it.op=it.op||{};
+ // Casco abierto por delante: laterales, suelo, techo y trasera encastrada.
+ B(g,t,h,d,-w/2+t/2,h/2,0,carcass);
+ B(g,t,h,d,w/2-t/2,h/2,0,carcass);
+ B(g,innerW,t,d,0,t/2,0,carcass);
+ B(g,innerW,t,d,0,h-t/2,0,carcass);
+ B(g,innerW,h-2*t,t,0,h/2,-d/2+t/2,interior);
+ // Travesaños posteriores y zócalo retranqueado, con apoyo al suelo.
+ B(g,innerW*.96,t*.72,t,0,h-t*1.5,-d/2+t*1.5,carcass);
+ B(g,innerW*.96,t*.72,t,0,h*.12,-d/2+t*1.5,carcass);
+ const kickH=Math.min(10,h*.1),kickD=Math.max(2,d*.12);
+ B(g,w*.91,kickH,kickD,0,kickH/2,-d/2+kickD/2,interior);
+ // Taladros de sistema 32 y soportes metálicos para baldas móviles.
+ const shelfCount=isShoe?5:(isTall?4:2);
+ const shelfYs=[];
+ for(let k=1;k<=shelfCount;k++){
+  const y=t+(h-2*t)*k/(shelfCount+1);shelfYs.push(y);
+  B(g,innerW-1.2,Math.max(1.6,t*.78),innerD-1.8,0,y,0,interior);
+  for(const side of [-1,1])for(let row=0;row<10;row++){
+   const yy=t+row*3.2+4;
+   if(yy>h-t-4)continue;
+   const pin=new T.Mesh(new T.CylinderGeometry(.32,.32,1.15,10),metal);
+   pin.rotation.z=Math.PI/2;pin.position.set(side*(w/2-t-.4),yy,d*.16);g.add(pin);
+  }
+ }
+ // Cajones con caja completa, fondo, costados, trasera, guías telescópicas y tirador.
+ const drawerCount=isShoe?0:(isBath?(isColumn?3:2):(isTall?2:1));
+ const drawerZone=isBath?h*.52:(isTall?h*.28:h*.34);
+ const drawerH=drawerCount?drawerZone/drawerCount:0;
+ for(let k=0;k<drawerCount;k++){
+  const y=drawerH*(k+.5),boxD=innerD*.78,boxH=Math.max(7,drawerH-t*.7);
+  const dr=new T.Group();dr.position.set(0,y,frontZ);g.add(dr);
+  // Frente enrasado con holguras perimetrales.
+  B(dr,innerW-t*.45,drawerH-1.2,2.2,0,0,0,edge);
+  // Caja interior, con fondo y trasera.
+  B(dr,innerW-t*1.4,1.2,boxD,0,-boxH/2+1,-boxD/2+1,interior);
+  B(dr,innerW-t*1.4,1.2,2,0,0,-boxD+1,interior);
+  for(const side of [-1,1]){
+   B(dr,t*.68,boxH,boxD,side*(innerW/2-t*.65),-boxH/2,-boxD/2+1,interior);
+   // Guía telescópica y perfil de rodamiento.
+   B(g,1.1,1.4,boxD,side*(innerW/2-t-1),y,-boxD/2+1,metal);
+   B(g,.7,.7,boxD*.92,side*(innerW/2-t-1),y-1.3,-boxD/2+1,dark);
+  }
+  // Tirador de perfil continuo, con dos fijaciones visibles.
+  const pullY=0,pullX=0;
+  for(const side of [-1,1]){
+   const post=new T.Mesh(new T.CylinderGeometry(.75,.75,2.1,12),metal);
+   post.position.set(pullX+side*Math.min(7,innerW*.16),pullY,2.05);dr.add(post);
+  }
+  const bar=new T.Mesh(new T.CylinderGeometry(.9,.9,Math.min(18,innerW*.42),16),metal);
+  bar.rotation.z=Math.PI/2;bar.position.set(0,0,3.05);dr.add(bar);
+  mv(dr,{it,k,t:'s',z:frontZ,sl:Math.min(26,boxD*.48)});
+ }
+ // Puertas abatibles independientes; bisagras de cazoleta y tirador vertical.
+ const doorY=drawerCount?drawerZone+(h-drawerZone)/2:h/2;
+ const doorH=drawerCount?h-drawerZone-t:h-2*t;
+ const doorCount=isShoe?0:(w>92?2:1);
+ for(let k=0;k<doorCount;k++){
+  const side=k===0?-1:1,doorW=(innerW-(doorCount-1)*.5)/doorCount;
+  const hingeSide=doorCount===1?-1:(side===-1?-1:1);
+  const door=new T.Group();
+  door.position.set(doorCount===1?-w/2+t:(side===-1?-w/2+t:w/2-t),doorY,frontZ);
+  g.add(door);
+  const localX=doorCount===1?doorW/2:(side===-1?doorW/2:-doorW/2);
+  B(door,doorW,doorH,2.1,localX,0,0,edge);
+  // Panel central ligeramente remetido, con marco perimetral fino.
+  const panelInset=Math.min(4,doorW*.055);
+  B(door,doorW-panelInset*2,doorH-panelInset*2,.32,localX,0,1.22,interior);
+  for(const y of [-doorH/2+panelInset,doorH/2-panelInset])
+   B(door,doorW-panelInset*2,.45,.65,localX,y,1.3,edge);
+  for(const x of [-doorW/2+panelInset,doorW/2-panelInset])
+   B(door,.45,doorH-panelInset*2,.65,localX+x,0,1.3,edge);
+  const hingeX=hingeSide<0?0:hingeSide*doorW;
+  for(const yy of [-doorH*.36,0,doorH*.36]){
+   const cup=new T.Mesh(new T.CylinderGeometry(1.6,1.6,.8,20),metal);
+   cup.rotation.x=Math.PI/2;cup.position.set(hingeX+hingeSide*2,yy,1.5);door.add(cup);
+   B(door,4.5,1.2,.7,hingeX+hingeSide*3.2,yy,2.15,metal);
+  }
+  const handleX=hingeSide<0?doorW*.37:-doorW*.37;
+  for(const yy of [-Math.min(doorH*.16,12),Math.min(doorH*.16,12)]){
+   const post=new T.Mesh(new T.CylinderGeometry(.85,.85,2.2,12),metal);
+   post.rotation.x=Math.PI/2;post.position.set(localX+handleX,yy,2.15);door.add(post);
+  }
+  const handle=new T.Mesh(new T.CylinderGeometry(1.05,1.05,Math.min(24,doorH*.3),16),metal);
+  handle.position.set(localX+handleX,0,3.1);door.add(handle);
+  mv(door,{it,k:drawerCount+k,t:'d',sg:hingeSide});
+ }
+ // Barra colgadora para columnas y armarios altos; con soportes laterales.
+ if(isTall&&!isShoe){
+  const railY=h*.78,railZ=-d*.08;
+  const rod=new T.Mesh(new T.CylinderGeometry(1.05,1.05,innerW*.82,20),metal);
+  rod.rotation.z=Math.PI/2;rod.position.set(0,railY,railZ);g.add(rod);
+  for(const side of [-1,1]){
+   const support=new T.Mesh(new T.CylinderGeometry(2,2,2.2,16),metal);
+   support.rotation.z=Math.PI/2;support.position.set(side*(innerW*.42),railY,railZ);g.add(support);
+  }
+ }
+ // Canto visto de los paneles y pies niveladores regulables.
+ for(const side of [-1,1])for(const z of [-d*.34,d*.34]){
+  const foot=new T.Mesh(new T.CylinderGeometry(1.1,1.3,2.2,16),dark);
+  foot.position.set(side*(w/2-t/2),1.1,z);g.add(foot);
+ }
+ g.userData.construction={family:'cabinetry',schemaVersion:1,dimensionsCm:{width:w,height:h,depth:d},panelThicknessCm:t,components:['carcass','back-panel','adjustable-shelves','drawer-boxes','telescopic-runners','hinges','handles','leveling-feet'],status:'reconstructed-pending-visual-and-interaction-verification'};
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+}
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o)};switch(it.shape){
 case'sofa':{
  const upholstery=M(it.col||'#a88f78',.9,.01),seam=M('#d5c8b8',.92,.01),frame=M('#383b3c',.48,.32),feet=M('#272c2e',.42,.42);
@@ -1122,14 +1245,7 @@ case'sideboard':{
  break;
 }
 case'cabinet':{
- const name=(it.n||'').toLowerCase(),body=M(it.col||'#d7d2c9',.62,.04),inside=M('#b8b4ac',.8,.02),hardware=M('#aeb5b8',.28,.82),th=Math.max(1.6,w*.035),dep=d*.9,frontZ=dep/2+1.2;
- const isColumn=name.includes('columna'),isBath=/baño|bano/.test(name),isShoe=/zapatero/.test(name),drawers=isBath?(isColumn?3:2):isShoe?0:1;
- it.op=it.op||[];
- for(const x of [-1,1])B(g,th,h,dep,x*(w/2-th/2),h/2,0,body);
- B(g,w-2*th,th,dep,0,th/2,0,body);B(g,w-2*th,th,dep,0,h-th/2,0,body);B(g,w-2*th,h-2*th,th,0,h/2,-dep/2+th/2,inside);
- for(let k=1;k<=3;k++)B(g,w-2*th-2,1.8,dep-2*th-3,0,h*k/4,0,inside);
- if(drawers){const zone=isBath?h*.55:h*.28,dh=zone/drawers;for(let k=0;k<drawers;k++){const yy=dh*(k+.5),dr=new T.Group();dr.position.set(0,yy,frontZ);g.add(dr);B(dr,w-2*th-2,dh-1.5,2.2,0,0,0,body);B(dr,w-2*th-5,1.4,dep*.72,0,-dh*.4,-dep*.36,inside);for(const x of [-1,1])B(dr,1.5,dh-3,dep*.72,x*(w/2-th*1.7),0,-dep*.36,inside);const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(18,w*.16),16),hardware);pull.rotation.z=Math.PI/2;pull.position.set(0,0,2.8);dr.add(pull);mv(dr,{it,k,t:'s',z:frontZ,sl:Math.min(22,dep*.4)})}}
- const doorY=drawers?((isBath?h*.55:h*.28)+(h-(isBath?h*.55:h*.28))/2):h/2,doorH=drawers?h-(isBath?h*.55:h*.28):h-2*th;const door=new T.Group();door.position.set(-w/2+th,doorY,frontZ);g.add(door);B(door,w-2*th,doorH,2,(w-2*th)/2,0,0,body);B(door,2,Math.min(12,doorH*.18),3,w*.35,0,2.8,hardware);mv(door,{it,k:drawers,t:'d',sg:-1});
+ buildCabinetConstruction(g,it,mt);
  break;
 }
 case'toolcab':{
