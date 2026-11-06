@@ -1,0 +1,96 @@
+
+/* Disenito · nueva interfaz visual. No altera la lógica ni los datos del editor. */
+body:not(.ui-legacy) {
+  --ui-bg:#f2f1ed; --ui-panel:#fbfaf7; --ui-panel-2:#e9e8e2;
+  --ui-line:#d9d8d0; --ui-ink:#263432; --ui-muted:#71807b;
+  --ui-teal:#174b46; --ui-teal-2:#23645d; --ui-copper:#b77955;
+  --ui-shadow:0 8px 24px rgba(31,48,44,.08);
+  background:var(--ui-bg)!important;color:var(--ui-ink)!important;
+  font:13px/1.45 Inter,"Segoe UI",system-ui,sans-serif!important;
+}
+body:not(.ui-legacy) #top {
+  padding:9px 14px!important;gap:7px!important;align-items:center;
+  background:var(--ui-panel)!important;border-bottom:1px solid var(--ui-line);
+  box-shadow:0 2px 10px rgba(30,45,40,.04);max-height:24dvh!important;
+}
+body:not(.ui-legacy) #pn {color:var(--ui-teal)!important;font-size:16px;font-weight:750;letter-spacing:.01em;margin-right:12px!important}
+body:not(.ui-legacy) button,
+body:not(.ui-legacy) select,
+body:not(.ui-legacy) input:not([type=checkbox]):not([type=range]),
+body:not(.ui-legacy) textarea {
+  color:var(--ui-ink)!important;background:#fff!important;border:1px solid var(--ui-line)!important;
+  border-radius:8px!important;padding:7px 10px!important;box-shadow:none;
+}
+body:not(.ui-legacy) button {font-weight:600;transition:background .15s,border-color .15s,transform .15s}
+body:not(.ui-legacy) button:hover {background:#edf3f0!important;border-color:#9bb6ad!important}
+body:not(.ui-legacy) button.on,
+body:not(.ui-legacy) .seg button.on {background:var(--ui-teal)!important;color:#fff!important;border-color:var(--ui-teal)!important}
+body:not(.ui-legacy) #bPbr,body:not(.ui-legacy) #bPry,body:not(.ui-legacy) #bReal,body:not(.ui-legacy) #bFotoIA {
+  background:var(--ui-teal)!important;color:#fff!important;border:1px solid var(--ui-teal)!important
+}
+body:not(.ui-legacy) #bFotoIA {background:var(--ui-copper)!important;border-color:var(--ui-copper)!important}
+body:not(.ui-legacy) #bAcc {background:#f1f3ef!important}
+body:not(.ui-legacy) #saveCloudState {background:#edf2ee!important;color:var(--ui-teal)!important;border:1px solid #d7e3dc}
+body:not(.ui-legacy) .seg {border:1px solid var(--ui-line)!important;border-radius:9px!important;background:#f4f4f0}
+body:not(.ui-legacy) .seg button {padding:6px 11px!important;background:transparent!important}
+body:not(.ui-legacy) .seg button.on {background:var(--ui-teal)!important}
+body:not(.ui-legacy) #main {gap:0!important;background:var(--ui-bg)}
+body:not(.ui-legacy) #tools {
+  width:76px!important;flex-basis:76px!important;padding:12px 8px!important;gap:8px!important;
+  background:var(--ui-teal)!important;border-right:1px solid #123c38;
+}
+body:not(.ui-legacy) #tools button {
+  min-height:54px;text-align:center!important;white-space:normal!important;
+  color:#f6f8f5!important;background:transparent!important;border:1px solid transparent!important;
+  border-radius:10px!important;padding:7px 4px!important;font-size:11px!important;
+}
+body:not(.ui-legacy) #tools button:hover,
+body:not(.ui-legacy) #tools button.on {background:#ffffff20!important;border-color:#ffffff38!important}
+body:not(.ui-legacy) .side {
+  background:var(--ui-panel)!important;color:var(--ui-ink)!important;
+  border-right:1px solid var(--ui-line);padding:13px!important;
+}
+body:not(.ui-legacy) #lib {width:270px;flex-basis:270px}
+body:not(.ui-legacy) #pr {width:260px;flex-basis:260px;border-left:1px solid var(--ui-line);border-right:0}
+body:not(.ui-legacy) .side h3,
+body:not(.ui-legacy) .side h4,
+body:not(.ui-legacy) #lib h3,
+body:not(.ui-legacy) #pr h3 {color:var(--ui-teal)!important;font-weight:750;letter-spacing:.01em}
+body:not(.ui-legacy) h4 {color:var(--ui-teal)!important;margin:15px 0 7px!important}
+body:not(.ui-legacy) .it {
+  display:block;width:100%;text-align:left;margin:4px 0!important;padding:8px 10px!important;
+  background:#f5f5f1!important;border:1px solid #e4e4dc!important;border-radius:8px!important;
+}
+body:not(.ui-legacy) .it:hover {background:#eaf1ed!important;border-color:#b6c9bf!important}
+body:not(.ui-legacy) .r {padding:4px 0;margin:6px 0}
+body:not(.ui-legacy) .r input,body:not(.ui-legacy) .r select {width:100px;background:#fff!important}
+body:not(.ui-legacy) #view {background:#e7e8e3!important}
+body:not(.ui-legacy) #hint {background:#173e39e8!important;color:#fff!important;padding:7px 11px!important;border-radius:8px!important;box-shadow:var(--ui-shadow)}
+body:not(.ui-legacy) #sb {background:var(--ui-panel)!important;color:var(--ui-muted)!important;border-top:1px solid var(--ui-line)!important;padding:7px 12px!important}
+body:not(.ui-legacy) .ddm {background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:10px!important;box-shadow:var(--ui-shadow)!important;padding:7px!important}
+body:not(.ui-legacy) .ddm button {background:transparent!important;color:var(--ui-ink)!important}
+body:not(.ui-legacy) .ddm button:hover {background:#edf3f0!important}
+body:not(.ui-legacy) .sw {border-color:var(--ui-line)!important;border-radius:7px!important}
+body:not(.ui-legacy) .sw.on {border-color:var(--ui-teal)!important;outline:2px solid #174b4630}
+body:not(.ui-legacy) .rc {background:#f4f4ef!important;border:1px solid var(--ui-line);border-radius:10px!important;padding:8px!important}
+body:not(.ui-legacy) .rl {border-color:var(--ui-line)!important}
+body:not(.ui-legacy) #cat,
+body:not(.ui-legacy) #pv {background:var(--ui-panel)!important;color:var(--ui-ink)!important;border:1px solid var(--ui-line)!important;border-radius:14px!important;box-shadow:0 18px 55px rgba(25,40,36,.2)!important}
+body:not(.ui-legacy) #cat table td,body:not(.ui-legacy) #cat table th {border-color:var(--ui-line)!important}
+body:not(.ui-legacy) #cat input,body:not(.ui-legacy) #cat select,body:not(.ui-legacy) #cat textarea {background:#fff!important;color:var(--ui-ink)!important;border-color:var(--ui-line)!important}
+body:not(.ui-legacy) #pv input[type=number] {background:#fff!important;color:var(--ui-ink)!important;border-color:var(--ui-line)!important}
+body:not(.ui-legacy) #pvx {background:#f2f2ed!important}
+body:not(.ui-legacy) ::-webkit-scrollbar {width:9px;height:9px}
+body:not(.ui-legacy) ::-webkit-scrollbar-thumb {background:#c5cbc4;border:2px solid transparent;border-radius:20px;background-clip:padding-box}
+body:not(.ui-legacy) ::-webkit-scrollbar-track {background:transparent}
+@media(max-width:1050px){
+ body:not(.ui-legacy) #tools{width:68px!important;flex-basis:68px!important}
+ body:not(.ui-legacy) #lib{width:220px;flex-basis:220px}
+ body:not(.ui-legacy) #pr{width:220px;flex-basis:220px}
+}
+@media(max-width:760px){
+ body:not(.ui-legacy) #tools{width:58px!important;flex-basis:58px!important;padding:8px 5px!important}
+ body:not(.ui-legacy) #tools button{min-height:48px;font-size:10px!important}
+ body:not(.ui-legacy) .side{width:175px!important;flex-basis:175px!important;padding:8px!important}
+ body:not(.ui-legacy) #top{max-height:30dvh!important;padding:6px 8px!important}
+}
