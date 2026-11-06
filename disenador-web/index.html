@@ -1139,8 +1139,92 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   const p=pv(-w/2+1,h/2-3,k0,{t:'d',sg:-1});B(p,w-2,h-8,2,(w-2)/2,0,0,mp);const r=new T.Mesh(new T.CylinderGeometry(w*.3,w*.3,1,24),(SP.cristal?dk:new T.MeshStandardMaterial({color:'#223',roughness:.05,metalness:.3,transparent:true,opacity:.75})));r.rotation.x=Math.PI/2;r.position.set((w-2)/2,0,1.4);p.add(r);const rg=new T.Mesh(new T.TorusGeometry(w*.3+.4,.8,8,32),stl);rg.position.set((w-2)/2,0,1.4);p.add(rg);[-1,1].forEach(q=>B(p,2.5,4,1.6,1.4,q*h*.3,-.2,stl));
   B(a,w-2,7,1,0,h-4,d/2+.2,pn);B(a,w*.28,5,.5,-w*.3,h-4,d/2+.75,wht);B(a,w*.14,2,.2,0,h-4,d/2+.75,lcd);const dl=new T.Mesh(new T.CylinderGeometry(3.2,3.2,1.6,20),kn);dl.rotation.x=Math.PI/2;dl.position.set(w*.28,h-4,d/2+1.3);a.add(dl)}
  else if(kd=='americano'){[0,1].forEach(i=>{const s=i?-1:1,p=pv(-s*w/2,h/2,k0+i,{t:'d',sg:-s});B(p,w/2-.5,h-1,2,s*w/4,0,0,mp);B(p,1.6,h*.3,2.4,s*(w/2-4),0,3,hd)})}
- else if(kd=='combi'||kd=='frigo'){const parts=kd=='combi'?[[2,h*.64],[h*.64+2,h*.34]]:[[2,h-4]];parts.forEach(([y,hh],i)=>{const cy=y+hh/2,n=Math.max(1,Math.round(hh/22)-1);shell(0,cy,w-6,hh-6,wht);for(let q=1;q<=n;q++)B(a,w-8,.6,d-12,0,y+3+(hh-6)*q/(n+1),zc,gls);if(i==0)B(a,w-10,Math.min(12,hh*.25),d-14,0,y+3+Math.min(12,hh*.25)/2,zc,gls);B(a,w*.4,.8,2,0,y+hh-3.6,zc,lit);
-   const p=pv(-w/2,cy,k0+i,{t:'d',sg:-1});B(p,w-.5,hh-1,2,w/2,0,0,mp);B(p,1.6,Math.min(hh*.5,40),2.4,w-5,0,3,hd);[-1,0,1].forEach(q=>B(p,w-10,2.5,3,w/2,q*hh*.25,-2.5,wht));[-1,1].forEach(q=>B(p,2.5,4,1.6,1.3,q*(hh/2-6),-.2,stl))})}
+ else if(kd=='combi'||kd=='frigo'){
+  // Frigorífico con construcción por capas: carcasa, cámara, estantes, cajones y puertas funcionales.
+  const split=kd=='combi'?h*.35:h-4;
+  const parts=kd=='combi'?[[2,split],[split+2,h-split-4]]:[[2,split]];
+  const bodyW=w-5,doorMat=mp,innerMat=wht,glassShelf=new T.MeshStandardMaterial({color:'#d9e8ed',roughness:.16,metalness:.12,transparent:true,opacity:.62});
+  // Laterales, trasera y travesaños estructurales del aparato.
+  B(a,2.2,h-2,d-2,-w/2+1.1,h/2,-.5,m);
+  B(a,2.2,h-2,d-2,w/2-1.1,h/2,-.5,m);
+  B(a,w-4,2,d-2,0,1,-.5,m);
+  B(a,w-4,2,d-2,0,h-1,-.5,m);
+  B(a,w-4,h-4,1.8,0,h/2,-d/2+1.1,m);
+  if(kd=='combi')B(a,w-5,2.4,d-3,0,split+1,-.5,stl);
+  parts.forEach(([y,hh],i)=>{
+   const cy=y+hh/2,innerW=w-9,innerD=d-10,isFreezer=kd=='combi'&&i===0;
+   // Interior blanco moldeado, con profundidad y paredes visibles.
+   B(a,1.2,hh-4,innerD,-w/2+3.2,cy,-.5,innerMat);
+   B(a,1.2,hh-4,innerD,w/2-3.2,cy,-.5,innerMat);
+   B(a,innerW,hh-4,1.1,0,cy,-d/2+2.2,innerMat);
+   // Iluminación interior y guías laterales de estantes.
+   const lamp=new T.Mesh(new T.BoxGeometry(2.2,Math.max(3,hh*.045),.8),lit);
+   lamp.position.set(0,y+hh-7,d/2-12);a.add(lamp);
+   if(isFreezer){
+    const count=Math.max(2,Math.min(3,Math.floor(hh/24)));
+    for(let q=0;q<count;q++){
+     const by=y+5+(hh-10)*(q+.5)/count,bh=(hh-12)/count-1;
+     B(a,innerW-2,bh,innerD-3,0,by,-.5,glassShelf);
+     B(a,innerW-4,bh*.82,.8,0,by,d/2-8,gls);
+     B(a,innerW-2,.7,1.1,0,by+bh/2,-.5,stl);
+    }
+   }else{
+    const shelfCount=Math.max(2,Math.min(5,Math.floor(hh/27)));
+    for(let q=1;q<=shelfCount;q++){
+     const sy=y+hh*.12+(hh*.66)*q/(shelfCount+1);
+     B(a,innerW-3,.8,innerD-3,0,sy,-.4,glassShelf);
+     B(a,innerW-3,.55,1.1,0,sy,d/2-7,stl);
+     [-1,1].forEach(side=>B(a,.65,1.2,innerD-4,side*(innerW/2-1.5),sy+.4,-.4,stl));
+    }
+    // Dos cajones inferiores para fruta y verdura, con frentes translúcidos.
+    const drawerY=y+hh*.105,drawerH=Math.max(7,hh*.105);
+    [-1,1].forEach((side,q)=>{
+     const dw=(innerW-3)/2,dx=side*(dw/2+1);
+     B(a,dw,1,innerD-5,dx,drawerY-drawerH/2,-.5,innerMat);
+     B(a,1,drawerH,innerD-5,dx-dw/2+.5,drawerY,-.5,innerMat);
+     B(a,1,drawerH,innerD-5,dx+dw/2-.5,drawerY,-.5,innerMat);
+     B(a,dw-1,drawerH*.78,.8,dx,drawerY,d/2-8,glassShelf);
+     B(a,dw*.3,.55,.5,dx,drawerY+drawerH*.3,d/2-7.4,stl);
+    });
+   }
+   // Puerta independiente con espesor, panel frontal, junta perimetral y bisagras.
+   const p=pv(-w/2+1.5,cy,k0+i,{t:'d',sg:-1});
+   B(p,w-3,hh-2,3.8,(w-3)/2,0,0,doorMat);
+   B(p,w-6,hh-5,.28,(w-6)/2,0,2.04,doorMat);
+   // Junta magnética oscura en la cara interior.
+   const gasketZ=-2.05,gasketW=w-7,gasketH=hh-6;
+   B(p,gasketW,.75,.65,(w-3)/2,gasketH/2,gasketZ,rub);
+   B(p,gasketW,.75,.65,(w-3)/2,-gasketH/2,gasketZ,rub);
+   B(p,.75,gasketH,.65,3.5,gasketZ*0+0,gasketZ,rub);
+   B(p,.75,gasketH,.65,w-3.5,0,gasketZ,rub);
+   // Tirador vertical metálico con anclajes y extremos redondeados.
+   const hx=w-7.2,handleLen=Math.max(13,Math.min(hh*.48,58));
+   const handle=new T.Mesh(new T.CylinderGeometry(.72,.72,handleLen,20),hd);
+   handle.position.set(hx,0,3.05);p.add(handle);
+   [-1,1].forEach(side=>{
+    const anchor=new T.Mesh(new T.CylinderGeometry(.9,.9,1.7,16),stl);
+    anchor.rotation.x=Math.PI/2;anchor.position.set(hx,side*handleLen*.43,2.15);p.add(anchor);
+    const cap=new T.Mesh(new T.SphereGeometry(.76,12,10),stl);
+    cap.position.set(hx,side*handleLen/2,3.05);p.add(cap);
+   });
+   // Bisagras visibles en el canto, sin logotipos ficticios.
+   [-1,1].forEach(side=>B(p,2.6,3.2,2.2,2.4,side*(hh/2-3),-.1,stl));
+   // Compartimentos de puerta moldeados, visibles al abrirla.
+   const binCount=isFreezer?2:Math.max(2,Math.min(3,Math.floor(hh/38)));
+   for(let q=0;q<binCount;q++){
+    const by=-hh*.32+(hh*.64)*(q+.5)/binCount,bw=w*.7,bh=isFreezer?4.2:5.2;
+    B(p,bw,1,5,(w-3)/2,by,-5.1,gls);
+    B(p,bw,1,5,(w-3)/2,by-bh/2,-5.1,gls);
+    [-1,1].forEach(side=>B(p,.8,bh,5,(w-3)/2+side*bw/2,by,-5.1,gls));
+    B(p,bw,.7,.7,(w-3)/2,by+bh/2,-3.0,stl);
+   }
+   // Display discreto en la puerta superior de los modelos combi.
+   if(kd=='combi'&&!isFreezer){
+    B(p,Math.min(9,w*.19),3.2,.22,w*.72,hh*.31,2.22,lcd);
+    B(p,Math.min(5,w*.1),.35,.2,w*.72,hh*.31-1,2.24,lit);
+   }
+  });
+ }
  else if(kd=='cafetera'){B(a,w-2,h-4,.8,0,h/2,d/2+.2,mp);B(a,w*.55,h*.28,.6,0,h*.62,d/2+.8,dk);[-1,1].forEach(q=>knob(q*w*.32,h*.62,1.6));B(a,w*.5,1,d*.5,0,h*.14,d/2-d*.25,hd)}
  else if(kd=='vinoteca'){const p=pv(-w/2+1,h/2,k0,{t:'d',sg:-1});shell(0,h/2,w-6,h-8,enam);B(p,w-2,h-4,1.2,(w-2)/2,0,0,GLS);B(p,1.6,h*.4,2.4,w-5,0,2,hd);[-1,1].forEach(q=>B(p,2.5,4,1.6,1.4,q*h*.3,-.2,stl));for(let q=1;q<5;q++)B(a,w-8,.8,d-12,0,h*q/5,zc,M('#7a5a3a',.6))}}
 
