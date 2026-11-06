@@ -23,9 +23,6 @@
   },
   "kv_namespaces": [
     {
-      "binding": "MASTER_TEST_STATS"
-    },
-    {
       "binding": "CATALOG_APPROVALS",
       "id": "28ff3950582f420e8fcdfc0c343b11b1"
     }
