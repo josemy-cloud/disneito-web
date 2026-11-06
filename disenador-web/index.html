@@ -1206,6 +1206,7 @@ const SBU='https://aqfqwvzbsbjrixzgxtro.supabase.co',SBK='eyJhbGciOiJIUzI1NiIsIn
 let SES=null,REMEMBER_SESSION=true;try{const savedLocal=localStorage.getItem('sbSes');if(savedLocal){SES=JSON.parse(savedLocal);REMEMBER_SESSION=true}else{const savedTab=sessionStorage.getItem('sbSes');if(savedTab){SES=JSON.parse(savedTab);REMEMBER_SESSION=false}}}catch(e){}
 const sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}window.NUBE_STORE=x?CLOUD:null};
 async function sbAuth(path,body){const r=await fetch(SBU+'/auth/v1/'+path,{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
+async function sbRecover(email){const address=String(email||'').trim();if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(address))throw new Error('Introduce un correo electrónico válido.');const redirectTo=window.location.origin+window.location.pathname;const r=await fetch(SBU+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify({email:address})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo enviar el correo de recuperación.');return j}
 const sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
 async function sbTok(){if(!SES)throw new Error('Sin sesión: entra con tu correo en «Mis proyectos».');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token});sesSave(sesFrom(j))}return SES.access_token}
 async function sbq(path,o){o=o||{};const r=await fetch(SBU+'/rest/v1/'+path,{method:o.method||'GET',headers:Object.assign({apikey:SBK,Authorization:'Bearer '+await sbTok(),'Content-Type':'application/json'},o.h||{}),body:o.body?JSON.stringify(o.body):undefined});if(!r.ok)throw new Error('Nube: '+r.status+' '+(await r.text()).slice(0,200));return r.status==204?null:r.json().catch(()=>null)}
@@ -1222,11 +1223,37 @@ async function accountPanel(){
  const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent='Mi cuenta';title.style.margin='0';head.append(title,btn('✕ Cerrar',()=>box.remove()));box.append(head);
  const content=document.createElement('div');content.style.cssText='max-width:720px;margin:18px auto';box.append(content);
  const authFetch=async(method,body)=>{const token=await sbTok();const r=await fetch(SBU+'/auth/v1/user',{method,headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo actualizar la cuenta ('+r.status+')');return j};
+ const recoveryParams=new URLSearchParams(window.location.hash.replace(/^#/,''));
+ const drawPasswordReset=(token)=>{
+  content.innerHTML='<p style="color:#b9c4d4">Introduce tu nueva contraseña. El enlace de recuperación solo puede utilizarse una vez.</p>';
+  const p1=field('Nueva contraseña (mínimo 8 caracteres)','password','','new-password');
+  const p2=field('Repite la nueva contraseña','password','','new-password');
+  content.append(p1.wrap,p2.wrap);
+  content.append(btn('Guardar nueva contraseña',async()=>{
+   const password=p1.input.value;
+   if(password.length<8)throw new Error('La contraseña debe tener al menos 8 caracteres.');
+   if(password!==p2.input.value)throw new Error('Las contraseñas no coinciden.');
+   const r=await fetch(SBU+'/auth/v1/user',{method:'PUT',headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password})});
+   const j=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'El enlace ha caducado o no es válido. Solicita uno nuevo.');
+   const refreshToken=recoveryParams.get('refresh_token');
+   const expiresAt=Number(recoveryParams.get('expires_at'))||Math.floor(Date.now()/1000)+Number(recoveryParams.get('expires_in')||3600);
+   history.replaceState(null,document.title,window.location.pathname+window.location.search);
+   if(refreshToken){REMEMBER_SESSION=true;sesSave({access_token:token,refresh_token:refreshToken,expires_at:expiresAt,email:j.email||''});await drawProfile()}
+   else{sesSave(null);drawLogin();alert('Contraseña actualizada. Ya puedes iniciar sesión con ella.')}
+  }));
+  content.append(btn('Cancelar y volver al inicio de sesión',()=>{history.replaceState(null,document.title,window.location.pathname+window.location.search);drawLogin()}));
+ };
  const drawLogin=()=>{
   content.innerHTML='<p style="color:#b9c4d4">Inicia sesión para acceder a tu perfil y a tus diseños guardados en otros dispositivos.</p>';
   const em=field('Correo electrónico','email','','username'),pw=field('Contraseña','password','','current-password');content.append(em.wrap,pw.wrap);
   const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);content.append(rememberWrap);
   content.append(btn('Iniciar sesión',async()=>{if(!em.input.value||!pw.input.value)throw new Error('Introduce el correo y la contraseña.');const j=await sbAuth('token?grant_type=password',{email:em.input.value,password:pw.input.value});REMEMBER_SESSION=remember.checked;sesSave(sesFrom(j));await drawProfile()}));
+  content.append(btn('¿Has olvidado tu contraseña?',async()=>{
+   await sbRecover(em.input.value);
+   content.innerHTML='<p style="color:#b9c4d4;line-height:1.6">Si existe una cuenta asociada a ese correo, recibirás un mensaje con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.</p>';
+   content.append(btn('Volver al inicio de sesión',drawLogin));
+  }));
   content.append(btn('Crear cuenta',async()=>{pw.input.autocomplete='new-password';if(!em.input.value||pw.input.value.length<6)throw new Error('Introduce un correo y una contraseña de al menos 6 caracteres.');await sbAuth('signup',{email:em.input.value,password:pw.input.value});alert('Cuenta creada. Si se solicita confirmar el correo, revisa tu bandeja de entrada. Después podrás iniciar sesión.')}))
  };
  const drawProfile=async()=>{
@@ -1249,12 +1276,15 @@ async function accountPanel(){
   content.append(btn('Cerrar sesión',async()=>{sesSave(null);CATALOG_MASTER=false;libUI();curProj=null;try{localStorage.removeItem('curProj')}catch(e){};await drawLogin();const b=document.getElementById('bAcc');if(b)b.textContent='👤 Mi cuenta'}));
   const b=document.getElementById('bAcc');if(b){const label=(meta.full_name||u.email||'Mi cuenta').slice(0,18);if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label}
  };
- await drawProfile();
+ const recoveryType=recoveryParams.get('type'),recoveryToken=recoveryParams.get('access_token'),recoveryError=recoveryParams.get('error_description')||recoveryParams.get('error');
+ if(recoveryType==='recovery'&&recoveryToken)drawPasswordReset(recoveryToken);
+ else if(recoveryError){content.innerHTML='<p style="color:#ffb4a9;line-height:1.6">El enlace de recuperación ha caducado, ya se ha utilizado o no es válido. Solicita uno nuevo desde «¿Has olvidado tu contraseña?».</p>';content.append(btn('Volver al inicio de sesión',()=>{history.replaceState(null,document.title,window.location.pathname+window.location.search);drawLogin()}));}
+ else await drawProfile();
 }
 
 function cloudBar(redraw){const d=document.createElement('div');d.style.cssText='margin:8px 0;padding:8px;border:1px solid #445;border-radius:6px;background:#202633';const b=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.style.margin='2px 3px';e.onclick=async()=>{try{await fn()}catch(x){alert(x.message||x)}};return e};
  if(SES){d.append(document.createTextNode('☁ Nube: '+SES.email+' — los proyectos de esta lista están en la nube. '),b('Copiar mis proyectos locales a la nube',async()=>{const L=await LOCAL.list();for(const p of L)await CLOUD.put(await LOCAL.get(p.id));alert(L.length+' proyectos copiados.');redraw()}),b('Salir de la nube',async()=>{sesSave(null);CATALOG_MASTER=false;curProj=null;redraw()}))}
- else{d.append(document.createTextNode('☁ Nube desactivada (se guarda solo en este navegador). '));const em=document.createElement('input'),pw=document.createElement('input');em.placeholder='correo';em.type='email';em.autocomplete='username';pw.placeholder='contraseña (mín. 6)';pw.type='password';pw.autocomplete='current-password';d.append(em,pw,b('Entrar',async()=>{sesSave(sesFrom(await sbAuth('token?grant_type=password',{email:em.value,password:pw.value})));SES.email=em.value;sesSave(SES);await catalogLoadPermissions();await catLoad();redraw()}),b('Crear cuenta',async()=>{await sbAuth('signup',{email:em.value,password:pw.value});alert('Cuenta creada. Si Supabase pide confirmar el correo, abre el email que te han enviado y luego pulsa Entrar.')}))}
+ else{d.append(document.createTextNode('☁ Nube desactivada (se guarda solo en este navegador). '));const em=document.createElement('input'),pw=document.createElement('input');em.placeholder='correo';em.type='email';em.autocomplete='username';pw.placeholder='contraseña (mín. 6)';pw.type='password';pw.autocomplete='current-password';d.append(em,pw,b('Entrar',async()=>{sesSave(sesFrom(await sbAuth('token?grant_type=password',{email:em.value,password:pw.value})));SES.email=em.value;sesSave(SES);await catalogLoadPermissions();await catLoad();redraw()}),b('Crear cuenta',async()=>{await sbAuth('signup',{email:em.value,password:pw.value});alert('Cuenta creada. Si Supabase pide confirmar el correo, abre el email que te han enviado y luego pulsa Entrar.')}),b('¿Has olvidado tu contraseña?',async()=>{await sbRecover(em.value);alert('Si existe una cuenta asociada a ese correo, recibirás un mensaje con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.')}))}
  return d}
 let curProj=null,psT=0;try{curProj=localStorage.getItem('curProj')}catch(e){}
 function pushVer(rec,data,why,now){const v=rec.versions=rec.versions||[],l=v[v.length-1];if(why=='auto'&&l&&now-l.t<6e5)return false;v.push({t:now,data,why});while(v.length>20)v.shift();return true}
@@ -1738,4 +1768,6 @@ try{const a=localStorage.getItem('auto');if(a){S=JSON.parse(a);H=[a]}}catch(e){}
 try{JSON.parse(localStorage.getItem('ml')||'[]').forEach(o=>{ML.push(o);LIB.push(o)})}catch(e){}
 r3.outputEncoding=r4.outputEncoding=T.sRGBEncoding;r3.shadowMap.type=T.PCFSoftShadowMap;
 drawTools();libUI();hint();setSun();setQ();refresh();animate();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});
+const recoveryOnLoad=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type')==='recovery'||new URLSearchParams(window.location.hash.replace(/^#/,'')).has('error_description');
+if(recoveryOnLoad)setTimeout(()=>accountPanel(),0);
 </script></body></html>
