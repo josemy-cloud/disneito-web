@@ -3545,6 +3545,14 @@
       "commit": "e600f5aabe83885cec5716d18249f9be61a1b9d6",
       "verified": false,
       "notes": "Se sustituye la cojinería elipsoidal genérica por paneles acolchados de contorno redondeado y volumen extruido con bisel, separando asiento y respaldo. Se diferencia la distribución de sofás rectos, chaise longue, rinconeros y modulares; se incorporan estructura inferior, brazos acolchados, apoyos y costuras de referencia. Butacas y sillones reciben asiento/respaldo panelados y brazos constructivos; el puf conserva tipología sin respaldo. El código se integró en las ramas compartidas shape=sofa y shape=seat, afectando a todas sus variantes enlazadas. Los tres scripts inline se parsean correctamente. Pendiente render real, revisión visual de proporciones, colisiones y comprobación en navegador; ningún modelo se declara verificado."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "salon-comedor-mesas-y-sillas",
+      "action": "Reconstrucción transversal de sillas de comedor y mesas rectangulares, redondas, ovaladas y extensibles",
+      "commit": "9833607fec5211f5b6aa9e1bdc8b91eacd654019",
+      "verified": false,
+      "notes": "Las sillas pasan a tener asiento con bastidor y cojín independiente opcional, respaldo curvado, montantes, faldones y cuatro patas conectadas; las variantes con brazos incorporan apoyabrazos soportados. Las mesas distinguen geometría redonda/ovalada y rectangular, con pedestal central en las redondas y cuatro apoyos en las rectangulares; las extensibles incorporan hojas separadas, panel central y guías inferiores. Se aplica a todas las variantes que usan shape=chair y shape=table. Los tres scripts inline se parsean correctamente. Pendiente inspección visual por variante, comprobación dimensional y validación en navegador; no se consideran terminadas."
     }
   ],
   "validation": {
@@ -3570,7 +3578,10 @@
     "kitchen_modular_interaction_validation": "not_performed: doors, drawers, corner mechanisms, lift-up fronts and appliance integrations require browser interaction tests",
     "seating_family_static_update": "passed: shared sofa and seat generators now use rounded extruded upholstery panels, distinct straight/chaise/corner/modular layouts, and constructed armchair/pouf variants; 3 inline scripts parse",
     "seating_family_browser_visual_validation": "not_performed: live browser render and per-variant visual inspection still required",
-    "seating_family_interaction_validation": "not_performed: placement, dimensions, project persistence and interaction still require browser tests"
+    "seating_family_interaction_validation": "not_performed: placement, dimensions, project persistence and interaction still require browser tests",
+    "dining_seating_table_static_update": "passed: shared chair and table generators updated; rounded upholstered seats, curved backrests, connected legs, distinct round/rectangular bases and three-panel extension layout integrated; 3 inline scripts parse",
+    "dining_seating_table_browser_visual_validation": "not_performed: live render and inspection of all chair/table variants still required",
+    "dining_seating_table_interaction_validation": "not_performed: extension behavior is represented geometrically; real interaction and project persistence remain to be tested"
   },
   "current_execution": {
     "date": "2026-11-06",
