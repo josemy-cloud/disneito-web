@@ -106,6 +106,14 @@
       "impact": "Los cajones no podían abrirse desde la previsualización; los muebles parecían carecer de lavabo; el inodoro no se reconocía como un conjunto sanitario correctamente ensamblado.",
       "action": "Corrección adicional: ramas específicas por nombre para mueble auxiliar y columna con cajones y puerta registrados en MV; encimeras perforadas mediante paños alrededor de las cubetas, cubetas cerámicas y grifería; reconstrucción de BUILD.lavabo clásico; reconstrucción de toiletGeometry con pedestal, aro, tapa, plataforma posterior y cisterna apoyada. Sintaxis de scripts comprobada; sigue pendiente prueba visual y de clic en navegador.",
       "verified": false
+    },
+    {
+      "id": "F13",
+      "severity": "high",
+      "finding": "El usuario detectó que el inodoro genérico corregido tenía taza, pedestal, aro y tapa demasiado pequeños respecto a la cisterna.",
+      "impact": "El sanitario perdía proporciones reconocibles y parecía descompensado.",
+      "action": "Se amplió el perfil radial de la taza y el pedestal, el aro y la tapa se escalaron al contorno completo del sanitario; se aumentó ligeramente el ancho de cisterna y repisa de apoyo, manteniendo la profundidad total y corrigiendo el perfil interior de la cubeta. Pendiente verificación visual en navegador.",
+      "verified": false
     }
   ],
   "counts_by_room": {
@@ -3436,6 +3444,14 @@
       "commit": "7a0b9b31f9094695139ac90e2b9869f5192d328b",
       "verified": false,
       "notes": "Se corrigió la detección de los nombres reales de los dos muebles de baño para registrar cajones y puerta en MV. Se abrieron huecos en las encimeras y se reconstruyó también el generador legacy BUILD.lavabo, que no usaba la rama vanity. Se sustituyó toiletGeometry, usado por BUILD.inodoro, para que la cisterna tenga apoyo y conexión con la taza. No se declara verificado: falta comprobación visual y de interacción real."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "baño",
+      "action": "Reequilibrar proporciones del inodoro genérico respecto a la cisterna",
+      "commit": "edec0ef8e225f0c779ba9fef3a03203f22890a17",
+      "verified": false,
+      "notes": "Aumento aproximado al doble del radio transversal de la taza y asiento frente a la geometría anterior, ampliación del pedestal, aro y tapa; cisterna ensanchada de forma moderada. Perfil interior revisado para mantener una cavidad coherente. No verificado visualmente."
     }
   ]
 }
