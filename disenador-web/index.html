@@ -1274,7 +1274,17 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   B(a,w-7,.8,.7,0,cy+ch/2-2,d/2-3,rub);
  } else if(kd=='lavadora'||kd=='secadora'){
   const cs=Math.min(w*.62,h*.52),cy=h*.47,innerR=cs*.43,depth=Math.min(d*.55,d-8);
-  B(a,w-2,h-2,d-2,0,h/2,-.5,m);B(a,w-4,h-4,d-4,0,h/2,-.5,mp);
+  // Carcasa hueca con abertura circular real en el frontal; no hay una placa opaca detrás del cristal.
+  const openingR=cs*.49,frontZ=d/2-1.2,sideW=2;
+  B(a,sideW,h,d-2,-w/2+sideW/2,h/2,-.5,m);B(a,sideW,h,d-2,w/2-sideW/2,h/2,-.5,m);
+  B(a,w-4,2,d-2,0,1,-.5,m);B(a,w-4,2,d-2,0,h-1,-.5,m);
+  B(a,w-4,h-4,2,0,h/2,-d/2+1,m);
+  const fasciaW=Math.max(2,w-4-2*openingR),topH=Math.max(2,h-(cy+openingR)),bottomH=Math.max(2,cy-openingR-2);
+  B(a,w-4,topH,2,0,cy+openingR+topH/2,frontZ,mp);
+  B(a,w-4,bottomH,2,0,bottomH/2+1,frontZ,mp);
+  B(a,fasciaW/2,openingR*2,2,-(openingR+fasciaW/4),cy,frontZ,mp);
+  B(a,fasciaW/2,openingR*2,2,openingR+fasciaW/4,cy,frontZ,mp);
+  const apertureRim=new T.Mesh(new T.TorusGeometry(openingR-1,1.1,10,48),chrome);apertureRim.position.set(0,cy,frontZ+1.1);a.add(apertureRim);
   const tub=new T.Mesh(new T.CylinderGeometry(cs*.47,cs*.47,depth,40,1,true),stl);tub.rotation.x=Math.PI/2;tub.position.set(0,cy,-.2);a.add(tub);
   const rear=new T.Mesh(new T.CircleGeometry(cs*.46,40),enam);rear.position.set(0,cy,-depth/2-.3);a.add(rear);
   const drum=new T.Mesh(new T.CylinderGeometry(innerR,innerR,depth*.72,40,1,true),stl);drum.rotation.x=Math.PI/2;drum.position.set(0,cy,-.1);a.add(drum);
