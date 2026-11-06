@@ -3591,16 +3591,15 @@ BUILD.rocaOnaFineceramicBasin=(g,it)=>{
 };
 
 function partMaterialRole(mesh,mat,primary,it){
- if(mat===primary)return 'principal';
- const p=mesh&&mesh.userData&&mesh.userData.part,tag=(p&&p.t)||'',name=((mesh&&mesh.name)||'')+' '+((mat&&mat.name)||'')+' '+tag,n=name.toLowerCase(),shape=it&&(it.shape||it.t),parts=ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it&&it.t]||[];
- for(const [key,label] of parts){const aliases={
- seat:/asiento|seat|cushion/,back:/respaldo|back/,arms:/brazo|arm/,frame:/estructura|bastidor|frame/,feet:/pata|pie|foot/,top:/tablero|encimera|sobre|top/,doors:/puerta|door/,fronts:/frente|front/,drawers:/caj[oó]n|drawer/,handles:/tirador|handle/,glass:/cristal|vidrio|glass|espejo/,tap:/grifer[ií]a|grifo|tap/,ceramic:/cer[aá]mica|porcelana/,mattress:/colch[oó]n|mattress/,bedding:/edred[oó]n|ropa de cama/,pillows:/almohada|pillow/,shelves:/balda|estante|shelf/,hardware:/herra|bisagra|gu[ií]a|hardware/,wheels:/rueda|neum[aá]tico|wheel/,fabric:/lona|tejido|tela|fabric/,body:/carcasa|cuerpo|body/,carcass:/casco|carcasa|carcass/,basin:/cubeta|lavabo|fregadero|basin/,profiles:/perfil|bisagra|profile/,tray:/plato de ducha|tray/,frame:/marco|estructura|frame/,shell:/vaso|cuerpo|shell/};
-  if((p&&p.t&&((key==='doors'&&/puerta|frente/.test(tag))||(key==='drawers'&&/caj[oó]n/.test(tag))||(key==='shelves'&&/balda/.test(tag))||(key==='handles'&&/tirador/.test(tag))||(key==='hardware'&&/herra|bisagra|gu[ií]a/.test(tag))))||((aliases[key]||new RegExp(key,'i')).test(n)))return key;
- }
+ const p=mesh&&mesh.userData&&mesh.userData.part,tag=(p&&p.t)||'',meshName=(mesh&&mesh.name)||'',matName=(mat&&mat.name)||'',n=(meshName+' '+matName+' '+tag).toLowerCase(),shape=it&&(it.shape||it.t),parts=ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it&&it.t]||[];
+ // Identificar primero la pieza: antes el material principal cortocircuitaba esta búsqueda.
+ const aliases={seat:/asiento|seat|cushion/,back:/respaldo|back/,arms:/brazo|arm/,frame:/estructura|bastidor|frame|cuadro/,feet:/pata|pie|foot/,top:/tablero|encimera|sobre|top/,doors:/puerta|door/,fronts:/frente|front/,drawers:/caj[oó]n|drawer/,handles:/tirador|handle/,glass:/cristal|vidrio|glass|espejo/,tap:/grifer[ií]a|grifo|tap/,ceramic:/cer[aá]mica|porcelana/,mattress:/colch[oó]n|mattress/,bedding:/edred[oó]n|ropa de cama/,pillows:/almohada|pillow/,shelves:/balda|estante|shelf/,hardware:/herra|bisagra|gu[ií]a|hardware/,wheels:/rueda|neum[aá]tico|wheel/,fabric:/lona|tejido|tela|fabric/,body:/carcasa|cuerpo|body/,carcass:/casco|carcasa|carcass/,basin:/cubeta|lavabo|fregadero|basin/,profiles:/perfil|bisagra|profile/,tray:/plato de ducha|tray/,shell:/vaso|cuerpo|shell/,headboard:/cabecero|headboard/,legs:/pata|leg/,apron:/fald[oó]n|apron/,rail:/barra|riel|rail/,controls:/mando|control/,shade:/pantalla|difusor|shade/,base:/base|pedestal/,drain:/desag[uü]e|v[aá]lvula|drain/,waste:/desag[uü]e|v[aá]lvula|waste/};
+ for(const [key] of parts){const rx=aliases[key]||new RegExp(key,'i');if((tag&&tag.toLowerCase()===key.toLowerCase())||rx.test(n))return key}
  if(/cristal|vidrio|glass|espejo/.test(n))return 'glass';
  if(/metal|acero|inox|chrome|cromo|bisagra|tirador|herra|steel/.test(n)||(mat&&mat.metalness>.55))return 'hardware';
  if(/tapiz|tela|tejido|cojin|cojín|almohad|colchon|colchón|linen|fabric/.test(n))return 'fabric';
  if(mat&&((mat.transparent&&mat.opacity<.99)||mat.transmission>0))return 'glass';
+ if(mat===primary)return 'principal';
  return 'body';
 }
 function applyItemPartColors(g,it,primary){
