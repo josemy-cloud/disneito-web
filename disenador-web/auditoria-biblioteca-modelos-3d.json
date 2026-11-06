@@ -161,6 +161,14 @@
       "impact": "Los proyectos y entradas antiguas que usan los tipos clásicos podían conservar un aspecto inferior aunque la biblioteca procedural nueva estuviera mejorada.",
       "action": "Actualizados también los generadores clásicos de sofá, mesa y cama: cojines volumétricos separados, soportes estructurales, mesa con pedestal o patas diferenciadas y colchón/almohadas/ropa de cama con volumen. Se conserva la compatibilidad de los identificadores y tipos legacy. Pendiente validación visual en navegador.",
       "verified": false
+    },
+    {
+      "id": "F13",
+      "severity": "high",
+      "finding": "La primera geometría compartida de camas no resolvía de forma suficientemente constructiva el colchón ni los apoyos: el colchón/ropa de cama se leían como superficies simplificadas y la cama convencional solo tenía dos patas visibles.",
+      "impact": "La silueta de cama no transmite un producto real; los colchones deben ser rectangulares y con espesor, el bastidor debe quedar apoyado y las patas deben corresponder al tipo de cama.",
+      "action": "Reconstrucción v3 de BUILD.roomObject bed aplicada a las seis variantes: colchón rectangular acolchado con espesor, ropa de cama y almohadas proporcionadas, bastidor perimetral con lamas, cuatro patas con conteras y apoyos centrales en camas anchas; litera con cuatro postes continuos y barandillas; canapé con arcón y herrajes laterales. Pendiente inspección visual, dimensiones y mecanismos en navegador.",
+      "verified": false
     }
   ],
   "counts_by_room": {
@@ -3561,6 +3569,13 @@
       "commit": "894058cb6001f8cdea4fce0cbeaaaa5f8d809686",
       "verified": false,
       "notes": "La familia de camas se reconstruye con bastidor perimetral, travesaños de somier, colchón de espesor propio, edredón y almohadas independientes mediante geometría acolchada extruida y biselada. El cabecero incorpora marco y paños tapizados. Las literas mantienen dos niveles y escalera con montantes/peldaños; el canapé incluye herrajes visibles de elevación, pero no se afirma que la tapa abra hasta comprobar su pivote y animación real. Se aplica a todas las variantes shape=bed. Los tres scripts inline se parsean correctamente; pendiente revisión visual, dimensional, de colisiones y de mecanismo en navegador."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "dormitorios",
+      "action": "Reconstrucción v3 del generador compartido de camas: colchones rectangulares con volumen, ropa de cama proporcionada, bastidores, lamas, patas y apoyos; variantes individual, doble, king size, matrimonio 135, litera y canapé",
+      "commit": "75d2d28b028e55f84a03632e9f5f9dc58cec0d08",
+      "verified": false
     }
   ],
   "validation": {
@@ -3590,9 +3605,9 @@
     "dining_seating_table_static_update": "passed: shared chair and table generators updated; rounded upholstered seats, curved backrests, connected legs, distinct round/rectangular bases and three-panel extension layout integrated; 3 inline scripts parse",
     "dining_seating_table_browser_visual_validation": "not_performed: live render and inspection of all chair/table variants still required",
     "dining_seating_table_interaction_validation": "not_performed: extension behavior is represented geometrically; real interaction and project persistence remain to be tested",
-    "bed_family_static_update": "passed: shared bed generator rebuilt with frame, slatted support, mattress, duvet, pillows, upholstered headboard, bunk ladder and visible storage-bed hardware; 3 inline scripts parse",
-    "bed_family_browser_visual_validation": "not_performed: visual inspection and proportion checks in browser remain pending",
-    "bed_family_interaction_validation": "not_performed: storage-bed lift mechanism and project persistence require runtime testing"
+    "bed_family_static_update": "passed: BUILD.roomObject bed rebuilt as schemaVersion 3 with rounded-rectangular mattress geometry, realistic mattress thickness, perimeter rails, slats, four corner legs and center supports for wide beds; bunk and storage-bed branches differentiated. Main inline scripts parse successfully.",
+    "bed_family_browser_visual_validation": "not_performed: live browser render still required to confirm mattress silhouette, proportions, feet contact, bedding and all six variants.",
+    "bed_family_interaction_validation": "not_performed: storage-bed lifting mechanism is represented by hardware only; runtime opening and project persistence remain to be tested."
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3609,7 +3624,7 @@
     "verification": {
       "inventory_json_parse": "passed",
       "shape_generator_static_mapping": "passed",
-      "inline_javascript_parse": "passed: 3 executable inline scripts parsed after seating-family reconstruction",
+      "inline_javascript_parse": "passed: executable inline scripts parsed after bed-family reconstruction",
       "module_javascript_parse": "passed",
       "geometry_runtime": "not_run",
       "visual_review": "not_run",
@@ -3623,7 +3638,7 @@
       "rebuilt_models": 0,
       "improved_models": 0,
       "verified_models": 0,
-      "note": "No se contabilizan registros individuales como procesados, reconstruidos o verificados: los cambios se aplican a generadores compartidos y aún requieren ejecución y revisión por variante."
+      "note": "La reconstrucción afecta al generador compartido de seis variantes de cama; no se contabilizan como verificados hasta comprobar cada variante en navegador."
     }
   }
 }
