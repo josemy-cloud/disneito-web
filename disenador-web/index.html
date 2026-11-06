@@ -1310,7 +1310,7 @@ case'bed':{
  }
  // Cabecero tapizado con bastidor, espesor y panel central; solo en camas no literas.
  if(!bunk){
-  const headH=Math.max(28,Math.min(48,h*.46)),headY=Math.min(h-headH*.52,mattressY+matH*.72);
+  const headH=Math.max(28,Math.min(48,h*.46)),headY=Math.min(h-headH*.52,mattressY+mattressH*.72);
   B(g,w*.99,headH,6,0,headY,-d*.465,frame);
   B(g,w*.91,headH*.82,2.2,0,headY,-d*.425,linen);
   for(let x=-w*.36;x<=w*.36;x+=w*.24)B(g,1.1,headH*.7,1.4,x,headY,-d*.407,frame);
