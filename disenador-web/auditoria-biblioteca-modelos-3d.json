@@ -3592,6 +3592,14 @@
       "commit": "45c48ff7991243a224978b122581d872b1d7bf00",
       "verified": false,
       "notes": "Primera fase de personalización de controles, no finalización global. La UI presenta listas distintas según shape/tipo. La aplicación efectiva de cada override depende de que el generador identifique/tague la pieza correspondiente; muchas geometrías heredadas aún carecen de etiquetas semánticas por componente. Es necesario instrumentar cada generador, probar visualmente todas las piezas y verificar persistencia antes de dar la función por completada."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "correccion-aplicacion-colores-componentes",
+      "action": "Corregida la prioridad del clasificador de materiales: ahora busca primero etiquetas semánticas y nombres de pieza, y solo asigna el rol principal como fallback. Antes, cualquier malla que compartiera el material base se clasificaba inmediatamente como principal, impidiendo que los selectores específicos reconocieran varias piezas. El cambio se aplica al reconstruirse la escena mediante el flujo normal de guardado/actualización.",
+      "commit": "7db1f6e6e77df0fc0321e6196a158a3d48b0e8fd",
+      "verified": false,
+      "notes": "Corrección estática del fallo de precedencia. Los generadores sin nombres ni etiquetas por pieza siguen sin poder distinguir componentes; no se declara resuelto el sistema completo hasta etiquetado de geometrías y prueba visual real."
     }
   ],
   "validation": {
@@ -3628,8 +3636,8 @@
     "per_part_color_browser_validation": "not_performed: actual browser/WebGL review of material-role classification and all object families remains required.",
     "per_part_color_persistence_validation": "not_performed: saved-project round trip for partColors remains to be tested in browser.",
     "per_object_component_ui_static_update": "passed: replaced generic color-role controls with type-specific component schemas; main inline script parses successfully.",
-    "per_object_component_mapping": "partial: overrides resolve explicit semantic tags and mesh names; legacy procedural generators still need per-component tagging.",
-    "per_object_component_browser_validation": "not_performed: no live browser/WebGL visual validation.",
+    "per_object_component_mapping": "partial: corrected material-primary short-circuit; semantic tags and mesh names are now evaluated first. Generators with unnamed/untagged meshes still require explicit component tagging.",
+    "per_object_component_browser_validation": "not_performed: needs browser/WebGL visual check after deployment or local preview.",
     "per_object_component_persistence_validation": "not_performed: project save/reopen round trip not tested."
   },
   "current_execution": {
@@ -3659,7 +3667,7 @@
       "per_part_color_browser_validation": "not_run",
       "per_part_color_persistence": "not_run",
       "per_object_component_ui_static_update": "passed: type-specific schemas and per-component persistence fields integrated; main inline script parses.",
-      "per_object_component_mapping": "partial: explicit tags/name mapping supported; legacy generated meshes remain to be tagged by family.",
+      "per_object_component_mapping": "partial: precedence bug fixed; legacy meshes still need explicit per-component tags.",
       "per_object_component_browser_validation": "not_run",
       "per_object_component_persistence": "not_run"
     },
@@ -3668,7 +3676,7 @@
       "rebuilt_models": 0,
       "improved_models": 0,
       "verified_models": 0,
-      "note": "No se contabiliza ningún modelo como completado o verificado. Los esquemas de componentes específicos son una primera fase; falta etiquetar la geometría de cada generador para que cada selector controle exactamente su pieza."
+      "note": "Se corrigió un fallo que clasificaba prematuramente las mallas con material base como componente principal, anulando selectores específicos aunque hubiera nombre/etiqueta. Siguen pendientes etiquetas en geometrías heredadas y validación visual/runtime; ningún modelo se considera completado."
     }
   }
 }
