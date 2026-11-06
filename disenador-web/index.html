@@ -997,7 +997,7 @@ function buildCabinetConstruction(g,it,baseMaterial){
  const kickH=Math.min(10,h*.1),kickD=Math.max(2,d*.12);
  B(g,w*.91,kickH,kickD,0,kickH/2,d/2-kickD/2,interior);
  // Taladros de sistema 32 y soportes metálicos para baldas móviles.
- const shelfCount=isShoe?5:(isTall?4:2);
+ const shelfCount=isShoe?0:(isTall?4:2);
  const shelfYs=[];
  for(let k=1;k<=shelfCount;k++){
   const y=t+(h-2*t)*k/(shelfCount+1);shelfYs.push(y);
@@ -1036,6 +1036,24 @@ function buildCabinetConstruction(g,it,baseMaterial){
   const bar=new T.Mesh(new T.CylinderGeometry(.9,.9,Math.min(18,innerW*.42),16),metal);
   bar.rotation.z=Math.PI/2;bar.position.set(0,0,3.05);dr.add(bar);
   mv(dr,{it,k,t:'s',z:frontZ,sl:Math.min(26,boxD*.48)});
+ }
+ // Zapatero: compartimentos basculantes independientes, con cubeta interior y bisagras inferiores.
+ if(isShoe){
+  const n=3,compH=(h-2*t)/n;
+  for(let k=0;k<n;k++){
+   const bottomY=t+k*compH,flap=new T.Group();
+   flap.position.set(0,bottomY,frontZ);g.add(flap);
+   B(flap,innerW-t*.5,compH-t,2.1,0,(compH-t)/2,0,edge);
+   B(flap,innerW-t*1.5,1.4,innerD*.72,0,t*.4,-innerD*.14,interior);
+   for(const side of [-1,1]){
+    B(flap,t*.7,compH-t,innerD*.72,side*(innerW/2-t*.7),(compH-t)/2,-innerD*.14,interior);
+    const hinge=new T.Mesh(new T.CylinderGeometry(.9,.9,3.2,12),metal);
+    hinge.rotation.z=Math.PI/2;hinge.position.set(side*(innerW/2-t),1.5,-.1);flap.add(hinge);
+   }
+   const pull=new T.Mesh(new T.CylinderGeometry(.85,.85,Math.min(18,innerW*.34),16),metal);
+   pull.rotation.z=Math.PI/2;pull.position.set(0,compH-t-3,2.8);flap.add(pull);
+   mv(flap,{it,k,t:'h'});
+  }
  }
  // Puertas abatibles independientes; bisagras de cazoleta y tirador vertical.
  const doorY=drawerCount?drawerZone+(h-drawerZone)/2:h/2;
