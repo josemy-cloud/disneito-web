@@ -3526,9 +3526,9 @@
       "date": "2026-11-06",
       "phase": "bano-ducha-y-mampara",
       "action": "Añadir perfilería inferior, juntas, placas de fijación y estabilizador superior a la mampara de ducha",
-      "commit": "cec246397ff444c701caa9172a55858b7afbca24",
+      "commit": "b500227a936ca20bc0ec48476c243a7e2669dc66",
       "verified": false,
-      "notes": "Se añaden perfiles y juntas de apoyo al conjunto móvil de vidrio, placas de herraje y tornillería, además de una barra estabilizadora superior con abrazadera mural. Es una mejora constructiva del generador compartido shape=shower; no se ha ejecutado render real ni se ha inspeccionado el modelo en navegador. Debe comprobarse que los perfiles queden alineados con el vidrio y el plato en ambas variantes de ducha."
+      "notes": "Se añaden perfiles y juntas de apoyo al conjunto móvil de vidrio, placas de herraje y tornillería, además de una barra estabilizadora superior con abrazadera mural. Es una mejora constructiva del generador compartido shape=shower; no se ha ejecutado render real ni se ha inspeccionado el modelo en navegador. Debe comprobarse que los perfiles queden alineados con el vidrio y el plato en ambas variantes de ducha. Ajuste de cota posterior: el canal inferior se sitúa a 1,5 cm sobre la base para coincidir con el borde inferior del vidrio, en lugar de usar la altura total del plato."
     }
   ],
   "validation": {
@@ -3548,7 +3548,7 @@
     "cabinetry_geometry_harness": "passed: 6/6 inventory records with shape=cabinet generated mesh hierarchies and expected motion registrations in an isolated constructor harness; this is not a real Three.js/WebGL browser test",
     "cabinetry_browser_visual_validation": "not_performed: no live browser render or visual inspection; do not approve these models yet",
     "cabinetry_browser_interaction_validation": "not_performed: drawer, hinge and tilt-out movement still require real browser interaction testing",
-    "shower_enclosure_static_update": "integrated: lower glass channel, seal, hinge plates, fixings and upper stabilizer added; browser visual and interaction validation not performed"
+    "shower_enclosure_static_update": "integrated: lower channel aligned to glass bottom at 1.5 cm, glass seal, hinge plates, fixings and upper stabilizer added; browser visual and interaction validation not performed"
   },
   "current_execution": {
     "date": "2026-11-06",
