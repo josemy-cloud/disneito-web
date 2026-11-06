@@ -1169,7 +1169,24 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   B(a,w*.12,.7,.35,0,h*.9,d*.36,lcd);
   return
  }
- if(kd=='placa'){const hh=Math.max(h,3);B(a,w,hh,d,0,hh/2,0,M('#0b0e12',.05,.35));[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([x,z])=>{const r=new T.Mesh(new T.TorusGeometry(7,.35,8,28),M('#555',.4,.5));r.rotation.x=Math.PI/2;r.position.set(x*w/4,hh+.2,z*d/4);a.add(r);const r2=new T.Mesh(new T.CylinderGeometry(3,3,.3,20),M('#3a3a3a',.4,.5));r2.position.set(x*w/4,hh+.2,z*d/4);a.add(r2)});B(a,w*.3,.2,2,0,hh+.15,d/2-3,lcd);return}
+ if(kd=='placa'){
+  // Placa de inducción con cristal biselado, cuatro zonas y controles táctiles.
+  const hh=Math.max(h,3),glass=M('#101419',.12,.42),edge=M('#343a40',.28,.55),ring=M('#737d84',.32,.72),mark=M('#aeb9c0',.38,.42);
+  B(a,w,hh,d,0,hh/2,0,glass);
+  B(a,w-1.2,.45,.7,0,hh+.15,-d/2+.35,edge);B(a,w-1.2,.45,.7,0,hh+.15,d/2-.35,edge);
+  B(a,.7,.45,d-1.2,-w/2+.35,hh+.15,0,edge);B(a,.7,.45,d-1.2,w/2-.35,hh+.15,0,edge);
+  const zones=[[-w*.25,-d*.23,Math.min(w*.205,d*.31)],[w*.25,-d*.23,Math.min(w*.205,d*.31)],[-w*.25,d*.23,Math.min(w*.205,d*.31)],[w*.25,d*.23,Math.min(w*.205,d*.31)]];
+  zones.forEach(([x,z,rad],i)=>{
+   const outer=new T.Mesh(new T.TorusGeometry(rad,.42,8,56),ring);outer.rotation.x=Math.PI/2;outer.position.set(x,hh+.42,z);a.add(outer);
+   const inner=new T.Mesh(new T.TorusGeometry(rad*.88,.22,6,48),mark);inner.rotation.x=Math.PI/2;inner.position.set(x,hh+.43,z);a.add(inner);
+   const dot=new T.Mesh(new T.CircleGeometry(.65,16),i===0?lit:mark);dot.rotation.x=-Math.PI/2;dot.position.set(x+rad*.7,hh+.46,z+rad*.7);a.add(dot);
+  });
+  const panelW=Math.min(w*.58,38),panelZ=d*.43;
+  B(a,panelW,1.05,5,0,hh+.48,panelZ,M('#080b0e',.18,.28));
+  for(let q=0;q<5;q++){const x=-panelW*.38+q*panelW*.19,key=new T.Mesh(new T.RingGeometry(1.05,1.45,24),mark);key.rotation.x=Math.PI/2;key.position.set(x,hh+1.05,panelZ);a.add(key)}
+  B(a,Math.min(12,w*.22),.25,.35,0,hh+1.06,panelZ-.8,lcd);
+  return
+}
  const SH={horno:1,micro:1,lavavajillas:1,lavadora:1,secadora:1,combi:1,frigo:1,vinoteca:1};if(!SH[kd])B(a,w,h,d-1,0,h/2,-.5,m);
  if(kd=='horno'){
   // Horno empotrable: cavidad esmaltada, guías, parrillas, resistencia y puerta abatible.
