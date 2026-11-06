@@ -774,7 +774,8 @@
           "correderas telescópicas de tres perfiles, rodamientos y fijaciones"
         ],
         "validation": "Los dos scripts clásicos inline se compilan sin errores. No se ha realizado comprobación visual en navegador ni pruebas de interacción en los cuatro modos.",
-        "status": "en_proceso"
+        "status": "en_proceso",
+        "library_policy": "Los 8 modelos legacy de cocina permanecen visibles en la biblioteca mientras no exista un sustituto nuevo integrado y verificado. Se conservan sus IDs y generadores; no se ocultan ni se eliminan durante esta transición."
       }
     },
     {
@@ -822,6 +823,13 @@
       "phase": "cocina",
       "action": "Mejora geométrica integrada en el generador paramétrico",
       "commit": "5e49a59c6e318942ff836a83ef252f72faa6fbb1",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "cocina",
+      "action": "Restaurar visibilidad de los 8 modelos legacy; no se ocultan ni eliminan antes de verificar sustitutos",
+      "commit": "2a056411ec09082b25948379daff14d4aac42780",
       "verified": false
     }
   ]
