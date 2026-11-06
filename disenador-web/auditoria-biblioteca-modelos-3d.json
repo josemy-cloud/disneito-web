@@ -3584,6 +3584,14 @@
       "commit": "2ccb8a98c7ad29c86484bd44efcdd8eea6bea0ff",
       "verified": false,
       "notes": "Se elimina únicamente el modelo heredado «Cama 150»; se conservan las seis variantes de cama del catálogo de dormitorio. Se incorporan controles persistentes por objeto para superficie principal, piezas secundarias, metal/herrajes, cristal/vidrio, tapizados/tejidos y cerámica/porcelana. La aplicación de colores se realiza en el constructor compartido, por lo que afecta tanto a la escena 3D como a las previsualizaciones de biblioteca. Los colores adicionales se guardan en partColors dentro del objeto del proyecto. El script ejecutable principal supera el parseo estático; pendiente comprobar en navegador la asignación visual por material, todos los tipos de objeto, persistencia y ausencia de efectos secundarios."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "colores-componentes-especificos-por-familia",
+      "action": "Sustituidos los seis selectores cromáticos genéricos por esquemas de componentes específicos para familias de muebles, baño, cocina, electrónica, exterior y objetos auxiliares; cada override se guarda por clave de componente en el objeto. El clasificador reconoce etiquetas semánticas existentes y nombres de malla cuando están disponibles.",
+      "commit": "45c48ff7991243a224978b122581d872b1d7bf00",
+      "verified": false,
+      "notes": "Primera fase de personalización de controles, no finalización global. La UI presenta listas distintas según shape/tipo. La aplicación efectiva de cada override depende de que el generador identifique/tague la pieza correspondiente; muchas geometrías heredadas aún carecen de etiquetas semánticas por componente. Es necesario instrumentar cada generador, probar visualmente todas las piezas y verificar persistencia antes de dar la función por completada."
     }
   ],
   "validation": {
@@ -3618,7 +3626,11 @@
     "bed_family_interaction_validation": "not_performed: storage-bed lift mechanism is represented by hardware only; runtime opening and project persistence remain to be tested.",
     "per_part_color_static_update": "passed: shared buildItemGeometry applies persisted per-part color overrides to generated and imported object meshes; main executable inline script parses successfully.",
     "per_part_color_browser_validation": "not_performed: actual browser/WebGL review of material-role classification and all object families remains required.",
-    "per_part_color_persistence_validation": "not_performed: saved-project round trip for partColors remains to be tested in browser."
+    "per_part_color_persistence_validation": "not_performed: saved-project round trip for partColors remains to be tested in browser.",
+    "per_object_component_ui_static_update": "passed: replaced generic color-role controls with type-specific component schemas; main inline script parses successfully.",
+    "per_object_component_mapping": "partial: overrides resolve explicit semantic tags and mesh names; legacy procedural generators still need per-component tagging.",
+    "per_object_component_browser_validation": "not_performed: no live browser/WebGL visual validation.",
+    "per_object_component_persistence_validation": "not_performed: project save/reopen round trip not tested."
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3645,14 +3657,18 @@
       "modes_3d_render": "not_run",
       "per_part_color_static_update": "passed: principal, secondary, metal, glass, textile and ceramic role overrides integrated in shared geometry builder; main executable inline script parses successfully.",
       "per_part_color_browser_validation": "not_run",
-      "per_part_color_persistence": "not_run"
+      "per_part_color_persistence": "not_run",
+      "per_object_component_ui_static_update": "passed: type-specific schemas and per-component persistence fields integrated; main inline script parses.",
+      "per_object_component_mapping": "partial: explicit tags/name mapping supported; legacy generated meshes remain to be tagged by family.",
+      "per_object_component_browser_validation": "not_run",
+      "per_object_component_persistence": "not_run"
     },
     "completion": {
       "processed_models": 0,
       "rebuilt_models": 0,
       "improved_models": 0,
       "verified_models": 0,
-      "note": "La reconstrucción afecta al generador compartido de seis variantes de cama; no se contabilizan como verificados hasta comprobar cada variante en navegador."
+      "note": "No se contabiliza ningún modelo como completado o verificado. Los esquemas de componentes específicos son una primera fase; falta etiquetar la geometría de cada generador para que cada selector controle exactamente su pieza."
     }
   }
 }
