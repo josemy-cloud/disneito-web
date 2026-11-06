@@ -1309,9 +1309,277 @@
     {
       "id": "bano",
       "name": "Cuartos de baño",
-      "status": "pending",
+      "status": "in_process",
       "inventory_complete": false,
-      "items": []
+      "items": [
+        {
+          "id": "bano-banera-exenta",
+          "name": "Bañera exenta",
+          "family": "Bañera",
+          "shape": "bath",
+          "dimensions_cm": {
+            "width": 170,
+            "height": 58,
+            "depth": 78
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-ducha-mampara",
+          "name": "Ducha con mampara",
+          "family": "Ducha",
+          "shape": "shower",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 205,
+            "depth": 90
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-mueble-lavabo-doble",
+          "name": "Mueble lavabo doble",
+          "family": "Mueble lavabo",
+          "shape": "vanity",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 58,
+            "depth": 50
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-lavabo-sobre-encimera",
+          "name": "Lavabo sobre encimera",
+          "family": "Lavabo",
+          "shape": "basin",
+          "dimensions_cm": {
+            "width": 48,
+            "height": 18,
+            "depth": 48
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-bide-ceramico",
+          "name": "Bidé cerámico",
+          "family": "Sanitario",
+          "shape": "bidet",
+          "dimensions_cm": {
+            "width": 38,
+            "height": 40,
+            "depth": 58
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-radiador-toallero",
+          "name": "Radiador toallero",
+          "family": "Accesorio",
+          "shape": "rail",
+          "dimensions_cm": {
+            "width": 55,
+            "height": 115,
+            "depth": 12
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-columna",
+          "name": "Columna baño",
+          "family": "Almacenaje",
+          "shape": "cabinet",
+          "dimensions_cm": {
+            "width": 38,
+            "height": 175,
+            "depth": 32
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-espejo-iluminado",
+          "name": "Espejo iluminado",
+          "family": "Espejo",
+          "shape": "mirror",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 75,
+            "depth": 5
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-banera-encastrada",
+          "name": "Bañera rectangular encastrada",
+          "family": "Bañera",
+          "shape": "bath",
+          "dimensions_cm": {
+            "width": 170,
+            "height": 55,
+            "depth": 75
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-plato-ducha-cuadrado",
+          "name": "Plato de ducha cuadrado",
+          "family": "Ducha",
+          "shape": "shower",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 200,
+            "depth": 100
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-mueble-lavabo-suspendido",
+          "name": "Mueble lavabo suspendido",
+          "family": "Mueble lavabo",
+          "shape": "vanity",
+          "dimensions_cm": {
+            "width": 100,
+            "height": 52,
+            "depth": 48
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-lavabo-apoyo-ovalado",
+          "name": "Lavabo de apoyo ovalado",
+          "family": "Lavabo",
+          "shape": "basin",
+          "dimensions_cm": {
+            "width": 58,
+            "height": 18,
+            "depth": 40
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-mueble-auxiliar",
+          "name": "Mueble auxiliar baño",
+          "family": "Almacenaje",
+          "shape": "cabinet",
+          "dimensions_cm": {
+            "width": 45,
+            "height": 110,
+            "depth": 32
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-toallero-pared",
+          "name": "Toallero de pared",
+          "family": "Accesorio",
+          "shape": "rail",
+          "dimensions_cm": {
+            "width": 55,
+            "height": 65,
+            "depth": 12
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "modelo procedural genérico"
+        },
+        {
+          "id": "bano-roca-ona-bidet",
+          "name": "Roca Ona A357687000",
+          "family": "Sanitario comercial",
+          "shape": "rocaOnaBidet",
+          "dimensions_cm": {
+            "width": 36,
+            "height": 42,
+            "depth": 53
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida"
+        },
+        {
+          "id": "bano-roca-ona-wc",
+          "name": "Roca Ona A346687000",
+          "family": "Sanitario comercial",
+          "shape": "rocaOnaWallHungWC",
+          "dimensions_cm": {
+            "width": 36,
+            "height": 29,
+            "depth": 53
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida"
+        },
+        {
+          "id": "bano-roca-ona-wc-compacto",
+          "name": "Roca Ona WC compacto",
+          "family": "Sanitario comercial",
+          "shape": "rocaOnaWallHungWCCompact",
+          "dimensions_cm": {
+            "width": 36,
+            "height": 29,
+            "depth": 48
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida"
+        },
+        {
+          "id": "bano-roca-ona-bidet-compacto",
+          "name": "Roca Ona bidé compacto",
+          "family": "Sanitario comercial",
+          "shape": "rocaOnaWallHungBidet",
+          "dimensions_cm": {
+            "width": 36,
+            "height": 29,
+            "depth": 53
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida"
+        },
+        {
+          "id": "bano-roca-ona-lavabo-fineceramic",
+          "name": "Roca Ona Fineceramic A327686000",
+          "family": "Lavabo comercial",
+          "shape": "rocaOnaFineceramicBasin",
+          "dimensions_cm": {
+            "width": 60,
+            "height": 16,
+            "depth": 46
+          },
+          "status": "pending",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "source_type": "producto comercial con geometría paramétrica reconstruida"
+        }
+      ],
+      "scope_note": "Inventario inicial de 19 modelos identificados en catálogo estático y generadores comerciales Roca Ona. Pendiente inspeccionar modelos importados/dinámicos de IndexedDB, objetos persistidos en proyectos, variantes legacy (tipos lavabo/inodoro) y recursos fuera de LIB; por tanto, no se declara completo."
     },
     {
       "id": "salon-comedor",
