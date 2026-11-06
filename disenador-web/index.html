@@ -885,7 +885,48 @@ case'seat':case'bench':case'chair':{box(0,h*.43,0,w*.88,h*.11,d*.78,mt);box(0,h*
 case'panel':box(0,h*.5,0,w,h,d*.08,M('#75563f',.62));box(0,h*.52,d*.05,w*.76,h*.48,2,M('#171b20',.16,.3));for(let x of [-1,1])box(x*w*.43,h*.5,d*.08,3,h*.95,3,metal);for(let y of [.18,.84])box(0,h*y,d*.1,w*.9,3,d*.16,M('#9d7955',.6));break;
 case'table':if(v%2===0){cyl(0,h-3,0,Math.min(w,d)*.46,6);cyl(0,h*.5,0,Math.min(w,d)*.12,h-8,metal)}else{box(0,h-3,0,w,6,d);for(let x of [-1,1])for(let z of [-1,1])box(x*w*.42,h*.48,z*d*.4,5,h*.92,5)}break;
 case'bed':{box(0,h*.13,0,w*.96,h*.2,d*.94,mt);box(0,h*.32,d*.015,w*.93,h*.15,d*.9,M('#e5e0d7',.96));box(0,h*.72,-d*.46,w,h*.48,6,mt);for(let x of [-1,1]){box(x*w*.22,h*.48,-d*.3,w*.38,h*.12,d*.2,M('#faf8f3',.98));box(x*w*.22,h*.54,-d*.29,w*.34,h*.035,d*.18,M('#d7d0c5',.98))}box(0,h*.42,d*.19,w*.9,h*.07,d*.45,M('#e8e3da',.98));for(let k=0;k<6;k++){const cv=new T.CatmullRomCurve3([new T.Vector3(-w*.4+k*w*.16,h*.46,d*.02),new T.Vector3(-w*.34+k*w*.16,h*.44,d*.22),new T.Vector3(-w*.3+k*w*.16,h*.42,d*.39)]);g.add(new T.Mesh(new T.TubeGeometry(cv,12,.5,5,false),M('#c9c2b8',.98)))}break;}
-case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':box(0,h*.48,0,w*.94,h*.92,d*.92);for(let k=0;k<4;k++){box(0,h*(.14+k*.2),d*.47,w*.88,h*.16,2,M('#c7b7a4',.7));cyl(w*.25,h*(.14+k*.2),d*.5,1.3,3,metal)}break;
+case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':{
+ const name=(it.n||'').toLowerCase();
+ if(name.includes('cajonera móvil')){
+  const shell=M('#c8c0b3',.72,.04),rail=M('#89949b',.32,.82),darkRail=M('#4c555b',.45,.62),front=mt,foot=M('#272d31',.5,.5);
+  const sideT=1.8,baseY=3,topY=h-2,bodyD=d*.9,bodyW=w*.94,frontZ=bodyD/2+1.5;
+  // Casco abierto y ensamblado: dos costados, trasera, tapa y base.
+  for(const sx of [-1,1])box(sx*(bodyW/2-sideT/2),h*.48,0,sideT,h*.88,bodyD,shell);
+  box(0,h*.48,-bodyD/2+sideT/2,bodyW-2*sideT,h*.88,sideT,shell);
+  box(0,baseY,0,bodyW-2*sideT,2.4,bodyD,shell);
+  box(0,topY,0,bodyW+2,3,bodyD+2,front);
+  const n=3,drawerGap=1.4,drawerH=(h-11)/n;
+  for(let k=0;k<n;k++){
+   const yy=baseY+2+drawerH*(k+.5),dw=bodyW-2*sideT-1,dd=bodyD-5;
+   box(0,yy,-1,dw,drawerH-2,dd,shell);
+   box(0,yy,frontZ,dw,drawerH-1.2,2.2,front);
+   // Caja real del cajón con laterales, trasera y fondo.
+   for(const sx of [-1,1])box(sx*(dw/2-1),yy+1,0,1.6,drawerH-3,dd-3,shell);
+   box(0,yy+1,-dd/2+2,dw-2,drawerH-3,1.6,shell);
+   box(0,yy-drawerH*.42,0,dw-2,1.2,dd-4,shell);
+   // Tirador tubular horizontal y dos anclajes.
+   const pullY=yy,pullZ=frontZ+1.6;
+   for(const sx of [-1,1])cyl(sx*dw*.13,pullY,pullZ,1.1,2,rail);
+   tube([-dw*.13,pullY+1,pullZ+1],[dw*.13,pullY+1,pullZ+1],1.15,rail);
+   // Guías laterales con perfiles y puntos de fijación.
+   for(const sx of [-1,1]){
+    box(sx*(dw/2+0.2),yy,0,1.2,2,dd*.78,rail);
+    box(sx*(dw/2+1.1),yy-1,0,.8,1,dd*.72,darkRail);
+    for(const z of [-dd*.32,dd*.32])cyl(sx*(dw/2+1.1),yy,z,1,1.2,rail);
+   }
+  }
+  // Cuatro ruedas giratorias con horquilla, eje y banda de goma.
+  for(const sx of [-1,1])for(const sz of [-1,1]){
+   const x=sx*(bodyW*.36),z=sz*(bodyD*.38),mount=new T.Group();mount.position.set(x,2,z);g.add(mount);
+   box(0,1,0,5,2,5,rail);tube([0,0,0],[0,-3,0],1.2,rail);
+   const wh=new T.Mesh(new T.TorusGeometry(3.2,1.4,10,20),foot);wh.rotation.y=Math.PI/2;wh.position.y=-4;mount.add(wh);
+   const axle=new T.Mesh(new T.CylinderGeometry(1,1,7,12),rail);axle.rotation.z=Math.PI/2;axle.position.y=-4;mount.add(axle);
+  }
+ }else{
+  box(0,h*.48,0,w*.94,h*.92,d*.92);for(let k=0;k<4;k++){box(0,h*(.14+k*.2),d*.47,w*.88,h*.16,2,M('#c7b7a4',.7));cyl(w*.25,h*(.14+k*.2),d*.5,1.3,3,metal)}
+ }
+ break;
+}
 case'wardrobe':box(0,h*.49,0,w*.96,h*.98,d*.94);for(let k=0;k<2;k++){box(-w*.23+k*w*.46,h*.5,d*.48,w*.44,h*.94,2,k?M('#bba991',.6):mt);cyl(-w*.23+k*w*.46+w*.16,h*.5,d*.5,1.3,4,metal)}for(let y of [.28,.55,.82])box(0,h*y,0,w*.9,2,d*.86,M('#bba991',.7));break;
 case'shelf':{
  const side=M('#a89a87',.72,.035),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
@@ -1059,7 +1100,37 @@ case'workbench':box(0,h*.68,0,w,h*.12,d);for(let x of [-1,1])for(let z of [-1,1]
 case'compressor':cyl(0,h*.35,0,w*.42,h*.48);cyl(0,h*.65,0,w*.14,h*.28,metal);break;
 case'cart':case'tyres':for(let k=0;k<3;k++){const tor=new T.Mesh(new T.TorusGeometry(w*.25,6,12,32),dark);tor.rotation.x=Math.PI/2;tor.position.y=h*.25+k*12;g.add(tor)}break;
 case'coat':cyl(0,h*.5,0,2,h,metal);for(let k=0;k<6;k++){const a=k*Math.PI/3;tube([0,h*.82,0],[Math.cos(a)*w*.38,h*.96,Math.sin(a)*d*.38])}break;
-case'computer':box(0,h*.65,-d*.2,w*.9,h*.55,3,dark);box(0,h*.65,-d*.17,w*.84,h*.47,1,glass);box(0,h*.18,d*.15,w*.8,2,d*.3,dark);break;
+case'computer':{
+ const casing=M('#242a30',.32,.62),bezel=M('#11161b',.28,.24),screen=new T.MeshStandardMaterial({color:'#192c38',roughness:.18,metalness:.22,emissive:'#172d3b',emissiveIntensity:.16}),key=M('#333b42',.55,.22),keyTop=M('#9ba4aa',.55,.18),silver=M('#89949b',.3,.8);
+ const monW=w*.88,monH=h*.62,monY=h*.68,monZ=-d*.22,frame=2.8;
+ // Monitor: carcasa trasera, bisel frontal, cristal y cámara.
+ box(0,monY,monZ,monW,monH,4.2,casing);
+ box(0,monY,monZ+2.35,monW-2,monH-2,1.2,bezel);
+ box(0,monY+1,monZ+3.05,monW-frame*2,monH-frame*2.4,.65,screen);
+ box(0,monY-monH/2+frame*.55,monZ+3.1,monW*.26,1.2,.8,casing);
+ const cam=new T.Mesh(new T.SphereGeometry(.85,12,8),silver);cam.position.set(0,monY+monH/2-3,monZ+3.5);g.add(cam);
+ for(let k=-2;k<=2;k++){const led=new T.Mesh(new T.SphereGeometry(.35,8,6),silver);led.position.set(k*3,monY+monH/2-3,monZ+3.5);g.add(led)}
+ // Cuello articulado y base metálica con apoyo inclinado.
+ box(0,monY-monH/2-6,monZ,monW*.18,4,monW*.16,casing);
+ tube([0,monY-monH/2-7,monZ],[0,h*.24,monZ],3.2,silver);
+ const base=new T.Shape();base.moveTo(-w*.19,-d*.07);base.quadraticCurveTo(-w*.2,-d*.11,-w*.13,-d*.12);base.lineTo(w*.13,-d*.12);base.quadraticCurveTo(w*.2,-d*.11,w*.19,-d*.07);base.lineTo(w*.15,d*.1);base.quadraticCurveTo(0,d*.14,-w*.15,d*.1);base.closePath();
+ const baseGeo=new T.ExtrudeGeometry(base,{depth:2.2,bevelEnabled:true,bevelSegments:3,bevelSize:1,bevelThickness:.8});baseGeo.rotateX(Math.PI/2);const bm=new T.Mesh(baseGeo,silver);bm.position.set(0,h*.13,monZ);g.add(bm);
+ // Teclado independiente con carcasa, reposamuñecas y teclas individuales.
+ const ky=h*.13,kz=d*.24,kw=w*.78,kd=d*.27;
+ box(0,ky,kz,kw,2.8,kd,casing);
+ box(0,ky+1.55,kz,kw-2,1,kd-2,key);
+ const rows=5,cols=14,gap=1.1,keyW=(kw-10-(cols-1)*gap)/cols,keyD=(kd-7-(rows-1)*gap)/rows;
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  const special=(r===4&&c>=4&&c<=9),ww=special?keyW*1.6:keyW;
+  const x=-kw/2+5+c*(keyW+gap)+(special?(c-4)*keyW*.6:0),z=kz-kd/2+4+r*(keyD+gap);
+  box(x+ww/2,ky+2.5,z+keyD/2,ww,keyD*.28,keyD*.82,keyTop);
+ }
+ // Ratón con carcasa curva, rueda y división de botones.
+ const mouse=new T.Mesh(new T.SphereGeometry(1,24,16),casing);mouse.scale.set(w*.055,2.2,d*.075);mouse.position.set(w*.39,ky+2.3,kz);g.add(mouse);
+ tube([w*.39,ky+4.4,kz-d*.04],[w*.39,ky+4.4,kz+d*.035],.55,silver);
+ const wheel=new T.Mesh(new T.CylinderGeometry(.9,.9,2.5,12),silver);wheel.rotation.x=Math.PI/2;wheel.position.set(w*.39,ky+4.5,kz);g.add(wheel);
+ break;
+}
 case'sunbed':box(0,h*.55,0,w,h*.12,d);tube([-w*.4,4,-d*.3],[-w*.4,h*.6,d*.3]);tube([w*.4,4,-d*.3],[w*.4,h*.6,d*.3]);break;
 case'umbrella':cyl(0,h*.48,0,2,h*.94,metal);const canopy=new T.Mesh(new T.ConeGeometry(w*.5,h*.2,40),mt);canopy.position.y=h*.88;g.add(canopy);break;
 case'pergola':for(let x of [-1,1])for(let z of [-1,1])box(x*w*.46,h/2,z*d*.46,7,h,7);box(0,h-4,0,w,8,d);for(let k=0;k<8;k++)box(0,h-12,-d*.42+k*d*.12,w,4,5);break;
