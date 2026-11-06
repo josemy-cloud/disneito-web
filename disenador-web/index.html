@@ -358,21 +358,27 @@ function createCustomFurniture(){
 function libUI(q=''){
  const L=$('#lib');if(q!==undefined)libQuery=q;const query=libQuery||'';L.innerHTML='';
  const rooms=[
-  {n:'Cocina',key:'cocina',cats:['Cocina','Electrodomésticos']},
+  {n:'Cocina',key:'cocina',cats:['Cocina','Cocina modular','Electrodomésticos']},
   {n:'Baño',key:'baño',cats:['Baño']},
   {n:'Dormitorio',key:'dormitorio',cats:['Dormitorio']},
   {n:'Vestidor',key:'vestidor',cats:['Vestidor']},
-  {n:'Salón',key:'salón',cats:['Salón']},
+  {n:'Salón',key:'salón',cats:['Salón','Decoración']},
   {n:'Comedor',key:'comedor',cats:['Comedor']},
   {n:'Recibidor',key:'recibidor',cats:['Recibidor']},
   {n:'Despacho',key:'despacho',cats:['Despacho']},
   {n:'Lavadero',key:'lavadero',cats:['Lavadero']},
   {n:'Garaje',key:'garaje',cats:['Garaje']},
   {n:'Trastero',key:'trastero',cats:['Trastero']},
-  {n:'Terraza',key:'terraza',cats:['Terraza']},
-  {n:'Jardín',key:'jardin',cats:['Jardín']}
+  {n:'Terraza',key:'terraza',cats:['Terraza','Exterior']},
+  {n:'Jardín',key:'jardin',cats:['Jardín','Exterior']}
  ];
- const belongs=(o,room)=>o.roomType===room.key||room.cats.includes(o.c);
+ // Si el modelo ya tiene estancia asignada, esa asignación prevalece sobre su categoría.
+ // Así los elementos "Exterior" no aparecen duplicados en Terraza y Jardín.
+ const belongs=(o,room)=>{
+  if(o.roomType)return o.roomType===room.key;
+  if(o.c==='Importados'||o.c==='Mi biblioteca')return room.key==='salón';
+  return room.cats.includes(o.c);
+ };
  const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:inherit;padding:2px 0 8px;z-index:2';
  const title=document.createElement('h4');title.textContent='Mobiliario y objetos';title.style.margin='4px 0 8px';head.append(title);
  const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar en todo el catálogo…';search.value=query;search.style.cssText='width:100%;box-sizing:border-box;margin-bottom:7px';head.append(search);
@@ -406,13 +412,10 @@ function libUI(q=''){
     const count=document.createElement('small');count.textContent=LIB.filter(o=>belongs(o,room)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
     card.onclick=()=>{roomF=room.n;catF='';libUI()};grid.append(card)
    });
-   const catTitle=document.createElement('h4');catTitle.textContent='Ver por tipo de producto';content.append(catTitle);
-   const cats=[...new Set(LIB.map(o=>o.c).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));const cg=document.createElement('div');cg.style.cssText='display:flex;flex-wrap:wrap;gap:4px';content.append(cg);
-   cats.forEach(c=>{const btn=document.createElement('button');btn.className='it';btn.textContent=c+' · '+LIB.filter(o=>o.c==c).length;btn.style.cssText='width:auto;display:inline-block';btn.onclick=()=>{catF=c;roomF='';libUI()};cg.append(btn)});
-   const extra=document.createElement('div');extra.style.cssText='font-size:11px;color:#9ca8b8;margin:9px 0';extra.textContent='Busca por nombre, fabricante, referencia o dimensiones para localizar cualquier elemento.';content.append(extra);materials();return
+   const extra=document.createElement('div');extra.style.cssText='font-size:11px;color:#9ca8b8;margin:9px 0';extra.textContent='Todas las categorías de producto están integradas en su estancia correspondiente. Usa el buscador para localizar cualquier modelo, fabricante, referencia o dimensión.';content.append(extra);materials();return
   }
-  crumb.textContent=qv?'Resultados en todo el catálogo':roomF?('Estancias  ›  '+roomF):('Tipos de producto  ›  '+catF);
-  const back=document.createElement('button');back.className='it';back.textContent='← Todas las estancias y categorías';back.style.cssText='margin-bottom:7px';back.onclick=()=>{catF='';roomF='';libUI()};content.append(back);
+  crumb.textContent=qv?'Resultados en todo el catálogo':roomF?('Estancias  ›  '+roomF):('Catálogo  ›  '+catF);
+  const back=document.createElement('button');back.className='it';back.textContent='← Todas las estancias';back.style.cssText='margin-bottom:7px';back.onclick=()=>{catF='';roomF='';libUI()};content.append(back);
   if(roomF){const room=rooms.find(r=>r.n==roomF);const intro=document.createElement('div');intro.style.cssText='font-size:12px;color:#c4cedc;margin:3px 0 8px';intro.textContent='Elementos disponibles en '+roomF+'. Para ampliar el mobiliario, utiliza «Crear mueble personalizado».';content.append(intro)}
   const count=document.createElement('div');count.textContent=matches.length+' elementos';count.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 6px';content.append(count);
   if(!matches.length){const empty=document.createElement('div');empty.textContent='Todavía no hay modelos de catálogo para esta estancia. Puedes crear un mueble a medida o importar un modelo 3D.';empty.style.cssText='font-size:12px;color:#aab4c4;padding:12px 4px';content.append(empty)}
