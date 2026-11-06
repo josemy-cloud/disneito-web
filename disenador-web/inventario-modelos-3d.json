@@ -1323,13 +1323,14 @@
             "depth": 78
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco exterior con perfil redondeado",
             "cubeta interior abierta y profunda",
             "rebosadero y desagüe visibles",
-            "apoyos para variante exenta o encastrada"
+            "apoyos para variante exenta o encastrada",
+            "segunda revisión de silueta y volumen; pendiente inspección visual"
           ]
         },
         {
@@ -1384,13 +1385,14 @@
             "depth": 48
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "cuerpo de lavabo abierto",
             "paredes inclinadas y cubeta interior",
             "borde perimetral y desagüe",
-            "grifería y rebosadero"
+            "grifería y rebosadero",
+            "segunda revisión de silueta y volumen; pendiente inspección visual"
           ]
         },
         {
@@ -1403,9 +1405,12 @@
             "height": 40,
             "depth": 58
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "segunda revisión de silueta y volumen; pendiente inspección visual"
+          ]
         },
         {
           "id": "bano-radiador-toallero",
@@ -1460,13 +1465,14 @@
             "depth": 75
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "casco exterior con perfil redondeado",
             "cubeta interior abierta y profunda",
             "rebosadero y desagüe visibles",
-            "apoyos para variante exenta o encastrada"
+            "apoyos para variante exenta o encastrada",
+            "segunda revisión de silueta y volumen; pendiente inspección visual"
           ]
         },
         {
@@ -1521,13 +1527,14 @@
             "depth": 40
           },
           "status": "integrated_no_verificado",
-          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "note": "Revisión geométrica correctiva: bañera con perfil ovalado continuo de pared y fondo, sin bloques/cilindros superpuestos; lavabos con cubeta cóncava y paredes definidas, distinguiendo ovalado y rectangular; bidé con silueta sanitaria ovalada y cavidad interior. Sintaxis comprobada; pendiente validación visual y funcional en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "cuerpo de lavabo abierto",
             "paredes inclinadas y cubeta interior",
             "borde perimetral y desagüe",
-            "grifería y rebosadero"
+            "grifería y rebosadero",
+            "segunda revisión de silueta y volumen; pendiente inspección visual"
           ]
         },
         {
@@ -1582,8 +1589,8 @@
             "height": 29,
             "depth": 53
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
+          "status": "integrated_no_verificado",
+          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos. El generador genérico de inodoro dispone ahora de una geometría sanitaria específica; el modelo comercial Roca Ona mantiene su generador propio. Pendiente validación visual.",
           "source_type": "producto comercial con geometría paramétrica reconstruida"
         },
         {
