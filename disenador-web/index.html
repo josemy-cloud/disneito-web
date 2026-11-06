@@ -1053,7 +1053,32 @@ case'table':{
  }
  break;
 }
-case'bed':{box(0,h*.13,0,w*.96,h*.2,d*.94,mt);box(0,h*.32,d*.015,w*.93,h*.15,d*.9,M('#e5e0d7',.96));box(0,h*.72,-d*.46,w,h*.48,6,mt);for(let x of [-1,1]){box(x*w*.22,h*.48,-d*.3,w*.38,h*.12,d*.2,M('#faf8f3',.98));box(x*w*.22,h*.54,-d*.29,w*.34,h*.035,d*.18,M('#d7d0c5',.98))}box(0,h*.42,d*.19,w*.9,h*.07,d*.45,M('#e8e3da',.98));for(let k=0;k<6;k++){const cv=new T.CatmullRomCurve3([new T.Vector3(-w*.4+k*w*.16,h*.46,d*.02),new T.Vector3(-w*.34+k*w*.16,h*.44,d*.22),new T.Vector3(-w*.3+k*w*.16,h*.42,d*.39)]);g.add(new T.Mesh(new T.TubeGeometry(cv,12,.5,5,false),M('#c9c2b8',.98)))}break;}
+case'bed':{
+ const name=(it.n||'').toLowerCase(),frame=M(it.col||'#9b8978',.54,.1),mattress=M('#e8e4dc',.94,.01),linen=M('#d7d0c5',.96,.01),pillow=M('#f4f1ea',.98,.01),metal=M('#777f82',.38,.7);
+ const bunk=/litera/.test(name),levels=bunk?2:1,baseY=h*.12,levelGap=bunk?h*.42:0;
+ for(let level=0;level<levels;level++){
+  const y=baseY+level*levelGap;
+  B(g,w*.96,Math.max(4,h*.08),d*.94,0,y,0,frame);
+  const mattressBody=new T.Mesh(new T.SphereGeometry(1,40,24),mattress);mattressBody.scale.set(w*.46,h*.065,d*.44);mattressBody.position.set(0,y+h*.1,d*.015);g.add(mattressBody);
+  const duvet=new T.Mesh(new T.SphereGeometry(1,40,24),linen);duvet.scale.set(w*.44,h*.045,d*.31);duvet.position.set(0,y+h*.17,d*.13);g.add(duvet);
+  for(const x of [-1,1]){const p=new T.Mesh(new T.SphereGeometry(1,32,20),pillow);p.scale.set(w*.19,h*.045,d*.105);p.position.set(x*w*.22,y+h*.2,-d*.29);g.add(p)}
+  for(let k=0;k<5;k++){const seam=tube([-w*.36+k*w*.18,y+h*.19,d*.08],[-w*.36+k*w*.18,y+h*.19,d*.37],.45,M('#c5beb3',.98,.01))}
+ }
+ // Cabecero tapizado y patas con apoyo real.
+ B(g,w*.98,h*.48,5,0,bunk?h*.94:h*.72,-d*.47,frame);
+ B(g,w*.9,h*.36,3,0,bunk?h*.94:h*.72,-d*.43,linen);
+ for(const x of [-1,1])for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2.8,3.4,h*.12,16),frame);leg.position.set(x*w*.43,h*.06,z*d*.42);g.add(leg)}
+ if(bunk){
+  for(const x of [-1,1])B(g,3,h*.38,3,x*w*.46,h*.79,d*.38,metal);
+  for(const z of [-1,1])tube([-w*.46,h*.62,z*d*.38],[w*.46,h*.62,z*d*.38],2.2,metal);
+  // Escalera frontal con peldaños y apoyos.
+  for(const x of [-1,1])tube([x*w*.38,2,d*.47],[x*w*.38,h*.94,d*.47],2.4,metal);
+  for(let k=1;k<6;k++)tube([-w*.38,h*k*.15,d*.47],[w*.38,h*k*.15,d*.47],1.8,metal);
+ }
+ break;
+}
+
+
 case'dresser':{
  const name=(it.n||'').toLowerCase(),body=M(it.col||'#b7a58e',.62,.06),inside=M('#c9c2b8',.82,.02),metal=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.28);
  const mobile=/móvil|movil/.test(name),count=/6 cajones/.test(name)?6:/2 cajones/.test(name)?2:3,th=2.2,dep=d*.88,frontZ=dep/2+1.5;
@@ -1683,7 +1708,16 @@ case'tyres':{
 }
 
 
-case'coat':cyl(0,h*.5,0,2,h,metal);for(let k=0;k<6;k++){const a=k*Math.PI/3;tube([0,h*.82,0],[Math.cos(a)*w*.38,h*.96,Math.sin(a)*d*.38])}break;
+case'coat':{
+ const metal=M('#aeb5b8',.3,.82),wood=M(it.col||'#7d6047',.52,.12),dark=M('#30373a',.52,.3);
+ const base=new T.Mesh(new T.CylinderGeometry(w*.24,w*.3,4,48),dark);base.position.y=2;g.add(base);
+ const pole=new T.Mesh(new T.CylinderGeometry(2.2,3.2,h*.86,24),metal);pole.position.y=h*.45;g.add(pole);
+ const crown=new T.Mesh(new T.SphereGeometry(1,24,16),wood);crown.scale.set(w*.08,h*.045,w*.08);crown.position.y=h*.91;g.add(crown);
+ for(let k=0;k<6;k++){const a=k*Math.PI/3,x=Math.cos(a)*w*.32,z=Math.sin(a)*d*.32,y=h*.84; tube([0,y-h*.05,0],[x*.72,y,z*.72],2.4,wood);tube([x*.72,y,z*.72],[x,y-h*.09,z],1.8,wood);const cap=new T.Mesh(new T.SphereGeometry(1,12,8),metal);cap.scale.set(2,2,2);cap.position.set(x,y-h*.09,z);g.add(cap)}
+ break;
+}
+
+
 case'computer':{
  const itemName=(it.n||'').toLowerCase();
  if(/portátil|portatil|laptop/.test(itemName)){
@@ -1778,7 +1812,25 @@ case'pergola':{
  for(const x of [-1,1])tube([x*w*.46,h-12,-d*.4],[x*w*.46,h-12,d*.4],2,dark);
  break;
 }
-case'planter':case'tree':{cyl(0,h*.13,0,w*.29,h*.26,M('#98745d',.82));const soil=new T.Mesh(new T.CircleGeometry(w*.27,32),dark);soil.rotation.x=-Math.PI/2;soil.position.y=h*.26;g.add(soil);if(it.shape==='tree'){cyl(0,h*.48,0,w*.055,h*.62,M('#76553b'));for(let k=0;k<13;k++){const a=k*2.399,rad=w*(.12+(k%3)*.035),y=h*(.55+(k%4)*.09),leaf=new T.Mesh(new T.SphereGeometry(1,20,14),M(k%2?'#477b4b':'#60905a',.94));leaf.scale.set(w*.14,h*.13,w*.11);leaf.position.set(Math.cos(a)*rad,y,Math.sin(a)*rad);leaf.rotation.z=-Math.cos(a)*.5;g.add(leaf)}}else for(let k=0;k<9;k++){const a=k*2.399,leaf=new T.Mesh(new T.SphereGeometry(1,18,12),M(k%2?'#477b4b':'#60905a',.96));leaf.scale.set(w*.08,h*.2,w*.06);leaf.position.set(Math.cos(a)*w*.2,h*(.48+(k%3)*.08),Math.sin(a)*w*.2);leaf.rotation.z=-Math.cos(a)*.7;g.add(leaf)}break;}
+case'planter':{
+ const ceramic=M(it.col||'#9b765e',.72,.04),soil=M('#4d3c2d',.98,.01),green1=M('#477b4b',.96,.01),green2=M('#6b965e',.94,.01);
+ // Jardinera hueca y troncocónica, con pared real y borde superior.
+ const rx=w*.48,rz=d*.48,profile=[new T.Vector2(rx*.68,2),new T.Vector2(rx*.72,h*.08),new T.Vector2(rx*.88,h*.78),new T.Vector2(rx,h*.84),new T.Vector2(rx*.94,h*.88)];
+ const pot=new T.Mesh(new T.LatheGeometry(profile,64),ceramic);pot.scale.z=rz/rx;g.add(pot);
+ const earth=new T.Mesh(new T.CircleGeometry(rx*.84,48),soil);earth.rotation.x=-Math.PI/2;earth.scale.set(1,rz/rx,1);earth.position.y=h*.78;g.add(earth);
+ for(let k=0;k<12;k++){const a=k*2.399,rad=w*(.12+(k%3)*.025),leaf=new T.Mesh(new T.SphereGeometry(1,20,14),k%2?green1:green2);leaf.scale.set(w*.1,h*.16,w*.085);leaf.position.set(Math.cos(a)*rad,h*(.88+(k%3)*.025),Math.sin(a)*rad);g.add(leaf)}
+ break;
+}
+case'tree':{
+ const bark=M('#76553b',.94,.01),green1=M('#477b4b',.96,.01),green2=M('#60905a',.94,.01);
+ // Tronco cónico, raíces visibles y ramas independientes; árbol plantado en el suelo.
+ const trunk=new T.Mesh(new T.CylinderGeometry(w*.035,w*.07,h*.68,24),bark);trunk.position.y=h*.34;g.add(trunk);
+ for(let k=0;k<5;k++){const a=k*Math.PI*2/5; tube([Math.cos(a)*w*.025,2,Math.sin(a)*w*.025],[Math.cos(a)*w*.18,h*.08,Math.sin(a)*w*.18],w*.018,bark);tube([0,h*.48,0],[Math.cos(a)*w*.22,h*(.62+(k%2)*.08),Math.sin(a)*w*.22],Math.max(1.5,w*.018),bark)}
+ for(let k=0;k<22;k++){const a=k*2.399,rad=w*(.12+(k%4)*.055),y=h*(.58+(k%5)*.065),leaf=new T.Mesh(new T.SphereGeometry(1,24,18),k%2?green1:green2);leaf.scale.set(w*.16,h*.105,w*.13);leaf.position.set(Math.cos(a)*rad,y,Math.sin(a)*rad);leaf.rotation.z=-Math.cos(a)*.35;g.add(leaf)}
+ break;
+}
+
+
 case'bbq':{
  it.op=it.op||[];
  const body=M('#343a3d',.42,.58),metal=M('#aeb5b8',.28,.86),grate=M('#545d62',.34,.82),heat=M('#171b1d',.72,.16);
@@ -1810,7 +1862,14 @@ case'pool':{
  for(const x of [-1,1])B(g,3,1.2,d*.84,x*w*.47,wallH+2,0,dark);
  break;
 }
-case'ladder':for(let x of [-1,1])tube([x*w*.35,0,0],[x*w*.35,h,0]);for(let k=1;k<8;k++)tube([-w*.35,h*k/8,0],[w*.35,h*k/8,0]);break;
+case'ladder':{
+ const frame=M('#aeb5b8',.32,.82),rubber=M('#292e31',.78,.02),stepCount=Math.max(5,Math.min(12,Math.round(h/24)));
+ for(const x of [-1,1]){tube([x*w*.36,2,0],[x*w*.36,h,0],Math.max(2,w*.018),frame);B(g,8,3,8,x*w*.36,2,0,rubber)}
+ for(let k=1;k<stepCount;k++){const y=h*k/stepCount;tube([-w*.36,y,0],[w*.36,y,0],Math.max(1.8,w*.016),frame);for(const x of [-1,1])B(g,4,2.5,5,x*w*.36,y,0,rubber)}
+ B(g,w*.82,2.5,4,0,h*.98,0,frame);
+ break;
+}
+
 default:console.warn('Subtipo geométrico sin reconstrucción específica; se omite para evitar bloques genéricos:',it.shape,it.n);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})};function build3d(){roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
