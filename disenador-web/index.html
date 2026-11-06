@@ -1207,8 +1207,8 @@ function pan(p,w,h,cx,c,mf){
   B(p,w-8,h-8,.7,cx,0,2.05,GLS);
   B(p,w-10,.7,.8,cx,h*.22,2.45,frame);
   B(p,w-10,.7,.8,cx,-h*.22,2.45,frame);
-  B(p,.7,h-10,.8,cx,0,2.45,frame);
-  B(p,.7,h-10,.8,cx,0,2.45,frame);
+  B(p,.7,h-10,.8,cx-w/2+5,0,2.45,frame);
+  B(p,.7,h-10,.8,cx+w/2-5,0,2.45,frame);
   // Junta interior y junquillo perimetral.
   rail(w-7,1,cx,h/2-5,2.5,seal);rail(w-7,1,cx,-h/2+5,2.5,seal);
   rail(1,h-7,cx-w/2+5,0,2.5,seal);rail(1,h-7,cx+w/2-5,0,2.5,seal);
@@ -1278,7 +1278,34 @@ function fdoor(g,it,k,x0,w,y0,h,fl,Mx){const c=it.cfg,op=c.op||'lateral',mf=Mx.m
  else if(op=='plegable'){p.position.set(fl?x0+w:x0,y0+h/2,sw);const w2=w/2,q=new T.Group();q.position.set(s*w2,0,0);p.add(q);pan(p,w2,h,s*w2/2,c,mf);pan(q,w2,h,s*w2/2,c,mf);hdl(q,c,w2,h,s*(w2-4),true,mh);mv(p,{it,k,t:'f',sg:fl?1:-1,c:q})}
  else if(op=='abatible'){p.position.set(x0+w/2,y0+h,sw);const q=new T.Group();q.position.y=-h/2;p.add(q);pan(q,w,h,0,c,mf);hdl(q,c,w,h,0,'bot',mh);mv(p,{it,k,t:'u'})}
  else{p.position.set(x0+w/2,y0+h/2,sw);pan(p,w,h,0,c,mf);hdl(p,c,w,h,0,'bot',mh);mv(p,{it,k,t:'e',dy:h*.85})}return p}
-function ndrw(g,it,k,x0,w,y0,h,Mx,o){const c=it.cfg,p=new T.Group();p.position.set(x0+w/2,y0+h/2,it.d/2);g.add(p);p.userData.part={t:'cajón',i:k};if(selPart&&selPart.id==it.id&&selPart.t=='cajón'&&selPart.i==k)HL.push(p);pan(p,w,h,0,c,Mx.mf);hdl(p,c,w,h,0,false,Mx.mh,true);const dd=Math.min(it.d-4,(o&&o.bd)>0?o.bd:1e9),tm=M('#e0dccf');B(p,w-6,1.5,dd,0,-h/2+3,-dd/2,tm);B(p,1.5,h-8,dd,-(w-6)/2,0,-dd/2,tm);B(p,1.5,h-8,dd,(w-6)/2,0,-dd/2,tm);B(p,w-6,h-8,1.5,0,0,-dd,tm);mv(p,{it,k,t:'s',z:it.d/2,sl:it.d*.7})}
+function ndrw(g,it,k,x0,w,y0,h,Mx,o){
+ const c=it.cfg,p=new T.Group();p.position.set(x0+w/2,y0+h/2,it.d/2);g.add(p);p.userData.part={t:'cajón',i:k};
+ if(selPart&&selPart.id==it.id&&selPart.t=='cajón'&&selPart.i==k)HL.push(p);
+ pan(p,w,h,0,c,Mx.mf);hdl(p,c,w,h,0,false,Mx.mh,true);
+ const dd=Math.min(it.d-4,(o&&o.bd)>0?o.bd:1e9),tm=M('#e0dccf',.72,.06),rail=M('#89949b',.32,.82),inner=M('#c3c9cc',.28,.86),dark=M('#515b62',.48,.55);
+ // Caja interior del cajón con fondo, laterales y trasera independientes.
+ B(p,w-6,1.5,dd,0,-h/2+3,-dd/2,tm);
+ B(p,1.5,h-8,dd,-(w-6)/2,0,-dd/2,tm);B(p,1.5,h-8,dd,(w-6)/2,0,-dd/2,tm);
+ B(p,w-6,h-8,1.5,0,0,-dd,tm);
+ // Correderas telescópicas de tres perfiles, con jaula de rodamientos y fijaciones.
+ [-1,1].forEach(side=>{
+  const x=side*(w/2-3.2),z=-dd*.48,span=Math.max(8,dd-9);
+  B(p,1.15,2.8,span,x,-h*.18,z,rail);
+  B(p,1.05,1.25,span*.88,x+side*.8,-h*.18+1.05,z,inner);
+  B(p,.9,.9,span*.72,x-side*.65,-h*.18-1.0,z,dark);
+  for(let q=0;q<5;q++){
+   const zz=-dd*.12-q*(span*.17);
+   const ball=new T.Mesh(new T.SphereGeometry(.72,10,8),inner);ball.position.set(x+side*.1,-h*.18+1.85,zz);p.add(ball);
+  }
+  [-1,1].forEach(end=>{
+   const bracket=M('#6e777d',.38,.7);
+   B(p,3,3,2.4,x,-h*.18,z+end*(span/2-1),bracket);
+  });
+ });
+ // Unión frontal oculta y separadores de fondo para evitar deformación de la caja.
+ B(p,w-10,1.1,2,0,-h/2+4,-dd+1,dark);
+ mv(p,{it,k,t:'s',z:it.d/2,sl:it.d*.7});
+}
 function worktop(g,it,c,y,cut){const mn=topMat(c),w=it.w+1,d=it.d+2;if(!cut){B(g,w,3,d,0,y+1.5,1,mn);return}
  const cw=cut.w,cd=cut.d,fz=(d-cd)/2,sx=(w-cw)/2;B(g,w,3,fz,0,y+1.5,1+cd/2+fz/2,mn);B(g,w,3,fz,0,y+1.5,1-cd/2-fz/2,mn);B(g,sx,3,cd,-cw/2-sx/2,y+1.5,1,mn);B(g,sx,3,cd,cw/2+sx/2,y+1.5,1,mn);
  if(cut.t=='s'){const st=M('#c4c7cc',.25,.9);B(g,cw-4,1,cd-4,0,y-16,1,st);B(g,cw-4,16,1,0,y-8,1+cd/2-2,st);B(g,cw-4,16,1,0,y-8,1-cd/2+2,st);B(g,1,16,cd-4,-cw/2+2,y-8,1,st);B(g,1,16,cd-4,cw/2-2,y-8,1,st);const ft=new T.Mesh(new T.CylinderGeometry(1.2,1.2,26,10),st);ft.position.set(0,y+16,1-cd/2-6);g.add(ft);B(g,2,2,16,0,y+28,1-cd/2+2,st)}
