@@ -1322,9 +1322,15 @@
             "height": 58,
             "depth": 78
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "casco exterior con perfil redondeado",
+            "cubeta interior abierta y profunda",
+            "rebosadero y desagüe visibles",
+            "apoyos para variante exenta o encastrada"
+          ]
         },
         {
           "id": "bano-ducha-mampara",
@@ -1336,9 +1342,15 @@
             "height": 205,
             "depth": 90
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "plato de ducha con geometría extruida y perímetro redondeado",
+            "desagüe y rejilla",
+            "mampara de vidrio y perfilería para variante con mampara",
+            "columna de ducha, rociador, mezclador y flexo"
+          ]
         },
         {
           "id": "bano-mueble-lavabo-doble",
@@ -1350,9 +1362,15 @@
             "height": 58,
             "depth": 50
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "casco estructural hueco",
+            "frentes de cajón independientes",
+            "laterales, trasera, fondos y guías",
+            "encimera y cubetas integradas"
+          ]
         },
         {
           "id": "bano-lavabo-sobre-encimera",
@@ -1364,9 +1382,15 @@
             "height": 18,
             "depth": 48
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "cuerpo de lavabo abierto",
+            "paredes inclinadas y cubeta interior",
+            "borde perimetral y desagüe",
+            "grifería y rebosadero"
+          ]
         },
         {
           "id": "bano-bide-ceramico",
@@ -1434,9 +1458,15 @@
             "height": 55,
             "depth": 75
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "casco exterior con perfil redondeado",
+            "cubeta interior abierta y profunda",
+            "rebosadero y desagüe visibles",
+            "apoyos para variante exenta o encastrada"
+          ]
         },
         {
           "id": "bano-plato-ducha-cuadrado",
@@ -1448,9 +1478,15 @@
             "height": 200,
             "depth": 100
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "plato de ducha con geometría extruida y perímetro redondeado",
+            "desagüe y rejilla",
+            "mampara de vidrio y perfilería para variante con mampara",
+            "columna de ducha, rociador, mezclador y flexo"
+          ]
         },
         {
           "id": "bano-mueble-lavabo-suspendido",
@@ -1462,9 +1498,15 @@
             "height": 52,
             "depth": 48
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "casco estructural hueco",
+            "frentes de cajón independientes",
+            "laterales, trasera, fondos y guías",
+            "encimera y cubetas integradas"
+          ]
         },
         {
           "id": "bano-lavabo-apoyo-ovalado",
@@ -1476,9 +1518,15 @@
             "height": 18,
             "depth": 40
           },
-          "status": "pending",
-          "note": "Generador actual inspeccionado. Pendiente reconstrucción específica, comprobación de cotas y materiales, integración de comportamiento y pruebas visuales/funcionales en todos los modos.",
-          "source_type": "modelo procedural genérico"
+          "status": "integrated_no_verificado",
+          "note": "Reconstrucción geométrica integrada en BUILD.roomObject. Sintaxis JavaScript comprobada; pendiente verificación visual, dimensiones exactas, interacción y compatibilidad en vista 2D, 3D, materiales, realista, render tradicional y Foto IA.",
+          "source_type": "modelo procedural genérico",
+          "implemented_components": [
+            "cuerpo de lavabo abierto",
+            "paredes inclinadas y cubeta interior",
+            "borde perimetral y desagüe",
+            "grifería y rebosadero"
+          ]
         },
         {
           "id": "bano-mueble-auxiliar",
