@@ -586,7 +586,7 @@ fill.position.set(-900,1100,650);rim.position.set(700,850,-900);
 sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.00018;sun.shadow.normalBias=2;sun.shadow.radius=5;Object.assign(sun.shadow.camera,{left:-1600,right:1600,top:1600,bottom:-1600,far:7000});
 let MV=[],sunC=new T.Vector3(150,0,150);
 function setSun(){const a=$('#sa').value*D,e=$('#se').value*D;sun.position.set(sunC.x+Math.cos(a)*Math.cos(e)*2500,Math.sin(e)*2500,sunC.z+Math.sin(a)*Math.cos(e)*2500);sun.target.position.copy(sunC);sun.intensity=.52+Math.sin(e)*.43;fill.position.set(sunC.x-900,1100,sunC.z+650);rim.position.set(sunC.x+700,850,sunC.z-900)}
-function setQ(){const q=$('#sq').value;r3.shadowMap.enabled=q!='f';sun.castShadow=q!='f';r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=q=='q'?1.02:q=='m'?.94:.88;r3.setPixelRatio(q=='f'?1:Math.min(devicePixelRatio,2));hemi.intensity=q=='q'?.42:q=='m'?.48:.55;fill.intensity=q=='q'?.12:q=='m'?.16:.2;rim.intensity=q=='q'?.06:q=='m'?.09:.12;resize();build3d()}
+function setQ(){const q=$('#sq').value;r3.shadowMap.enabled=q=='q';sun.castShadow=q=='q';r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=q=='q'?1.02:q=='m'?.94:.88;r3.setPixelRatio(q=='f'?1:Math.min(devicePixelRatio,2));hemi.intensity=q=='q'?.42:q=='m'?.48:.55;fill.intensity=q=='q'?.12:q=='m'?.16:.2;rim.intensity=q=='q'?.06:q=='m'?.09:.12;resize();build3d()}
 function resize(){const w=d3.clientWidth,h=d3.clientHeight;if(!w)return;r3.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
 new ResizeObserver(()=>{resize();draw()}).observe($('#view'));
 const M=(c,r=.55,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
