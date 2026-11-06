@@ -3500,5 +3500,18 @@
       "verified": false,
       "notes": "Aumento aproximado al doble del radio transversal de la taza y asiento frente a la geometría anterior, ampliación del pedestal, aro y tapa; cisterna ensanchada de forma moderada. Perfil interior revisado para mantener una cavidad coherente. No verificado visualmente."
     }
-  ]
+  ],
+  "validation": {
+    "static_javascript_syntax": "passed: 3 executable inline scripts parsed successfully with new Function; importmap excluded as non-executable JSON",
+    "procedural_catalog_coverage": "passed: 144 roomObject definitions inventoried; 50 distinct shape values each have an explicit geometry branch",
+    "generic_geometry_fallback": "removed: unknown subtypes now warn and are omitted rather than rendered as a generic cuboid",
+    "browser_visual_validation": "not_performed: no browser session available in this work context",
+    "runtime_interaction_validation": "not_performed: door/drawer/hinge animations and render modes require browser interaction",
+    "approval": "not_approved: no model is considered visually or functionally verified by static checks alone",
+    "backups": [
+      "respaldo-realismo-integral-2026-11-06",
+      "respaldo-previo-transformacion-global-2026-11-06"
+    ],
+    "deployment": "not_deployed"
+  }
 }
