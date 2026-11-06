@@ -796,12 +796,14 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
           "implemented_components": [
-            "tablero continuo extruido en planta con espesor real",
-            "estructura portante diferenciada según tipología",
-            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
-            "herrajes y pasacables geométricos"
+            "tablero continuo extruido con espesor y canto perimetral",
+            "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
+            "casco hueco de cajonera con laterales, tapa, base y trasera",
+            "frentes de cajón independientes con tiradores y anclajes",
+            "bastidores, patas, travesaños y pies nivelables según tipología",
+            "mecanismo telescópico de mesa regulable y pasacables"
           ],
           "verification": {
             "visual": false,
@@ -826,12 +828,14 @@
             "depth": 150
           },
           "status": "integrado",
-          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
           "implemented_components": [
-            "tablero continuo extruido en planta con espesor real",
-            "estructura portante diferenciada según tipología",
-            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
-            "herrajes y pasacables geométricos"
+            "tablero continuo extruido con espesor y canto perimetral",
+            "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
+            "casco hueco de cajonera con laterales, tapa, base y trasera",
+            "frentes de cajón independientes con tiradores y anclajes",
+            "bastidores, patas, travesaños y pies nivelables según tipología",
+            "mecanismo telescópico de mesa regulable y pasacables"
           ],
           "verification": {
             "visual": false,
@@ -856,12 +860,14 @@
             "depth": 70
           },
           "status": "integrado",
-          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
           "implemented_components": [
-            "tablero continuo extruido en planta con espesor real",
-            "estructura portante diferenciada según tipología",
-            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
-            "herrajes y pasacables geométricos"
+            "tablero continuo extruido con espesor y canto perimetral",
+            "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
+            "casco hueco de cajonera con laterales, tapa, base y trasera",
+            "frentes de cajón independientes con tiradores y anclajes",
+            "bastidores, patas, travesaños y pies nivelables según tipología",
+            "mecanismo telescópico de mesa regulable y pasacables"
           ],
           "verification": {
             "visual": false,
@@ -885,9 +891,15 @@
             "height": 120,
             "depth": 68
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "asiento acolchado con contorno anatómico y volumen",
+            "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
+            "brazos, soportes metálicos y mecanismo inferior",
+            "columna neumática y base de cinco radios",
+            "ruedas con horquillas, ejes y banda de goma"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -910,9 +922,15 @@
             "height": 115,
             "depth": 72
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "asiento acolchado con contorno anatómico y volumen",
+            "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
+            "brazos, soportes metálicos y mecanismo inferior",
+            "columna neumática y base de cinco radios",
+            "ruedas con horquillas, ejes y banda de goma"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -935,9 +953,13 @@
             "height": 200,
             "depth": 35
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "costados y trasera con espesor real",
+            "baldas independientes con soportes y anclajes",
+            "libros de diferentes alturas y lomos"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -960,9 +982,14 @@
             "height": 58,
             "depth": 52
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "casco hueco con costados, trasera, tapa y base",
+            "tres cajones con cajas, fondos, frentes y guías",
+            "tiradores tubulares con anclajes",
+            "cuatro ruedas con horquilla y ejes"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -985,9 +1012,14 @@
             "height": 48,
             "depth": 22
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "monitor con carcasa, bisel, cristal, cámara e indicadores",
+            "cuello y base de soporte",
+            "teclado con teclas individuales",
+            "ratón con carcasa, rueda y separación de botones"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1011,12 +1043,14 @@
             "depth": 115
           },
           "status": "integrado",
-          "note": "Generador específico reconstruido e integrado en la rama de desarrollo. Pendiente comprobación visual, edición dimensional, materiales, colocación y modos de renderizado; no verificado.",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
           "implemented_components": [
-            "tablero continuo extruido en planta con espesor real",
-            "estructura portante diferenciada según tipología",
-            "pedestal de cajones con casco hueco y frentes independientes cuando corresponde",
-            "herrajes y pasacables geométricos"
+            "tablero continuo extruido con espesor y canto perimetral",
+            "geometría en L continua cuando corresponde, sin ala formada por bloque superpuesto",
+            "casco hueco de cajonera con laterales, tapa, base y trasera",
+            "frentes de cajón independientes con tiradores y anclajes",
+            "bastidores, patas, travesaños y pies nivelables según tipología",
+            "mecanismo telescópico de mesa regulable y pasacables"
           ],
           "verification": {
             "visual": false,
@@ -1040,9 +1074,15 @@
             "height": 105,
             "depth": 62
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "asiento acolchado con contorno anatómico y volumen",
+            "respaldo extruido curvo, refuerzo lumbar y costuras/canales",
+            "brazos, soportes metálicos y mecanismo inferior",
+            "columna neumática y base de cinco radios",
+            "ruedas con horquillas, ejes y banda de goma"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1065,9 +1105,13 @@
             "height": 210,
             "depth": 32
           },
-          "status": "pendiente",
-          "note": "Geometría antigua simplificada identificada en auditoría. Pendiente reconstrucción específica.",
-          "implemented_components": [],
+          "status": "integrado",
+          "note": "Nueva geometría reconstruida e integrada en el generador procedural específico. Pendiente validación visual y funcional en navegador; no verificado.",
+          "implemented_components": [
+            "costados y trasera con espesor real",
+            "baldas independientes con soportes y anclajes",
+            "libros de diferentes alturas y lomos"
+          ],
           "verification": {
             "visual": false,
             "dimensions": false,
@@ -1082,19 +1126,16 @@
       ],
       "last_work": {
         "date": "2026-11-06",
-        "commit": "6384d14afef310ec6629c032a01fd2df664c6937",
-        "scope": "Reconstrucción geométrica de escritorios, con mesa en L como primer modelo de referencia",
+        "commit": "083f1f997b1832fa8ee1ca4979418d1ba69a47f0",
+        "scope": "Reconstrucción geométrica de los 11 modelos estáticos del despacho",
         "implemented": [
-          "tablero en L de una sola pieza mediante geometría extruida en planta",
-          "retorno continuo sin bloque superpuesto",
-          "canto perimetral con espesor",
-          "pedestal de cajones construido con laterales, tapa, base, trasera y frentes independientes",
-          "tiradores con soportes y barra",
-          "bastidor de acero, patas y travesaños según tipología",
-          "mesa regulable con columnas telescópicas y pies",
-          "pasacables geométrico"
+          "Escritorios recto, en L, regulable y con ala lateral",
+          "Sillas ergonómica, ejecutiva y compacta",
+          "Estantería y librería con estructura, baldas y libros diferenciados",
+          "Cajonera móvil con casco hueco, cajones, guías y ruedas",
+          "Monitor con bisel, pantalla, cámara, soporte, teclado y ratón"
         ],
-        "validation": "Compilación de scripts inline correcta. Pendiente visualización en navegador y pruebas interactivas.",
+        "validation": "Dos scripts clásicos inline compilados sin errores. Pendiente inspección visual real, colocación, dimensiones, selección, modos de renderizado y Foto IA.",
         "status": "integrado_no_verificado"
       }
     },
@@ -1157,6 +1198,13 @@
       "phase": "despacho",
       "action": "Inventario específico de 11 modelos y reconstrucción integrada de 4 escritorios mediante generador geométrico dedicado",
       "commit": "6384d14afef310ec6629c032a01fd2df664c6937",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Integrar reconstrucciones geométricas de escritorios, sillas, estanterías, cajonera y equipo informático; 11/11 integrados, 0 verificados",
+      "commit": "083f1f997b1832fa8ee1ca4979418d1ba69a47f0",
       "verified": false
     }
   ]
