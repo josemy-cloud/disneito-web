@@ -324,7 +324,26 @@ const MATS=['madera','mármol','cemento','gres','hidráulico','metro','piedra'],
 const PAINT=['#f1ede4','#faf7f0','#bfc3c7','#d8c9b0','#b08968','#8aa39b','#c97b63','#37474f'];
 /* ===== Interfaz ===== */
 const TL=[['sel','Seleccionar'],['wall','Pared'],['room','Habitación (arrastrar)'],['rx','Habitación exacta'],['door','Puerta'],['win','Ventana'],['measure','Medir distancias']];
-function drawTools(){const t=$('#tools');t.innerHTML='';TL.forEach(([id,n])=>{const b=document.createElement('button');b.textContent=n;b.className=tool==id?'on':'';b.onclick=()=>{if(id=='rx')return exact();tool=id;cur=null;drawTools();hint()};t.append(b)})}
+function drawTools(){
+ const t=$('#tools');t.innerHTML='';
+ const icons={
+  sel:'<path d="m5 3 14 10-6 1.5L9.5 21 5 3Z"/>',
+  wall:'<path d="M3 5h18v14H3zM3 10h18M9 5v5m6 0v9"/>',
+  room:'<path d="M4 4h16v16H4zM4 9h5v6H4m11-11v5h5"/>',
+  rx:'<path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3M7 12h10M12 7v10"/>',
+  door:'<path d="M5 21V4l12-2v19M5 21h15M10 8v.01"/>',
+  win:'<path d="M3 4h18v16H3zM12 4v16M3 12h18"/>',
+  measure:'<path d="m4 16 12-12 4 4L8 20H4zM13 7l4 4M10 10l2 2M7 13l2 2"/>'
+ };
+ const labels={sel:'Seleccionar',wall:'Pared',room:'Habitación',rx:'Medidas exactas',door:'Puerta',win:'Ventana',measure:'Medir'};
+ TL.forEach(([id,n])=>{
+  const b=document.createElement('button');b.type='button';b.className=tool==id?'on':'';
+  b.dataset.tool=id;b.title=n;b.setAttribute('aria-label',n);
+  b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[id]+'</svg><span>'+labels[id]+'</span>';
+  b.onclick=()=>{if(id=='rx')return exact();tool=id;cur=null;drawTools();hint()};
+  t.append(b)
+ })
+}
 function hint(){$('#hint').textContent=armed?'Material activo: haz clic en suelo/pared (3D) o usa herramienta Seleccionar. Esc para soltar':({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Clic sobre una pared',win:'Clic sobre una pared'}[tool]||'')}
 function createCustomFurniture(){
  const data={'Cocina modular':{key:'cocina',items:[['Mueble bajo a medida',60,87,60,true],['Mueble alto a medida',60,70,35,false],['Columna a medida',60,210,60,false]]},'Baño':{key:'baño',items:[['Mueble de lavabo',120,55,48,true],['Columna de baño',40,180,35,false],['Mueble auxiliar',60,80,35,false]]},'Dormitorio':{key:'dormitorio',items:[['Armario a medida',180,220,60,false],['Cómoda',100,90,45,true],['Mesita de noche',50,55,40,true]]},'Vestidor':{key:'vestidor',items:[['Módulo de vestidor',100,220,60,false],['Módulo zapatero',80,100,40,false],['Módulo de cajones',80,90,55,false]]},'Salón':{key:'salón',items:[['Mueble de televisión',180,50,42,true],['Aparador',140,85,45,true],['Librería',100,210,35,false],['Vitrina',80,190,40,false]]},'Recibidor':{key:'recibidor',items:[['Consola',100,85,35,true],['Zapatero',100,110,30,false],['Banco con almacenamiento',100,48,40,true]]},'Despacho':{key:'despacho',items:[['Escritorio',140,75,70,true],['Escritorio compacto',120,75,60,true],['Cajonera',45,65,55,false],['Librería',90,200,32,false]]},'Lavadero':{key:'lavadero',items:[['Módulo para lavadora',70,90,70,true],['Columna de lavado',70,220,70,false],['Armario superior',100,70,35,false],['Mueble de almacenaje',80,90,45,true]]},'Garaje':{key:'garaje',items:[['Estantería',120,200,45,false],['Armario de taller',100,190,55,false],['Banco de trabajo',160,90,65,true]]},'Trastero':{key:'trastero',items:[['Estantería',100,200,40,false],['Armario de almacenaje',100,200,55,false],['Módulo bajo',80,90,45,true]]},'Exterior':{key:'exterior',items:[['Armario exterior',100,180,50,false],['Módulo de cocina exterior',120,90,65,true],['Banco exterior',120,45,45,true]]}};
