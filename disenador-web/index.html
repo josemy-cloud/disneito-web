@@ -1127,13 +1127,82 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
  if(kd=='campana_int'){B(a,w,h*.6,d*.9,0,h*.3,0,m);B(a,w-4,.6,d*.7,0,.4,2,stl);for(let q=-4;q<=4;q++)B(a,.25,.5,d*.7,q*(w-8)/9,.2,2,rub);return}
  if(kd=='placa'){const hh=Math.max(h,3);B(a,w,hh,d,0,hh/2,0,M('#0b0e12',.05,.35));[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([x,z])=>{const r=new T.Mesh(new T.TorusGeometry(7,.35,8,28),M('#555',.4,.5));r.rotation.x=Math.PI/2;r.position.set(x*w/4,hh+.2,z*d/4);a.add(r);const r2=new T.Mesh(new T.CylinderGeometry(3,3,.3,20),M('#3a3a3a',.4,.5));r2.position.set(x*w/4,hh+.2,z*d/4);a.add(r2)});B(a,w*.3,.2,2,0,hh+.15,d/2-3,lcd);return}
  const SH={horno:1,micro:1,lavavajillas:1,lavadora:1,secadora:1,combi:1,frigo:1,vinoteca:1};if(!SH[kd])B(a,w,h,d-1,0,h/2,-.5,m);
- if(kd=='horno'){const cw=w-10,ch=Math.max(10,h-20),cy=h/2-4;shell(0,cy,cw,ch,enam);[.28,.62].forEach(f=>{const y=cy-ch/2+ch*f;rack(0,y,zc,cw-4,d-16,stl);[-1,1].forEach(q=>B(a,.6,.8,d-16,q*(cw/2-.4),y-.5,zc,stl))});B(a,cw-8,.5,d-20,0,cy-ch/2+ch*.1,zc,M('#1a1a1c',.7,.3));
-  B(a,w-2,8,1,0,h-5,d/2+.2,pn);const p=pv(0,2,k0,{t:'h'});B(p,w-2,h-12,2,0,(h-12)/2,0,mp);B(p,w-12,Math.max(5,h-26),.3,0,(h-12)/2-2,1.1,dk);B(p,w*.7,1.6,2.4,0,h-15,3.4,hd);hinge2(p,.6,w/2-8);[-1,0,1].forEach(q=>knob(q*w*.28,h-5,1.8));B(a,w*.2,1.4,.2,0,h-2.4,d/2+.75,lcd);B(a,w*.5,.25,.15,0,h-8,d/2+.75,rub);frm(p,w-12,Math.max(5,h-26),0,(h-12)/2-2,1.15,mf)}
- else if(kd=='micro'){const dw=w*.72,p=pv(-w/2+1,h/2,k0,{t:'d',sg:-1}),cw=dw-8,ch=h-12,cx=-w/2+1+dw/2,tr=Math.min(cw,d-12)/2-1,pw=w-dw-3,px=dw/2+.5;shell(cx,h/2,cw,ch,stl);
-  const tt=new T.Mesh(new T.CylinderGeometry(tr,tr,.5,32),gls);tt.position.set(cx,h/2-ch/2+1.4,zc);a.add(tt);const ro=new T.Mesh(new T.CylinderGeometry(tr*.3,tr*.3,1,16),stl);ro.position.set(cx,h/2-ch/2+.6,zc);a.add(ro);
-  B(p,dw,h-3,2,dw/2,0,0,mp);B(p,dw-6,h-10,.3,dw/2,0,1.1,dk);frm(p,dw-6,h-10,dw/2,0,1.15,mf);B(p,1.6,h*.5,2.4,dw-3,0,3,hd);[-1,1].forEach(q=>B(p,2.5,4,1.6,1.4,q*h*.3,-.2,stl));B(a,pw+3-3,h-3,1,px,h/2,d/2+.2,pn);
-  B(a,pw*.8,3.2,.2,px,h*.8,d/2+.75,lcd);const dl=new T.Mesh(new T.CylinderGeometry(2.6,2.6,1.8,20),kn);dl.rotation.x=Math.PI/2;dl.position.set(px,h*.52,d/2+1.2);a.add(dl);for(let q=0;q<3;q++)B(a,pw*.7,1.4,.4,px,h*.34-q*3,d/2+.9,kn);for(let q=0;q<5;q++)B(a,pw*.7,.3,.15,px,6+q*1.2,d/2+.75,rub)}
- else if(kd=='lavavajillas'){const cw=w-8,ch=h-16,cy=h/2-4;shell(0,cy,cw,ch,stl);rack(0,cy-ch/2+ch*.2,zc,cw-4,d-12,stl);rack(0,cy+ch*.12,zc,cw-6,d-14,stl);B(a,cw*.6,.6,2,0,cy-ch/2+ch*.2-3,zc,stl);
+ if(kd=='horno'){
+  // Horno empotrable: cavidad esmaltada, guías, parrillas, resistencia y puerta abatible.
+  const cw=w-10,ch=Math.max(12,h-20),cy=h/2-4,innerD=d-13;
+  shell(0,cy,cw,ch,enam);
+  B(a,cw-5,ch-5,1.2,0,cy,-d/2+2.2,M('#17191b',.78,.12));
+  [-1,1].forEach(side=>{for(let q=0;q<4;q++)B(a,1.1,1.1,innerD-3,side*(cw/2-3),cy-ch*.34+q*ch*.21,-.3,stl)});
+  [0,.34,.68].forEach((f,q)=>{
+   const yy=cy-ch*.34+ch*f;
+   if(q===1){B(a,cw-8,1.1,innerD-4,0,yy,-.4,stl);B(a,cw-12,.5,innerD-8,0,yy+.9,-.4,M('#55595d',.6,.35))}
+   else{
+    B(a,cw-8,.8,1.1,0,yy,-innerD/2+.5,stl);B(a,cw-8,.8,1.1,0,yy,innerD/2-.5,stl);
+    [-1,1].forEach(side=>B(a,1,.8,innerD-1,side*(cw/2-4),yy,-.4,stl));
+    for(let q2=1;q2<9;q2++)B(a,.55,.55,innerD-2,0,yy,-innerD/2+q2*innerD/9,stl);
+   }
+  });
+  const coil=new T.Mesh(new T.TorusGeometry(Math.min(cw,innerD)*.22,.65,8,36),stl);
+  coil.rotation.x=Math.PI/2;coil.position.set(0,cy+ch*.34,-.2);a.add(coil);
+  const ovenLamp=new T.Mesh(new T.SphereGeometry(1.4,12,10),lit);
+  ovenLamp.position.set(-cw*.39,cy+ch*.25,d/2-12);a.add(ovenLamp);
+  B(a,w-2,8,1.2,0,h-5,d/2+.3,pn);
+  B(a,w*.24,2.8,.3,0,h-5,d/2+1.05,lcd);
+  [-1,1].forEach(side=>{
+   const dial=new T.Mesh(new T.CylinderGeometry(2.5,2.5,1.8,24),kn);
+   dial.rotation.x=Math.PI/2;dial.position.set(side*w*.34,h-5,d/2+1.1);a.add(dial);
+   B(a,.45,2.4,.35,side*w*.34,h-3.8,d/2+1.5,stl);
+  });
+  const p=pv(0,2,k0,{t:'h'});
+  B(p,w-2,h-12,3.2,0,(h-12)/2,0,mp);
+  B(p,w-8,h-19,.5,0,(h-12)/2-1,1.8,mf);
+  B(p,w-13,h-25,.55,0,(h-12)/2-1,2.12,dk);
+  B(p,w-17,h-29,.3,0,(h-12)/2-1,2.42,gls);
+  B(p,w*.66,2.1,3.2,0,h-15,3.3,hd);
+  [-1,1].forEach(side=>{
+   const cap=new T.Mesh(new T.SphereGeometry(1.05,12,10),stl);
+   cap.position.set(side*w*.33,h-15,3.3);p.add(cap);
+   B(p,2.8,3.5,2.2,side*(w/2-7),.7,-.1,stl);
+  });
+  B(a,w*.32,.5,.25,0,h-1.4,d/2+.8,rub);
+ } else if(kd=='micro'){
+  // Microondas: cavidad metálica, plato giratorio, guía de ondas y panel de mandos.
+  const panelW=w*.27,doorW=w-panelW-5,cx=-w/2+doorW/2+1,ch=h-12,cy=h/2;
+  const innerD=d-12,innerW=doorW-8,innerH=h-17;
+  B(a,w-2,h-2,d-2,0,h/2,-.5,m);
+  B(a,innerW,innerH,innerD,cx,cy,-.5,enam);
+  B(a,innerW-3,1,innerD-3,cx,cy-innerH/2+1,-.5,stl);
+  B(a,innerW-3,1,innerD-3,cx,cy+innerH/2-1,-.5,stl);
+  const radius=Math.max(5,Math.min(innerW,innerD)*.34);
+  const turn=new T.Mesh(new T.CylinderGeometry(radius,radius,.65,48),gls);
+  turn.position.set(cx,cy-innerH*.28,.2);a.add(turn);
+  const ring=new T.Mesh(new T.TorusGeometry(radius*.82,.48,8,36),stl);
+  ring.rotation.x=Math.PI/2;ring.position.set(cx,cy-innerH*.28,.6);a.add(ring);
+  for(let q=0;q<3;q++){
+   const ang=q*Math.PI*2/3,roller=new T.Mesh(new T.SphereGeometry(.9,10,8),rub);
+   roller.position.set(cx+Math.cos(ang)*radius*.78,cy-innerH*.28+.8,Math.sin(ang)*radius*.78);a.add(roller);
+  }
+  B(a,Math.max(4,innerW*.2),.7,2,cx,cy+innerH*.37,d/2-7,stl);
+  const lamp=new T.Mesh(new T.SphereGeometry(1.2,12,10),lit);
+  lamp.position.set(cx-innerW*.38,cy+innerH*.36,d/2-7);a.add(lamp);
+  const p=pv(-w/2+1,h/2,k0,{t:'d',sg:-1});
+  B(p,doorW,h-3,2.8,doorW/2,0,0,mp);
+  B(p,doorW-6,h-9,.5,doorW/2,0,1.55,mf);
+  B(p,doorW-12,h-15,.35,doorW/2,0,1.9,dk);
+  B(p,doorW-17,h-20,.18,doorW/2,0,2.15,gls);
+  for(let ix=0;ix<7;ix++)for(let iy=0;iy<5;iy++){
+   const dot=new T.Mesh(new T.CircleGeometry(.22,6),rub);
+   dot.position.set(doorW/2-doorW*.38+ix*doorW*.76/6,-(h-20)*.36+iy*(h-20)*.72/4,2.27);p.add(dot);
+  }
+  B(p,1.6,h*.46,2.8,doorW-3,0,3.1,hd);
+  [-1,1].forEach(side=>B(p,2.2,3.8,1.8,1.2,side*h*.32,-.2,stl));
+  const px=w/2-panelW/2-1;
+  B(a,panelW,h-3,2,px,h/2,d/2+.25,pn);
+  B(a,panelW*.72,4,.25,px,h*.79,d/2+1.35,lcd);
+  const dial=new T.Mesh(new T.CylinderGeometry(2.5,2.5,1.8,24),kn);
+  dial.rotation.x=Math.PI/2;dial.position.set(px,h*.55,d/2+1.2);a.add(dial);
+  for(let q=0;q<4;q++)B(a,panelW*.56,1.2,.35,px,h*.37-q*3,d/2+1.05,kn);
+ } else if(kd=='lavavajillas'){const cw=w-8,ch=h-16,cy=h/2-4;shell(0,cy,cw,ch,stl);rack(0,cy-ch/2+ch*.2,zc,cw-4,d-12,stl);rack(0,cy+ch*.12,zc,cw-6,d-14,stl);B(a,cw*.6,.6,2,0,cy-ch/2+ch*.2-3,zc,stl);
   B(a,w-2,8,1,0,h-5,d/2+.2,pn);const p=pv(0,2,k0,{t:'h'});B(p,w-1,h-12,2,0,(h-12)/2,0,mp);B(p,w*.6,1.6,2.4,0,h-16,3.4,hd);hinge2(p,.6,w/2-8);B(a,w*.16,1.4,.2,0,h-3.2,d/2+.75,lcd);[-2,-1,1,2].forEach(q=>B(a,2,1.2,.4,q*w*.12,h-6.4,d/2+.8,kn))}
  else if(kd=='lavadora'||kd=='secadora'){const cs=w*.62,cy=h/2-3;shell(0,cy,cs,cs,enam);const dr=new T.Mesh(new T.CylinderGeometry(cs/2-1,cs/2-1,Math.min(d*.55,d-8),28,1,true),stl);dr.rotation.x=Math.PI/2;dr.position.set(0,cy,.5);a.add(dr);const gk=new T.Mesh(new T.TorusGeometry(cs/2,1.4,10,32),rub);gk.position.set(0,cy,d/2-1.2);a.add(gk);
   const p=pv(-w/2+1,h/2-3,k0,{t:'d',sg:-1});B(p,w-2,h-8,2,(w-2)/2,0,0,mp);const r=new T.Mesh(new T.CylinderGeometry(w*.3,w*.3,1,24),(SP.cristal?dk:new T.MeshStandardMaterial({color:'#223',roughness:.05,metalness:.3,transparent:true,opacity:.75})));r.rotation.x=Math.PI/2;r.position.set((w-2)/2,0,1.4);p.add(r);const rg=new T.Mesh(new T.TorusGeometry(w*.3+.4,.8,8,32),stl);rg.position.set((w-2)/2,0,1.4);p.add(rg);[-1,1].forEach(q=>B(p,2.5,4,1.6,1.4,q*h*.3,-.2,stl));
