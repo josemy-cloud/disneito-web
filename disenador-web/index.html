@@ -935,7 +935,7 @@ case'shelf':{
  if(library)box(0,h/2,0,2.2,h-4,d-3,side);
  const n=it.variant===2?6:5,step=(h-8)/(n-1),shelfYs=[];
  for(let k=0;k<n;k++){const y=4+k*step;shelfYs.push(y);box(0,y,0,w-3,3.2,d-4,mt);
-  for(const x of [-1,1]){cyl(x*(w/2-5),y-2,0,1.1,2.4,pin);cyl(x*(w/2-5),y-2,d*.28,1.1,2.4,pin)}
+  for(const x of [-1,1]){cyl(x*(w/2-5),y-2.9,0,1.1,2.4,pin);cyl(x*(w/2-5),y-2.9,d*.28,1.1,2.4,pin)}
   box(0,y-2.25,0,w-8,1.1,d-8,side);box(0,y,d/2-2,w-5,1.2,1.4,side);
  }
  for(let shelf=0;shelf<n-1;shelf++){
