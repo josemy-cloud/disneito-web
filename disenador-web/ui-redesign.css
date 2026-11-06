@@ -272,3 +272,57 @@ body:not(.ui-legacy) #hint{
 @media(prefers-reduced-motion:no-preference){
   body:not(.ui-legacy) #d3 canvas{transition:filter .18s ease}
 }
+
+
+/* Espacio de trabajo dual: plano técnico editable y escena 3D viva en paralelo. */
+body:not(.ui-legacy) #view.view-dual{
+  --dual-ratio:44%;
+  background:#e7e9e3!important;
+  isolation:isolate;
+}
+body:not(.ui-legacy) #view.view-dual #c2{
+  inset:0 0 auto 0!important;
+  width:100%!important;height:var(--dual-ratio)!important;
+  display:block!important;
+  background:#fbfcfa;
+  border-bottom:1px solid #c8cec6;
+}
+body:not(.ui-legacy) #view.view-dual #d3{
+  inset:var(--dual-ratio) 0 0 0!important;
+  width:100%!important;height:calc(100% - var(--dual-ratio))!important;
+  display:block!important;
+  border-top:1px solid rgba(255,255,255,.8);
+}
+body:not(.ui-legacy) #view.view-dual #hint{
+  z-index:9;max-width:min(620px,calc(100% - 24px));
+}
+body:not(.ui-legacy) #view.view-dual::before,
+body:not(.ui-legacy) #view.view-dual::after{
+  position:absolute;left:12px;z-index:8;pointer-events:none;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 9px;border:1px solid rgba(255,255,255,.82);
+  border-radius:7px;background:rgba(250,251,247,.92);
+  color:#31534b;font:750 9px/1.2 Inter,"Segoe UI",sans-serif;
+  letter-spacing:.09em;box-shadow:0 2px 8px rgba(25,45,36,.08);
+}
+body:not(.ui-legacy) #view.view-dual::before{content:"PLANO 2D · EDICIÓN TÉCNICA";top:10px}
+body:not(.ui-legacy) #view.view-dual::after{content:"MODELO 3D · VISTA EN TIEMPO REAL";top:calc(var(--dual-ratio) + 10px)}
+body:not(.ui-legacy) #view.view-dual #dualSplitter{
+  position:absolute;z-index:10;left:0;right:0;top:calc(var(--dual-ratio) - 4px);
+  height:8px;cursor:row-resize;touch-action:none;
+  background:linear-gradient(to bottom,transparent 0 3px,#8b9b90 3px 5px,transparent 5px);
+}
+body:not(.ui-legacy) #view.view-dual #dualSplitter::after{
+  content:"";position:absolute;left:calc(50% - 22px);top:1px;width:44px;height:6px;
+  border-radius:8px;background:#f8faf6;border:1px solid #91a197;
+  box-shadow:0 1px 4px rgba(0,0,0,.15);
+}
+body:not(.ui-legacy) #top .view-mode#mvDual{min-width:78px}
+body:not(.ui-legacy) #top .view-mode#mvDual svg{width:21px;height:21px}
+@media(max-width:900px){
+ body:not(.ui-legacy) #top .view-mode#mvDual{min-width:62px}
+}
+@media(max-width:760px){
+ body:not(.ui-legacy) #view.view-dual::before,
+ body:not(.ui-legacy) #view.view-dual::after{font-size:8px;padding:4px 6px;left:7px}
+}
