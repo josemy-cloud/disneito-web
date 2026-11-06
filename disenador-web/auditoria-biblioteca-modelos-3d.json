@@ -114,6 +114,14 @@
       "impact": "El sanitario perdía proporciones reconocibles y parecía descompensado.",
       "action": "Se amplió el perfil radial de la taza y el pedestal, el aro y la tapa se escalaron al contorno completo del sanitario; se aumentó ligeramente el ancho de cisterna y repisa de apoyo, manteniendo la profundidad total y corrigiendo el perfil interior de la cubeta. Pendiente verificación visual en navegador.",
       "verified": false
+    },
+    {
+      "id": "F14",
+      "severity": "high",
+      "finding": "La rama activa case'toilet':case'wc' del generador genérico seguía construyendo una taza de aproximadamente la mitad del ancho del parámetro y un aro aún más estrecho, aunque una función auxiliar anterior ya había sido ampliada. Por tanto, el ajuste previo no alcanzaba al generador realmente utilizado por el modelo de biblioteca.",
+      "impact": "El inodoro genérico seguía mostrando taza, pedestal, aro y tapa desproporcionadamente pequeños frente a la cisterna; además, la tapa no tenía un pivote/registro de apertura propio.",
+      "action": "Reconstruida la rama activa: perfil de taza y pedestal ensanchado, cubeta interior ampliada, aro ovalado dimensionado al contorno, tapa independiente articulada en su borde posterior y registrada mediante MV; cisterna y repisa mantienen unión física. Pendiente prueba visual y funcional real en navegador.",
+      "verified": false
     }
   ],
   "counts_by_room": {
