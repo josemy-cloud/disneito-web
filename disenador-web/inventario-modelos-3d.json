@@ -782,7 +782,7 @@
       "id": "despacho",
       "name": "Despacho",
       "status": "in_process",
-      "inventory_complete": true,
+      "inventory_complete": false,
       "items": [
         {
           "audit_id": "static-062",
@@ -1122,12 +1122,108 @@
             "traditional_render": false,
             "photo_ai": false
           }
+        },
+        {
+          "id": "custom-despacho-escritorio",
+          "name": "Plantilla de escritorio a medida",
+          "family": "Plantilla de mobiliario personalizado",
+          "shape": "custom_template",
+          "dimensions_cm": {
+            "width": 140,
+            "height": 75,
+            "depth": 70
+          },
+          "status": "pendiente",
+          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "id": "custom-despacho-escritorio-compacto",
+          "name": "Plantilla de escritorio compacto a medida",
+          "family": "Plantilla de mobiliario personalizado",
+          "shape": "custom_template",
+          "dimensions_cm": {
+            "width": 120,
+            "height": 75,
+            "depth": 60
+          },
+          "status": "pendiente",
+          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "id": "custom-despacho-cajonera",
+          "name": "Plantilla de cajonera a medida",
+          "family": "Plantilla de mobiliario personalizado",
+          "shape": "custom_template",
+          "dimensions_cm": {
+            "width": 45,
+            "height": 65,
+            "depth": 55
+          },
+          "status": "pendiente",
+          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
+        },
+        {
+          "id": "custom-despacho-libreria",
+          "name": "Plantilla de librería a medida",
+          "family": "Plantilla de mobiliario personalizado",
+          "shape": "custom_template",
+          "dimensions_cm": {
+            "width": 90,
+            "height": 200,
+            "depth": 32
+          },
+          "status": "pendiente",
+          "note": "Plantilla paramétrica del creador de muebles a medida; pendiente auditoría y reconstrucción de su geometría específica. No es un modelo estático de la biblioteca.",
+          "implemented_components": [],
+          "verification": {
+            "visual": false,
+            "dimensions": false,
+            "placement": false,
+            "materials": false,
+            "view3d": false,
+            "realistic": false,
+            "traditional_render": false,
+            "photo_ai": false
+          }
         }
       ],
       "last_work": {
         "date": "2026-11-06",
         "commit": "d651191fe1ab6265806547578923b32334d75bf2",
-        "scope": "Reconstrucción geométrica de los 11 modelos estáticos del despacho",
+        "scope": "11 modelos estáticos reconstruidos e integrados; 4 plantillas del creador a medida añadidas al inventario como pendientes de auditoría",
         "implemented": [
           "Escritorios recto, en L, regulable y con ala lateral",
           "Sillas ergonómica, ejecutiva y compacta",
@@ -1139,7 +1235,8 @@
         ],
         "validation": "Dos scripts clásicos inline compilados sin errores. Pendiente inspección visual real, colocación, dimensiones, selección, modos de renderizado y Foto IA.",
         "status": "integrado_no_verificado"
-      }
+      },
+      "scope_note": "Inventario inicial de 11 modelos estáticos identificados en la auditoría más 4 plantillas del creador de muebles a medida. Pendiente inspección de modelos importados/dinámicos, objetos persistidos en proyectos y cualquier recurso que no esté declarado en LIB."
     },
     {
       "id": "bano",
@@ -1213,6 +1310,13 @@
       "date": "2026-11-06",
       "phase": "despacho",
       "action": "Diferenciar geometría de sillas ejecutiva/ergonómica/compacta y estantería abierta/librería",
+      "commit": "d651191fe1ab6265806547578923b32334d75bf2",
+      "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "despacho",
+      "action": "Ampliar inventario con 4 plantillas del creador de muebles a medida; marcar inventario global como incompleto hasta auditar importados y objetos persistidos",
       "commit": "d651191fe1ab6265806547578923b32334d75bf2",
       "verified": false
     }
