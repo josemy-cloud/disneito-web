@@ -1195,9 +1195,64 @@ const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.
 const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lavavajillas:81,frigo:120,combi:150,vinoteca:80,puerta:15,cajon:12,hueco:0},APD={cafetera:45,horno:55,micro:38,lavadora:55,secadora:55,lavavajillas:56,frigo:55,combi:55,vinoteca:55};
 function fm(c,acab,mat){if(mat&&mat!='liso')return sm(mat,c,60,60,30,.2,'#999');const f=FIN[acab||'satinado'];return new T.MeshStandardMaterial({color:c,roughness:f[0],metalness:f[1]})}
 function topMat(c){const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='mármol'||m=='madera')return sm(m,'#fff',100,100,60,.1,'#999');if(m=='granito')return sm('piedra','#fff',100,100,40,.1,'#777');return new T.MeshStandardMaterial({color:c.cn,roughness:m=='laminado'?.6:.2})}
-function pan(p,w,h,cx,c,mf){const f=c.fr;if(f=='cristal'){const fr=M('#2a2a2a',.4,.6);B(p,w-.4,3,2,cx,h/2-1.5,1,fr);B(p,w-.4,3,2,cx,-h/2+1.5,1,fr);B(p,3,h,2,cx-w/2+1.5,0,1,fr);B(p,3,h,2,cx+w/2-1.5,0,1,fr);B(p,w-6,h-6,.6,cx,0,1,GLS);return}
- B(p,w-.4,h-.4,PT||2,cx,0,1,mf);if(f=='marco')B(p,w-9,h-9,.8,cx,0,2.2,mf);if(f=='relieve')B(p,w*.6,h*.6,.8,cx,0,2.2,mf);
- if(f=='estriada'||f=='acanalada'){const v=f=='estriada',n=Math.floor((v?w:h)/3.5),o=((v?w:h)-n*3.5)/2;for(let i=0;i<n;i++){if(v)B(p,1.4,h-3,.8,cx-w/2+o+3.5*(i+.5),0,2.2,mf);else B(p,w-3,1.4,.8,cx,-h/2+o+3.5*(i+.5),2.2,mf)}}}
+function pan(p,w,h,cx,c,mf){
+ const f=c.fr||'liso',z=1,edge=M('#b9b5ad',.62,.08),shadow=M('#77766f',.78,.02),limit=Math.max(2,Math.min(w,h)*.12);
+ // Frente estructural con espesor real y canto ligeramente suavizado.
+ B(p,Math.max(2,w-.5),Math.max(2,h-.5),PT||2,cx,0,z,mf);
+ const rail=(ww,hh,x,y,zz=2.45,mat=mf)=>B(p,ww,hh,.9,x,y,zz,mat);
+ if(f==='cristal'){
+  const frame=M('#292d30',.34,.72),seal=M('#161a1d',.72,.05);
+  rail(w-1,3.4,cx,h/2-2);rail(w-1,3.4,cx,-h/2+2);
+  rail(3.4,h-1,cx-w/2+2,0);rail(3.4,h-1,cx+w/2-2,0);
+  B(p,w-8,h-8,.7,cx,0,2.05,GLS);
+  B(p,w-10,.7,.8,cx,h*.22,2.45,frame);
+  B(p,w-10,.7,.8,cx,-h*.22,2.45,frame);
+  B(p,.7,h-10,.8,cx,0,2.45,frame);
+  B(p,.7,h-10,.8,cx,0,2.45,frame);
+  // Junta interior y junquillo perimetral.
+  rail(w-7,1,cx,h/2-5,2.5,seal);rail(w-7,1,cx,-h/2+5,2.5,seal);
+  rail(1,h-7,cx-w/2+5,0,2.5,seal);rail(1,h-7,cx+w/2-5,0,2.5,seal);
+  return;
+ }
+ if(f==='marco'||f==='relieve'){
+  const bw=Math.max(2.8,Math.min(5.2,Math.min(w,h)*.095)),innerW=Math.max(2,w-2*bw-1),innerH=Math.max(2,h-2*bw-1);
+  const mould=M('#d8d5ce',.7,.04),inset=M('#c9c5bd',.78,.025);
+  // Cuatro largueros independientes y un panel central remetido.
+  rail(w-.8,bw,cx,h/2-bw/2,2.5);
+  rail(w-.8,bw,cx,-h/2+bw/2,2.5);
+  rail(bw,h-2*bw,cx-w/2+bw/2,0,2.5);
+  rail(bw,h-2*bw,cx+w/2-bw/2,0,2.5);
+  B(p,innerW,innerH,.55,cx,0,2.05,f==='relieve'?mould:inset);
+  // Junquillo interior en relieve, sin crear una placa plana superpuesta.
+  const q=Math.max(1.1,bw*.24);
+  rail(innerW,q,cx,h/2-bw-q/2,2.42,mould);
+  rail(innerW,q,cx,-h/2+bw+q/2,2.42,mould);
+  rail(q,innerH,cx-w/2+bw+q/2,0,2.42,mould);
+  rail(q,innerH,cx+w/2-bw-q/2,0,2.42,mould);
+  return;
+ }
+ if(f==='estriada'||f==='acanalada'){
+  const vertical=f==='estriada',span=vertical?w:h,pitch=Math.max(3.2,Math.min(4.5,span/Math.max(4,Math.floor(span/4)))),n=Math.max(2,Math.floor((span-4)/pitch)),rib=Math.min(1.35,pitch*.38),start=-(n-1)*pitch/2;
+  const groove=M('#77766f',.82,.01);
+  for(let i=0;i<n;i++){
+   const off=start+i*pitch;
+   if(vertical){
+    B(p,rib,h-4,.75,cx+off,0,2.35,mf);
+    B(p,.45,h-6,.35,cx+off+rib*.55,0,2.58,groove);
+   }else{
+    B(p,w-4,rib,.75,cx,off,2.35,mf);
+    B(p,w-6,.45,.35,cx,off+rib*.55,2.58,groove);
+   }
+  }
+  return;
+ }
+ // Acabado liso: canto perimetral y microdetalle de junta, sin molduras decorativas falsas.
+ const band=M('#aaa69e',.7,.04);
+ B(p,w-.8,.45,.35,cx,h/2-.45,2.12,band);
+ B(p,w-.8,.45,.35,cx,-h/2+.45,2.12,band);
+ B(p,.45,h-.8,.35,cx-w/2+.45,0,2.12,band);
+ B(p,.45,h-.8,.35,cx+w/2-.45,0,2.12,band);
+}
 function hdl(p,c,w,h,cx,vert,mh,hideMounts=false){
  const t=c.ti,L=Math.max(8,c.tl||30);
  if(t=='push'||t=='ninguno')return;
