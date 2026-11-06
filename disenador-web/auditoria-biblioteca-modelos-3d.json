@@ -3513,6 +3513,14 @@
       "action": "Correcciones transversales de geometría y mecanismos compartidos",
       "verified": false,
       "notes": "Se corrige el selector geométrico de mesas para que nombres explícitamente rectangulares, extensibles, escritorios y auxiliares no hereden una base redonda por variant par. Se incorporan copas y placas de bisagra a las puertas laterales del generador modular. El generador de cajones modular añade carriles exteriores fijos al casco y un perfil intermedio telescópico animado a media carrera, manteniendo el cajón y sus identificadores. BUILD.roomObject registra metadatos de malla, triángulos, normales, bounding boxes y materiales para diagnóstico. Comprobación estática: inventario JSON con 226 registros en 6 grupos; 56 subtipos geométricos, todos con una ruta de generador identificada (52 casos roomObject y 6 generadores específicos). JavaScript inline y módulo superan parseo estático. No se ha ejecutado render, interacción, colisiones ni prueba de proyectos en navegador; por tanto no se aprueba ningún modelo como visual/funcionalmente verificado."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "armarios-y-almacenaje",
+      "action": "Reconstrucción constructiva específica de los seis modelos con shape cabinet",
+      "commit": "dbf89b24173305870e929bec0258cb71c9d61c8b",
+      "verified": false,
+      "notes": "Se sustituye la rama geométrica compartida anterior por un constructor de cascos huecos con paneles de 16–22 mm según escala, trasera encastrada, baldas con soportes, cajones con caja y guías, bisagras, frentes y tiradores independientes, apoyos niveladores y zócalo frontal. Los zapateros incorporan tres compartimentos basculantes animados. Prueba aislada del constructor con doble de Three.js: 6/6 registros generan geometría y mecanismos esperados; parseo del JavaScript completo correcto. Esta prueba no equivale a renderizado Three.js ni a comprobación visual, colisiones, persistencia o animación en navegador. Se mantienen estados no verificados."
     }
   ],
   "validation": {
@@ -3528,7 +3536,10 @@
     ],
     "deployment": "not_deployed",
     "ui_dual_view_static": "passed: button, dual state, split layout and adjustable divider integrated; main inline JavaScript parsed successfully",
-    "ui_dual_view_browser": "not_performed: no browser session available in this work context"
+    "ui_dual_view_browser": "not_performed: no browser session available in this work context",
+    "cabinetry_geometry_harness": "passed: 6/6 inventory records with shape=cabinet generated mesh hierarchies and expected motion registrations in an isolated constructor harness; this is not a real Three.js/WebGL browser test",
+    "cabinetry_browser_visual_validation": "not_performed: no live browser render or visual inspection; do not approve these models yet",
+    "cabinetry_browser_interaction_validation": "not_performed: drawer, hinge and tilt-out movement still require real browser interaction testing"
   },
   "current_execution": {
     "date": "2026-11-06",
