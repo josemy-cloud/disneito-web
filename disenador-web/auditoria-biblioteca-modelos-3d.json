@@ -3576,6 +3576,14 @@
       "action": "Reconstrucción v3 del generador compartido de camas: colchones rectangulares con volumen, ropa de cama proporcionada, bastidores, lamas, patas y apoyos; variantes individual, doble, king size, matrimonio 135, litera y canapé; ajuste adicional de edredón y almohadas colocados sobre la cara superior y con volumen",
       "commit": "9643dafc0246efb3740d8f34a5570124d1c112b5",
       "verified": false
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "biblioteca-colores-por-partes",
+      "action": "Retirada de la entrada heredada «Cama 150» y controles de color por componente para los objetos de la biblioteca y los objetos colocados",
+      "commit": "2ccb8a98c7ad29c86484bd44efcdd8eea6bea0ff",
+      "verified": false,
+      "notes": "Se elimina únicamente el modelo heredado «Cama 150»; se conservan las seis variantes de cama del catálogo de dormitorio. Se incorporan controles persistentes por objeto para superficie principal, piezas secundarias, metal/herrajes, cristal/vidrio, tapizados/tejidos y cerámica/porcelana. La aplicación de colores se realiza en el constructor compartido, por lo que afecta tanto a la escena 3D como a las previsualizaciones de biblioteca. Los colores adicionales se guardan en partColors dentro del objeto del proyecto. El script ejecutable principal supera el parseo estático; pendiente comprobar en navegador la asignación visual por material, todos los tipos de objeto, persistencia y ausencia de efectos secundarios."
     }
   ],
   "validation": {
@@ -3607,7 +3615,10 @@
     "dining_seating_table_interaction_validation": "not_performed: extension behavior is represented geometrically; real interaction and project persistence remain to be tested",
     "bed_family_static_update": "passed: BUILD.roomObject bed rebuilt as schemaVersion 3. Six inventory variants share a rounded-rectangular mattress with visible thickness, top-positioned duvet and pillows, side drape, perimeter rails, slats, four corner legs and center supports for wide beds; bunk and storage-bed branches are differentiated. Main executable inline scripts parse successfully.",
     "bed_family_browser_visual_validation": "not_performed: live browser render still required to confirm mattress silhouette, proportions, feet contact, bedding and all six variants.",
-    "bed_family_interaction_validation": "not_performed: storage-bed lift mechanism is represented by hardware only; runtime opening and project persistence remain to be tested."
+    "bed_family_interaction_validation": "not_performed: storage-bed lift mechanism is represented by hardware only; runtime opening and project persistence remain to be tested.",
+    "per_part_color_static_update": "passed: shared buildItemGeometry applies persisted per-part color overrides to generated and imported object meshes; main executable inline script parses successfully.",
+    "per_part_color_browser_validation": "not_performed: actual browser/WebGL review of material-role classification and all object families remains required.",
+    "per_part_color_persistence_validation": "not_performed: saved-project round trip for partColors remains to be tested in browser."
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3631,7 +3642,10 @@
       "animation_runtime": "not_run",
       "dimensions_runtime": "not_run",
       "project_persistence": "not_run",
-      "modes_3d_render": "not_run"
+      "modes_3d_render": "not_run",
+      "per_part_color_static_update": "passed: principal, secondary, metal, glass, textile and ceramic role overrides integrated in shared geometry builder; main executable inline script parses successfully.",
+      "per_part_color_browser_validation": "not_run",
+      "per_part_color_persistence": "not_run"
     },
     "completion": {
       "processed_models": 0,
