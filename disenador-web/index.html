@@ -949,8 +949,45 @@ BUILD.griferia=(g,it)=>{const chrome=M(it.col||'#b7c0c8',.3,.78),dark=M('#58636b
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o)};switch(it.shape){
 case'sofa':case'outdoorsofa':{box(0,h*.14,0,w*.94,h*.2,d*.84);box(0,h*.28,d*.04,w*.9,h*.1,d*.68,mt);for(let k=0;k<3;k++){const x=(k-1)*w*.29;box(x,h*.39,d*.06,w*.28,h*.13,d*.6,mt);box(x,h*.68,-d*.34,w*.28,h*.42,d*.16,mt);const seam=new T.Mesh(new T.TorusGeometry(Math.min(w,d)*.07,Math.max(.4,w*.004),6,24),M('#d0c8bd',.95));seam.scale.set(1,.62,.25);seam.position.set(x,h*.46,d*.34);g.add(seam)}for(let x of [-1,1]){box(x*w*.44,h*.4,0,w*.12,h*.56,d*.84,mt);for(let z of [-1,1])cyl(x*w*.4,h*.055,z*d*.34,Math.max(1,w*.012),h*.11,dark)}if(v%2){box(w*.22,h*.51,d*.2,w*.22,h*.2,d*.22,M('#d9c8b4',.96));box(-w*.22,h*.51,d*.2,w*.22,h*.2,d*.22,M('#b8c2bd',.96))}break;}
 case'seat':case'bench':case'chair':{box(0,h*.43,0,w*.88,h*.11,d*.78,mt);box(0,h*.51,0,w*.8,h*.08,d*.7,M('#d9d2c7',.94));box(0,h*.76,-d*.37,w*.84,h*.42,d*.1,mt);box(0,h*.79,-d*.31,w*.72,h*.29,d*.08,M('#e6e0d6',.96));for(let x of [-1,1]){tube([x*w*.39,h*.42,d*.3],[x*w*.43,3,d*.34],Math.max(1.5,w*.018),metal);tube([x*w*.39,h*.42,-d*.3],[x*w*.43,3,-d*.34],Math.max(1.5,w*.018),metal);tube([x*w*.39,h*.49,-d*.34],[x*w*.39,h*.69,-d*.34],Math.max(1.5,w*.018),metal)}tube([-w*.38,3,d*.34],[w*.38,3,d*.34],1.5,metal);break;}
-case'panel':box(0,h*.5,0,w,h,d*.08,M('#75563f',.62));box(0,h*.52,d*.05,w*.76,h*.48,2,M('#171b20',.16,.3));for(let x of [-1,1])box(x*w*.43,h*.5,d*.08,3,h*.95,3,metal);for(let y of [.18,.84])box(0,h*y,d*.1,w*.9,3,d*.16,M('#9d7955',.6));break;
-case'table':if(v%2===0){cyl(0,h-3,0,Math.min(w,d)*.46,6);cyl(0,h*.5,0,Math.min(w,d)*.12,h-8,metal)}else{box(0,h-3,0,w,6,d);for(let x of [-1,1])for(let z of [-1,1])box(x*w*.42,h*.48,z*d*.4,5,h*.92,5)}break;
+case'panel':{
+ const wood=M(it.col||'#75563f',.62,.08),edge=M('#4b382c',.55,.12),screen=M('#080d12',.12,.28),glass=new T.MeshStandardMaterial({color:'#18232b',roughness:.12,metalness:.35});
+ // Panel mural con espesor, trasera, listones y fijaciones; pantalla con marco y cristal.
+ B(g,w,h,d*.11,0,h/2,0,wood);
+ for(let x=-w*.46;x<=w*.46;x+=Math.max(5,w*.045))B(g,1.2,h*.94,1.5,x,h/2,d*.07,edge);
+ const tvW=w*.72,tvH=h*.46,tvY=h*.57;
+ B(g,tvW+4,tvH+4,2,0,tvY,d*.075,edge);B(g,tvW,tvH,1.2,0,tvY,d*.09,screen);B(g,tvW*.985,tvH*.97,.25,0,tvY,d*.1,glass);
+ for(const x of [-1,1])B(g,2,5,5,x*tvW*.3,tvY-tvH*.5-2,d*.11,metal);
+ // Mueble bajo suspendido con casco, frentes separados y cajones animados.
+ const cabW=w*.9,cabH=Math.max(14,h*.16),cabD=d*.72,cabY=h*.12;
+ B(g,cabW,cabH,cabD,0,cabY,0,wood);B(g,cabW-4,cabH-4,1,0,cabY,-cabD/2,inside);
+ it.op=it.op||[];
+ for(let k=0;k<3;k++){const dw=cabW/3-1,dp=new T.Group();dp.position.set((k-1)*cabW/3,cabY,cabD/2+1);g.add(dp);B(dp,dw,cabH-3,2,0,0,0,wood);B(dp,Math.min(12,dw*.22),1.2,1.2,0,0,2.2,metal);mv(dp,{it,k,t:'s',z:cabD/2+1,sl:Math.min(18,cabD*.45)})}
+ for(const x of [-1,1]){B(g,5,3,5,x*cabW*.39,cabY-cabH/2-1,0,dark)}
+ break;
+}
+case'table':{
+ const wood=M(it.col||'#98724f',.48,.12),edge=M('#6f5339',.55,.08),steel=M('#343b40',.32,.78),round=v%2===0||/redond|oval/.test((it.n||'').toLowerCase()),topT=Math.max(2.8,h*.055),topY=h-topT/2;
+ if(round){
+  const rx=w*.48,rz=d*.48;
+  const top=new T.Mesh(new T.CylinderGeometry(Math.min(rx,rz),Math.min(rx,rz),topT,96,1),wood);top.scale.z=rz/rx;top.position.y=topY;g.add(top);
+  const apron=new T.Mesh(new T.CylinderGeometry(Math.min(rx,rz)*.84,Math.min(rx,rz)*.84,topT*.7,64),edge);apron.scale.z=rz/rx;apron.position.y=topY-topT*.85;g.add(apron);
+  // Pedestal central con columna y base estable, no una pata cilíndrica flotante.
+  const col=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.075,Math.min(w,d)*.11,h*.68,32),steel);col.position.y=h*.34;g.add(col);
+  const foot=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.24,Math.min(w,d)*.28,topT*1.8,64),steel);foot.scale.z=rz/rx;foot.position.y=topT*.9;g.add(foot);
+ }else{
+  B(g,w,topT,d,0,topY,0,wood);
+  // Canto inferior y faldón perimetral estructural.
+  B(g,w-3,2.2,3,0,topY-topT/2-1.1,-d/2+1.5,edge);B(g,w-3,2.2,3,0,topY-topT/2-1.1,d/2-1.5,edge);
+  B(g,3,2.2,d-3,-w/2+1.5,topY-topT/2-1.1,0,edge);B(g,3,2.2,d-3,w/2-1.5,topY-topT/2-1.1,0,edge);
+  const legInset=/industrial|caballet/.test((it.n||'').toLowerCase())?.08:.12;
+  for(const x of [-1,1])for(const z of [-1,1]){
+   const px=x*w*(.5-legInset),pz=z*d*(.5-legInset);
+   tube([px*.94,h*.06,pz*.94],[px,topY-topT/2-2,pz],Math.max(2,Math.min(w,d)*.025),/industrial/.test((it.n||'').toLowerCase())?steel:wood);
+   B(g,8,2,8,px*.94,2,pz*.94,steel);
+  }
+ }
+ break;
+}
 case'bed':{box(0,h*.13,0,w*.96,h*.2,d*.94,mt);box(0,h*.32,d*.015,w*.93,h*.15,d*.9,M('#e5e0d7',.96));box(0,h*.72,-d*.46,w,h*.48,6,mt);for(let x of [-1,1]){box(x*w*.22,h*.48,-d*.3,w*.38,h*.12,d*.2,M('#faf8f3',.98));box(x*w*.22,h*.54,-d*.29,w*.34,h*.035,d*.18,M('#d7d0c5',.98))}box(0,h*.42,d*.19,w*.9,h*.07,d*.45,M('#e8e3da',.98));for(let k=0;k<6;k++){const cv=new T.CatmullRomCurve3([new T.Vector3(-w*.4+k*w*.16,h*.46,d*.02),new T.Vector3(-w*.34+k*w*.16,h*.44,d*.22),new T.Vector3(-w*.3+k*w*.16,h*.42,d*.39)]);g.add(new T.Mesh(new T.TubeGeometry(cv,12,.5,5,false),M('#c9c2b8',.98)))}break;}
 case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':{
  const name=(it.n||'').toLowerCase(),bathStorage=/mueble auxiliar baño|columna baño/.test(name);
@@ -1004,7 +1041,36 @@ case'dresser':case'sideboard':case'cabinet':case'toolcab':case'console':{
  }
  break;
 }
-case'wardrobe':box(0,h*.49,0,w*.96,h*.98,d*.94);for(let k=0;k<2;k++){box(-w*.23+k*w*.46,h*.5,d*.48,w*.44,h*.94,2,k?M('#bba991',.6):mt);cyl(-w*.23+k*w*.46+w*.16,h*.5,d*.5,1.3,4,metal)}for(let y of [.28,.55,.82])box(0,h*y,0,w*.9,2,d*.86,M('#bba991',.7));break;
+case'wardrobe':{
+ const body=M(it.col||'#b7a58e',.58,.08),inside=M('#d0c7ba',.82,.02),rail=M('#aeb5b8',.28,.82),dark=M('#30363b',.45,.22),th=Math.max(1.8,w*.025),dep=d*.92;
+ it.op=it.op||[];
+ // Casco hueco con costados, techo, suelo y trasera; nunca un bloque macizo.
+ box(-w/2+th/2,h/2,0,th,h,dep,body);box(w/2-th/2,h/2,0,th,h,dep,body);
+ box(0,th/2,0,w-2*th,th,dep,inside);box(0,h-th/2,0,w-2*th,th,dep,body);
+ box(0,h/2,-dep/2+th/2,w-2*th,h-2*th,th,inside);
+ const isSliding=/correder/.test((it.n||'').toLowerCase());
+ if(isSliding){
+  // Dos hojas correderas superpuestas, con carriles superior/inferior y perfiles de agarre.
+  box(0,h-3,dep/2-2,w-2,2,5,rail);box(0,3,dep/2-2,w-2,2,5,rail);
+  for(let k=0;k<2;k++){const leaf=new T.Group();leaf.position.set((k-.5)*w*.43,0,dep/2+1.5);g.add(leaf);B(leaf,w*.53,h-6,2,0,h/2,0,body);B(leaf,2,h-12,1.2,(k? -1:1)*w*.22,h/2,1.2,rail);leaf.position.x+=(k?1:-1)*w*.2}
+ }else{
+  const doorW=(w-2*th-2)/2;
+  for(let k=0;k<2;k++){
+   const sg=k?1:-1,door=new T.Group();door.position.set(sg*(w/2-th),0,dep/2+1.6);g.add(door);
+   B(door,doorW,h-2*th,2,-sg*doorW/2,h/2,0,body);
+   B(door,doorW*.88,h-2*th-8,.35,-sg*doorW/2,h/2,1.15,inside);
+   const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(18,h*.1),16),rail);pull.rotation.x=Math.PI/2;pull.position.set(-sg*doorW*.12,h*.5,2.8);door.add(pull);
+   mv(door,{it,k,t:'d',sg:sg===1?-1:1});
+  }
+ }
+ // Interiores reales: baldas, barra de colgar y cajonera inferior.
+ const shelves=/vestidor|zapatero/.test((it.n||'').toLowerCase())?4:3;
+ for(let k=1;k<=shelves;k++){const yy=h*(k/(shelves+1));B(g,w-2*th-3,1.8,dep-2*th-4,0,yy,0,inside);for(const x of [-1,1])cyl(x*(w/2-th-2),yy-2,dep*.25,.8,1.8,rail)}
+ if(!/zapatero/.test((it.n||'').toLowerCase())){tube([-w*.38,h*.78,-dep*.18],[w*.38,h*.78,-dep*.18],1.5,rail);for(let k=0;k<5;k++){const x=-w*.3+k*w*.15;const hook=new T.Mesh(new T.TorusGeometry(2,.55,8,16),rail);hook.position.set(x,h*.78,-dep*.18);g.add(hook)}}
+ const drawerN=2,drawerH=Math.max(8,h*.12);
+ for(let k=0;k<drawerN;k++){const yy=th+drawerH*(k+.5),dr=new T.Group();dr.position.set(0,yy,dep/2+2);g.add(dr);B(dr,w*.72,drawerH-1,2,0,0,0,body);B(dr,w*.68,1.2,dep*.5,0,-drawerH*.4,-dep*.25,inside);for(const x of [-1,1])B(dr,1.5,drawerH-2,dep*.5,x*w*.35,0,-dep*.25,inside);const pull=new T.Mesh(new T.CylinderGeometry(1,1,Math.min(w*.2,20),16),rail);pull.rotation.z=Math.PI/2;pull.position.z=2;dr.add(pull);mv(dr,{it,k:2+k,t:'s',z:dep/2+2,sl:Math.min(25,dep*.4)})}
+ break;
+}
 case'shelf':{
  const name=(it.n||'').toLowerCase(),library=/librería/.test(name),side=M(library?'#b39c7d':'#343b40',library?.72:.38,library?.035:.72),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
  for(const x of [-1,1]){if(library)box(x*(w/2-1.5),h/2,0,3,h,d,side);else{tube([x*(w/2-2),3,-d*.42],[x*(w/2-2),h-3,-d*.42],2.2,side);tube([x*(w/2-2),3,d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);tube([x*(w/2-2),h-3,-d*.42],[x*(w/2-2),h-3,d*.42],2.2,side)}}
@@ -1186,7 +1252,24 @@ case'mirror':{
  box(0,h*.965,3.8,w*.84,1.2,1.2,led);box(0,h*.035,3.8,w*.84,1.2,1.2,led);
  break;
 }
-case'lamp':cyl(0,h*.45,0,2,h*.88,metal);const sh=new T.Mesh(new T.ConeGeometry(w*.48,h*.32,32,1,true),mt);sh.position.y=h*.82;g.add(sh);cyl(0,h*.63,0,w*.12,3,M('#fff1c9',.2));break;
+case'lamp':{
+ const name=(it.n||'').toLowerCase(),metal=M('#9b8b72',.32,.82),shade=M(it.col||'#d6c39b',.68,.04),dark=M('#33383c',.42,.55),bulb=M('#fff1cf',.18,.02);
+ const hanging=/colg|suspend/.test(name),table=/sobremesa|mesita/.test(name),floor=!hanging&&!table;
+ const baseR=Math.max(4,Math.min(w,d)*.24);
+ if(!hanging){const base=new T.Mesh(new T.CylinderGeometry(baseR*.82,baseR,Math.max(2,h*.025),48),dark);base.position.y=Math.max(1,h*.012);g.add(base)}
+ if(hanging){cyl(0,h*.96,0,Math.max(2,w*.045),3,metal);tube([0,h*.96,0],[0,h*.78,0],1,metal)}
+ else tube([0,h*.04,0],[0,h*(table?.62:.84),0],Math.max(1.5,w*.018),metal);
+ // Pantalla de revolución con borde inferior, cuello y difusor; no cono abierto genérico.
+ const profile=[new T.Vector2(Math.max(2,w*.09),0),new T.Vector2(w*.16,h*.035),new T.Vector2(w*.38,h*.24),new T.Vector2(w*.48,h*.3),new T.Vector2(w*.46,h*.32),new T.Vector2(w*.13,h*.1),new T.Vector2(w*.1,h*.08)];
+ const shadeGeo=new T.LatheGeometry(profile,64);const sh=new T.Mesh(shadeGeo,shade);sh.position.y=h*(hanging?.64:table?.7:.84);g.add(sh);
+ const rim=new T.Mesh(new T.TorusGeometry(w*.46,Math.max(.6,w*.009),10,64),metal);rim.position.y=sh.position.y;g.add(rim);
+ const socket=new T.Mesh(new T.CylinderGeometry(Math.max(2,w*.055),Math.max(2,w*.07),h*.055,24),dark);socket.position.y=sh.position.y-h*.045;g.add(socket);
+ const globe=new T.Mesh(new T.SphereGeometry(1,32,20),bulb);globe.scale.set(w*.105,h*.07,w*.105);globe.position.y=sh.position.y-h*.12;g.add(globe);
+ if(floor){for(const a of [-1,1]){tube([0,h*.05,0],[a*w*.34,2,a*d*.34],2,metal)}}
+ if(table){const neck=new T.Mesh(new T.CylinderGeometry(2.5,3.5,h*.12,20),metal);neck.position.y=h*.61;g.add(neck)}
+ if(hanging){for(let k=0;k<3;k++){const a=k*Math.PI*2/3;tube([Math.cos(a)*w*.12,h*.72,Math.sin(a)*d*.12],[Math.cos(a)*w*.4,h*.91,Math.sin(a)*d*.4],.8,metal)}}
+ break;
+}
 case'bath':{
  const name=(it.n||'').toLowerCase(),porcelain=ceramicMaterial(it.col||'#f4f3ef'),inside=new T.MeshStandardMaterial({color:'#dce1de',roughness:.22,side:T.DoubleSide}),chrome=M('#aeb5b8',.24,.82),dark=M('#343a3d',.3,.3);
  const inset=name.includes('encastrada'),rx=w*.5,rz=d*.5,bodyH=h*.9;
@@ -1355,14 +1438,121 @@ case'rail':{
  }else{for(let x of [-1,1])tube([x*w*.4,0,0],[x*w*.4,h,0],2,metal);for(let k=0;k<5;k++)tube([-w*.4,h*(.2+k*.14),0],[w*.4,h*(.2+k*.14),0],1.5,metal)}
  break;
 }
-case'washer':{box(0,h/2,0,w*.98,h*.98,d*.94,M('#e4e7e8',.5));box(0,h*.88,d*.49,w*.92,h*.16,2.5,M('#c7cdd0',.45));for(let k=0;k<3;k++)cyl(-w*.3+k*w*.17,h*.88,d*.52,Math.max(1.5,w*.025),2,metal);box(-w*.3,h*.88,d*.52,w*.19,h*.1,1.5,M('#d7dde0',.3));const z=d*.49,cy=h*.45,outer=new T.Mesh(new T.TorusGeometry(w*.315,Math.max(2,w*.03),16,56),metal);outer.position.set(0,cy,z);g.add(outer);const gasket=new T.Mesh(new T.TorusGeometry(w*.272,Math.max(2,w*.035),16,56),dark);gasket.position.set(0,cy,z+1);g.add(gasket);const pane=new T.Mesh(new T.SphereGeometry(1,36,22),glass);pane.scale.set(w*.23,w*.23,d*.035);pane.position.set(0,cy,z+2);g.add(pane);const drum=new T.Mesh(new T.CylinderGeometry(w*.2,w*.2,d*.12,40,1,true),metal);drum.rotation.x=Math.PI/2;drum.position.set(0,cy,z+d*.11);g.add(drum);break;}
-case'sink':box(0,h*.46,0,w,h*.9,d);box(0,h*.94,0,w*1.04,3,d*1.04);const bowl=new T.Mesh(new T.SphereGeometry(1,24,16),M('#b8c0c5',.2,.8));bowl.scale.set(w*.35,h*.22,d*.34);bowl.position.y=h*.88;g.add(bowl);break;
-case'basket':case'box':case'trunk':case'suitcase':box(0,h*.45,0,w*.92,h*.86,d*.92);box(0,h*.9,0,w*.96,3,d*.96,M('#c3b39f',.7));break;
-case'ironing':box(0,h*.88,0,w,h*.12,d*.92);tube([-w*.38,4,-d*.2],[-w*.2,h*.85,d*.2]);tube([w*.38,4,-d*.2],[w*.2,h*.85,d*.2]);break;
-case'car':case'van':box(0,h*.35,0,w*.94,h*.42,d*.9);box(0,h*.7,-d*.04,w*.7,h*.32,d*.48,glass);for(let x of [-1,1])for(let z of [-1,1]){const wh=new T.Mesh(new T.CylinderGeometry(h*.13,h*.13,w*.08,24),dark);wh.rotation.z=Math.PI/2;wh.position.set(x*w*.47,h*.2,z*d*.29);g.add(wh)}box(0,h*.23,d*.46,w*.75,h*.08,3,dark);break;
+case'washer':{
+ const body=M('#e4e7e8',.42,.04),panel=M('#c7cdd0',.38,.16),metal=M('#aeb5bb',.28,.82),dark=M('#343a3e',.38,.25),glass=new T.MeshStandardMaterial({color:'#25343c',roughness:.12,metalness:.42,transparent:true,opacity:.82});
+ B(g,w*.98,h*.98,d*.94,0,h/2,0,body);
+ B(g,w*.94,h*.105,2.4,0,h*.91,d*.472,panel);
+ for(let k=0;k<3;k++){const knob=new T.Mesh(new T.CylinderGeometry(Math.max(1.2,w*.018),Math.max(1.2,w*.018),2,24),metal);knob.rotation.x=Math.PI/2;knob.position.set(-w*.32+k*w*.17,h*.91,d*.49);g.add(knob)}
+ B(g,w*.12,h*.055,1.2,-w*.32,h*.91,d*.49,dark);
+ const cy=h*.45,z=d*.48,outerR=Math.min(w*.34,h*.36);
+ const pivot=new T.Group();pivot.name='Puerta de lavadora';pivot.position.set(-outerR*.82,cy,z+1.5);g.add(pivot);
+ const ring=new T.Mesh(new T.TorusGeometry(outerR*.9,Math.max(2,w*.027),20,72),metal);ring.position.x=outerR*.82;pivot.add(ring);
+ const gasket=new T.Mesh(new T.TorusGeometry(outerR*.78,Math.max(2,w*.035),20,72),dark);gasket.position.set(outerR*.82,0,1);pivot.add(gasket);
+ const pane=new T.Mesh(new T.SphereGeometry(1,48,32),glass);pane.scale.set(outerR*.72,outerR*.72,Math.max(2,d*.045));pane.position.set(outerR*.82,0,2.2);pivot.add(pane);
+ const handle=new T.Mesh(new T.TorusGeometry(outerR*.12,Math.max(.8,w*.009),10,24,Math.PI*1.2),metal);handle.position.set(outerR*1.55,0,2.8);pivot.add(handle);
+ mv(pivot,{it,k:0,t:'d',sg:-1});
+ // Patas niveladoras y zócalo inferior.
+ B(g,w*.86,3,d*.82,0,2,0,dark);for(const x of [-1,1])for(const zz of [-1,1]){cyl(x*w*.39,1.5,zz*d*.37,2,3,dark)}
+ break;
+}
+case'sink':{
+ const steel=M('#b8c0c5',.24,.82),inside=M('#d5dadd',.32,.62),dark=M('#3c454a',.3,.4),chrome=M('#c6cbd0',.2,.9);
+ const topY=h*.91,topT=Math.max(2.5,h*.045),double=/doble/.test((it.n||'').toLowerCase()),count=double?2:1;
+ // Bastidor/encimera de lavadero con cubetas abiertas y reborde perimetral.
+ B(g,w*.98,topT,d*.94,0,topY,0,steel);
+ const basinW=w*(double?.39:.62),basinD=d*.62,basinH=h*.25;
+ for(let k=0;k<count;k++){
+  const x=count===2?(k?1:-1)*w*.245:0,rx=basinW*.5,rz=basinD*.5;
+  const profile=[new T.Vector2(0,0),new T.Vector2(rx*.48,0),new T.Vector2(rx*.72,basinH*.12),new T.Vector2(rx*.9,basinH*.55),new T.Vector2(rx,basinH),new T.Vector2(rx*.92,basinH)];
+  const bowl=new T.Mesh(new T.LatheGeometry(profile,64),steel);bowl.scale.z=rz/rx;bowl.position.set(x,topY-topT/2-basinH,0);g.add(bowl);
+  const floor=new T.Mesh(new T.CircleGeometry(rx*.47,48),inside);floor.rotation.x=-Math.PI/2;floor.scale.set(1,rz/rx,1);floor.position.set(x,topY-topT/2-basinH+1.5,0);g.add(floor);
+  const drain=new T.Mesh(new T.TorusGeometry(Math.max(1.5,rx*.055),.7,10,32),chrome);drain.rotation.x=Math.PI/2;drain.position.set(x,topY-topT/2-basinH+2,0);g.add(drain);
+  const hole=new T.Mesh(new T.CircleGeometry(Math.max(1,rx*.045),32),dark);hole.rotation.x=-Math.PI/2;hole.position.set(x,topY-topT/2-basinH+2.1,0);g.add(hole);
+ }
+ // Grifería con base, cuerpo, caño curvado y aireador.
+ const tapX=0,tapZ=-d*.34;cyl(tapX,topY+2,tapZ,3,3,chrome);tube([tapX,topY,tapZ],[tapX,topY+h*.13,tapZ],2.2,chrome);
+ const curve=new T.CatmullRomCurve3([new T.Vector3(tapX,topY+h*.13,tapZ),new T.Vector3(tapX,topY+h*.19,tapZ+d*.08),new T.Vector3(tapX,topY+h*.19,tapZ+d*.18),new T.Vector3(tapX,topY+h*.12,tapZ+d*.22)]);
+ g.add(new T.Mesh(new T.TubeGeometry(curve,24,2.1,12,false),chrome));
+ const aer=new T.Mesh(new T.CylinderGeometry(2.3,2.3,2.5,20),dark);aer.position.set(tapX,topY+h*.12,tapZ+d*.22);g.add(aer);
+ // Mueble inferior abierto con patas y travesaños, dejando accesibles sifones.
+ for(const x of [-1,1])for(const z of [-1,1]){tube([x*w*.43,3,z*d*.4],[x*w*.43,topY-topT/2,z*d*.4],2.5,metal)}
+ B(g,w*.9,3,d*.8,0,topY*.16,0,metal);
+ break;
+}
+case'basket':case'box':case'trunk':case'suitcase':{
+ const shell=M(it.col||'#b7a58e',.62,.12),trim=M('#373d42',.48,.42),metal=M('#aeb5bb',.28,.84),fabric=M('#d0c7ba',.88,.01);
+ // Carcasa de dos mitades con junta perimetral y esquinas protegidas.
+ B(g,w*.94,h*.9,d*.45,0,h*.5,-d*.24,shell);B(g,w*.94,h*.9,d*.45,0,h*.5,d*.24,shell);
+ for(const x of [-1,1])for(const y of [.08,.92])for(const z of [-1,1]){const cap=new T.Mesh(new T.SphereGeometry(1,16,12),trim);cap.scale.set(w*.035,h*.045,d*.035);cap.position.set(x*w*.46,h*y,z*d*.45);g.add(cap)}
+ for(const z of [-1,1]){B(g,w*.9,1.5,1.5,0,h*.5,z*d*.48,trim);for(let x=-w*.4;x<=w*.4;x+=w*.1){const rivet=new T.Mesh(new T.SphereGeometry(1,8,6),metal);rivet.scale.set(1.2,1.2,1.2);rivet.position.set(x,h*.5,z*d*.49);g.add(rivet)}}
+ // Asa telescópica, asa superior y cuatro ruedas giratorias.
+ B(g,w*.32,2,2,0,h*.97,-d*.3,metal);B(g,w*.045,h*.22,2,-w*.25,h*.92,-d*.3,metal);B(g,w*.045,h*.22,2,w*.25,h*.92,-d*.3,metal);
+ B(g,w*.28,4,5,0,h*.96,d*.18,trim);
+ for(const x of [-1,1])for(const z of [-1,1]){const wheel=new T.Mesh(new T.TorusGeometry(3.5,1.8,10,20),trim);wheel.rotation.y=Math.PI/2;wheel.position.set(x*w*.4,3,z*d*.42);g.add(wheel)}
+ // Interior visible por la unión de las mitades y separador textil.
+ const lining=new T.Mesh(new T.BoxGeometry(w*.82,h*.78,d*.04),fabric);lining.position.set(0,h*.5,0);g.add(lining);
+ break;
+}
+case':box(0,h*.45,0,w*.92,h*.86,d*.92);box(0,h*.9,0,w*.96,3,d*.96,M('#c3b39f',.7));break;
+case'ironing':{
+ const fabric=M(it.col||'#d5d0c7',.86,.02),frame=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.3);
+ const boardW=w*.92,boardD=d*.9,topY=h*.88;
+ // Tabla con silueta afinada en la punta, grosor y funda acolchada.
+ const shape=new T.Shape();shape.moveTo(-boardW*.5,-boardD*.42);shape.lineTo(boardW*.35,-boardD*.42);shape.quadraticCurveTo(boardW*.5,-boardD*.35,boardW*.5,-boardD*.16);shape.lineTo(boardW*.5,boardD*.2);shape.quadraticCurveTo(boardW*.42,boardD*.42,0,boardD*.5);shape.quadraticCurveTo(-boardW*.42,boardD*.42,-boardW*.5,boardD*.2);shape.closePath();
+ const top=new T.Mesh(new T.ExtrudeGeometry(shape,{depth:3,bevelEnabled:true,bevelSegments:3,bevelSize:1,bevelThickness:1,curveSegments:16}),fabric);top.rotation.x=Math.PI/2;top.position.y=topY;g.add(top);
+ B(g,boardW*.82,2,boardD*.76,0,topY-3,0,dark);
+ // Patas cruzadas con articulación central, travesaño y tacos antideslizantes.
+ tube([-w*.36,4,-d*.22],[w*.36,topY-5,d*.22],2.5,frame);tube([w*.36,4,-d*.22],[-w*.36,topY-5,d*.22],2.5,frame);
+ const hinge=new T.Mesh(new T.CylinderGeometry(3,3,7,20),dark);hinge.rotation.z=Math.PI/2;hinge.position.set(0,h*.43,0);g.add(hinge);
+ tube([-w*.32,topY*.42,-d*.2],[w*.32,topY*.42,-d*.2],2,frame);
+ for(const x of [-1,1])B(g,9,2,9,x*w*.36,2,-d*.22,dark);
+ break;
+}
+case'car':case'van':{
+ const paint=M(it.col||'#7c8790',.38,.24),glass=new T.MeshStandardMaterial({color:'#273943',roughness:.16,metalness:.35}),rubber=M('#202326',.86,.02),chrome=M('#aeb5bb',.25,.82),lamp=M('#e9e6d8',.24,.08);
+ // Carrocería baja con capó, cabina elevada y transiciones de volumen.
+ B(g,w*.94,h*.38,d*.9,0,h*.3,0,paint);B(g,w*.78,h*.34,d*.52,0,h*.63,-d*.08,paint);
+ B(g,w*.82,h*.035,d*.32,0,h*.47,d*.12,paint);
+ // Parabrisas y ventanillas laterales, con marcos de goma.
+ B(g,w*.76,h*.21,1.2,0,h*.66,d*.185,glass);
+ for(const x of [-1,1]){B(g,1,h*.2,d*.32,x*w*.39,h*.65,-d*.08,glass);B(g,1,h*.2,d*.24,x*w*.39,h*.65,d*.13,glass)}
+ // Puertas laterales, tiradores, retrovisores y pilotos.
+ for(const x of [-1,1]){B(g,1.2,h*.26,d*.34,x*w*.472,h*.32,-d*.08,chrome);B(g,4,2,2,x*w*.485,h*.42,d*.04,chrome);tube([x*w*.46,h*.58,d*.1],[x*w*.54,h*.61,d*.16],2,paint)}
+ for(const z of [-1,1])for(const x of [-1,1]){
+  const tire=new T.Mesh(new T.TorusGeometry(h*.13,Math.max(3,h*.035),16,36),rubber);tire.rotation.y=Math.PI/2;tire.position.set(x*w*.47,h*.19,z*d*.29);g.add(tire);
+  const hub=new T.Mesh(new T.CylinderGeometry(h*.075,h*.075,5,32),chrome);hub.rotation.z=Math.PI/2;hub.position.copy(tire.position);g.add(hub);
+ }
+ for(const x of [-1,1]){B(g,w*.12,h*.07,2,x*w*.36,h*.34,d*.455,lamp);B(g,w*.1,h*.06,2,x*w*.36,h*.22,-d*.455,M('#bd3730',.32,.08))}
+ B(g,w*.68,h*.045,2,0,h*.17,d*.455,chrome);
+ break;
+}
 case'bike':case'bicycle':{for(let z of [-d*.34,d*.34]){const wh=new T.Mesh(new T.TorusGeometry(h*.25,2,10,32),dark);wh.rotation.y=Math.PI/2;wh.position.set(0,h*.25,z);g.add(wh)}tube([0,h*.25,-d*.34],[w*.25,h*.55,0]);tube([w*.25,h*.55,0],[0,h*.25,d*.34]);tube([0,h*.25,d*.34],[-w*.25,h*.55,0]);tube([-w*.25,h*.55,0],[0,h*.25,-d*.34]);break}
-case'workbench':box(0,h*.68,0,w,h*.12,d);for(let x of [-1,1])for(let z of [-1,1])box(x*w*.45,h*.32,z*d*.43,5,h*.64,5,metal);box(0,h*.9,-d*.4,w,h*.16,4);break;
-case'compressor':cyl(0,h*.35,0,w*.42,h*.48);cyl(0,h*.65,0,w*.14,h*.28,metal);break;
+case'workbench':{
+ const frame=M('#454d53',.34,.78),wood=M('#927858',.55,.12),inside=M('#c2b8a8',.82,.02),steel=M('#aeb5bb',.28,.84);
+ const topT=Math.max(4,h*.075),topY=h-topT/2;
+ B(g,w,topT,d,0,topY,0,wood);B(g,w*.98,2,d*.96,0,topY-topT/2-1,0,frame);
+ for(const x of [-1,1])for(const z of [-1,1]){B(g,5,h*.68,5,x*w*.44,h*.34,z*d*.43,frame);B(g,8,3,8,x*w*.44,2,z*d*.43,steel)}
+ // Bastidor posterior perforado, con ganchos y baldas de herramientas.
+ B(g,w*.96,h*.28,3,0,h*.84,-d*.46,frame);
+ for(let x=-w*.42;x<=w*.42;x+=8)for(let y=h*.73;y<=h*.94;y+=8){const hole=new T.Mesh(new T.TorusGeometry(.8,.35,6,12),steel);hole.position.set(x,y,-d*.438);g.add(hole)}
+ for(let k=0;k<3;k++){const drawer=new T.Group();drawer.position.set((k-1)*w*.29,h*.48,d*.46);g.add(drawer);B(drawer,w*.27,h*.2,2,0,0,0,frame);B(drawer,w*.24,h*.16,d*.42,0,-h*.11,-d*.22,inside);const pull=new T.Mesh(new T.CylinderGeometry(1,1,Math.min(14,w*.1),16),steel);pull.rotation.z=Math.PI/2;pull.position.z=2;drawer.add(pull);mv(drawer,{it,k,t:'s',z:d*.46,sl:Math.min(22,d*.35)})}
+ for(const x of [-1,1]){B(g,w*.12,2,d*.72,x*w*.38,h*.36,0,frame)}
+ break;
+}
+case'compressor':{
+ const tank=M('#6e8791',.42,.55),metal=M('#aeb5bb',.28,.84),dark=M('#30383d',.48,.5),rubber=M('#202528',.78,.03);
+ const r=w*.34,cy=h*.43,hh=h*.56;
+ const vessel=new T.Mesh(new T.CylinderGeometry(r*.92,r*.92,hh*.78,48,1,true),tank);vessel.position.y=cy;g.add(vessel);
+ for(const y of [cy-hh*.39,cy+hh*.39]){const cap=new T.Mesh(new T.SphereGeometry(1,40,24),tank);cap.scale.set(r*.92,hh*.12,r*.92);cap.position.y=y;g.add(cap)}
+ const motor=new T.Mesh(new T.CylinderGeometry(r*.45,r*.45,h*.2,32),metal);motor.position.set(-w*.18,h*.86,0);g.add(motor);
+ for(let k=0;k<8;k++){const fin=new T.Mesh(new T.BoxGeometry(r*1.45,1.4,2),dark);fin.position.set(-w*.18,h*.86-h*.08+k*h*.023,0);g.add(fin)}
+ const gauge=new T.Mesh(new T.CylinderGeometry(4,4,2,32),metal);gauge.rotation.x=Math.PI/2;gauge.position.set(w*.12,h*.83,d*.36);g.add(gauge);
+ const face=new T.Mesh(new T.CircleGeometry(3.3,32),M('#f4f0e7',.55));face.position.set(w*.12,h*.83,d*.375);g.add(face);
+ tube([w*.18,h*.74,0],[w*.18,h*.93,0],2,metal);tube([w*.18,h*.93,0],[w*.38,h*.93,0],2,metal);
+ for(const x of [-1,1]){const wheel=new T.Mesh(new T.TorusGeometry(6,2.2,10,24),rubber);wheel.rotation.y=Math.PI/2;wheel.position.set(x*w*.25,5,d*.25);g.add(wheel);cyl(x*w*.25,5,d*.25,2,5,metal)}
+ for(const z of [-1,1])B(g,8,4,8,w*.2,2,z*d*.25,dark);
+ break;
+}
 case'cart':case'tyres':for(let k=0;k<3;k++){const tor=new T.Mesh(new T.TorusGeometry(w*.25,6,12,32),dark);tor.rotation.x=Math.PI/2;tor.position.y=h*.25+k*12;g.add(tor)}break;
 case'coat':cyl(0,h*.5,0,2,h,metal);for(let k=0;k<6;k++){const a=k*Math.PI/3;tube([0,h*.82,0],[Math.cos(a)*w*.38,h*.96,Math.sin(a)*d*.38])}break;
 case'computer':{
@@ -1413,12 +1603,83 @@ case'computer':{
  }
  break;
 }
-case'sunbed':box(0,h*.55,0,w,h*.12,d);tube([-w*.4,4,-d*.3],[-w*.4,h*.6,d*.3]);tube([w*.4,4,-d*.3],[w*.4,h*.6,d*.3]);break;
-case'umbrella':cyl(0,h*.48,0,2,h*.94,metal);const canopy=new T.Mesh(new T.ConeGeometry(w*.5,h*.2,40),mt);canopy.position.y=h*.88;g.add(canopy);break;
-case'pergola':for(let x of [-1,1])for(let z of [-1,1])box(x*w*.46,h/2,z*d*.46,7,h,7);box(0,h-4,0,w,8,d);for(let k=0;k<8;k++)box(0,h-12,-d*.42+k*d*.12,w,4,5);break;
+case'sunbed':{
+ const frame=M('#aeb5b8',.3,.78),fabric=M(it.col||'#a9b2a5',.82,.02),dark=M('#343a3e',.55,.2);
+ const bedW=w*.88,bedD=d*.9,seatY=h*.56;
+ // Bastidor lateral con patas, travesaños y articulaciones de respaldo.
+ for(const x of [-1,1]){
+  tube([x*bedW*.43,4,-bedD*.48],[x*bedW*.43,seatY,-bedD*.35],2.6,frame);
+  tube([x*bedW*.43,4,bedD*.48],[x*bedW*.43,seatY,bedD*.35],2.6,frame);
+  tube([x*bedW*.43,seatY,-bedD*.35],[x*bedW*.43,seatY,bedD*.35],2.2,frame);
+ }
+ for(const z of [-1,1])tube([-bedW*.43,seatY,z*bedD*.35],[bedW*.43,seatY,z*bedD*.35],2.4,frame);
+ const back=new T.Group();back.position.set(0,seatY,bedD*.28);g.add(back);
+ const backPanel=new T.Mesh(new T.BoxGeometry(bedW,3,bedD*.36),fabric);backPanel.rotation.x=-.25;back.add(backPanel);
+ const seat=new T.Mesh(new T.BoxGeometry(bedW,3,bedD*.58),fabric);seat.position.set(0,seatY,-bedD*.08);g.add(seat);
+ for(let k=0;k<7;k++)B(g,bedW*.98,1.2,1.2,0,seatY+2,-bedD*.36+k*bedD*.12,dark);
+ for(const x of [-1,1]){tube([x*bedW*.38,seatY,-bedD*.3],[x*bedW*.38,4,bedD*.1],2,frame);const hinge=new T.Mesh(new T.CylinderGeometry(3,3,5,20),dark);hinge.rotation.z=Math.PI/2;hinge.position.set(x*bedW*.38,seatY,bedD*.28);g.add(hinge)}
+ break;
+}
+case'umbrella':{
+ const pole=M('#9c8c70',.36,.78),rib=M('#737d7c',.52,.5),fabric=M(it.col||'#d0c6b7',.82,.02),dark=M('#343a3d',.5,.3);
+ const radius=Math.min(w,d)*.49,topY=h*.88;
+ tube([0,3,0],[0,h*.91,0],Math.max(2,w*.012),pole);
+ // Cubierta segmentada en paños radiales con caída hacia el perímetro.
+ const panels=12;
+ for(let k=0;k<panels;k++){
+  const a=k*Math.PI*2/panels,b=(k+1)*Math.PI*2/panels,verts=[],idx=[],steps=6;
+  for(let j=0;j<=steps;j++){const t=j/steps;for(let q=0;q<2;q++){const ang=q?b:a,rr=radius*t,yy=topY-h*.13*t*t;verts.push(Math.cos(ang)*rr,yy,Math.sin(ang)*rr)}}
+  for(let j=0;j<steps;j++){const n=j*2;idx.push(n,n+1,n+3,n,n+3,n+2)}
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setIndex(idx);geo.computeVertexNormals();const panel=new T.Mesh(geo,fabric);panel.material.side=T.DoubleSide;g.add(panel);
+  tube([0,topY,0],[Math.cos(a)*radius,topY-h*.13,Math.sin(a)*radius],1.25,rib);
+ }
+ const cap=new T.Mesh(new T.SphereGeometry(Math.max(2,w*.018),24,16),pole);cap.position.y=topY+1;g.add(cap);
+ const hub=new T.Mesh(new T.CylinderGeometry(3,4,8,24),dark);hub.position.y=topY-h*.11;g.add(hub);
+ const base=new T.Mesh(new T.CylinderGeometry(radius*.13,radius*.17,5,40),dark);base.position.y=2.5;g.add(base);
+ break;
+}
+case'pergola':{
+ const frame=M(it.col||'#a8a9a4',.38,.72),dark=M('#555e60',.46,.62),seal=M('#30383b',.52,.35);
+ for(const x of [-1,1])for(const z of [-1,1]){B(g,10, h*.94,10,x*w*.46,h*.47,z*d*.46,frame);B(g,18,3,18,x*w*.46,1.5,z*d*.46,seal)}
+ // Vigas perimetrales con uniones visibles y canalón de evacuación.
+ B(g,w,10,12,0,h-7,-d*.46,frame);B(g,w,10,12,0,h-7,d*.46,frame);
+ B(g,12,10,d, -w*.46,h-7,0,frame);B(g,12,10,d,w*.46,h-7,0,frame);
+ // Lamas orientables individuales, separadas y con eje de giro longitudinal.
+ for(let k=0;k<12;k++){const z=-d*.42+k*d*.84/11,slat=new T.Group();slat.position.set(0,h-14,z);g.add(slat);B(slat,w*.88,2.6,d*.055,0,0,0,frame);tube([-w*.42,0,0],[w*.42,0,0],.7,dark)}
+ for(const x of [-1,1])tube([x*w*.46,h-12,-d*.4],[x*w*.46,h-12,d*.4],2,dark);
+ break;
+}
 case'planter':case'tree':{cyl(0,h*.13,0,w*.29,h*.26,M('#98745d',.82));const soil=new T.Mesh(new T.CircleGeometry(w*.27,32),dark);soil.rotation.x=-Math.PI/2;soil.position.y=h*.26;g.add(soil);if(it.shape==='tree'){cyl(0,h*.48,0,w*.055,h*.62,M('#76553b'));for(let k=0;k<13;k++){const a=k*2.399,rad=w*(.12+(k%3)*.035),y=h*(.55+(k%4)*.09),leaf=new T.Mesh(new T.SphereGeometry(1,20,14),M(k%2?'#477b4b':'#60905a',.94));leaf.scale.set(w*.14,h*.13,w*.11);leaf.position.set(Math.cos(a)*rad,y,Math.sin(a)*rad);leaf.rotation.z=-Math.cos(a)*.5;g.add(leaf)}}else for(let k=0;k<9;k++){const a=k*2.399,leaf=new T.Mesh(new T.SphereGeometry(1,18,12),M(k%2?'#477b4b':'#60905a',.96));leaf.scale.set(w*.08,h*.2,w*.06);leaf.position.set(Math.cos(a)*w*.2,h*(.48+(k%3)*.08),Math.sin(a)*w*.2);leaf.rotation.z=-Math.cos(a)*.7;g.add(leaf)}break;}
-case'bbq':box(0,h*.55,0,w*.88,h*.5,d*.72,dark);box(0,h*.82,0,w*.94,5,d*.78,metal);break;
-case'pool':box(0,h*.22,0,w,h*.44,d,M('#c3d5d8',.55));box(0,h*.46,0,w*.94,2,d*.94,glass);break;
+case'bbq':{
+ const body=M('#343a3d',.42,.58),metal=M('#aeb5b8',.28,.86),grate=M('#545d62',.34,.82),heat=M('#171b1d',.72,.16);
+ const fireH=h*.42,topY=h*.76;
+ B(g,w*.84,fireH,d*.68,0,h*.47,0,body);B(g,w*.9,4,d*.74,0,topY,0,metal);
+ // Cámara de combustión, tapa abatible, asa y parrilla de varillas.
+ B(g,w*.78,2,d*.58,0,topY+1,0,heat);
+ const lid=new T.Group();lid.position.set(0,topY+2,-d*.28);g.add(lid);B(lid,w*.82,h*.22,d*.08,0,h*.12,d*.28,body);
+ tube([-w*.28,topY+h*.22,-d*.28],[w*.28,topY+h*.22,-d*.28],2.2,metal);
+ for(let k=0;k<12;k++)tube([-w*.36+k*w*.72/11,topY+4,-d*.25],[-w*.36+k*w*.72/11,topY+4,d*.25],.75,grate);
+ mv(lid,{it,k:0,t:'h'});
+ // Repisas laterales, mandos, patas, ruedas y bandeja inferior.
+ for(const x of [-1,1]){B(g,w*.18,3,d*.62,x*w*.52,topY-2,0,metal);cyl(x*w*.35,topY-h*.12,d*.36,2,3,metal);tube([x*w*.39,topY-h*.02,0],[x*w*.39,6,0],2.4,body)}
+ B(g,w*.7,3,d*.42,0,8,0,body);
+ for(const x of [-1,1]){const wheel=new T.Mesh(new T.TorusGeometry(5,2,10,20),heat);wheel.rotation.y=Math.PI/2;wheel.position.set(x*w*.39,5,d*.3);g.add(wheel)}
+ break;
+}
+case'pool':{
+ const shell=M('#bfc6c5',.48,.18),water=new T.MeshStandardMaterial({color:'#5e9fae',roughness:.12,metalness:.18,transparent:true,opacity:.78}),tile=M('#d8e1df',.28,.18),dark=M('#33484d',.34,.28);
+ // Vaso hueco: fondo, cuatro paredes interiores y coronación perimetral.
+ const wallH=h*.42,baseY=2,wallT=Math.max(3,h*.045);
+ B(g,w,wallT,d,0,baseY,0,shell);
+ B(g,w,wallH,wallT,0,wallH/2,-d/2+wallT/2,shell);B(g,w,wallH,wallT,0,wallH/2,d/2-wallT/2,shell);
+ B(g,wallT,wallH,d-2*wallT,-w/2+wallT/2,wallH/2,0,shell);B(g,wallT,wallH,d-2*wallT,w/2-wallT/2,wallH/2,0,shell);
+ B(g,w*.96,3,d*.96,0,wallH+1,0,tile);
+ B(g,w*.88,1.4,d*.88,0,wallH*.64,0,water);
+ // Escalera interior de acceso y rejilla perimetral.
+ for(let k=0;k<4;k++)B(g,w*.28,3,d*.14,0,wallH*.18+k*wallH*.12,d*.32-k*d*.1,tile);
+ for(const x of [-1,1])B(g,3,1.2,d*.84,x*w*.47,wallH+2,0,dark);
+ break;
+}
 case'ladder':for(let x of [-1,1])tube([x*w*.35,0,0],[x*w*.35,h,0]);for(let k=1;k<8;k++)tube([-w*.35,h*k/8,0],[w*.35,h*k/8,0]);break;
 default:box(0,h/2,0,w,h,d);break;}g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}})};function build3d(){roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
