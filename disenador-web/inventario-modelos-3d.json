@@ -1620,14 +1620,16 @@
             "depth": 68
           },
           "status": "integrated_no_verificado",
-          "note": "Geometría reconstruida: taza ovalada con pedestal continuo, aro y tapa proporcionados, repisa posterior de apoyo y cisterna conectada físicamente. Pendiente prueba visual en navegador.",
+          "note": "Ajuste de proporciones tras revisión del usuario: taza y pedestal ampliados para guardar escala con la cisterna; aro y tapa ahora cubren el contorno completo de la taza. Cisterna ensanchada ligeramente y plataforma posterior adaptada. Perfil interior corregido. Pendiente comprobación visual en navegador.",
           "source_type": "modelo procedural genérico",
           "implemented_components": [
             "taza y pedestal cerámicos de perfil curvo",
             "cavidad interior",
             "aro abierto y tapa ovalada",
             "plataforma posterior y cisterna apoyada",
-            "pendiente validación visual y funcional"
+            "pendiente validación visual y funcional",
+            "proporciones de taza/pedestal/aro/tapa ampliadas en consonancia con cisterna",
+            "plataforma y cisterna reajustadas al ancho del conjunto"
           ]
         },
         {
