@@ -251,3 +251,24 @@ body:not(.ui-legacy) #lib .it{
 body:not(.ui-legacy) #lib .it img{
   border:1px solid var(--ui-line);
 }
+
+
+/* Presentación arquitectónica del visor 3D */
+body:not(.ui-legacy) #view{
+  background:radial-gradient(ellipse at 50% 42%,#f3f2ed 0%,#e7e7e1 58%,#dcded8 100%)!important;
+}
+body:not(.ui-legacy) #d3{
+  background:linear-gradient(145deg,#eeede8 0%,#e3e4de 55%,#d9ddd7 100%);
+  overflow:hidden;
+}
+body:not(.ui-legacy) #d3 canvas{
+  display:block;width:100%;height:100%;outline:none;
+  image-rendering:auto;
+}
+body:not(.ui-legacy) #hint{
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.22);
+}
+@media(prefers-reduced-motion:no-preference){
+  body:not(.ui-legacy) #d3 canvas{transition:filter .18s ease}
+}
