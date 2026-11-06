@@ -1155,18 +1155,24 @@ case'bench':{
  break;
 }
 case'chair':{
- const name=(it.n||'').toLowerCase(),wood=M(it.col||'#9d8264',.5,.13),uphol=M('#c8bcae',.9,.01),metal=M('#aeb5b8',.32,.78),seatY=h*.48,seatW=w*.84,seatD=d*.72;
- // Asiento de contorno redondeado, con cojín separado cuando es tapizada.
- B(g,seatW,h*.075,seatD,0,seatY,0,wood);
- if(/tapiz|brazos/.test(name)){const cushion=new T.Mesh(new T.SphereGeometry(1,32,20),uphol);cushion.scale.set(seatW*.49,h*.055,seatD*.47);cushion.position.y=seatY+h*.06;g.add(cushion)}
- const backShape=new T.Shape();backShape.moveTo(-seatW*.46,0);backShape.quadraticCurveTo(-seatW*.5,0,-seatW*.5,h*.08);backShape.lineTo(-seatW*.42,h*.42);backShape.quadraticCurveTo(0,h*.48,seatW*.42,h*.42);backShape.lineTo(seatW*.5,h*.08);backShape.quadraticCurveTo(seatW*.5,0,seatW*.46,0);backShape.closePath();
- const backGeo=new T.ExtrudeGeometry(backShape,{depth:3,bevelEnabled:true,bevelSegments:3,bevelSize:1.5,bevelThickness:1,curveSegments:12});const back=new T.Mesh(backGeo,/tapiz/.test(name)?uphol:wood);back.rotation.x=Math.PI/2;back.position.set(0,seatY+h*.09,-seatD*.48);g.add(back);
- for(const x of [-1,1])for(const z of [-1,1]){const px=x*seatW*.39,pz=z*seatD*.38; tube([px,seatY-2,pz],[px+x*2,3,pz+z*2],Math.max(1.8,w*.022),wood)}
- if(/brazos/.test(name))for(const x of [-1,1]){tube([x*seatW*.42,seatY+h*.08,-seatD*.38],[x*seatW*.42,seatY+h*.3,-seatD*.38],2.5,wood);tube([x*seatW*.42,seatY+h*.3,-seatD*.38],[x*seatW*.42,seatY+h*.3,seatD*.35],2.5,wood);B(g,4,3,seatD*.72,x*seatW*.42,seatY+h*.3,0,wood)}
+ const name=(it.n||'').toLowerCase(),wood=M(it.col||'#9d8264',.5,.16),uphol=M('#c8bcae',.9,.02),metal=M('#aeb5b8',.32,.78),seatY=h*.47,seatW=w*.82,seatD=d*.68,arms=/brazos/.test(name),padded=/tapiz/.test(name);
+ // Marco de asiento y cojín independiente, con esquinas redondeadas y espesor real.
+ B(g,seatW,h*.07,seatD,0,seatY,0,wood);
+ if(padded){const sx=seatW*.94,sz=seatD*.92,r=Math.min(4,sx*.12,sz*.12),s=new T.Shape();s.moveTo(-sx/2+r,-sz/2);s.lineTo(sx/2-r,-sz/2);s.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);s.lineTo(sx/2,sz/2-r);s.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);s.lineTo(-sx/2+r,sz/2);s.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);s.lineTo(-sx/2,-sz/2+r);s.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:h*.055,bevelEnabled:true,bevelSegments:4,bevelSize:1.1,bevelThickness:1,curveSegments:12});geo.rotateX(Math.PI/2);const cushion=new T.Mesh(geo,uphol);cushion.position.set(0,seatY+h*.065,0);g.add(cushion)}
+ // Patas traseras ligeramente inclinadas y delanteras verticales, unidas por faldones.
+ for(const x of [-1,1]){
+  tube([x*seatW*.39,seatY-h*.02,seatD*.39],[x*seatW*.43,3,seatD*.43],Math.max(2,w*.018),wood);
+  tube([x*seatW*.39,seatY-h*.02,-seatD*.39],[x*seatW*.39,3,-seatD*.39],Math.max(2,w*.018),wood);
+  tube([x*seatW*.4,seatY*.72,-seatD*.39],[x*seatW*.4,seatY*.72,seatD*.39],2,wood);
+ }
+ // Respaldo curvado, montantes laterales y travesaño superior.
+ const backShape=new T.Shape();backShape.moveTo(-seatW*.46,0);backShape.quadraticCurveTo(-seatW*.5,0,-seatW*.5,h*.07);backShape.lineTo(-seatW*.43,h*.38);backShape.quadraticCurveTo(0,h*.45,seatW*.43,h*.38);backShape.lineTo(seatW*.5,h*.07);backShape.quadraticCurveTo(seatW*.5,0,seatW*.46,0);backShape.closePath();
+ const backGeo=new T.ExtrudeGeometry(backShape,{depth:3.4,bevelEnabled:true,bevelSegments:4,bevelSize:1.2,bevelThickness:1,curveSegments:16});const back=new T.Mesh(backGeo,padded?uphol:wood);back.rotation.x=Math.PI/2;back.position.set(0,seatY+h*.09,-seatD*.48);g.add(back);
+ tube([-seatW*.42,seatY+h*.15,-seatD*.47],[seatW*.42,seatY+h*.15,-seatD*.47],2.4,wood);
+ if(arms){for(const x of [-1,1]){tube([x*seatW*.43,seatY+h*.08,-seatD*.34],[x*seatW*.43,seatY+h*.3,-seatD*.34],2.8,wood);tube([x*seatW*.43,seatY+h*.3,-seatD*.34],[x*seatW*.43,seatY+h*.3,seatD*.34],2.8,wood);B(g,5,3,seatD*.7,x*seatW*.43,seatY+h*.3,0,wood)}}
+ g.userData.diningChairConstruction={schemaVersion:2,upholstered:padded,armrests:arms,backrest:'curved-panel',legs:'four-connected',status:'integrated-pending-visual-validation'};
  break;
 }
-
-
 case'panel':{
  const wood=M(it.col||'#75563f',.62,.08),edge=M('#4b382c',.55,.12),inside=M('#d0c6b8',.82,.02),screen=M('#080d12',.12,.28),glass=new T.MeshStandardMaterial({color:'#18232b',roughness:.12,metalness:.35});
  // Panel mural con espesor, trasera, listones y fijaciones; pantalla con marco y cristal.
@@ -1184,26 +1190,36 @@ case'panel':{
  break;
 }
 case'table':{
- const wood=M(it.col||'#98724f',.48,.12),edge=M('#6f5339',.55,.08),steel=M('#343b40',.32,.78),tableName=(it.n||'').toLowerCase(),explicitRound=/redond|oval|circular/.test(tableName),explicitRect=/rectang|extensible|escritorio|auxiliar/.test(tableName),round=explicitRound||(!explicitRect&&v%2===0),topT=Math.max(2.8,h*.055),topY=h-topT/2;
+ const wood=M(it.col||'#98724f',.48,.14),edge=M('#6f5339',.55,.1),steel=M('#343b40',.32,.78),name=(it.n||'').toLowerCase(),round=/redond|oval|circular/.test(name),extensible=/extensible/.test(name),small=/auxiliar|centro/.test(name),topT=Math.max(2.8,h*.055),topY=h-topT/2;
  if(round){
-  const rx=w*.48,rz=d*.48;
-  const top=new T.Mesh(new T.CylinderGeometry(rx,rx,topT,96,1),wood);top.scale.z=rz/rx;top.position.y=topY;g.add(top);
-  const apron=new T.Mesh(new T.CylinderGeometry(rx*.84,rx*.84,topT*.7,64),edge);apron.scale.z=rz/rx;apron.position.y=topY-topT*.85;g.add(apron);
-  // Pedestal central con columna y base estable, no una pata cilíndrica flotante.
-  const col=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.075,Math.min(w,d)*.11,h*.68,32),steel);col.position.y=h*.34;g.add(col);
-  const foot=new T.Mesh(new T.CylinderGeometry(rx*.24,rx*.28,topT*1.8,64),steel);foot.scale.z=rz/rx;foot.position.y=topT*.9;g.add(foot);
+  const rx=w*.48,rz=d*.48,top=new T.Mesh(new T.CylinderGeometry(rx,rx,topT,112,1),wood);top.scale.z=rz/rx;top.position.y=topY;g.add(top);
+  const apron=new T.Mesh(new T.CylinderGeometry(rx*.84,rx*.84,topT*.7,80),edge);apron.scale.z=rz/rx;apron.position.y=topY-topT*.85;g.add(apron);
+  const col=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.075,Math.min(w,d)*.11,h*.68,40),steel);col.position.y=h*.34;g.add(col);
+  const foot=new T.Mesh(new T.CylinderGeometry(rx*.24,rx*.28,topT*1.8,72),steel);foot.scale.z=rz/rx;foot.position.y=topT*.9;g.add(foot);
  }else{
-  B(g,w,topT,d,0,topY,0,wood);
-  // Canto inferior y faldón perimetral estructural.
-  B(g,w-3,2.2,3,0,topY-topT/2-1.1,-d/2+1.5,edge);B(g,w-3,2.2,3,0,topY-topT/2-1.1,d/2-1.5,edge);
-  B(g,3,2.2,d-3,-w/2+1.5,topY-topT/2-1.1,0,edge);B(g,3,2.2,d-3,w/2-1.5,topY-topT/2-1.1,0,edge);
-  const legInset=/industrial|caballet/.test((it.n||'').toLowerCase())?.08:.12;
-  for(const x of [-1,1])for(const z of [-1,1]){
-   const px=x*w*(.5-legInset),pz=z*d*(.5-legInset);
-   tube([px*.94,h*.06,pz*.94],[px,topY-topT/2-2,pz],Math.max(2,Math.min(w,d)*.025),/industrial/.test((it.n||'').toLowerCase())?steel:wood);
-   B(g,8,2,8,px*.94,2,pz*.94,steel);
+  if(extensible){
+   // Dos hojas principales y tablero central de extensión alineados a ras.
+   const leafW=w*.39,centerW=w*.22;
+   B(g,leafW,topT,d,-w*.305,topY,0,wood);B(g,centerW,topT,d,0,topY,0,wood);B(g,leafW,topT,d,w*.305,topY,0,wood);
+   for(const x of [-1,1])B(g,1.1,topT*.35,d*.88,x*w*.195,topY,0,edge);
+   // Guías telescópicas inferiores y travesaños de sincronización.
+   for(const z of [-1,1]){B(g,w*.72,2.2,2.2,0,topY-topT/2-3,z*d*.31,steel);B(g,w*.28,2.2,2.2,0,topY-topT/2-6,z*d*.2,steel)}
+  }else{
+   B(g,w,topT,d,0,topY,0,wood);
+   // Faldón perimetral fino y canto inferior visible.
+   B(g,w-3,2.2,3,0,topY-topT/2-1.1,-d/2+1.5,edge);B(g,w-3,2.2,3,0,topY-topT/2-1.1,d/2-1.5,edge);
+   B(g,3,2.2,d-3,-w/2+1.5,topY-topT/2-1.1,0,edge);B(g,3,2.2,d-3,w/2-1.5,topY-topT/2-1.1,0,edge);
   }
+  const industrial=/industrial|caballet/.test(name),inset=small?.16:industrial?.08:.12;
+  for(const x of [-1,1])for(const z of [-1,1]){
+   const px=x*w*(.5-inset),pz=z*d*(.5-inset),legMat=industrial?steel:wood;
+   tube([px*.94,h*.055,pz*.94],[px,topY-topT/2-2,pz],Math.max(2.2,Math.min(w,d)*.022),legMat);
+   B(g,8,2,8,px*.94,2,pz*.94,steel);
+   for(const a of [-1,1]){const bolt=new T.Mesh(new T.CylinderGeometry(1.1,1.1,.8,12),steel);bolt.rotation.x=Math.PI/2;bolt.position.set(px*.94,topY-topT/2-2,pz*.94+a*2);g.add(bolt)}
+  }
+  if(extensible){for(const x of [-1,1]){const rail=new T.Mesh(new T.BoxGeometry(2.2,2,d*.62),steel);rail.position.set(x*w*.2,topY-topT/2-5,0);g.add(rail)}}
  }
+ g.userData.tableConstruction={schemaVersion:2,shape:round?'round-or-oval':'rectangular',extension:extensible?'three-panel-with-underframe':'fixed',status:'integrated-pending-visual-validation'};
  break;
 }
 case'bed':{
