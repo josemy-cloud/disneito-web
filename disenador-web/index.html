@@ -1446,7 +1446,40 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   });
  }
  else if(kd=='cafetera'){B(a,w-2,h-4,.8,0,h/2,d/2+.2,mp);B(a,w*.55,h*.28,.6,0,h*.62,d/2+.8,dk);[-1,1].forEach(q=>knob(q*w*.32,h*.62,1.6));B(a,w*.5,1,d*.5,0,h*.14,d/2-d*.25,hd)}
- else if(kd=='vinoteca'){const p=pv(-w/2+1,h/2,k0,{t:'d',sg:-1});shell(0,h/2,w-6,h-8,enam);B(p,w-2,h-4,1.2,(w-2)/2,0,0,GLS);B(p,1.6,h*.4,2.4,w-5,0,2,hd);[-1,1].forEach(q=>B(p,2.5,4,1.6,1.4,q*h*.3,-.2,stl));for(let q=1;q<5;q++)B(a,w-8,.8,d-12,0,h*q/5,zc,M('#7a5a3a',.6))}}
+ else if(kd=='vinoteca'){
+  // Vinoteca de conservación: puerta acristalada, baldas de madera y botellas horizontales.
+  const innerW=w-10,innerD=d-13,innerH=h-12,wood=M('#76533a',.48,.12),dark=M('#171b1e',.48,.22);
+  shell(0,h/2,w-6,h-8,dark);
+  const p=pv(-w/2+1,h/2,k0,{t:'d',sg:-1});
+  B(p,w-2,h-4,2.8,(w-2)/2,0,0,mp);
+  B(p,w-7,h-9,.7,(w-7)/2,0,1.55,hd);
+  B(p,w-12,h-14,.35,(w-12)/2,0,1.95,GLS);
+  B(p,1.8,h*.42,2.5,w-5,0,2.5,hd);
+  [-1,1].forEach(q=>B(p,2.5,4,1.8,1.4,q*h*.39,-.2,stl));
+  B(a,w-8,.8,.7,0,h-5,d/2-1,rub);B(a,w-8,.8,.7,0,5,d/2-1,rub);
+  B(a,.8,h-10,.7,-w/2+4,h/2,d/2-1,rub);B(a,.8,h-10,.7,w/2-4,h/2,d/2-1,rub);
+  const shelfCount=Math.max(3,Math.min(6,Math.floor(h/27)));
+  for(let q=1;q<=shelfCount;q++){
+   const yy=6+(innerH-12)*q/(shelfCount+1);
+   B(a,innerW,.9,innerD,0,yy,-.5,wood);
+   [-1,1].forEach(side=>B(a,1.2,2,innerD-2,side*(innerW/2-1),yy+1,-.5,stl));
+   const bottleCount=Math.max(2,Math.floor(innerW/22));
+   for(let n=0;n<bottleCount;n++){
+    const bx=bottleCount===1?0:-innerW*.38+n*(innerW*.76/(bottleCount-1));
+    const br=Math.max(1.4,Math.min(2.3,innerW*.018)),bl=Math.min(innerD*.72,17);
+    const bottleMat=n%2?M('#4c6b52',.22,.18):M('#6b4533',.25,.16);
+    const bottle=new T.Mesh(new T.CylinderGeometry(br,br*.92,bl,12),bottleMat);
+    bottle.rotation.x=Math.PI/2;bottle.position.set(bx,yy+2,-.5);a.add(bottle);
+    const neck=new T.Mesh(new T.CylinderGeometry(br*.42,br*.58,3.2,10),bottleMat);
+    neck.rotation.x=Math.PI/2;neck.position.set(bx,yy+2,d/2-7);a.add(neck);
+    const collar=new T.Mesh(new T.CylinderGeometry(br*.46,br*.46,.8,10),stl);
+    collar.rotation.x=Math.PI/2;collar.position.set(bx,yy+2,d/2-5.1);a.add(collar);
+   }
+  }
+  B(a,Math.min(w*.32,20),3,.8,0,h-5,d/2-5,pn);
+  B(a,Math.min(w*.18,10),.7,.4,0,h-4,d/2-4.5,lcd);
+  const lamp=new T.Mesh(new T.BoxGeometry(1.4,Math.max(3,h*.045),.8),lit);lamp.position.set(0,h-10,d/2-8);a.add(lamp);
+ }}
 
 BUILD.app=(g,it)=>{it.op=it.op||[];appl(g,it.cfg.ap,it.w,it.h,it.d,it.cfg.mat||it.cfg.fin,it,0,0,it.d/2)};
 /* Generadores paramétricos para fichas sanitarias importadas */
