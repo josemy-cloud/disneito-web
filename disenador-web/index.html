@@ -1439,6 +1439,7 @@ case'rail':{
  break;
 }
 case'washer':{
+ it.op=it.op||[];
  const body=M('#e4e7e8',.42,.04),panel=M('#c7cdd0',.38,.16),metal=M('#aeb5bb',.28,.82),dark=M('#343a3e',.38,.25),glass=new T.MeshStandardMaterial({color:'#25343c',roughness:.12,metalness:.42,transparent:true,opacity:.82});
  B(g,w*.98,h*.98,d*.94,0,h/2,0,body);
  B(g,w*.94,h*.105,2.4,0,h*.91,d*.472,panel);
@@ -1493,7 +1494,6 @@ case'basket':case'box':case'trunk':case'suitcase':{
  const lining=new T.Mesh(new T.BoxGeometry(w*.82,h*.78,d*.04),fabric);lining.position.set(0,h*.5,0);g.add(lining);
  break;
 }
-case':box(0,h*.45,0,w*.92,h*.86,d*.92);box(0,h*.9,0,w*.96,3,d*.96,M('#c3b39f',.7));break;
 case'ironing':{
  const fabric=M(it.col||'#d5d0c7',.86,.02),frame=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.3);
  const boardW=w*.92,boardD=d*.9,topY=h*.88;
@@ -1651,6 +1651,7 @@ case'pergola':{
 }
 case'planter':case'tree':{cyl(0,h*.13,0,w*.29,h*.26,M('#98745d',.82));const soil=new T.Mesh(new T.CircleGeometry(w*.27,32),dark);soil.rotation.x=-Math.PI/2;soil.position.y=h*.26;g.add(soil);if(it.shape==='tree'){cyl(0,h*.48,0,w*.055,h*.62,M('#76553b'));for(let k=0;k<13;k++){const a=k*2.399,rad=w*(.12+(k%3)*.035),y=h*(.55+(k%4)*.09),leaf=new T.Mesh(new T.SphereGeometry(1,20,14),M(k%2?'#477b4b':'#60905a',.94));leaf.scale.set(w*.14,h*.13,w*.11);leaf.position.set(Math.cos(a)*rad,y,Math.sin(a)*rad);leaf.rotation.z=-Math.cos(a)*.5;g.add(leaf)}}else for(let k=0;k<9;k++){const a=k*2.399,leaf=new T.Mesh(new T.SphereGeometry(1,18,12),M(k%2?'#477b4b':'#60905a',.96));leaf.scale.set(w*.08,h*.2,w*.06);leaf.position.set(Math.cos(a)*w*.2,h*(.48+(k%3)*.08),Math.sin(a)*w*.2);leaf.rotation.z=-Math.cos(a)*.7;g.add(leaf)}break;}
 case'bbq':{
+ it.op=it.op||[];
  const body=M('#343a3d',.42,.58),metal=M('#aeb5b8',.28,.86),grate=M('#545d62',.34,.82),heat=M('#171b1d',.72,.16);
  const fireH=h*.42,topY=h*.76;
  B(g,w*.84,fireH,d*.68,0,h*.47,0,body);B(g,w*.9,4,d*.74,0,topY,0,metal);
