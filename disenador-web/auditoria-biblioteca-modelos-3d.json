@@ -1543,7 +1543,7 @@
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
       "reason": "Generador geométrico corregido: cajones de escritorio móviles con apertura interactiva y bastidor en L sin travesaño redundante. Pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-063",
@@ -1559,8 +1559,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Generador geométrico corregido: cajones de escritorio móviles con apertura interactiva y bastidor en L sin travesaño redundante. Pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Canto perimetral de la tapa en L corregido para seguir el contorno real sin prolongación sobre la zona estrecha. Pendiente validación visual real; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-064",
@@ -1576,8 +1576,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Generador geométrico corregido: cajones de escritorio móviles con apertura interactiva y bastidor en L sin travesaño redundante. Pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Canto perimetral de la tapa en L corregido para seguir el contorno real sin prolongación sobre la zona estrecha. Pendiente validación visual real; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-065",
@@ -1593,8 +1593,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Asiento extruido y orientado horizontalmente; pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Soportes de reposabrazos prolongados hasta conectar con la parte inferior de las almohadillas y la cota superior del asiento. Pendiente validación visual real; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-066",
@@ -1610,8 +1610,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Asiento extruido y orientado horizontalmente; pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Soportes de reposabrazos prolongados hasta conectar con la parte inferior de las almohadillas y la cota superior del asiento. Pendiente validación visual real; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-067",
@@ -1628,7 +1628,7 @@
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
       "reason": "Libros apoyados sobre la cara superior de las baldas, limitados al hueco libre y separados del divisor central. Pendiente comprobación visual real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-068",
@@ -1644,8 +1644,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Generador geométrico específico reconstruido e integrado en desarrollo. Pendiente comprobación visual y funcional real en navegador; no se considera verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Tres cajones reconstruidos como grupos independientes con apertura MV, tiradores y guías fijadas al casco. Pendiente prueba de clic real en navegador; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-069",
@@ -1662,7 +1662,7 @@
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
       "reason": "Generador de sobremesa conservado y variante de portátil añadida mediante identificación por nombre. Pendiente confirmar el elemento concreto en biblioteca y comprobación visual real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-070",
@@ -2846,8 +2846,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Generador geométrico corregido: cajones de escritorio móviles con apertura interactiva y bastidor en L sin travesaño redundante. Pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Canto perimetral de la tapa en L corregido para seguir el contorno real sin prolongación sobre la zona estrecha. Pendiente validación visual real; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-144",
@@ -2863,8 +2863,8 @@
       },
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
-      "reason": "Asiento extruido y orientado horizontalmente; pendiente comprobación visual y funcional real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "reason": "Soportes de reposabrazos prolongados hasta conectar con la parte inferior de las almohadillas y la cota superior del asiento. Pendiente validación visual real; no verificado.",
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-145",
@@ -2881,7 +2881,7 @@
       "audit_status": "reconstruido_integrado_pendiente_verificacion",
       "decision": "mantener_integrado_sin_retirar_respaldo_hasta_verificacion",
       "reason": "Libros apoyados sobre la cara superior de las baldas, limitados al hueco libre y separados del divisor central. Pendiente comprobación visual real; no verificado.",
-      "renovation_commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc"
+      "renovation_commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e"
     },
     {
       "id": "static-146",
@@ -3344,7 +3344,7 @@
     "models_integrated": 11,
     "models_verified": 0,
     "models_pending_visual_functional_validation": 11,
-    "commit": "679756271d9f3e5f30c8d77d2551765a587cbfcc",
+    "commit": "4f28899b7b33aa1c43a978e0946842ffee7c338e",
     "notes": [
       "El escritorio en L utiliza un tablero continuo extruido en planta, no dos bloques superpuestos.",
       "Los cuatro modelos de escritorio usan estructuras diferentes según tipología.",
@@ -3353,7 +3353,9 @@
       "La silla ejecutiva incorpora respaldo alto y reposacabezas; la ergonómica usa respaldo de malla y la compacta tiene respaldo reducido y sin brazos.",
       "La estantería abierta usa bastidor metálico; la librería incorpora costados, trasera y divisor central.",
       "Corrección posterior: asiento de sillas rotado al plano horizontal XZ; cajones de escritorios convertidos en grupos desplazables y vinculados al sistema de apertura; bastidor de la mesa en L depurado; libros elevados para apoyar sobre las baldas y separados del divisor central; generador informático con variante específica de portátil cuando el nombre lo identifica.",
-      "Estas correcciones solo están integradas y compiladas. La verificación visual y funcional en navegador sigue pendiente; no se marcan modelos como verificados."
+      "Estas correcciones solo están integradas y compiladas. La verificación visual y funcional en navegador sigue pendiente; no se marcan modelos como verificados.",
+      "Corrección adicional: reposabrazos con soportes verticales que conectan asiento y almohadillas; canto de la mesa en L ajustado a su contorno real; cajonera móvil con tres grupos de cajón independientes vinculados al sistema MV y con guías fijas al casco.",
+      "Compilación de los dos scripts clásicos inline correcta. La interacción de apertura de la cajonera móvil aún debe comprobarse con clic real en navegador; no se declara verificada."
     ]
   }
 }
