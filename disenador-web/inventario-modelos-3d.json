@@ -3440,15 +3440,17 @@
             "height": 95,
             "depth": 45
           },
-          "status": "en_proceso",
+          "status": "integrated_no_verificado",
           "source_type": "modelo procedural genérico",
           "implemented_components": [],
           "shape": "cart",
           "room": "garaje",
           "target_components": [
-            "geometría específica pendiente de reconstrucción"
+            "plataforma de carga",
+            "bastidor y asa de empuje",
+            "ruedas, ejes y soportes"
           ],
-          "note": "Generador procedural identificado y pendiente de reconstrucción geométrica completa; no verificado visual ni funcionalmente. Conservar dimensiones, identidad, materiales editables y compatibilidad con proyectos existentes."
+          "note": "Generador procedural reconstruido con plataforma, bastidor, asa y ruedas independientes. Integrado en desarrollo-cloudflare; pendiente inspección visual, estabilidad y prueba funcional en navegador. No verificado."
         },
         {
           "id": "room-garaje-neumaticos",
@@ -4433,7 +4435,8 @@
       "planter",
       "tree",
       "coat",
-      "ladder"
+      "ladder",
+      "cart"
     ],
     "procedural_room_object_types_total": 50
   },
