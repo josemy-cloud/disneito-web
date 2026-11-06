@@ -58,6 +58,14 @@
       "impact": "Las columnas de despensa y torres de electrodomésticos muestran el interior desde arriba y no tienen el cierre estructural completo.",
       "action": "Aplicar hasTop también a K=='col' y generar una placa superior continua de 18 mm a todo el ancho y profundidad. Pendiente verificación visual en navegador.",
       "verified": false
+    },
+    {
+      "id": "F07",
+      "severity": "high",
+      "finding": "La estancia baño tiene 19 modelos identificados, pero la fase estaba sin inventariar. Varios generadores roomObject son primitivas genéricas: bañera como cilindro hueco, lavabo sobre encimera como esfera, bidé como esfera, mueble lavabo como cajas y plato de ducha mezclado con mampara completa.",
+      "impact": "La biblioteca no representa correctamente la construcción ni las siluetas de los sanitarios y muebles; variantes distintas comparten la misma geometría genérica.",
+      "action": "Reconstruir por familias funcionales: bañeras, duchas/platos y mamparas, muebles de lavabo y cajones/puertas, lavabos, bidés, columna auxiliar, espejos y accesorios; mantener los modelos comerciales Roca separados y trazables.",
+      "verified": false
     }
   ],
   "counts_by_room": {
