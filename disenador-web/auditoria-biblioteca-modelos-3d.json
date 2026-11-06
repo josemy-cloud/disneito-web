@@ -3553,6 +3553,14 @@
       "commit": "9833607fec5211f5b6aa9e1bdc8b91eacd654019",
       "verified": false,
       "notes": "Las sillas pasan a tener asiento con bastidor y cojín independiente opcional, respaldo curvado, montantes, faldones y cuatro patas conectadas; las variantes con brazos incorporan apoyabrazos soportados. Las mesas distinguen geometría redonda/ovalada y rectangular, con pedestal central en las redondas y cuatro apoyos en las rectangulares; las extensibles incorporan hojas separadas, panel central y guías inferiores. Se aplica a todas las variantes que usan shape=chair y shape=table. Los tres scripts inline se parsean correctamente. Pendiente inspección visual por variante, comprobación dimensional y validación en navegador; no se consideran terminadas."
+    },
+    {
+      "date": "2026-11-06",
+      "phase": "dormitorios-camas",
+      "action": "Reconstrucción transversal de camas individuales, dobles, king size, litera y canapé",
+      "commit": "894058cb6001f8cdea4fce0cbeaaaa5f8d809686",
+      "verified": false,
+      "notes": "La familia de camas se reconstruye con bastidor perimetral, travesaños de somier, colchón de espesor propio, edredón y almohadas independientes mediante geometría acolchada extruida y biselada. El cabecero incorpora marco y paños tapizados. Las literas mantienen dos niveles y escalera con montantes/peldaños; el canapé incluye herrajes visibles de elevación, pero no se afirma que la tapa abra hasta comprobar su pivote y animación real. Se aplica a todas las variantes shape=bed. Los tres scripts inline se parsean correctamente; pendiente revisión visual, dimensional, de colisiones y de mecanismo en navegador."
     }
   ],
   "validation": {
@@ -3581,7 +3589,10 @@
     "seating_family_interaction_validation": "not_performed: placement, dimensions, project persistence and interaction still require browser tests",
     "dining_seating_table_static_update": "passed: shared chair and table generators updated; rounded upholstered seats, curved backrests, connected legs, distinct round/rectangular bases and three-panel extension layout integrated; 3 inline scripts parse",
     "dining_seating_table_browser_visual_validation": "not_performed: live render and inspection of all chair/table variants still required",
-    "dining_seating_table_interaction_validation": "not_performed: extension behavior is represented geometrically; real interaction and project persistence remain to be tested"
+    "dining_seating_table_interaction_validation": "not_performed: extension behavior is represented geometrically; real interaction and project persistence remain to be tested",
+    "bed_family_static_update": "passed: shared bed generator rebuilt with frame, slatted support, mattress, duvet, pillows, upholstered headboard, bunk ladder and visible storage-bed hardware; 3 inline scripts parse",
+    "bed_family_browser_visual_validation": "not_performed: visual inspection and proportion checks in browser remain pending",
+    "bed_family_interaction_validation": "not_performed: storage-bed lift mechanism and project persistence require runtime testing"
   },
   "current_execution": {
     "date": "2026-11-06",
