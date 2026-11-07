@@ -35,7 +35,7 @@ body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
 #pvp{display:block;box-sizing:border-box;width:100%;height:calc(100dvh - clamp(170px,32dvh,300px) - 105px);min-height:90px;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
 #pvp select,#pvp input,#pvp button{max-width:100%;box-sizing:border-box}
 @media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}#pvp{height:calc(100dvh - clamp(150px,27dvh,230px) - 90px)}}
-</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=2">
+</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=3">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
@@ -2646,7 +2646,7 @@ document.addEventListener('pointerlockchange',()=>{if(walk&&!document.pointerLoc
 r3.domElement.addEventListener('click',e=>{if(walk&&!touchWalk&&!document.pointerLockElement&&e.pointerType!=='touch')r3.domElement.requestPointerLock?.()});
 r3.domElement.addEventListener('wheel',e=>{if(walk){cam.fov=Math.max(30,Math.min(90,cam.fov+e.deltaY*.03));cam.updateProjectionMatrix()}});
 document.body.classList.add('adaptive');
-const mobileTop=$('#top'),mobileMenu=$('#compactMenu');
+const mobileTop=$('#top'),mobileMenu=$('#compactMenu'),mobileWorkspace=$('#main');
 const mobileActions=document.createElement('div');
 mobileActions.id='compactActions';
 mobileActions.setAttribute('aria-label','Acciones del proyecto');
@@ -2655,36 +2655,31 @@ const topNodes=[...mobileTop.childNodes];
 function arrangeMobileTop(){
   if(useCompact()){
     for(const node of topNodes)if(!mobileDock.includes(node))mobileActions.append(node);
-    mobileTop.append(mobileActions);
+    mobileWorkspace.append(mobileActions);
   }else{
     mobileActions.remove();
     mobileTop.append(...topNodes);
   }
 }
-function setMobileMenu(open){
-  mobileTop.classList.toggle('expanded',open);
-  mobileMenu.setAttribute('aria-expanded',String(open));
-  if(!open)mobileActions.querySelectorAll('.dd.open').forEach(menu=>menu.classList.remove('open'));
-}
 function setMobilePanel(panelId){
+  const menuOpen=panelId==='compactActions';
+  mobileWorkspace.classList.toggle('panel-open',Boolean(panelId));
+  mobileActions.classList.toggle('adaptive-open',menuOpen);
+  mobileMenu.setAttribute('aria-expanded',String(menuOpen));
+  if(!menuOpen)mobileActions.querySelectorAll('.dd.open').forEach(menu=>menu.classList.remove('open'));
   for(const [id,buttonId] of [['lib','tl'],['pr','tr']]){
     $('#'+id).classList.toggle('adaptive-open',id===panelId);
-    $('#'+buttonId).setAttribute('aria-expanded',String(id===panelId));
+    $('#'+buttonId).setAttribute('aria-expanded',String(useCompact()?id===panelId:$('#'+id).style.display!=='none'));
   }
 }
 const useCompact=()=>compact.matches&&!document.body.classList.contains('ui-legacy');
-mobileMenu.onclick=()=>{
-  const open=!mobileTop.classList.contains('expanded');
-  if(open)setMobilePanel(null);
-  setMobileMenu(open);
-};
+mobileMenu.onclick=()=>setMobilePanel(mobileActions.classList.contains('adaptive-open')?null:'compactActions');
 for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Propiedades']]){
   const button=$('#'+buttonId),panel=$('#'+panelId);
   button.setAttribute('aria-controls',panelId);
   button.onclick=()=>{
     if(useCompact()){
       panel.style.display='';
-      setMobileMenu(false);
       setMobilePanel(panel.classList.contains('adaptive-open')?null:panelId);
     }else{
       panel.style.display=panel.style.display==='none'?'':'none';
@@ -2698,18 +2693,10 @@ for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Pro
   compact.addEventListener('change',labelPanel);
   labelPanel();
 }
-compact.addEventListener('change',()=>{setMobileMenu(false);arrangeMobileTop()});
+compact.addEventListener('change',()=>{setMobilePanel(null);arrangeMobileTop()});
 arrangeMobileTop();
-mobileActions.addEventListener('click',e=>{
-  if(useCompact()&&e.target.closest('button:not(#bF):not(#bX)'))setMobileMenu(false);
-});
-document.addEventListener('pointerdown',e=>{
-  if(!useCompact())return;
-  if(!mobileTop.contains(e.target))setMobileMenu(false);
-  if(e.target.closest('#view,#tools'))setMobilePanel(null);
-});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&useCompact()){setMobileMenu(false);setMobilePanel(null)}
+  if(e.key==='Escape'&&useCompact())setMobilePanel(null);
 });
 /* ===== Previsualización 3D real ===== */
 const r4=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}),sc4=new T.Scene(),cam4=new T.PerspectiveCamera(40,520/330,5,6000),oc4=new T.OrbitControls(cam4,r4.domElement),g4=new T.Group();sc4.add(g4,new T.HemisphereLight('#fff','#887',.9));const dl4=new T.DirectionalLight('#fff',.8);dl4.position.set(300,500,400);sc4.add(dl4);sc4.background=new T.Color('#2b303a');
