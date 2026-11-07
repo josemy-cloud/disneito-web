@@ -3600,6 +3600,14 @@
       "commit": "7db1f6e6e77df0fc0321e6196a158a3d48b0e8fd",
       "verified": false,
       "notes": "Corrección estática del fallo de precedencia. Los generadores sin nombres ni etiquetas por pieza siguen sin poder distinguir componentes; no se declara resuelto el sistema completo hasta etiquetado de geometrías y prueba visual real."
+    },
+    {
+      "date": "2026-11-07",
+      "phase": "sofas-cojines-geometria-y-colores-por-componente",
+      "action": "Reconstruidas las geometrías de cojines de sofá exterior para dejar de usar esferas elipsoidales y crear cojines de contorno rectangular redondeado mediante extrusión biselada. Etiquetadas las piezas del sofá interior y exterior con roles semánticos independientes (asiento, respaldo, brazos, estructura, patas, ribetes) para conectar los selectores de color con las mallas correctas. El helper de tubos devuelve ahora la malla para permitir su etiquetado.",
+      "commit": "b261ccfba6e4d4e51cf3b1b42014d56660fc3c08",
+      "verified": false,
+      "notes": "Parseo JavaScript correcto y prueba aislada de clasificación de seis etiquetas del sofá. No se ha ejecutado WebGL ni validación visual en navegador; la revisión estética, dimensiones y persistencia real siguen pendientes."
     }
   ],
   "validation": {
@@ -3638,7 +3646,11 @@
     "per_object_component_ui_static_update": "passed: replaced generic color-role controls with type-specific component schemas; main inline script parses successfully.",
     "per_object_component_mapping": "partial: corrected material-primary short-circuit; semantic tags and mesh names are now evaluated first. Generators with unnamed/untagged meshes still require explicit component tagging.",
     "per_object_component_browser_validation": "not_performed: needs browser/WebGL visual check after deployment or local preview.",
-    "per_object_component_persistence_validation": "not_performed: project save/reopen round trip not tested."
+    "per_object_component_persistence_validation": "not_performed: project save/reopen round trip not tested.",
+    "sofa_component_tags": "static_pass: semantic tags present for seat, back, arms, frame, feet and piping; isolated classifier test resolves all six roles.",
+    "sofa_geometry": "static_pass: outdoor sofa no longer uses SphereGeometry for cushions; rounded extruded cushion panels are defined.",
+    "sofa_browser_visual_validation": "not_performed",
+    "sofa_color_application_browser": "not_performed"
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3669,14 +3681,16 @@
       "per_object_component_ui_static_update": "passed: type-specific schemas and per-component persistence fields integrated; main inline script parses.",
       "per_object_component_mapping": "partial: precedence bug fixed; legacy meshes still need explicit per-component tags.",
       "per_object_component_browser_validation": "not_run",
-      "per_object_component_persistence": "not_run"
+      "per_object_component_persistence": "not_run",
+      "sofa_component_tags": "static_pass",
+      "sofa_browser_visual_validation": "not_run"
     },
     "completion": {
       "processed_models": 0,
       "rebuilt_models": 0,
       "improved_models": 0,
       "verified_models": 0,
-      "note": "Se corrigió un fallo que clasificaba prematuramente las mallas con material base como componente principal, anulando selectores específicos aunque hubiera nombre/etiqueta. Siguen pendientes etiquetas en geometrías heredadas y validación visual/runtime; ningún modelo se considera completado."
+      "note": "Sofá interior/exterior: mallas principales etiquetadas para color por componente y cojines exteriores cambiados de esferas a paneles acolchados de contorno redondeado. Pendiente inspección real en navegador/WebGL y comprobación de persistencia; no se marca como visualmente verificado."
     }
   }
 }
