@@ -1313,19 +1313,19 @@ case'bench':{
 case'chair':{
  const name=(it.n||'').toLowerCase(),wood=M(it.col||'#9d8264',.5,.16),uphol=M('#c8bcae',.9,.02),metal=M('#aeb5b8',.32,.78),seatY=h*.47,seatW=w*.82,seatD=d*.68,arms=/brazos/.test(name),padded=/tapiz/.test(name);
  // Marco de asiento y cojín independiente, con esquinas redondeadas y espesor real.
- B(g,seatW,h*.07,seatD,0,seatY,0,wood);
- if(padded){const sx=seatW*.94,sz=seatD*.92,r=Math.min(4,sx*.12,sz*.12),s=new T.Shape();s.moveTo(-sx/2+r,-sz/2);s.lineTo(sx/2-r,-sz/2);s.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);s.lineTo(sx/2,sz/2-r);s.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);s.lineTo(-sx/2+r,sz/2);s.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);s.lineTo(-sx/2,-sz/2+r);s.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:h*.055,bevelEnabled:true,bevelSegments:4,bevelSize:1.1,bevelThickness:1,curveSegments:12});geo.rotateX(Math.PI/2);const cushion=new T.Mesh(geo,uphol);cushion.position.set(0,seatY+h*.065,0);g.add(cushion)}
+ const chairDeck=B(g,seatW,h*.07,seatD,0,seatY,0,wood);chairDeck.userData.part={t:'frame'};
+ if(padded){const sx=seatW*.94,sz=seatD*.92,r=Math.min(4,sx*.12,sz*.12),s=new T.Shape();s.moveTo(-sx/2+r,-sz/2);s.lineTo(sx/2-r,-sz/2);s.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);s.lineTo(sx/2,sz/2-r);s.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);s.lineTo(-sx/2+r,sz/2);s.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);s.lineTo(-sx/2,-sz/2+r);s.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:h*.055,bevelEnabled:true,bevelSegments:4,bevelSize:1.1,bevelThickness:1,curveSegments:12});geo.rotateX(Math.PI/2);const cushion=new T.Mesh(geo,uphol);cushion.userData.part={t:'seat'};cushion.position.set(0,seatY+h*.065,0);g.add(cushion)}
  // Patas traseras ligeramente inclinadas y delanteras verticales, unidas por faldones.
  for(const x of [-1,1]){
-  tube([x*seatW*.39,seatY-h*.02,seatD*.39],[x*seatW*.43,3,seatD*.43],Math.max(2,w*.018),wood);
-  tube([x*seatW*.39,seatY-h*.02,-seatD*.39],[x*seatW*.39,3,-seatD*.39],Math.max(2,w*.018),wood);
+  const frontLeg=tube([x*seatW*.39,seatY-h*.02,seatD*.39],[x*seatW*.43,3,seatD*.43],Math.max(2,w*.018),wood);frontLeg.userData.part={t:'feet'};
+  const rearLeg=tube([x*seatW*.39,seatY-h*.02,-seatD*.39],[x*seatW*.39,3,-seatD*.39],Math.max(2,w*.018),wood);rearLeg.userData.part={t:'feet'};
   tube([x*seatW*.4,seatY*.72,-seatD*.39],[x*seatW*.4,seatY*.72,seatD*.39],2,wood);
  }
  // Respaldo curvado, montantes laterales y travesaño superior.
  const backShape=new T.Shape();backShape.moveTo(-seatW*.46,0);backShape.quadraticCurveTo(-seatW*.5,0,-seatW*.5,h*.07);backShape.lineTo(-seatW*.43,h*.38);backShape.quadraticCurveTo(0,h*.45,seatW*.43,h*.38);backShape.lineTo(seatW*.5,h*.07);backShape.quadraticCurveTo(seatW*.5,0,seatW*.46,0);backShape.closePath();
- const backGeo=new T.ExtrudeGeometry(backShape,{depth:3.4,bevelEnabled:true,bevelSegments:4,bevelSize:1.2,bevelThickness:1,curveSegments:16});const back=new T.Mesh(backGeo,padded?uphol:wood);back.rotation.x=Math.PI/2;back.position.set(0,seatY+h*.09,-seatD*.48);g.add(back);
- tube([-seatW*.42,seatY+h*.15,-seatD*.47],[seatW*.42,seatY+h*.15,-seatD*.47],2.4,wood);
- if(arms){for(const x of [-1,1]){tube([x*seatW*.43,seatY+h*.08,-seatD*.34],[x*seatW*.43,seatY+h*.3,-seatD*.34],2.8,wood);tube([x*seatW*.43,seatY+h*.3,-seatD*.34],[x*seatW*.43,seatY+h*.3,seatD*.34],2.8,wood);B(g,5,3,seatD*.7,x*seatW*.43,seatY+h*.3,0,wood)}}
+ const backGeo=new T.ExtrudeGeometry(backShape,{depth:3.4,bevelEnabled:true,bevelSegments:4,bevelSize:1.2,bevelThickness:1,curveSegments:16});const back=new T.Mesh(backGeo,padded?uphol:wood);back.rotation.x=Math.PI/2;back.position.set(0,seatY+h*.09,-seatD*.48);back.userData.part={t:'back'};g.add(back);
+ const backRail=tube([-seatW*.42,seatY+h*.15,-seatD*.47],[seatW*.42,seatY+h*.15,-seatD*.47],2.4,wood);backRail.userData.part={t:'frame'};
+ if(arms){for(const x of [-1,1]){const armPost=tube([x*seatW*.43,seatY+h*.08,-seatD*.34],[x*seatW*.43,seatY+h*.3,-seatD*.34],2.8,wood);armPost.userData.part={t:'arms'};const armRail=tube([x*seatW*.43,seatY+h*.3,-seatD*.34],[x*seatW*.43,seatY+h*.3,seatD*.34],2.8,wood);armRail.userData.part={t:'arms'};const armPad=B(g,5,3,seatD*.7,x*seatW*.43,seatY+h*.3,0,wood);armPad.userData.part={t:'arms'}}}
  g.userData.diningChairConstruction={schemaVersion:2,upholstered:padded,armrests:arms,backrest:'curved-panel',legs:'four-connected',status:'integrated-pending-visual-validation'};
  break;
 }
