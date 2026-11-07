@@ -1169,20 +1169,77 @@ function buildCabinetConstruction(g,it,baseMaterial){
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
- const tag=(mesh,key)=>{if(mesh)mesh.userData.part={t:key};return mesh};const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),piping=M('#d5c8b8',.78,.03),frame=M('#383b3c',.48,.32),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
+ const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
+ const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),piping=M('#d5c8b8',.78,.03),frame=M('#383b3c',.48,.32),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
- const baseY=h*.13,seatY=h*.31,seatDepth=d*.58,seatFront=d*.34,seatBack=-d*.24,seatH=h*.14,backY=h*.68,backH=h*.34;
- tag(B(g,w*.92,h*.13,d*.78,0,baseY,-d*.015,frame),'frame');tag(B(g,w*.86,h*.055,d*.72,0,h*.225,-d*.015,upholstery),'seat');
- for(const x of [-1,1])tag(B(g,4,h*.08,d*.7,x*w*.39,h*.18,-d*.015,frame),'frame');
- const pad=(parent,x,y,z,sx,sy,sz,mat,rad)=>{const r=Math.min(rad,sx*.22,sz*.22),s=new T.Shape();s.moveTo(-sx/2+r,-sz/2);s.lineTo(sx/2-r,-sz/2);s.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);s.lineTo(sx/2,sz/2-r);s.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);s.lineTo(-sx/2+r,sz/2);s.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);s.lineTo(-sx/2,-sz/2+r);s.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:sy,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:Math.min(1.8,sy*.22),bevelThickness:Math.min(1.6,sy*.2),curveSegments:12});geo.rotateX(Math.PI/2);const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy/2,z);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
- const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad)=>{const r=Math.min(rad,sx*.2,sy*.2),s=new T.Shape();s.moveTo(-sx/2+r,-sy/2);s.lineTo(sx/2-r,-sy/2);s.quadraticCurveTo(sx/2,-sy/2,sx/2,-sy/2+r);s.lineTo(sx/2,sy/2-r);s.quadraticCurveTo(sx/2,sy/2,sx/2-r,sy/2);s.lineTo(-sx/2+r,sy/2);s.quadraticCurveTo(-sx/2,sy/2,-sx/2,sy/2-r);s.lineTo(-sx/2,-sy/2+r);s.quadraticCurveTo(-sx/2,-sy/2,-sx/2+r,-sy/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:sz,bevelEnabled:true,bevelSegments:4,bevelSize:Math.min(1.8,sz*.2),bevelThickness:Math.min(1.5,sz*.18),curveSegments:12});const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-sz/2);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
- const seats=corner?3:modular?4:Math.max(2,Math.min(3,Math.round(w/90))),seatW=w*(corner?.29:modular?.205:.78/seats),seatZ=seatFront-seatDepth/2;
- const addSeat=(x,z,sx,sz)=>{tag(pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(5,sx*.1)),'seat');for(const side of [-1,1])tag(tube([x+side*sx*.34,seatY+seatH*.82,z+sz*.32],[x+side*sx*.34,seatY+seatH*.82,z-sz*.32],.45,stitch),'piping')};
- if(corner){for(let k=0;k<2;k++){const x=(k-.5)*w*.34;addSeat(x,seatZ,w*.31,seatDepth*.82)}tag(pad(g,w*.31,seatY,-d*.02,w*.28,seatH,d*.34,upholstery,4),'seat');for(let k=0;k<3;k++){const x=(k-1)*w*.3;tag(verticalPad(g,x,backY,-d*.31,w*.29,backH,d*.12,upholstery,5),'back')}tag(verticalPad(g,w*.31,backY,-d*.02,w*.28,backH,d*.12,upholstery,5),'back')}
- else{for(let k=0;k<seats;k++){const x=(k-(seats-1)/2)*w*.78/seats;addSeat(x,seatZ,seatW,seatDepth*.82);tag(verticalPad(g,x,backY,-d*.31,seatW*.94,backH,d*.12,upholstery,5),'back')}if(chaise){tag(pad(g,-w*.25,seatY,-d*.015,w*.42,seatH,d*.72,upholstery,5),'seat');tag(verticalPad(g,-w*.25,backY,-d*.31,w*.42,backH,d*.12,upholstery,5),'back')}}
- for(const side of [-1,1]){const ax=side*w*.43;tag(B(g,w*.13,h*.34,d*.72,ax,h*.39,-d*.015,frame),'frame');tag(verticalPad(g,ax,h*.43,-d*.015,w*.13,h*.31,d*.7,upholstery,4),'arms');tag(B(g,w*.105,h*.035,d*.62,ax,h*.57,-d*.015,piping),'piping');for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2.2,2.8,h*.12,20),feet);leg.position.set(side*w*.39,h*.06,z*d*.3);tag(leg,'feet');g.add(leg)}}
- if(outdoor){for(let k=0;k<6;k++)B(g,w*.84,1.2,1.1,0,h*.16,-d*.34+k*d*.12,frame)}
- g.userData.upholsteryConstruction={schemaVersion:2,seatCount:seats,layout:corner?'L-corner':chaise?'chaise-longue':modular?'modular':'straight',cushionGeometry:'rounded-extruded-panels',status:'integrated-pending-visual-validation'};
+ const baseY=h*.105,seatY=h*.285,seatH=h*.135,backY=h*.665,backH=h*.31,seatFront=d*.34;
+ const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
+  const r=Math.min(rad,sx*.18,sz*.18),sh=new T.Shape();
+  sh.moveTo(-sx/2+r,-sz/2);sh.lineTo(sx/2-r,-sz/2);sh.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);
+  sh.lineTo(sx/2,sz/2-r);sh.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);sh.lineTo(-sx/2+r,sz/2);
+  sh.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);sh.lineTo(-sx/2,-sz/2+r);sh.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);sh.closePath();
+  const bevel=Math.min(1.8,sy*.16),geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
+  geo.translate(0,0,bevel);geo.rotateX(Math.PI/2);
+  const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy/2,z);tag(mesh,'');parent.add(mesh);return mesh;
+ };
+ const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
+  const r=Math.min(rad,sx*.18,sy*.16),sh=new T.Shape();
+  sh.moveTo(-sx/2+r,-sy/2);sh.lineTo(sx/2-r,-sy/2);sh.quadraticCurveTo(sx/2,-sy/2,sx/2,-sy/2+r);
+  sh.lineTo(sx/2,sy/2-r);sh.quadraticCurveTo(sx/2,sy/2,sx/2-r,sy/2);sh.lineTo(-sx/2+r,sy/2);
+  sh.quadraticCurveTo(-sx/2,sy/2,-sx/2,sy/2-r);sh.lineTo(-sx/2,-sy/2+r);sh.quadraticCurveTo(-sx/2,-sy/2,-sx/2+r,-sy/2);sh.closePath();
+  const geo=new T.ExtrudeGeometry(sh,{depth:sz,bevelEnabled:true,bevelSegments:4,bevelSize:Math.min(1.6,sz*.16),bevelThickness:Math.min(1.4,sz*.14),curveSegments:16});
+  const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-sz/2);tag(mesh,'');parent.add(mesh);return mesh;
+ };
+ const base=(x,sx,z,sz)=>tag(B(g,sx,h*.12,sz,x,baseY,z,frame),'frame');
+ if(chaise){
+  // Huella en L: cuerpo principal poco profundo + módulo de chaise prolongado hacia el frente.
+  base(w*.055,w*.81,-d*.075,d*.56);
+  base(-w*.245,w*.34,d*.315,d*.39);
+ }else if(corner){
+  // Dos módulos perpendiculares visualmente diferenciados: tramo principal y retorno lateral.
+  base(-w*.035,w*.82,-d*.075,d*.56);
+  base(w*.335,w*.25,d*.145,d*.48);
+ }else{
+  base(0,w*.92,-d*.025,d*.72);
+ }
+ const seats=Math.max(2,Math.min(4,Math.round(w/72)));
+ const addSeat=(x,z,sx,sz)=>{
+  tag(pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(6,sx*.12)),'seat');
+  for(const side of [-1,1])tag(tube([x+side*sx*.34,seatY+seatH*.8,z+sz*.34],[x+side*sx*.34,seatY+seatH*.8,z-sz*.34],.38,stitch),'piping');
+ };
+ const addBack=(x,sx,z=-d*.325)=>{
+  tag(verticalPad(g,x,backY,z,sx,backH,d*.105,upholstery,5),'back');
+ };
+ if(chaise){
+  // El módulo largo sustituye al asiento izquierdo: no se superponen dos cojines en la misma huella.
+  addSeat(-w*.235,d*.105,w*.305,d*.755);
+  const runX=[w*.075,w*.285],runW=w*.19;
+  runX.forEach(x=>{addSeat(x,-d*.015,runW,d*.49);addBack(x,runW*.96)});
+  addBack(-w*.235,w*.30);
+ }else if(corner){
+  // Tramo principal de dos plazas y retorno profundo a la derecha, formando una L reconocible.
+  const mainX=[-w*.255,w*.045],mainW=w*.275;
+  mainX.forEach(x=>{addSeat(x,-d*.105,mainW,d*.49);addBack(x,mainW*.96)});
+  addSeat(w*.335,d*.105,w*.245,d*.47);
+  const sideBack=verticalPad(g,w*.455,backY,d*.105,d*.43,backH,w*.105,upholstery,5);sideBack.rotation.y=Math.PI/2;tag(sideBack,'back');
+ }else{
+  const count=modular?4:seats,usableW=w*.78,gap=w*.012,cw=(usableW-gap*(count-1))/count;
+  for(let k=0;k<count;k++){const x=-usableW/2+cw/2+k*(cw+gap);addSeat(x,-d*.015,cw,d*.53);addBack(x,cw*.96)}
+ }
+ // Bastidor posterior y travesaños: quedan debajo de los cojines y no atraviesan el tapizado.
+ tag(B(g,w*.84,h*.075,d*.075,0,h*.205,-d*.325,frame),'frame');
+ for(const side of [-1,1]){
+  const ax=side*w*.43;
+  tag(B(g,w*.13,h*.34,d*.72,ax,h*.365,-d*.015,frame),'frame');
+  tag(verticalPad(g,ax,h*.425,-d*.015,w*.105,h*.275,d*.64,upholstery,4),'arms');
+  tag(pad(g,ax,h*.555,-d*.015,w*.105,h*.045,d*.62,upholstery,3),'arms');
+  for(const z of [-1,1]){
+   const leg=new T.Mesh(new T.CylinderGeometry(2.2,2.8,h*.085,20),feet);
+   leg.position.set(side*w*.39,h*.0425,z*d*.29);tag(leg,'feet');g.add(leg);
+  }
+ }
+ if(outdoor){for(let k=0;k<6;k++)tag(B(g,w*.84,1.2,1.1,0,h*.16,-d*.34+k*d*.12,frame),'frame')}
+ g.userData.upholsteryConstruction={schemaVersion:3,seatCount:chaise?3:corner?3:seats,layout:corner?'true-L-sectional':chaise?'L-chaise-extension':modular?'modular':'straight',cushionGeometry:'separate-rounded-extruded-panels',overlapStrategy:'disjoint-seat-zones-with-gaps',status:'reconstructed-pending-browser-visual-validation'};
  break;
 }
 case'outdoorsofa':{
