@@ -313,7 +313,7 @@ LIB.push(
 {t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"desk",n:"Escritorio juvenil",w:120,h:75,d:60,e:0,col:"#a98965",s:"nórdico",variant:2},
 {t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"lamp",n:"Lámpara de mesita",w:28,h:42,d:28,e:0,col:"#e4d5b6",s:"clásico",variant:0},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"bath",n:"Bañera rectangular encastrada",w:170,h:55,d:75,e:0,col:"#e5e4df",s:"moderno",variant:0},
-{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Plato de ducha cuadrado",w:100,h:200,d:100,e:0,col:"#cbd8dc",s:"minimalista",variant:1},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Plato de ducha cuadrado",w:100,h:5,d:100,e:0,col:"#cbd8dc",s:"minimalista",variant:1},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"vanity",n:"Mueble lavabo suspendido",w:100,h:52,d:48,e:0,col:"#9c8875",s:"contemporáneo",variant:2},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"basin",n:"Lavabo de apoyo ovalado",w:58,h:18,d:40,e:0,col:"#f1f0eb",s:"nórdico",variant:0},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"cabinet",n:"Mueble auxiliar baño",w:45,h:110,d:32,e:0,col:"#b9a58e",s:"clásico",variant:1},
@@ -1087,22 +1087,23 @@ function carcKitchen(g,it,mt){
 function ceramicMaterial(color){return new T.MeshStandardMaterial({color:color||'#f2f1ed',roughness:.16,metalness:.015})}
 function ceramicBasin(width,height,depth,mat){const w=Math.max(5,width),h=Math.max(4,height),profile=[new T.Vector2(0,.6),new T.Vector2(w*.12,.6),new T.Vector2(w*.3,1),new T.Vector2(w*.55,2.2),new T.Vector2(w*.78,4.5),new T.Vector2(w*.94,h*.48),new T.Vector2(w,h*.76),new T.Vector2(w*.99,h*.88),new T.Vector2(w*.94,h*.94),new T.Vector2(w*.86,h*.87),new T.Vector2(w*.72,h*.62),new T.Vector2(w*.5,h*.34),new T.Vector2(w*.25,h*.18),new T.Vector2(0,h*.16)];const mesh=new T.Mesh(new T.LatheGeometry(profile,48),mat);mesh.scale.z=Math.max(.25,depth/w);mesh.castShadow=mesh.receiveShadow=true;return mesh}
 function toiletGeometry(g,it,mt){
- const w=it.w,h=it.h,d=it.d,porcelain=ceramicMaterial(it.col||'#fafafa'),seat=ceramicMaterial('#fbfaf7'),inner=new T.MeshStandardMaterial({color:'#dfe3e0',roughness:.22,side:T.DoubleSide}),rx=w*.5,rz=d*.5,seatY=h*.56,bowlZ=d*.09;
+ const w=it.w,h=it.h,d=it.d,porcelain=ceramicMaterial(it.col||'#fafafa'),seat=ceramicMaterial('#fbfaf7'),inner=new T.MeshStandardMaterial({color:'#dfe3e0',roughness:.22,side:T.DoubleSide}),rx=w*.5,rz=d*.36,seatY=h*.56,bowlZ=d*.12;
  // WC de suelo compacto: pedestal cerámico continuo, taza ovalada y altura de asiento proporcionada.
  const outer=[new T.Vector2(0,2),new T.Vector2(rx*.46,2),new T.Vector2(rx*.62,h*.06),new T.Vector2(rx*.74,h*.17),new T.Vector2(rx*.86,h*.34),new T.Vector2(rx*.98,seatY-2),new T.Vector2(rx*.98,seatY),new T.Vector2(rx*.90,seatY),new T.Vector2(rx*.78,h*.46),new T.Vector2(rx*.64,h*.29),new T.Vector2(rx*.44,h*.2),new T.Vector2(0,h*.2)];
  const pan=new T.Mesh(new T.LatheGeometry(outer,96),porcelain);pan.scale.z=rz/rx;pan.position.z=bowlZ;g.add(pan);
  const cavityProfile=[new T.Vector2(0,h*.21),new T.Vector2(rx*.30,h*.22),new T.Vector2(rx*.56,h*.3),new T.Vector2(rx*.72,h*.42),new T.Vector2(rx*.82,seatY-2)];
  const cavity=new T.Mesh(new T.LatheGeometry(cavityProfile,80),inner);cavity.scale.z=rz/rx;cavity.position.z=bowlZ;g.add(cavity);
  // Aro con abertura real y tapa ovalada, ambos apoyados sobre la taza.
- const ringShape=new T.Shape();ringShape.absellipse(0,0,rx*.96,rz*.86,0,Math.PI*2,false,0);const hole=new T.Path();hole.absellipse(0,0,rx*.60,rz*.52,0,Math.PI*2,true,0);ringShape.holes.push(hole);
+ const ringShape=new T.Shape();ringShape.absellipse(0,0,rx*.96,rz*.98,0,Math.PI*2,false,0);const hole=new T.Path();hole.absellipse(0,0,rx*.60,rz*.52,0,Math.PI*2,true,0);ringShape.holes.push(hole);
  const ring=new T.Mesh(new T.ExtrudeGeometry(ringShape,{depth:1.8,bevelEnabled:true,bevelSegments:3,bevelSize:.55,bevelThickness:.45,curveSegments:72}),seat);ring.rotation.x=-Math.PI/2;ring.position.set(0,seatY,bowlZ);g.add(ring);
- const lidShape=new T.Shape();lidShape.absellipse(0,0,rx*.96,rz*.86,0,Math.PI*2,false,0);
- const lid=new T.Mesh(new T.ExtrudeGeometry(lidShape,{depth:1.6,bevelEnabled:true,bevelSegments:3,bevelSize:.5,bevelThickness:.4,curveSegments:72}),seat);lid.rotation.x=-Math.PI/2;lid.position.set(0,seatY+2,bowlZ);g.add(lid);
+ const lidShape=new T.Shape();lidShape.absellipse(0,0,rx*.96,rz*.98,0,Math.PI*2,false,0);
+ const pivot=new T.Group();pivot.name='Tapa del inodoro';pivot.position.set(0,seatY+2.55,bowlZ-rz*.98);g.add(pivot);
+ const lid=new T.Mesh(new T.ExtrudeGeometry(lidShape,{depth:1.6,bevelEnabled:true,bevelSegments:3,bevelSize:.5,bevelThickness:.4,curveSegments:72}),seat);lid.rotation.x=-Math.PI/2;lid.position.z=rz*.98;pivot.add(lid);it.op=it.op||[];mv(pivot,{it,k:0,t:'u',angle:82});
  // Plataforma posterior de porcelana y apoyo continuo: cisterna apoyada, nunca flotante.
- const bridge=new T.Mesh(new T.BoxGeometry(w*.88,h*.075,d*.34,4,2,3),porcelain);bridge.position.set(0,seatY+3,-d*.27);g.add(bridge);
- const tank=new T.Mesh(new T.BoxGeometry(w*.88,h*.34,d*.29,5,4,4),porcelain);tank.position.set(0,h*.79,-d*.34);g.add(tank);
- const tankLid=new T.Mesh(new T.BoxGeometry(w*.91,2.4,d*.31,5,1,4),porcelain);tankLid.position.set(0,h*.965,-d*.34);g.add(tankLid);
- const flush=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,28),M('#aeb5b8',.3,.7));flush.position.set(0,h*.985,-d*.34);g.add(flush);
+ const bridge=new T.Mesh(new T.BoxGeometry(w*.88,h*.075,d*.34,4,2,3),porcelain);bridge.position.set(0,seatY+2,-d*.27);g.add(bridge);
+ const tank=new T.Mesh(new T.BoxGeometry(w*.88,h*.34,d*.25,5,4,4),porcelain);tank.position.set(0,h*.79,-d*.367);g.add(tank);
+ const tankLid=new T.Mesh(new T.BoxGeometry(w*.91,2.4,d*.26,5,1,4),porcelain);tankLid.position.set(0,h*.965,-d*.367);g.add(tankLid);
+ const flush=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,28),M('#aeb5b8',.3,.7));flush.position.set(0,h*.985,-d*.367);g.add(flush);
  for(const x of [-1,1]){const cap=new T.Mesh(new T.CylinderGeometry(1.4,1.4,1,16),porcelain);cap.position.set(x*w*.27,seatY+1,-d*.27);g.add(cap)}
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 }
@@ -1227,44 +1228,7 @@ cama(g,it,mt){
  for(let x of [-1,1])for(let z of [-1,1]){const p=new T.Mesh(new T.CylinderGeometry(2.2,2.8,10,16),base);p.position.set(x*w*.42,5,z*d*.4);g.add(p)}
 },
 tv(g,it,mt,hm){carc(g,it,mt);const w=it.w/2-3;drw(g,it,0,-it.w/2+2,w,3,it.h-6,mt,hm);drw(g,it,1,1,w,3,it.h-6,mt,hm);B(g,100,55,3,0,it.h+30,0,M('#111',.2,.5))},
-lavabo(g,it,mt,hm){
- const w=it.w,h=it.h,d=it.d,bodyH=h*.72,th=1.8,bodyD=d*.9,bodyW=w*.96,topY=bodyH,body=M(it.col||'#cfd6d8',.58,.05),inside=M('#b9b5ad',.78,.02),ceramic=ceramicMaterial('#f5f4f0'),chrome=M('#aeb5bb',.3,.82);
- it.op=it.op||[];
- // Mueble hueco con laterales, base y trasera; el lavabo no se coloca encima de una caja maciza.
- B(g,th,bodyH,bodyD,-bodyW/2+th/2,bodyH/2,0,body);B(g,th,bodyH,bodyD,bodyW/2-th/2,bodyH/2,0,body);
- B(g,bodyW-2*th,th,bodyD,0,th/2,0,inside);B(g,bodyW-2*th,bodyH,th,0,bodyH/2,-bodyD/2+th/2,inside);
- B(g,bodyW-2*th,th,bodyD,0,bodyH-th/2,0,body);
- // Dos frentes de cajón completos e independientes, con guías y cajas interiores.
- const count=2,dh=(bodyH-th*2-2)/count;
- for(let k=0;k<count;k++){
-  const yy=th+dh/2+k*(dh+2),drawer=new T.Group();drawer.position.set(0,0,bodyD/2+1.4);g.add(drawer);
-  B(drawer,bodyW-2*th-1,dh-1.2,2,0,yy,0,mt);
-  for(const sx of [-1,1])B(drawer,1.5,dh-3,bodyD*.78,sx*(bodyW/2-th-1.5),yy,-bodyD*.39,inside);
-  B(drawer,bodyW-2*th-3,1.5,bodyD*.78,0,yy-dh/2+1,-bodyD*.39,inside);
-  B(drawer,bodyW-2*th-3,dh-3,1.5,0,yy,-bodyD*.78,inside);
-  const pull=new T.Mesh(new T.CylinderGeometry(1.2,1.2,Math.min(bodyW*.24,24),16),chrome);pull.rotation.z=Math.PI/2;pull.position.set(0,yy,3);drawer.add(pull);
-  mv(drawer,{it,k,t:'s',z:bodyD/2+1.4,sl:Math.min(d*.32,bodyD*.38)});
-  for(const sx of [-1,1])B(g,1.2,1.5,bodyD*.72,sx*(bodyW/2-th-1),yy,-bodyD*.08,chrome);
- }
- // Encimera con hueco ovalado abierto, cubeta de porcelana, desagüe y grifo real.
- const bw=w*.29,bd=d*.32,holeW=bw*2+4,holeD=bd*2+4,counterW=w*1.04,counterD=d*1.02,topMat=M('#f0efeb',.38,.04);
- B(g,(counterW-holeW)/2,4,counterD,-(counterW+holeW)/4,bodyH+2,0,topMat);
- B(g,(counterW-holeW)/2,4,counterD,(counterW+holeW)/4,bodyH+2,0,topMat);
- B(g,holeW,4,(counterD-holeD)/2,0,bodyH+2,-(counterD+holeD)/4,topMat);
- B(g,holeW,4,(counterD-holeD)/2,0,bodyH+2,(counterD+holeD)/4,topMat);
- const levels=[[.98,.98,bodyH+4.1],[.88,.86,bodyH+2],[.68,.65,bodyH-3],[.42,.4,bodyH-7],[.08,.08,bodyH-9]],verts=[],idx=[],seg=72;
- levels.forEach(([ax,az,y])=>{for(let q=0;q<seg;q++){const a=q/seg*Math.PI*2;verts.push(Math.cos(a)*bw*ax,y,-d*.02+Math.sin(a)*bd*az)}});
- for(let j=0;j<levels.length-1;j++)for(let q=0;q<seg;q++){const a=j*seg+q,b=j*seg+(q+1)%seg,c=(j+1)*seg+q,e=(j+1)*seg+(q+1)%seg;idx.push(a,b,c,b,e,c)}
- const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setIndex(idx);geo.computeVertexNormals();const bowl=new T.Mesh(geo,ceramic);bowl.material.side=T.DoubleSide;g.add(bowl);
- const rimPts=[];for(let q=0;q<seg;q++){const a=q/seg*Math.PI*2;rimPts.push(new T.Vector3(Math.cos(a)*bw,bodyH+4.1,-d*.02+Math.sin(a)*bd))}
- g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(rimPts,true),seg,1.1,8,true),ceramic));
- const drain=new T.Mesh(new T.TorusGeometry(2.3,.6,10,28),chrome);drain.rotation.x=Math.PI/2;drain.position.set(0,bodyH-8,-d*.02);g.add(drain);
- const base=new T.Mesh(new T.CylinderGeometry(3,3.5,1.8,24),chrome);base.position.set(0,bodyH+4.8,-d*.39);g.add(base);
- const stem=new T.Mesh(new T.CylinderGeometry(1.8,2.2,17,20),chrome);stem.position.set(0,bodyH+13,-d*.39);g.add(stem);
- const spout=new T.CatmullRomCurve3([new T.Vector3(0,bodyH+21,-d*.39),new T.Vector3(0,bodyH+22,-d*.29),new T.Vector3(0,bodyH+22,-d*.16)]);g.add(new T.Mesh(new T.TubeGeometry(spout,24,1.8,10,false),chrome));
- const aerator=new T.Mesh(new T.CylinderGeometry(1.8,1.8,2.2,20),chrome);aerator.rotation.x=Math.PI/2;aerator.position.set(0,bodyH+22,-d*.16);g.add(aerator);
- const overflow=new T.Mesh(new T.TorusGeometry(1.8,.45,8,24),chrome);overflow.position.set(0,bodyH*.48,d*.29);g.add(overflow);
-},
+lavabo(g,it,mt){buildBathVanity(g,it,mt)},
 inodoro(g,it,mt){toiletGeometry(g,it,mt)},
 planta(g,it,mt){const{w,h,d}=it,pot=M('#98745d',.78),soil=M('#42382f',1),stem=M('#557044',.95);const p=new T.Mesh(new T.CylinderGeometry(w*.27,w*.2,h*.19,32),pot);p.position.y=h*.095;g.add(p);const rim=new T.Mesh(new T.TorusGeometry(w*.255,Math.max(.8,w*.018),8,32),pot);rim.rotation.x=Math.PI/2;rim.position.y=h*.18;g.add(rim);const earth=new T.Mesh(new T.CircleGeometry(w*.23,32),soil);earth.rotation.x=-Math.PI/2;earth.position.y=h*.18;g.add(earth);for(let k=0;k<11;k++){const a=k*2.399,hh=h*(.35+(k%4)*.08),rad=w*(.08+(k%3)*.035),x=Math.cos(a)*rad,z=Math.sin(a)*rad;const cv=new T.CatmullRomCurve3([new T.Vector3(0,h*.18,0),new T.Vector3(x*.5,hh*.5,z*.5),new T.Vector3(x,hh,z)]);g.add(new T.Mesh(new T.TubeGeometry(cv,10,Math.max(.35,w*.006),5,false),stem));const leaf=new T.Mesh(new T.SphereGeometry(1,18,12),mt);leaf.scale.set(w*.085,h*.16,d*.055);leaf.position.set(x*1.6,hh+h*.06,z*1.6);leaf.rotation.z=-Math.cos(a)*.65;leaf.rotation.x=Math.sin(a)*.5;g.add(leaf)}},
 alfombra(g,it,mt){B(g,it.w,it.h,it.d,0,it.h/2,0,mt)},
@@ -1440,6 +1404,142 @@ function buildCabinetConstruction(g,it,baseMaterial){
  }
  g.userData.construction={family:'cabinetry',schemaVersion:1,dimensionsCm:{width:w,height:h,depth:d},panelThicknessCm:t,components:['carcass','back-panel','adjustable-shelves','drawer-boxes','telescopic-runners','hinges','handles','leveling-feet'],status:'reconstructed-pending-visual-and-interaction-verification'};
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+}
+function bathPull(group,x,y,z,length,metal,vertical=false){
+ const post=length*.33;
+ for(const side of [-1,1])B(group,1.4,1.4,2.2,x+(vertical?0:side*post),y+(vertical?side*post:0),z+1.05,metal);
+ const bar=new T.Mesh(new T.CylinderGeometry(.8,.8,length,20),metal);
+ if(!vertical)bar.rotation.z=Math.PI/2;
+ bar.position.set(x,y,z+2.45);group.add(bar);
+}
+
+function bathDrawer(g,it,k,{width,depth,frontZ,bottom,top,ceiling,front,inside,metal}){
+ const height=top-bottom,faceThickness=2,faceHeight=height-1,boxWidth=width-2;
+ const boxDepth=depth-1.8,boxBottom=-height/2+1.2,boxTop=Math.min(height/2-1.2,ceiling-(top+bottom)/2);
+ const boxHeight=boxTop-boxBottom,panel=Math.min(1.2,boxHeight/2,boxWidth/4,boxDepth/4);
+ const drawer=new T.Group();drawer.name='Cajón '+(k+1);
+ drawer.position.set(0,(top+bottom)/2,frontZ);g.add(drawer);
+ B(drawer,width-1,faceHeight,faceThickness,0,0,faceThickness/2,front).userData.part={t:'fronts'};
+ if(boxHeight>0&&boxWidth>2&&boxDepth>3){
+  const z=-boxDepth/2,y=(boxBottom+boxTop)/2;
+  B(drawer,boxWidth,panel,boxDepth,0,boxBottom+panel/2,z,inside);
+  for(const side of [-1,1]){
+   const x=side*(boxWidth-panel)/2;
+   B(drawer,panel,boxHeight,boxDepth,x,y,z,inside);
+   B(g,.75,1.5,boxDepth-.8,side*(boxWidth/2+.45),drawer.position.y+boxBottom+1.4,frontZ+z-.4,metal).name='Guía interior';
+   B(drawer,.55,1,boxDepth*.78,side*(boxWidth/2+.2),boxBottom+1.4,z,metal).name='Corredera móvil';
+  }
+  B(drawer,boxWidth-2*panel,boxHeight,panel,0,y,-boxDepth+panel/2,inside);
+ }
+ bathPull(drawer,0,0,faceThickness,Math.min(24,width*.42),metal);
+ const travel=Math.max(0,Math.min(25,boxDepth*.58));
+ mv(drawer,{it,k,t:'s',z:frontZ,sl:travel});
+}
+
+function buildBathCabinet(g,it,front){
+ const w=+it.w,h=+it.h,d=+it.d,t=Math.min(1.8,w/10,d/10,h/12);
+ const body=M(it.col||'#d8d3c9',.56,.03),inside=M('#c6c2b8',.73,.02),metal=M('#879193',.32,.7);
+ const count=/columna/i.test(it.n||'')?3:2;
+ const plinth=Math.min(6,h*.08),bottom=plinth+t,split=h*.53,frontZ=d/2;
+ B(g,w-2*t,plinth,d-6,0,plinth/2,-1,inside).name='Zócalo retranqueado';
+ for(const side of [-1,1])B(g,t,h-plinth,d,side*(w-t)/2,(plinth+h)/2,0,body).name='Costado';
+ const innerW=w-2*t;
+ for(const y of [plinth+t/2,split,h-t/2])B(g,innerW,t,d,0,y,0,body);
+ B(g,innerW,h-bottom-t,t,0,(h+bottom-t)/2,-d/2+t/2,inside).name='Trasera';
+ const lowerTop=split-t/2,slot=(lowerTop-bottom)/count;
+ it.op=it.op||[];
+ for(let k=0;k<count;k++)bathDrawer(g,it,k,{
+  width:innerW,depth:d,frontZ,bottom:bottom+k*slot,top:bottom+(k+1)*slot,
+  ceiling:bottom+(k+1)*slot-1.2,front,inside
+ });
+ const doorBottom=split+t/2,doorHeight=h-t-doorBottom-1;
+ for(const ratio of [.32,.67]){
+  const y=doorBottom+doorHeight*ratio;
+  B(g,innerW-.35,t,d-t-2,0,y,-.6,inside).name='Balda superior';
+ }
+ const door=new T.Group();door.name='Puerta superior';
+ door.position.set(-innerW/2+.5,doorBottom+.5,frontZ);g.add(door);
+ const leafWidth=innerW-1;
+ B(door,leafWidth,doorHeight,2,leafWidth/2,doorHeight/2,1,front).userData.part={t:'fronts'};
+ for(const y of [doorHeight*.2,doorHeight*.8]){
+  B(door,3.2,3,.8,2.3,y,-.4,metal).name='Cazoleta interior';
+  B(g,.8,3.4,3.4,-innerW/2+.4,door.position.y+y,frontZ-1.7,metal).name='Placa interior';
+ }
+ bathPull(door,leafWidth-Math.min(4,leafWidth*.18),doorHeight*.32,2,Math.min(22,doorHeight*.38),metal,true);
+ mv(door,{it,k:count,t:'d',sg:-1});
+}
+
+function bathFaucet(group,x,y,z,reach,height,metal){
+ const r=Math.min(1.65,height*.12);
+ const base=new T.Mesh(new T.CylinderGeometry(r*1.65,r*1.85,1.4,24),metal);
+ base.position.set(x,y+.7,z);group.add(base);
+ const center=[new T.Vector3(x,y+1,z),new T.Vector3(x,y+height*.75,z),new T.Vector3(x,y+height,z+reach*.37),new T.Vector3(x,y+height*.8,z+reach),new T.Vector3(x,y+height*.61,z+reach)];
+ const spout=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(center),28,r,12,false),metal);
+ group.add(spout);
+ const aerator=new T.Mesh(new T.CylinderGeometry(r*.91,r,1.2,20),metal);
+ aerator.position.set(x,y+height*.61,z+reach);group.add(aerator);
+ B(group,r*2.6,1.1,r*1.15,x-r*.9,y+height*.42,z,metal).rotation.z=.24;
+}
+
+function bathDrain(g,x,y,z,r,metal){
+ const ring=new T.Mesh(new T.TorusGeometry(r,.36,8,28),metal);
+ ring.rotation.x=-Math.PI/2;ring.position.set(x,y,z);g.add(ring);
+ const grate=new T.Mesh(new T.CylinderGeometry(r*.9,r*.9,.4,24),M('#394346',.48,.36));
+ grate.position.set(x,y-.24,z);g.add(grate);
+}
+
+function bathShell(g,profile,exponent,material){
+ const count=80,vertices=[],faces=[];
+ for(const [rx,rz,y] of profile)for(let i=0;i<count;i++){
+  const a=i/count*Math.PI*2,x=Math.cos(a),z=Math.sin(a);
+  const factor=1/Math.pow(Math.abs(x)**exponent+Math.abs(z)**exponent,1/exponent);
+  vertices.push(rx*x*factor,y,rz*z*factor);
+ }
+ for(let ring=0;ring<profile.length-1;ring++)for(let i=0;i<count;i++){
+  const a=ring*count+i,b=ring*count+(i+1)%count;
+  faces.push(a,a+count,b,b,a+count,b+count);
+ }
+ const geometry=new T.BufferGeometry();
+ geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+ geometry.setIndex(faces);geometry.computeVertexNormals();
+ const mesh=new T.Mesh(geometry,material);mesh.castShadow=mesh.receiveShadow=true;g.add(mesh);
+ return mesh;
+}
+function buildBathVanity(g,it,front){
+ const w=+it.w,h=+it.h,d=+it.d,t=Math.min(1.8,w/10,d/10,h/12);
+ const suspended=/suspendido/i.test(it.n||''),double=/doble/i.test(it.n||''),plinth=suspended?0:Math.min(7,h*.12);
+ const top=h-Math.min(14,h*.23),counter=3,bodyDepth=d-2,frontZ=bodyDepth/2;
+ const body=M(it.col||'#d8d4ca',.57,.03),inside=M('#c5c0b7',.74,.02),metal=M('#aeb5bb',.3,.82);
+ const innerW=w-2*t,carcassTop=top-counter;
+ for(const x of [-1,1])B(g,t,carcassTop-plinth,bodyDepth,x*(w-t)/2,(carcassTop+plinth)/2,0,body);
+ B(g,innerW,t,bodyDepth,0,plinth+t/2,0,inside);
+ B(g,innerW,carcassTop-plinth-t,t,0,(carcassTop+plinth+t)/2,-bodyDepth/2+t/2,inside);
+ if(plinth)B(g,innerW,plinth,bodyDepth-7,0,plinth/2,-1,body);
+ const basins=double?[-w*.25,w*.25]:[0],rx=w*(double?.183:.31),rz=d*.29,z=d*.04;
+ const cut=new T.Shape();
+ cut.moveTo(-w/2,-d/2);cut.lineTo(w/2,-d/2);cut.lineTo(w/2,d/2);cut.lineTo(-w/2,d/2);cut.closePath();
+ for(const x of basins){
+  const hole=new T.Path();
+  hole.absellipse(x,-z,rx,rz,0,Math.PI*2,true,0);cut.holes.push(hole);
+ }
+ const slab=new T.Mesh(new T.ExtrudeGeometry(cut,{depth:counter,bevelEnabled:false,curveSegments:40}),M('#f0ece3',.32,.04));
+ slab.rotation.x=-Math.PI/2;slab.position.y=top-counter;g.add(slab);
+ const bowlDepth=Math.min(12,(top-plinth)*.28);
+ for(const x of basins){
+  const rimY=top+.65,drainY=top-bowlDepth,r=Math.min(2.35,rx*.2);
+  const profile=[[rx-.2,top-counter-.1],[rx+.65,top-.15],[rx+.65,rimY],[rx-.65,rimY],[rx*.86,top-2],[rx*.62,top-bowlDepth*.72],[r,drainY]].map(([a,b])=>new T.Vector2(a,b));
+  const bowl=new T.Mesh(new T.LatheGeometry(profile,64),ceramicMaterial());
+  bowl.scale.z=rz/rx;bowl.position.set(x,0,z);g.add(bowl);
+  bathDrain(g,x,drainY,z,r*.87,metal);
+  bathFaucet(g,x,top,-d*.38,d*.25,h-top-.35,metal);
+ }
+ const bottom=plinth+t,slot=(top-counter-bottom)/2;
+ it.op=it.op||[];
+ for(let k=0;k<2;k++){
+  const upper=bottom+(k+1)*slot;
+  bathDrawer(g,it,k,{width:innerW,depth:bodyDepth,frontZ,bottom:bottom+k*slot,top:upper,
+   ceiling:k===1?Math.min(upper-1.2,top-bowlDepth-1):upper-1.2,front,inside});
+ }
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
@@ -1780,7 +1880,8 @@ case'sideboard':{
  break;
 }
 case'cabinet':{
- buildCabinetConstruction(g,it,mt);
+ if(it.roomType==='baño'||it.c==='Baño')buildBathCabinet(g,it,mt);
+ else buildCabinetConstruction(g,it,mt);
  break;
 }
 case'toolcab':{
@@ -2005,6 +2106,28 @@ case'cabinet':{
  const door=new T.Group();door.position.set(-w/2+th/2,0,frontZ+1);g.add(door);const panel=new T.Mesh(new T.BoxGeometry(innerW,Math.max(12,h-zone-th-2),2),mt);panel.position.set(innerW/2,(h+zone)/2,0);door.add(panel);mv(door,{it,k:count,t:'d',sg:-1});break;
 }
 case'mirror':{
+ if(it.roomType==='baño'||it.c==='Baño'){
+  const back=M('#555a58',.54,.32),reflect=M('#c9d1d2',.09,.95),radius=Math.min(w,h)*.075;
+  const rounded=(inset)=>{
+   const x=w/2-inset,y0=inset,y1=h-inset,r=Math.max(1,radius-inset/2);
+   const path=new T.Shape();
+   path.moveTo(-x+r,y0);path.lineTo(x-r,y0);path.quadraticCurveTo(x,y0,x,y0+r);
+   path.lineTo(x,y1-r);path.quadraticCurveTo(x,y1,x-r,y1);path.lineTo(-x+r,y1);
+   path.quadraticCurveTo(-x,y1,-x,y1-r);path.lineTo(-x,y0+r);path.quadraticCurveTo(-x,y0,-x+r,y0);
+   return path;
+  };
+  const casework=new T.Mesh(new T.ExtrudeGeometry(rounded(0),{depth:d*.8,bevelEnabled:false,curveSegments:14}),back);
+  casework.position.z=-d/2;g.add(casework);
+  const face=new T.Mesh(new T.ShapeGeometry(rounded(Math.min(w,h)*.057),24),reflect);
+  face.position.z=d*.35;g.add(face);
+  const light=new T.MeshStandardMaterial({color:'#fff3d8',emissive:'#fff3d8',emissiveIntensity:.85,roughness:.35});
+  const points=rounded(Math.min(w,h)*.035).getPoints(40).map(p=>new T.Vector3(p.x,p.y,d*.35));
+  points.pop();
+  const band=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points,true),120,Math.min(.5,d*.12),8,true),light);
+  g.add(band);
+  break;
+ }
+
  const name=(it.n||'').toLowerCase(),frame=M('#a9a39a',.48,.42),back=M('#252b2e',.6,.2),led=M('#fff0cb',.22,.08);
  if(/redond/.test(name)){
   const radius=Math.min(w,h)*.46,outer=new T.Mesh(new T.CylinderGeometry(radius,radius,3,96),back);
@@ -2042,112 +2165,76 @@ case'lamp':{
  break;
 }
 case'bath':{
- const name=(it.n||'').toLowerCase(),porcelain=ceramicMaterial(it.col||'#f4f3ef'),inside=new T.MeshStandardMaterial({color:'#dce1de',roughness:.22,side:T.DoubleSide}),chrome=M('#aeb5b8',.24,.82),dark=M('#343a3d',.3,.3);
- const inset=name.includes('encastrada'),rx=w*.5,rz=d*.5,bodyH=h*.9;
- // Perfil longitudinal continuo: bañera ovalada, no bloque rectangular ni cilindro superpuesto.
- const profile=[
-  new T.Vector2(0,1),new T.Vector2(rx*.58,1),new T.Vector2(rx*.78,2.5),
-  new T.Vector2(rx*.91,bodyH*.12),new T.Vector2(rx*.985,bodyH*.38),
-  new T.Vector2(rx,bodyH*.78),new T.Vector2(rx*.97,bodyH*.94),
-  new T.Vector2(rx*.91,bodyH*.98),new T.Vector2(rx*.84,bodyH*.84),
-  new T.Vector2(rx*.79,bodyH*.42),new T.Vector2(rx*.68,bodyH*.2),
-  new T.Vector2(rx*.42,bodyH*.15),new T.Vector2(0,bodyH*.15)
- ];
- const shell=new T.Mesh(new T.LatheGeometry(profile,96),porcelain);shell.scale.z=rz/rx;g.add(shell);
- // Fondo interior y desagüe con rebosadero en pared corta.
- const floor=new T.Mesh(new T.CircleGeometry(rx*.66,64),inside);floor.rotation.x=-Math.PI/2;floor.scale.set(1,rz/rx,1);floor.position.y=bodyH*.155;g.add(floor);
- const drain=new T.Mesh(new T.CylinderGeometry(3.2,3.2,1.1,32),chrome);drain.position.set(0,bodyH*.17,rz*.12);g.add(drain);
- const hole=new T.Mesh(new T.CircleGeometry(2.3,32),dark);hole.rotation.x=-Math.PI/2;hole.position.set(0,bodyH*.18,rz*.12);g.add(hole);
- const overflow=new T.Mesh(new T.TorusGeometry(2.6,.75,10,32),chrome);overflow.scale.x=1.2;overflow.rotation.x=Math.PI/2;overflow.position.set(0,bodyH*.68,-rz*.72);g.add(overflow);
- if(!inset){for(const x of [-1,1])for(const z of [-1,1]){const foot=new T.Mesh(new T.CylinderGeometry(2.3,2.8,5,16),chrome);foot.position.set(x*rx*.67,2.5,z*rz*.65);g.add(foot)}}
- else{const skirt=new T.Mesh(new T.CylinderGeometry(rx*.94,rx*.94,bodyH*.12,64,1,true),inside);skirt.scale.z=rz/rx;skirt.position.y=bodyH*.06;g.add(skirt)}
+ const inset=/encastrada/i.test(it.n||''),rx=w/2,rz=d/2,y=h-Math.min(13,h*.22);
+ const ceramic=ceramicMaterial(it.col||'#f4f3ef'),chrome=M('#aeb5b8',.24,.82);
+ const floor=y*.18,drainRadius=2.4;
+ const outer=inset?[[rx,rz,0],[rx,rz,y-1]]:[[rx*.67,rz*.7,0],[rx*.78,rz*.79,2],[rx*.9,rz*.9,y*.32],[rx*.99,rz*.99,y-1.4]];
+ const profile=[[.1,.1,0],...outer,[rx,rz,y],[rx*.93,rz*.86,y],[rx*.88,rz*.81,y-1.7],
+  [rx*.76,rz*.65,floor+5],[rx*.58,rz*.48,floor+.3],[drainRadius,drainRadius,floor]];
+ bathShell(g,profile,inset?8:2.4,ceramic).name=inset?'Bañera rectangular y faldón':'Cuerpo de bañera exenta';
+ bathDrain(g,0,floor,0,drainRadius*.86,chrome);
+ const overflow=new T.Mesh(new T.TorusGeometry(1.7,.32,8,24),chrome);
+ overflow.rotation.y=Math.PI/2;overflow.position.set(-rx*.85,y*.78,0);g.add(overflow);
+ // Mount the filler on the rim at the short end, with its outlet inside the bowl.
+ const tap=new T.Group();tap.position.set(-rx*.956,y,0);tap.rotation.y=Math.PI/2;g.add(tap);
+ bathFaucet(tap,0,0,0,Math.min(17,w*.11),h-y-1.5,chrome);
  break;
 }
 case'shower':{
- const name=(it.n||'').toLowerCase(),trayMat=ceramicMaterial(it.col||'#e8e8e3'),metal=M('#aeb5b8',.28,.82),dark=M('#68777d',.42,.3);
- const roundPlan=(W,D,R,depth,mat,y=0)=>{const s=new T.Shape(),x=-W/2,z=-D/2,r=Math.min(R,W*.18,D*.18);s.moveTo(x+r,z);s.lineTo(x+W-r,z);s.quadraticCurveTo(x+W,z,x+W,z+r);s.lineTo(x+W,z+D-r);s.quadraticCurveTo(x+W,z+D,x+W-r,z+D);s.lineTo(x+r,z+D);s.quadraticCurveTo(x,z+D,x,z+D-r);s.lineTo(x,z+r);s.quadraticCurveTo(x,z,x+r,z);const geo=new T.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelSegments:2,bevelSize:.8,bevelThickness:.8,curveSegments:8});geo.rotateX(-Math.PI/2);const m=new T.Mesh(geo,mat);m.position.y=y;g.add(m);return m};
- const trayH=Math.max(5,h*.045);roundPlan(w*.98,d*.98,Math.min(w,d)*.1,trayH,trayMat,0);
- const floorShape=new T.Shape();floorShape.moveTo(-w*.44,-d*.44);floorShape.lineTo(w*.44,-d*.44);floorShape.lineTo(w*.44,d*.44);floorShape.lineTo(-w*.44,d*.44);floorShape.closePath();const floor=new T.Mesh(new T.ShapeGeometry(floorShape),new T.MeshStandardMaterial({color:'#d9dcd8',roughness:.3,side:T.DoubleSide}));floor.rotation.x=-Math.PI/2;floor.position.y=trayH+.9;g.add(floor);
- const grate=new T.Mesh(new T.BoxGeometry(name.includes('cuadrado')?w*.2:3,1.2,3),metal);grate.position.set(w*.31,trayH+1.5,d*.31);g.add(grate);
- if(name.includes('mampara')||name.includes('ducha con')){const glass=new T.MeshPhysicalMaterial({color:'#c8e0e7',roughness:.08,metalness:0,transparent:true,opacity:.2,transmission:.3,thickness:.6,side:T.DoubleSide}),gy=h*.48,gh=h*.94,z=-d*.46,x=-w*.46;
- const rear=new T.Mesh(new T.BoxGeometry(w*.94,gh,1.1),glass);rear.position.set(0,gy,z);g.add(rear);const side=new T.Mesh(new T.BoxGeometry(1.1,gh,d*.92),glass);side.position.set(x,gy,0);g.add(side);
- for(const xx of [-w*.46,w*.46]){const post=new T.Mesh(new T.BoxGeometry(1.8,gh,2.4),metal);post.position.set(xx,gy,z);g.add(post)}
- const wp=new T.Mesh(new T.BoxGeometry(2,gh,2),metal);wp.position.set(x,gy,d*.44);g.add(wp);
- const door=new T.Group();door.position.set(x,0,d*.44);g.add(door);const leaf=new T.Mesh(new T.BoxGeometry(w*.9,gh,1.1),glass);leaf.position.set(w*.45,gy,0);door.add(leaf);
- for(const yy of [gh*.18,gh*.82]){const hinge=new T.Mesh(new T.BoxGeometry(3,7,4),metal);hinge.position.set(1.5,yy,0);door.add(hinge)}
- const channelMat=M('#9da7aa',.32,.78),sealMat=M('#8d9a9e',.62,.08);const lowerChannel=new T.Mesh(new T.BoxGeometry(w*.92,2.2,3.2),channelMat);lowerChannel.position.set(w*.46,1.5,0);door.add(lowerChannel);const glassSeal=new T.Mesh(new T.BoxGeometry(w*.9,1.1,1.8),sealMat);glassSeal.position.set(w*.45,1.1,0);door.add(glassSeal);for(const yy of [gh*.2,gh*.8]){const plate=new T.Mesh(new T.BoxGeometry(5,9,5),channelMat);plate.position.set(2.5,yy,-1.8);door.add(plate);const screw=new T.Mesh(new T.CylinderGeometry(.8,.8,1.1,12),dark);screw.rotation.x=Math.PI/2;screw.position.set(2.5,yy,1.1);door.add(screw)}const stabilizer=new T.Mesh(new T.CylinderGeometry(1.5,1.5,w*.38,16),metal);stabilizer.rotation.z=Math.PI/2;stabilizer.position.set(w*.22,h*.91,z);g.add(stabilizer);const clamp=new T.Mesh(new T.CylinderGeometry(3,3,4,20),metal);clamp.rotation.x=Math.PI/2;clamp.position.set(-w*.02,h*.91,z);g.add(clamp);
- const handle=new T.Mesh(new T.CylinderGeometry(1.5,1.5,gh*.18,16),metal);handle.position.set(w*.78,gy,2);door.add(handle);mv(door,{it,k:0,t:'d',sg:-1});}
- const railX=w*.32,wallZ=-d*.455,rail=new T.Mesh(new T.CylinderGeometry(1.8,1.8,h*.62,20),metal);rail.position.set(railX,h*.55,wallZ);g.add(rail);
- for(const yy of [h*.25,h*.85]){const mount=new T.Mesh(new T.CylinderGeometry(3,3,3,16),dark);mount.rotation.x=Math.PI/2;mount.position.set(railX,yy,wallZ);g.add(mount)}
- const arm=new T.Mesh(new T.CylinderGeometry(1.8,1.8,d*.12,16),metal);arm.rotation.x=Math.PI/2;arm.position.set(railX,h*.87,wallZ-d*.06);g.add(arm);const head=new T.Mesh(new T.CylinderGeometry(6,7,2.5,32),metal);head.rotation.x=Math.PI/2;head.position.set(railX,h*.87,wallZ-d*.12);g.add(head);
- const mixer=new T.Mesh(new T.CylinderGeometry(4,4,4,24),metal);mixer.rotation.x=Math.PI/2;mixer.position.set(railX,h*.48,wallZ);g.add(mixer);
- const hose=new T.CatmullRomCurve3([new T.Vector3(railX,h*.84,wallZ),new T.Vector3(railX+4,h*.68,wallZ-2),new T.Vector3(railX+7,h*.53,wallZ-3),new T.Vector3(railX,h*.48,wallZ)]);g.add(new T.Mesh(new T.TubeGeometry(hose,24,.9,8,false),metal));break;
-}
-case'vanity':{
- const name=(it.n||'').toLowerCase(),body=M(it.col||'#d8d4ca',.58,.05),inside=M('#b9b5ad',.78,.02),front=mt,metal=M('#aeb5bb',.3,.82),ceramic=ceramicMaterial('#f4f3ef');
- const suspended=name.includes('suspendido'),legsY=suspended?0:3,baseY=legsY,topY=h*.76,bodyW=w*.96,bodyD=d*.9,th=Math.max(1.6,Math.min(2.2,w*.035));
- it.op=it.op||[];
- // Casco hueco real: dos costados, trasera, base y travesaños.
- box(-bodyW/2+th/2,topY*.48,0,th,topY,bodyD,body);
- box(bodyW/2-th/2,topY*.48,0,th,topY,bodyD,body);
- box(0,th/2,-bodyD/2+th/2,bodyW-2*th,th,th,body);
- box(0,topY-th/2,0,bodyW-2*th,th,bodyD,body);
- box(0,topY*.48,-bodyD/2+th/2,bodyW-2*th,topY*.88,th,inside);
- const topMat=M('#d9d3c8',.42,.03),counterW=w*1.04,counterD=d*1.02;
- const bowls=name.includes('doble')?[-w*.25,w*.25]:[0],basinW=w*.19,basinD=d*.28,holeW=basinW*2+5,holeD=basinD*2+5;
- // Encimera realmente perforada: se construyen los paños alrededor de cada hueco, no una placa maciza que tape la cubeta.
- let cursor=-counterW/2;
- for(const bx of bowls){
-  const left=bx-holeW/2,right=bx+holeW/2;
-  if(left>cursor)box((cursor+left)/2,topY+2,0,left-cursor,4,counterD,topMat);
-  const sideDepth=Math.max(2,(counterD-holeD)/2);
-  box(bx,topY+2,-(counterD+holeD)/4,holeW,4,sideDepth,topMat);
-  box(bx,topY+2,(counterD+holeD)/4,holeW,4,sideDepth,topMat);
-  cursor=right;
+ const enclosure=/mampara|ducha con/i.test(it.n||''),tray=ceramicMaterial(it.col||'#eeeae4');
+ const metal=M('#aeb5b8',.28,.82),dark=M('#68777d',.42,.3),rx=w/2,rz=d/2;
+ const trayH=Math.max(3,Math.min(6,enclosure?h*.025:h));
+ const drainRadius=Math.min(3.3,rx*.12,rz*.12);
+ bathShell(g,[[.1,.1,0],[rx-.5,rz-.5,0],[rx,rz,.6],[rx,rz,trayH-.65],[rx-.6,rz-.6,trayH],
+  [rx-2,rz-2,trayH],[rx-3.1,rz-3.1,trayH-.9],[drainRadius,drainRadius,trayH-1.55]],10,tray).name='Plato con pendiente';
+ bathDrain(g,0,trayH-1.55,0,drainRadius*.9,metal);
+ if(!enclosure)break;
+ const glass=new T.MeshPhysicalMaterial({color:'#d7e9ed',roughness:.08,transparent:true,opacity:.26,transmission:.14,depthWrite:false});
+ const left=-rx+2,right=rx-2,rear=-rz+2,front=rz-2,glassH=h-trayH-2,y=trayH+glassH/2;
+ const fixedW=w*.43,hingeX=left+fixedW,leafW=right-hingeX-1.55;
+ const panel=(W,H,D,x,y,z)=>{const m=B(g,W,H,D,x,y,z,glass);m.castShadow=false;return m};
+ panel(1,glassH,front-rear,left,y,(rear+front)/2).name='Vidrio lateral fijo';
+ panel(fixedW,glassH,1,left+fixedW/2,y,front).name='Vidrio frontal fijo';
+ for(const x of [left,hingeX,right])B(g,1.5,glassH,1.8,x,y,front,metal);
+ B(g,1.5,glassH,2,left,y,rear,metal);
+ B(g,1.5,1.4,front-rear,left,trayH+.7,(rear+front)/2,metal);
+ B(g,fixedW,1.4,2,left+fixedW/2,trayH+.7,front,metal);
+ B(g,1.5,1.2,front-rear,left,h-2.6,(rear+front)/2,metal);
+ const door=new T.Group();door.name='Puerta de la mampara';door.position.set(hingeX+.55,trayH,front);g.add(door);
+ const pane=B(door,leafW,glassH-1.1,1,leafW/2,(glassH+1.1)/2,0,glass);pane.castShadow=false;
+ B(door,leafW,1.2,1.8,leafW/2,1,0,metal);
+ for(const k of [.22,.8]){
+  B(door,3,5,2.6,1.05,glassH*k,.35,metal).name='Bisagra de mampara';
  }
- if(cursor<counterW/2)box((cursor+counterW/2)/2,topY+2,0,counterW/2-cursor,4,counterD,topMat);
- const drawerCount=name.includes('doble')?2:2,drawerGap=2,usableH=topY-th*2;
- for(let k=0;k<drawerCount;k++){
-  const dh=(usableH-drawerGap*(drawerCount-1))/drawerCount,yy=th+dh/2+k*(dh+drawerGap);
-  const drawer=new T.Group();drawer.name='Cajón lavabo '+(k+1);
-  const f=new T.Mesh(new T.BoxGeometry(bodyW-2*th-1.2,dh-1.5,2.2),front);f.position.set(0,yy,bodyD/2+1);drawer.add(f);
-  const sideMat=inside;
-  for(const sx of [-1,1]){const s=new T.Mesh(new T.BoxGeometry(th,dh-3,bodyD*.82),sideMat);s.position.set(sx*(bodyW/2-th-1.2),yy,bodyD*.08);drawer.add(s);}
-  const back=new T.Mesh(new T.BoxGeometry(bodyW-2*th-2,dh-3,th),sideMat);back.position.set(0,yy,-bodyD*.34);drawer.add(back);
-  const bottom=new T.Mesh(new T.BoxGeometry(bodyW-2*th-2,1.5,bodyD*.82),inside);bottom.position.set(0,yy-dh/2+1,bodyD*.08);drawer.add(bottom);
-  const handle=new T.Mesh(new T.CylinderGeometry(1.3,1.3,bodyW*.22,16),metal);handle.rotation.z=Math.PI/2;handle.position.set(0,yy,bodyD/2+3);drawer.add(handle);
-  drawer.position.y=0;g.add(drawer);mv(drawer,{it,k,t:'s',z:0,sl:Math.min(d*.34,bodyD*.38)});
-  // Guías telescópicas fijas al casco.
-  for(const sx of [-1,1]){const rail=new T.Mesh(new T.BoxGeometry(1.2,1.5,bodyD*.72),metal);rail.position.set(sx*(bodyW/2-th-1),yy,-bodyD*.08);g.add(rail);}
- }
- if(!suspended){for(const x of [-1,1])for(const z of [-1,1]){cyl(x*bodyW*.4,legsY+2,z*bodyD*.38,2,4,metal);}}
- // Lavabos integrados: cubeta cerámica cóncava, rebosadero y desagüe.
- for(const x of bowls){
-  const bw=basinW,bd=basinD,levels=[[.98,.98,topY+4.1],[.88,.86,topY+2],[.68,.65,topY-3],[.42,.4,topY-7],[.08,.08,topY-9]],verts=[],idx=[],seg=64;
-  levels.forEach(([ax,az,y])=>{for(let q=0;q<seg;q++){const a=q/seg*Math.PI*2;verts.push(x+Math.cos(a)*bw*ax,y,-d*.02+Math.sin(a)*bd*az)}});
-  for(let j=0;j<levels.length-1;j++)for(let q=0;q<seg;q++){const a=j*seg+q,b=j*seg+(q+1)%seg,cc=(j+1)*seg+q,dd=(j+1)*seg+(q+1)%seg;idx.push(a,b,cc,b,dd,cc)}
-  const bg=new T.BufferGeometry();bg.setAttribute('position',new T.Float32BufferAttribute(verts,3));bg.setIndex(idx);bg.computeVertexNormals();const bowl=new T.Mesh(bg,ceramic);bowl.material.side=T.DoubleSide;g.add(bowl);
-  const rimCurve=new T.EllipseCurve(x,-d*.02,bw,bd,0,Math.PI*2,false,0);const rimPts=rimCurve.getPoints(64).map(p=>new T.Vector3(p.x,topY+3,p.y));g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(rimPts,true),64,1.1,8,true),ceramic));
-  const drain=new T.Mesh(new T.CylinderGeometry(2.5,2.5,1,24),metal);drain.position.set(x,topY+1,-d*.02);g.add(drain);
-  const tapBase=new T.Mesh(new T.CylinderGeometry(3.1,3.1,1.6,24),metal);tapBase.position.set(x,topY+4.8,-d*.39);g.add(tapBase);const tap=cyl(x,topY+14,-d*.39,1.8,18,metal);tube([x,topY+22,-d*.39],[x,topY+22,-d*.2],1.8,metal);const aerator=new T.Mesh(new T.CylinderGeometry(1.8,1.8,2.2,20),dark);aerator.rotation.x=Math.PI/2;aerator.position.set(x,topY+22,-d*.2);g.add(aerator);
- }
+ bathPull(door,leafW-5,glassH*.49,.5,20,metal,true);
+ it.op=it.op||[];mv(door,{it,k:0,t:'d',sg:-1});
+ // A rear mounting panel physically supports the shower fittings.
+ B(g,w*.23,glassH,.9,w*.23,y,rear,tray).name='Panel técnico';
+ const railX=w*.23,wallZ=rear+2.5,headY=h*.88,headZ=wallZ+d*.2;
+ tube([railX,trayH+glassH*.23,wallZ],[railX,headY,wallZ],1.05,metal);
+ for(const yy of [trayH+glassH*.27,headY-4])B(g,3,3,3,railX,yy,rear+1.45,metal);
+ tube([railX,headY,wallZ],[railX,headY,headZ],1.2,metal);
+ tube([railX,headY,headZ],[railX,headY-2,headZ],1.2,metal);
+ cyl(railX,headY-2.6,headZ,Math.min(8,w*.09),1.6,metal);
+ B(g,10,3.5,4,railX,trayH+glassH*.4,rear+2.5,metal);
+ const hose=new T.CatmullRomCurve3([new T.Vector3(railX,trayH+glassH*.4,wallZ),new T.Vector3(railX+3,trayH+glassH*.18,wallZ+3),new T.Vector3(railX+6,trayH+glassH*.28,wallZ+3),new T.Vector3(railX+3,trayH+glassH*.64,wallZ+1)]);
+ g.add(new T.Mesh(new T.TubeGeometry(hose,32,.55,10,false),metal));
+ tube([railX+3,trayH+glassH*.64,wallZ+1],[railX+2,trayH+glassH*.7,wallZ+1],1.15,metal);
  break;
 }
+case'vanity':{buildBathVanity(g,it,mt);break;}
 case'basin':{
- const name=(it.n||'').toLowerCase(),ceramic=ceramicMaterial(it.col||'#f5f4f0'),inside=new T.MeshStandardMaterial({color:'#e3e7e4',roughness:.2,side:T.DoubleSide}),chrome=M('#aeb5b8',.23,.84),dark=M('#343a3d',.28,.3);
- const rect=/rect|cuadr|fineceramic/.test(name),rx=w*.5,rz=d*.5,topY=h*.92;
- // Construcción por anillos elípticos: boca, paredes inclinadas y fondo, nunca un cilindro o esfera maciza.
- const rings=rect?[[.48,.43,topY],[.46,.41,topY-1],[.38,.32,h*.45],[.27,.21,h*.18],[.12,.09,h*.13],[.01,.01,h*.13]]:[[.01,.01,h*.12],[.28,.25,h*.14],[.52,.48,h*.2],[.76,.72,h*.42],[.94,.91,h*.78],[1,1,topY],[.98,.98,topY+1]];
- const verts=[],idx=[],seg=rect?64:80;
- for(const [ax,az,y] of rings){for(let i=0;i<seg;i++){const a=i/seg*Math.PI*2,cs=Math.cos(a),sn=Math.sin(a),shape=rect?1/Math.pow(Math.pow(Math.abs(cs),8)+Math.pow(Math.abs(sn),8),1/8):1;verts.push(cs*rx*ax*shape,y,sn*rz*az*shape)}}
- for(let j=0;j<rings.length-1;j++)for(let i=0;i<seg;i++){const a=j*seg+i,b=j*seg+(i+1)%seg,d0=(j+1)*seg+i,e=(j+1)*seg+(i+1)%seg;idx.push(a,b,d0,b,e,d0)}
- const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setIndex(idx);geo.computeVertexNormals();const vessel=new T.Mesh(geo,ceramic);vessel.material.side=T.DoubleSide;g.add(vessel);
- const rimPts=[];for(let i=0;i<seg;i++){const a=i/seg*Math.PI*2,cs=Math.cos(a),sn=Math.sin(a),shape=rect?1/Math.pow(Math.pow(Math.abs(cs),8)+Math.pow(Math.abs(sn),8),1/8):1;rimPts.push(new T.Vector3(cs*rx*.99,topY,sn*rz*.99*shape))}
- const rimGeo=new T.TubeGeometry(new T.CatmullRomCurve3(rimPts,true),seg,Math.max(.7,Math.min(1.4,w*.018)),8,true);g.add(new T.Mesh(rimGeo,ceramic));
- const drain=new T.Mesh(new T.CylinderGeometry(2.7,2.7,1,32),chrome);drain.position.set(0,h*.15,d*.04);g.add(drain);
- const hole=new T.Mesh(new T.CircleGeometry(1.8,24),dark);hole.rotation.x=-Math.PI/2;hole.position.set(0,h*.16,d*.04);g.add(hole);
- const overflow=new T.Mesh(new T.TorusGeometry(2,.65,8,24),chrome);overflow.rotation.x=Math.PI/2;overflow.position.set(0,h*.52,-d*.31);g.add(overflow);
- const stem=new T.Mesh(new T.CylinderGeometry(1.8,2.1,h*.55,20),chrome);stem.position.set(0,h*1.02,-d*.38);g.add(stem);tube([0,h*1.28,-d*.38],[0,h*1.28,-d*.12],1.8,chrome);
+ const name=(it.n||'').toLowerCase(),ceramic=ceramicMaterial(it.col||'#f5f4f0'),metal=M('#aeb5b8',.24,.82);
+ const rect=/rect|cuadr|fineceramic/.test(name),rx=w/2,rz=d/2,y=h-Math.min(7,h*.34);
+ const drainRadius=Math.min(2.4,rx*.16,rz*.17),floor=y*.2;
+ bathShell(g,[[.1,.1,0],[rx*.52,rz*.57,0],[rx*.71,rz*.72,y*.16],[rx*.92,rz*.92,y*.64],
+  [rx,rz,y-.8],[rx*.99,rz*.99,y],[rx*.93,rz*.88,y],[rx*.89,rz*.84,y-.8],
+  [rx*.72,rz*.66,y*.52],[rx*.43,rz*.4,floor+.5],[drainRadius,drainRadius,floor]],
+  rect?7:2,ceramic).name='Cubeta de apoyo';
+ bathDrain(g,0,floor,0,drainRadius*.85,metal);
+ // Raised ceramic tap deck meets the rear rim rather than floating outside the bowl.
+ box(0,y-.15,-rz*.84,rx*.57,1.5,rz*.26,ceramic);
+ bathFaucet(g,0,y+.6,-rz*.85,rz*.47,h-y-1.1,metal);
  break;
 }
 case'bidet':{
@@ -2160,54 +2247,26 @@ case'bidet':{
  const drain=new T.Mesh(new T.CylinderGeometry(2.6,2.6,1,28),chrome);drain.position.set(0,h*.3,d*.08);g.add(drain);
  const drainHole=new T.Mesh(new T.CircleGeometry(1.8,24),dark);drainHole.rotation.x=-Math.PI/2;drainHole.position.set(0,h*.31,d*.08);g.add(drainHole);
  // Repisa posterior con orificio de grifería y dos fijaciones.
- const deck=new T.Mesh(new T.SphereGeometry(1,32,20),porcelain);deck.scale.set(rx*.58,h*.035,rz*.16);deck.position.set(0,h*.98,-rz*.68);g.add(deck);
- for(const x of [-1,1]){const cap=new T.Mesh(new T.CylinderGeometry(1.5,1.5,1,16),chrome);cap.position.set(x*w*.32,h*.99,-d*.39);g.add(cap)}
+ const deck=new T.Mesh(new T.SphereGeometry(1,32,20),porcelain);deck.scale.set(rx*.62,h*.05,rz*.25);deck.position.set(0,h*.93,-rz*.67);g.add(deck);
+ bathFaucet(g,0,h*.975,-rz*.71,rz*.38,9,chrome);
  break;
 }
-case'toilet':case'wc':{
- const porcelain=ceramicMaterial(it.col||'#f5f4f0'),seat=ceramicMaterial('#f8f7f4'),inner=new T.MeshStandardMaterial({color:'#dfe3e0',roughness:.22,side:T.DoubleSide}),rx=w*.5,rz=d*.5,seatY=h*.57,bowlZ=d*.09;
- // Inodoro compacto: taza de anchura completa, pedestal progresivo y proporción coherente con la cisterna.
- const profile=[
-  new T.Vector2(0,2),new T.Vector2(rx*.34,2),new T.Vector2(rx*.43,h*.07),
-  new T.Vector2(rx*.52,h*.18),new T.Vector2(rx*.68,h*.36),
-  new T.Vector2(rx*.86,seatY-2),new T.Vector2(rx*.92,seatY),
-  new T.Vector2(rx*.84,seatY),new T.Vector2(rx*.77,h*.47),
-  new T.Vector2(rx*.64,h*.29),new T.Vector2(rx*.42,h*.2),new T.Vector2(0,h*.2)
- ];
- const shell=new T.Mesh(new T.LatheGeometry(profile,112),porcelain);shell.scale.z=rz/rx;shell.position.z=bowlZ;g.add(shell);
- // Cubeta interior cóncava, con abertura amplia y fondo profundo.
- const bowlProfile=[
-  new T.Vector2(0,h*.22),new T.Vector2(rx*.20,h*.23),new T.Vector2(rx*.39,h*.29),
-  new T.Vector2(rx*.55,h*.36),new T.Vector2(rx*.70,seatY-2)
- ];
- const cavity=new T.Mesh(new T.LatheGeometry(bowlProfile,96),inner);cavity.scale.z=rz/rx;cavity.position.z=bowlZ;g.add(cavity);
- // Aro sanitario dimensionado sobre el contorno real de la taza.
- const seatShape=new T.Shape();seatShape.absellipse(0,0,rx*.92,rz*.86,0,Math.PI*2,false,0);
- const hole=new T.Path();hole.absellipse(0,0,rx*.62,rz*.58,0,Math.PI*2,true,0);seatShape.holes.push(hole);
- const ring=new T.Mesh(new T.ExtrudeGeometry(seatShape,{depth:1.8,bevelEnabled:true,bevelSegments:4,bevelSize:.65,bevelThickness:.5,curveSegments:96}),seat);
- ring.rotation.x=-Math.PI/2;ring.position.set(0,seatY,bowlZ);g.add(ring);
- // Tapa independiente con bisagra posterior y apertura animada mediante el sistema MV.
- const lidShape=new T.Shape();lidShape.absellipse(0,0,rx*.92,rz*.86,0,Math.PI*2,false,0);
- const lidPivot=new T.Group();lidPivot.name='Tapa abatible del inodoro';lidPivot.position.set(0,seatY+2,bowlZ-rz*.86);g.add(lidPivot);
- const lid=new T.Mesh(new T.ExtrudeGeometry(lidShape,{depth:1.7,bevelEnabled:true,bevelSegments:4,bevelSize:.6,bevelThickness:.45,curveSegments:96}),seat);
- lid.rotation.x=-Math.PI/2;lid.position.z=rz*.86;lidPivot.add(lid);
- it.op=it.op||[];mv(lidPivot,{it,k:0,t:'u'});
- // Repisa posterior continua: une físicamente taza y cisterna, sin huecos ni piezas suspendidas.
- const bridge=new T.Mesh(new T.BoxGeometry(w*.88,h*.075,d*.34,4,2,3),porcelain);bridge.position.set(0,seatY-3,-d*.27);g.add(bridge);
- const tank=new T.Mesh(new T.BoxGeometry(w*.80,h*.34,d*.27,6,4,4),porcelain);tank.position.set(0,h*.79,-d*.34);g.add(tank);
- const tankLid=new T.Mesh(new T.BoxGeometry(w*.83,2.4,d*.29,6,1,4),porcelain);tankLid.position.set(0,h*.965,-d*.34);g.add(tankLid);
- const flush=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.8,32),M('#aeb5b8',.3,.7));flush.position.set(0,h*.985,-d*.34);g.add(flush);
- for(const x of [-1,1]){const cap=new T.Mesh(new T.CylinderGeometry(1.5,1.5,1,20),porcelain);cap.position.set(x*w*.34,seatY+1,-d*.29);g.add(cap)}
- break;
-}
+case'toilet':case'wc':{toiletGeometry(g,it,mt);break;}
 case'rail':{
  const steel=M('#aeb5b8',.28,.82),darkSteel=M('#727d83',.42,.7),nm=(it.n||'').toLowerCase();
- if(/toallero|radiador/.test(nm)){
+ if(/radiador/.test(nm)){
   for(const x of [-1,1]){tube([x*w*.38,3,0],[x*w*.38,h-3,0],2.5,steel);for(const y of [h*.12,h*.88]){const mount=new T.Mesh(new T.CylinderGeometry(3,3,4,16),darkSteel);mount.position.set(x*w*.38,y,-d*.22);mount.rotation.x=Math.PI/2;g.add(mount)}}
   const count=Math.max(5,Math.min(9,Math.round(h/15)));
   for(let k=0;k<count;k++){const y=h*(.16+k*.68/(count-1));tube([-w*.38,y,0],[w*.38,y,0],2.1,steel);for(const x of [-1,1]){const collar=new T.Mesh(new T.SphereGeometry(2.8,12,8),darkSteel);collar.position.set(x*w*.38,y,0);g.add(collar)}}
   for(const x of [-1,1]){cyl(x*w*.38,7,0,3,7,steel);cyl(x*w*.38,12,d*.12,2,8,darkSteel)}
- }else{for(let x of [-1,1])tube([x*w*.4,0,0],[x*w*.4,h,0],2,metal);for(let k=0;k<5;k++)tube([-w*.4,h*(.2+k*.14),0],[w*.4,h*(.2+k*.14),0],1.5,metal)}
+ }else{
+  const x=w*.41,front=d*.28;
+  for(const y of [h*.19,h*.5,h*.81]){
+   tube([-x,y,front],[x,y,front],1.05,steel);
+   for(const sign of [-1,1])tube([sign*x,y,front],[sign*x,y,-d*.25],.95,steel);
+  }
+  for(const sign of [-1,1])B(g,2.7,h*.74,1.6,sign*x,h/2,-d*.25,darkSteel);
+ }
  break;
 }
 case'washer':{
@@ -2916,7 +2975,7 @@ window.addEventListener('resize',()=>{if(pvOpen)resizePreviewRenderer()});
 $('#pvx').onclick=()=>{if(pendingModel){const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;libUI();refresh()}pvOpen=false;$('#pv').style.display='none'};
 /* ===== Configurador modular de cocina ===== */
 function mv(o,p){const m=Object.assign({o,v:p.it.op[p.k]?1:0,x0:o.position.x,y0:o.position.y,z0:o.position.z},p);o.userData.mv=m;MV.push(m);return m}
-function stepMV(m){const t=m.it.op[m.k]?1:0;m.v+=(t-m.v)*.14;const a=(m.it.ang||100)*D,o=m.o,v=m.v;switch(m.t){case'd':o.rotation.y=m.sg*a*v;break;case's':o.position.z=m.z+v*m.sl;break;case'u':o.rotation.x=-a*v;break;case'h':o.rotation.x=a*v;break;case'e':o.position.y=m.y0+v*m.dy;break;case'f':o.rotation.y=m.sg*a*.55*v;m.c.rotation.y=-m.sg*a*1.1*v;break;case'x':o.position.x=m.x0+v*(m.dx||0);o.position.z=m.z0+v*(m.dz||0);o.rotation.y=v*(m.ry||0)}}
+function stepMV(m){const t=m.it.op[m.k]?1:0;m.v+=(t-m.v)*.14;const a=(m.it.ang||100)*D,o=m.o,v=m.v;switch(m.t){case'd':o.rotation.y=m.sg*a*v;break;case's':o.position.z=m.z+v*m.sl;break;case'u':o.rotation.x=-(m.angle?m.angle*D:a)*v;break;case'h':o.rotation.x=a*v;break;case'e':o.position.y=m.y0+v*m.dy;break;case'f':o.rotation.y=m.sg*a*.55*v;m.c.rotation.y=-m.sg*a*1.1*v;break;case'x':o.position.x=m.x0+v*(m.dx||0);o.position.z=m.z0+v*(m.dz||0);o.rotation.y=v*(m.ry||0)}}
 const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardMaterial({color:'#bfe3f5',transparent:true,opacity:.3,roughness:.05}),LEDM=new T.MeshStandardMaterial({color:'#fff',emissive:'#fff',emissiveIntensity:1});
 const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.35,.1],'cristal negro':['#0b0e12',.05,.35],'negro mate':['#1a1a1c',.75,.1],'negro brillante':['#0c0c0e',.08,.2],'acero antihuellas':['#b9bcc1',.45,.85],'blanco mate':['#eeeeec',.8,.05],'blanco brillante':['#fafafa',.1,.05],gris:['#8d9096',.45,.3],grafito:['#3b3e44',.4,.5],'cristal blanco':['#f1f3f5',.05,.2],'cristal oscuro':['#10131a',.05,.4],'gris metal':['#999999',.3,.9],aluminio:['#d0d3d8',.4,.95],dorado:['#c9a24a',.3,1],cobre:['#b87333',.35,1],bronce:['#6b5a3e',.35,1]},finM=f=>{const a=AFIN[f]||AFIN.acero;return M(a[0],a[1],a[2])};
 const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lavavajillas:81,frigo:120,combi:150,vinoteca:80,puerta:15,cajon:12,hueco:0},APD={cafetera:45,horno:55,micro:38,lavadora:55,secadora:55,lavavajillas:56,frigo:55,combi:55,vinoteca:55};
