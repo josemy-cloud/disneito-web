@@ -3608,6 +3608,14 @@
       "commit": "b261ccfba6e4d4e51cf3b1b42014d56660fc3c08",
       "verified": false,
       "notes": "Parseo JavaScript correcto y prueba aislada de clasificación de seis etiquetas del sofá. No se ha ejecutado WebGL ni validación visual en navegador; la revisión estética, dimensiones y persistencia real siguen pendientes."
+    },
+    {
+      "date": "2026-11-07",
+      "phase": "salon-comedor-reconstruccion-sofas-chaise-butacas-y-frentes",
+      "action": "Revisión estructural de los 33 registros del grupo Salón y comedor y reconstrucción transversal de las familias de sofá, asiento, mesa/silla, aparador, espejo y mobiliario asociado. Se rehace la huella del chaise longue y el rinconero como composiciones en L con zonas de cojín separadas; se corrigen apoyos y alturas para que los cojines descansen sobre el bastidor; se diferencian el puf redondo y el sillón orejero; se corrige la superposición vertical entre cajones y puertas de aparador; el espejo redondo recibe geometría circular real y se etiquetan componentes de silla.",
+      "commit": "38cad98848c9ea9ca3eaa90e57b50e6c403a7b24",
+      "verified": false,
+      "notes": "Cambios estáticos integrados en el generador compartido. El grupo de inventario contiene 33 fichas y sus variantes se sirven mediante generadores comunes. No se declara que los 33 estén visualmente perfectos: aún falta render real por variante, detección de colisiones con bounding boxes en Three.js, comprobación de proporciones, materiales, colocación, guardado y animaciones en navegador."
     }
   ],
   "validation": {
@@ -3650,7 +3658,11 @@
     "sofa_component_tags": "static_pass: semantic tags present for seat, back, arms, frame, feet and piping; isolated classifier test resolves all six roles.",
     "sofa_geometry": "static_pass: outdoor sofa no longer uses SphereGeometry for cushions; rounded extruded cushion panels are defined.",
     "sofa_browser_visual_validation": "not_performed",
-    "sofa_color_application_browser": "not_performed"
+    "sofa_color_application_browser": "not_performed",
+    "salon_group_static_update": "passed: sofa, chaise, corner, modular, armchair, wingback and round pouf branches reconstructed; sideboard door/drawer vertical zones separated; round mirror geometry differentiated; dining chair component tags added; main classic inline script parsed successfully.",
+    "salon_browser_visual_validation": "not_performed: all 33 Salon y comedor inventory entries still require live browser/WebGL inspection by variant.",
+    "salon_collision_validation": "not_performed: no runtime bounding-box/intersection test or visual inspection has been run; static layout zones were separated in sofa/chaise/corner generators.",
+    "salon_interaction_validation": "not_performed: moving/opening mechanisms, project persistence and color overrides still require browser testing."
   },
   "current_execution": {
     "date": "2026-11-06",
@@ -3691,6 +3703,18 @@
       "improved_models": 0,
       "verified_models": 0,
       "note": "Sofá interior/exterior: mallas principales etiquetadas para color por componente y cojines exteriores cambiados de esferas a paneles acolchados de contorno redondeado. Pendiente inspección real en navegador/WebGL y comprobación de persistencia; no se marca como visualmente verificado."
+    },
+    "last_salon_review": {
+      "date": "2026-11-07",
+      "inventory_records": 33,
+      "static_code_commit": "38cad98848c9ea9ca3eaa90e57b50e6c403a7b24",
+      "verification": {
+        "inline_classic_scripts": "passed",
+        "browser_visual": "not_run",
+        "runtime_collisions": "not_run",
+        "interactions": "not_run"
+      },
+      "completion_note": "Rediseño estructural de las familias indicadas integrado en código; los modelos siguen sin aprobación visual ni funcional hasta comprobarlos en navegador."
     }
   }
 }
