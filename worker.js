@@ -28,6 +28,7 @@ async function getSupabaseUser(token) {
     signal: AbortSignal.timeout(6000),
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
   });
+  if (r.status >= 500 || r.status === 429) throw new Error("Supabase Auth no está disponible.");
   if (!r.ok) return null;
   const user = await r.json().catch(() => null);
   return user && user.id ? user : null;
@@ -85,10 +86,14 @@ export default {
     }
 
     if (url.pathname === "/api/sesion") {
+      const token = bearer(request);
+      if (request.method === "GET") {
+        // Confirm that the browser retained this session before navigating to the editor.
+        return new Response(null, { status: token && token === sessionCookie(request) ? 204 : 401, headers: NO_STORE });
+      }
       if (request.headers.get("Origin") !== url.origin) {
         return Response.json({ error: "Origen no autorizado." }, { status: 403, headers: NO_STORE });
       }
-      const token = bearer(request);
       if (request.method === "DELETE") {
         const activeToken = token || sessionCookie(request);
         if (activeToken) {
@@ -99,9 +104,15 @@ export default {
         return sessionResponse("", true);
       }
       if (request.method !== "POST") return new Response(null, { status: 405 });
-      if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token) ||
-          !await getSupabaseUser(token).catch(() => null)) {
-        return Response.json({ error: "Inicia sesión para continuar." }, { status: 401, headers: NO_STORE });
+      if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) {
+        return Response.json({ error: "La sesión de la cuenta no es válida." }, { status: 401, headers: NO_STORE });
+      }
+      try {
+        if (!await getSupabaseUser(token)) {
+          return Response.json({ error: "Supabase rechazó la sesión. Vuelve a iniciar sesión." }, { status: 401, headers: NO_STORE });
+        }
+      } catch {
+        return Response.json({ error: "Cloudflare no pudo verificar la sesión con Supabase. Inténtalo en unos segundos." }, { status: 503, headers: NO_STORE });
       }
       return sessionResponse(token);
     }

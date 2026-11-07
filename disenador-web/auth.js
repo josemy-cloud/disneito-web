@@ -12,7 +12,12 @@ async function enterEditor(signal=AbortSignal.timeout(8000)){
     method:'POST',signal,headers:{Authorization:'Bearer '+token}
   });
   signal.throwIfAborted();
-  if(!response.ok)throw new Error('No se pudo validar la sesión. Vuelve a iniciar sesión.');
+  if(!response.ok){
+    const data=await response.json().catch(()=>({}));
+    throw new Error(data.error||'Cloudflare no pudo abrir la sesión (HTTP '+response.status+').');
+  }
+  const cookieCheck=await fetch('/api/sesion',{signal,cache:'no-store',headers:{Authorization:'Bearer '+token}});
+  if(cookieCheck.status!==204)throw new Error('El navegador no guardó la cookie de Disenito. Permite las cookies de este sitio e inténtalo de nuevo.');
   const target=new URL('/',location.origin);
   target.search=location.search;
   target.searchParams.set('_acceso','1');
@@ -30,7 +35,7 @@ async function accountPanel({entry=false}={}){
  let box=document.getElementById('accountBox');if(box){box.remove();return}
  box=document.createElement('div');box.id='accountBox';box.style.cssText='position:fixed;inset:60px 20px 20px;z-index:80;background:#1a1d24;border:1px solid #556;border-radius:12px;padding:18px;overflow:auto;color:#eee;font:14px Arial;box-shadow:0 16px 50px #0009';
  document.body.append(box);
- const btn=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.style.cssText='margin:5px 5px 5px 0;padding:8px 12px';b.onclick=async()=>{try{await fn()}catch(e){alert(e.message||e)}};return b};
+ const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='margin:5px 5px 5px 0;padding:8px 12px';b.onclick=async()=>{try{await fn()}catch(e){alert(e.message||e)}};return b};
  const field=(label,type='text',value='',autocomplete='')=>{const wrap=document.createElement('label');wrap.style.cssText='display:block;margin:10px 0;color:#bbc4d2';wrap.textContent=label;const i=document.createElement('input');i.type=type;if(autocomplete)i.autocomplete=autocomplete;i.value=value;i.style.cssText='display:block;box-sizing:border-box;width:min(100%,420px);padding:10px;margin-top:5px;background:#252c38;color:#fff;border:1px solid #566;border-radius:6px';wrap.append(i);return {wrap,input:i}};
  const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent=entry?'Accede a Disenito':'Mi cuenta';title.style.margin='0';head.append(title);if(!entry)head.append(btn('✕ Cerrar',()=>box.remove()));box.append(head);
  const content=document.createElement('div');content.style.cssText='max-width:720px;margin:18px auto';box.append(content);
@@ -58,9 +63,44 @@ async function accountPanel({entry=false}={}){
  };
  const drawLogin=()=>{
   content.innerHTML='<p style="color:#b9c4d4">Inicia sesión o crea una cuenta para acceder al editor de Disenito y a tus proyectos.</p>';
-  const em=field('Correo electrónico','email','','username'),pw=field('Contraseña','password','','current-password');content.append(em.wrap,pw.wrap);
-  const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);content.append(rememberWrap);
-  content.append(btn('Iniciar sesión',async()=>{if(!em.input.value||!pw.input.value)throw new Error('Introduce el correo y la contraseña.');const j=await sbAuth('token?grant_type=password',{email:em.input.value,password:pw.input.value});REMEMBER_SESSION=remember.checked;sesSave(sesFrom(j));if(entry)await enterEditor();else await drawProfile()}));
+  const em=field('Correo electrónico','email','','username'),pw=field('Contraseña','password','','current-password');
+  const form=document.createElement('form');
+  form.noValidate=true;
+  em.input.name='email';pw.input.name='password';
+  form.append(em.wrap,pw.wrap);
+  content.append(form);
+  const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);form.append(rememberWrap);
+  const submit=btn('Iniciar sesión',()=>{});
+  submit.onclick=null;submit.type='submit';
+  const status=document.createElement('p');
+  status.setAttribute('role','status');
+  form.append(submit,status);
+  form.onsubmit=async event=>{
+   event.preventDefault();
+   if(submit.disabled)return;
+   const email=em.input.value.trim();
+   const password=pw.input.value;
+   if(!email||!password){status.textContent='Introduce el correo y la contraseña.';return}
+   if(!em.input.validity.valid){status.textContent='Introduce el correo electrónico de tu cuenta.';return}
+   submit.disabled=true;
+   let credentialsAccepted=false;
+   status.textContent='Comprobando tu correo y contraseña…';
+   try{
+    const j=await sbAuth('token?grant_type=password',{email,password});
+    if(!j.access_token||!j.refresh_token)throw new Error('El servicio no devolvió una sesión válida.');
+    credentialsAccepted=true;
+    REMEMBER_SESSION=remember.checked;sesSave(sesFrom(j));
+    status.textContent='Cuenta verificada. Abriendo el editor…';
+    if(entry)await enterEditor();else await drawProfile();
+   }catch(error){
+    const message=error.name==='TimeoutError'||error.name==='TypeError'
+      ? 'No hubo respuesta del servicio. Inténtalo de nuevo.'
+      : error.message==='Invalid login credentials'
+        ? 'El correo o la contraseña no coinciden.'
+        : error.message;
+    status.textContent=(credentialsAccepted?'Cuenta verificada. ':'')+message;
+   }finally{submit.disabled=false}
+  };
   content.append(btn('¿Has olvidado tu contraseña?',async()=>{
    await sbRecover(em.input.value);
    content.innerHTML='<p style="color:#b9c4d4;line-height:1.6">Si existe una cuenta asociada a ese correo, recibirás un mensaje con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.</p>';
