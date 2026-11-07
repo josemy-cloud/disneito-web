@@ -1462,7 +1462,7 @@ case'sideboard':{
  for(const x of [-1,1])B(g,th,h*.92,dep,x*(w/2-th/2),h*.48,0,body);
  B(g,w-2*th,th,dep,0,th/2,0,inside);B(g,w-2*th,th,dep,0,h-th/2,0,body);B(g,w-2*th,h*.9,th,0,h*.48,-dep/2+th/2,inside);
  B(g,w,3,d,0,h-1.5,0,body);
- for(let k=0;k<2;k++){const door=new T.Group(),sg=k?1:-1;door.position.set(sg*(w/2-th),0,frontZ);g.add(door);B(door,w*.48,h*.62,2,-sg*w*.24,h*.64,0,body);const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(18,h*.12),16),metal);pull.rotation.x=Math.PI/2;pull.position.set(-sg*w*.08,h*.64,2.8);door.add(pull);mv(door,{it,k,t:'d',sg:sg===1?-1:1})}
+ for(let k=0;k<2;k++){const door=new T.Group(),sg=k?1:-1;door.position.set(sg*(w/2-th),0,frontZ);g.add(door);B(door,w*.48,h*.5,2,-sg*w*.24,h*.72,0,body);const pull=new T.Mesh(new T.CylinderGeometry(1.1,1.1,Math.min(18,h*.12),16),metal);pull.rotation.x=Math.PI/2;pull.position.set(-sg*w*.08,h*.72,2.8);door.add(pull);mv(door,{it,k,t:'d',sg:sg===1?-1:1})}
  for(let k=0;k<2;k++){const yy=h*.18+k*h*.16,dr=new T.Group();dr.position.set(0,yy,frontZ);g.add(dr);B(dr,w*.94,h*.14,2,0,0,0,body);B(dr,w*.9,1.4,dep*.72,0,-h*.08,-dep*.36,inside);mv(dr,{it,k:2+k,t:'s',z:frontZ,sl:Math.min(20,dep*.35)})}
  for(const x of [-1,1])for(const z of [-1,1])B(g,5,5,5,x*w*.42,2,z*dep*.4,metal);
  break;
@@ -1693,13 +1693,22 @@ case'cabinet':{
  const door=new T.Group();door.position.set(-w/2+th/2,0,frontZ+1);g.add(door);const panel=new T.Mesh(new T.BoxGeometry(innerW,Math.max(12,h-zone-th-2),2),mt);panel.position.set(innerW/2,(h+zone)/2,0);door.add(panel);mv(door,{it,k:count,t:'d',sg:-1});break;
 }
 case'mirror':{
- const frame=M('#a9a39a',.48,.42),back=M('#252b2e',.6,.2),led=M('#fff0cb',.22,.08);
- box(0,h/2,0,w,h,3,back);
- const shape=new T.Shape(),r=Math.min(w,h)*.07;shape.moveTo(-w/2+r,0);shape.lineTo(w/2-r,0);shape.quadraticCurveTo(w/2,0,w/2,r);shape.lineTo(w/2,h-r);shape.quadraticCurveTo(w/2,h,w/2-r,h);shape.lineTo(-w/2+r,h);shape.quadraticCurveTo(-w/2,h,-w/2,h-r);shape.lineTo(-w/2,r);shape.quadraticCurveTo(-w/2,0,-w/2+r,0);
- const geo=new T.ExtrudeGeometry(shape,{depth:1.8,bevelEnabled:true,bevelSegments:3,bevelSize:.7,bevelThickness:.5,curveSegments:12});const rim=new T.Mesh(geo,frame);rim.position.z=2;g.add(rim);
- box(0,h/2,3,w*.91,h*.94,.8,glass);
- for(const x of [-1,1])box(x*w*.475,h/2,3.8,1.2,h*.84,1.2,led);
- box(0,h*.965,3.8,w*.84,1.2,1.2,led);box(0,h*.035,3.8,w*.84,1.2,1.2,led);
+ const name=(it.n||'').toLowerCase(),frame=M('#a9a39a',.48,.42),back=M('#252b2e',.6,.2),led=M('#fff0cb',.22,.08);
+ if(/redond/.test(name)){
+  const radius=Math.min(w,h)*.46,outer=new T.Mesh(new T.CylinderGeometry(radius,radius,3,96),back);
+  outer.rotation.x=Math.PI/2;outer.position.z=0;g.add(outer);
+  const rim=new T.Mesh(new T.TorusGeometry(radius*.985,Math.max(1.5,Math.min(w,h)*.018),12,96),frame);rim.position.z=2;g.add(rim);
+  const reflective=new T.Mesh(new T.CylinderGeometry(radius*.91,radius*.91,.8,96),glass);reflective.rotation.x=Math.PI/2;reflective.position.z=2.05;g.add(reflective);
+  const hanger=new T.Mesh(new T.BoxGeometry(radius*.42,2,3),back);hanger.position.set(0,h*.38,-1.8);g.add(hanger);
+ }else{
+  const horizontal=/horizontal/.test(name),rw=horizontal?Math.max(w,h):w,rh=horizontal?Math.min(w,h):h;
+  box(0,rh/2,0,rw,rh,3,back);
+  const shape=new T.Shape(),r=Math.min(rw,rh)*.07;
+  shape.moveTo(-rw/2+r,0);shape.lineTo(rw/2-r,0);shape.quadraticCurveTo(rw/2,0,rw/2,r);shape.lineTo(rw/2,rh-r);shape.quadraticCurveTo(rw/2,rh,rw/2-r,rh);shape.lineTo(-rw/2+r,rh);shape.quadraticCurveTo(-rw/2,rh,-rw/2,rh-r);shape.lineTo(-rw/2,r);shape.quadraticCurveTo(-rw/2,0,-rw/2+r,0);
+  const geo=new T.ExtrudeGeometry(shape,{depth:1.8,bevelEnabled:true,bevelSegments:3,bevelSize:.7,bevelThickness:.5,curveSegments:12}),rim=new T.Mesh(geo,frame);rim.position.z=2;g.add(rim);
+  box(0,rh/2,3,rw*.91,rh*.94,.8,glass);
+  if(/iluminado/.test(name)){for(const x of [-1,1])box(x*rw*.475,rh/2,3.8,1.2,rh*.84,1.2,led);box(0,rh*.965,3.8,rw*.84,1.2,1.2,led);box(0,rh*.035,3.8,rw*.84,1.2,1.2,led)}
+ }
  break;
 }
 case'lamp':{
