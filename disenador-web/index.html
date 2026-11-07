@@ -1172,7 +1172,7 @@ case'sofa':{
  const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),piping=M('#d5c8b8',.78,.03),frame=M('#383b3c',.48,.32),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
- const baseY=h*.105,seatY=h*.285,seatH=h*.135,backY=h*.665,backH=h*.31,seatFront=d*.34;
+ const baseY=h*.105,seatY=h*.285,seatH=h*.135,backY=h*.64,backH=h*.44,seatFront=d*.34;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   const r=Math.min(rad,sx*.18,sz*.18),sh=new T.Shape();
   sh.moveTo(-sx/2+r,-sz/2);sh.lineTo(sx/2-r,-sz/2);sh.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);
@@ -1204,6 +1204,7 @@ case'sofa':{
  }
  const seats=Math.max(2,Math.min(4,Math.round(w/72)));
  const addSeat=(x,z,sx,sz)=>{
+  tag(B(g,sx*.99,h*.05,sz*.99,x,seatY-h*.025,z,frame),'frame');
   tag(pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(6,sx*.12)),'seat');
   for(const side of [-1,1])tag(tube([x+side*sx*.34,seatY+seatH*.8,z+sz*.34],[x+side*sx*.34,seatY+seatH*.8,z-sz*.34],.38,stitch),'piping');
  };
@@ -1213,26 +1214,26 @@ case'sofa':{
  if(chaise){
   // El módulo largo sustituye al asiento izquierdo: no se superponen dos cojines en la misma huella.
   addSeat(-w*.235,d*.105,w*.305,d*.755);
-  const runX=[w*.075,w*.285],runW=w*.19;
+  const runX=[w*.07,w*.265],runW=w*.18;
   runX.forEach(x=>{addSeat(x,-d*.015,runW,d*.49);addBack(x,runW*.96)});
   addBack(-w*.235,w*.30);
  }else if(corner){
   // Tramo principal de dos plazas y retorno profundo a la derecha, formando una L reconocible.
-  const mainX=[-w*.255,w*.045],mainW=w*.275;
+  const mainX=[-w*.22,w*.08],mainW=w*.24;
   mainX.forEach(x=>{addSeat(x,-d*.105,mainW,d*.49);addBack(x,mainW*.96)});
   addSeat(w*.335,d*.105,w*.245,d*.47);
   const sideBack=verticalPad(g,w*.455,backY,d*.105,d*.43,backH,w*.105,upholstery,5);sideBack.rotation.y=Math.PI/2;tag(sideBack,'back');
  }else{
-  const count=modular?4:seats,usableW=w*.78,gap=w*.012,cw=(usableW-gap*(count-1))/count;
+  const count=modular?4:seats,usableW=w*.70,gap=w*.012,cw=(usableW-gap*(count-1))/count;
   for(let k=0;k<count;k++){const x=-usableW/2+cw/2+k*(cw+gap);addSeat(x,-d*.015,cw,d*.53);addBack(x,cw*.96)}
  }
  // Bastidor posterior y travesaños: quedan debajo de los cojines y no atraviesan el tapizado.
  tag(B(g,w*.84,h*.075,d*.075,0,h*.205,-d*.325,frame),'frame');
  for(const side of [-1,1]){
   const ax=side*w*.43;
-  tag(B(g,w*.13,h*.34,d*.72,ax,h*.365,-d*.015,frame),'frame');
-  tag(verticalPad(g,ax,h*.425,-d*.015,w*.105,h*.275,d*.64,upholstery,4),'arms');
-  tag(pad(g,ax,h*.555,-d*.015,w*.105,h*.045,d*.62,upholstery,3),'arms');
+  tag(B(g,w*.13,h*.27,d*.72,ax,h*.53,-d*.015,frame),'frame');
+  tag(verticalPad(g,ax,h*.55,-d*.015,w*.105,h*.24,d*.64,upholstery,4),'arms');
+  tag(pad(g,ax,h*.68,-d*.015,w*.105,h*.04,d*.62,upholstery,3),'arms');
   for(const z of [-1,1]){
    const leg=new T.Mesh(new T.CylinderGeometry(2.2,2.8,h*.085,20),feet);
    leg.position.set(side*w*.39,h*.0425,z*d*.29);tag(leg,'feet');g.add(leg);
