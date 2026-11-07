@@ -578,7 +578,9 @@ const BATH_COLOR_PARTS={
 const isBathroomItem=it=>it.roomType==='baño'||it.c==='Baño'||it.t==='lavabo'||it.t==='inodoro';
 const modelPartDefaults=new WeakMap();
 const isBedroomItem=it=>it.roomType==='dormitorio'||it.c==='Dormitorio'||it.t==='cama';
-const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it);
+const isVestidorItem=it=>it.roomType==='vestidor'||it.c==='Vestidor';
+const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it);
+const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
 const BEDROOM_COLOR_PARTS={
  dresser:[...ITEM_COLOR_PARTS.dresser,['drawerInterior','Interior de cajones'],['hardware','Guías y soportes']],
  wardrobe:[...ITEM_COLOR_PARTS.wardrobe,['drawerInterior','Interior de cajones']],
@@ -586,7 +588,7 @@ const BEDROOM_COLOR_PARTS={
 };
 function itemColorParts(it){
  const shape=it.shape||(it.t==='cama'?'bed':it.t==='armario'&&isBedroomItem(it)?'wardrobe':it.t);
- return (isBedroomItem(it)&&BEDROOM_COLOR_PARTS[shape])||
+ return ((isBedroomItem(it)||isVestidorItem(it))&&BEDROOM_COLOR_PARTS[shape])||
   (isBathroomItem(it)&&BATH_COLOR_PARTS[it.t==='lavabo'?'vanity':shape])||
   ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
 }
@@ -625,10 +627,16 @@ function props(){P.innerHTML='';const e=get();
   if(e.ty==='d'||kind!=='fija')btn('Abrir/cerrar',()=>{e.op=e.op||[];e.op[0]=!e.op[0]});
   btn('Eliminar',()=>{S.o=S.o.filter(o=>o!==e);sel=null});
  }
- else{P.innerHTML='<h4>'+htmlText(e.n)+'</h4>';if(e.relWarning)P.insertAdjacentHTML('beforeend','<div style="color:#ffb74d;font-size:12px">'+htmlText(e.relWarning)+'</div>');P.insertAdjacentHTML('beforeend','<h4>Relación con otro objeto</h4>');const relOptions=['Independiente',...S.i.filter(x=>x.id!=e.id&&supportableParent(x)).map(x=>'#'+x.id+' · '+x.n)],relParent=e.rel&&S.i.find(x=>x.id==e.rel.parentId);sel2('Apoyar sobre',relOptions,relParent?'#'+relParent.id+' · '+relParent.n:'Independiente',v=>{if(v=='Independiente'){detachChild(e);e.e=0}else{const id=+(v.match(/^#(\d+)/)||[])[1],p=S.i.find(x=>x.id==id);if(p)attachToSurface(e,p)}});row('Anchura (cm)',e.w,v=>safeItemGeometryEdit(e,()=>e.w=Math.max(5,v)));row('Altura (cm)',e.h,v=>safeItemGeometryEdit(e,()=>e.h=Math.max(2,v)));row('Profundidad (cm)',e.d,v=>safeItemGeometryEdit(e,()=>e.d=Math.max(5,v)));row('Posición X',R(e.x),v=>safeItemGeometryEdit(e,()=>e.x=v));row('Posición Y (plano)',R(e.y),v=>safeItemGeometryEdit(e,()=>e.y=v));row('Elevación Z (cm)',e.e,v=>safeItemGeometryEdit(e,()=>e.e=v));row('Rotación (°)',e.r,v=>safeItemGeometryEdit(e,()=>e.r=v));row('Escala %',100,v=>safeItemGeometryEdit(e,()=>{if(!(v>0))return;e.w*=v/100;e.h*=v/100;e.d*=v/100}));partColorUI(e);if(e.cfg)cfgUI(e);
-  if(MV_HAS(e)){row('Ángulo máx. apertura',e.ang,v=>e.ang=v);btn('Invertir sentido',()=>e.fl=!e.fl);btn('Abrir/cerrar puertas y cajones',()=>toggleItemMotion(e))}
+ else{P.innerHTML='<h4>'+htmlText(e.n)+'</h4>';if(e.relWarning)P.insertAdjacentHTML('beforeend','<div style="color:#ffb74d;font-size:12px">'+htmlText(e.relWarning)+'</div>');P.insertAdjacentHTML('beforeend','<h4>Relación con otro objeto</h4>');const relOptions=['Independiente',...S.i.filter(x=>x.id!=e.id&&supportableParent(x)).map(x=>'#'+x.id+' · '+x.n)],relParent=e.rel&&S.i.find(x=>x.id==e.rel.parentId);sel2('Apoyar sobre',relOptions,relParent?'#'+relParent.id+' · '+relParent.n:'Independiente',v=>{if(v=='Independiente'){detachChild(e);e.e=0}else{const id=+(v.match(/^#(\d+)/)||[])[1],p=S.i.find(x=>x.id==id);if(p)attachToSurface(e,p)}});row('Anchura (cm)',e.w,v=>safeItemGeometryEdit(e,()=>e.w=Math.max(5,v)));row('Altura (cm)',e.h,v=>safeItemGeometryEdit(e,()=>e.h=Math.max(2,v)));row('Profundidad (cm)',e.d,v=>safeItemGeometryEdit(e,()=>e.d=Math.max(5,v)));row('Posición X',R(e.x),v=>safeItemGeometryEdit(e,()=>e.x=v));row('Posición Y (plano)',R(e.y),v=>safeItemGeometryEdit(e,()=>e.y=v));row('Elevación Z (cm)',e.e,v=>safeItemGeometryEdit(e,()=>e.e=v));row('Rotación (°)',e.r,v=>safeItemGeometryEdit(e,()=>e.r=v));row('Escala %',100,v=>safeItemGeometryEdit(e,()=>{if(!(v>0))return;e.w*=v/100;e.h*=v/100;e.d*=v/100}));
+  const motions=MV.filter(m=>m.it===e||(e.op&&m.it.op===e.op));
+  if(motions.length){
+   if(motions.some(m=>!m.angle&&['d','u','h','f'].includes(m.t)))row('Ángulo máx. apertura',e.ang||100,v=>e.ang=v);
+   if(motions.some(m=>m.t==='d')&&['mod','frigo','lavadora','base','alto','col'].includes(e.t))btn('Invertir sentido',()=>e.fl=!e.fl);
+   appendMotionButton(P,e,motions,()=>{commitQ();psaveSoon()},true);
+  }
+  if(isLamp(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
+  partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{clip=JSON.stringify(e)});if(clip)btn('Pegar',()=>{const c=JSON.parse(clip);c.id=nid();c.x+=30;c.y+=30;S.i.push(c);sel={k:'i',id:c.id}});btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
-const MV_HAS=e=>!['sofa','mesa','cama','inodoro','planta','alfombra','lampara','model'].includes(e.t);
 /* ===== 2D ===== */
 const c2=$('#c2'),x2=c2.getContext('2d'),W2=(px,py)=>[(px-ox)/k,(py-oy)/k];
 function drawOpening2D(w,o){
@@ -1245,7 +1253,8 @@ lavabo(g,it,mt){buildBathVanity(g,it,mt)},
 inodoro(g,it,mt){toiletGeometry(g,it,mt)},
 planta(g,it,mt){const{w,h,d}=it,pot=M('#98745d',.78),soil=M('#42382f',1),stem=M('#557044',.95);const p=new T.Mesh(new T.CylinderGeometry(w*.27,w*.2,h*.19,32),pot);p.position.y=h*.095;g.add(p);const rim=new T.Mesh(new T.TorusGeometry(w*.255,Math.max(.8,w*.018),8,32),pot);rim.rotation.x=Math.PI/2;rim.position.y=h*.18;g.add(rim);const earth=new T.Mesh(new T.CircleGeometry(w*.23,32),soil);earth.rotation.x=-Math.PI/2;earth.position.y=h*.18;g.add(earth);for(let k=0;k<11;k++){const a=k*2.399,hh=h*(.35+(k%4)*.08),rad=w*(.08+(k%3)*.035),x=Math.cos(a)*rad,z=Math.sin(a)*rad;const cv=new T.CatmullRomCurve3([new T.Vector3(0,h*.18,0),new T.Vector3(x*.5,hh*.5,z*.5),new T.Vector3(x,hh,z)]);g.add(new T.Mesh(new T.TubeGeometry(cv,10,Math.max(.35,w*.006),5,false),stem));const leaf=new T.Mesh(new T.SphereGeometry(1,18,12),mt);leaf.scale.set(w*.085,h*.16,d*.055);leaf.position.set(x*1.6,hh+h*.06,z*1.6);leaf.rotation.z=-Math.cos(a)*.65;leaf.rotation.x=Math.sin(a)*.5;g.add(leaf)}},
 alfombra(g,it,mt){B(g,it.w,it.h,it.d,0,it.h/2,0,mt)},
-lampara(g,it,mt){B(g,3,it.h,3,0,it.h/2,0,M('#555',.3,.8));const s=new T.Mesh(new T.CylinderGeometry(it.w*.4,it.w*.5,it.h*.2,20),new T.MeshStandardMaterial({color:it.col,emissive:it.col,emissiveIntensity:.6}));s.position.y=it.h*.9;g.add(s);if($('#sq').value=='q'){const l=new T.PointLight('#ffd9a0',.4,400);l.position.y=it.h*.85;g.add(l)}}};
+lampara(g,it,mt){buildBedroomLamp(g,it,mt)}};
+
 BUILD.fregadero=(g,it)=>{
  const w=it.w,d=it.d,h=Math.max(10,it.h),top=h*.84,bottom=h*.18;
  const steel=new T.MeshStandardMaterial({color:it.col||'#b8c0c5',roughness:.24,metalness:.82,side:T.DoubleSide});
@@ -1717,7 +1726,7 @@ function buildBedroomBed(g,it,primary){
 }
 
 function buildBedroomDresser(g,it,primary){
- const {w,h,d}=it,name=it.n||'',floating=/flotante/i.test(name),columns=/6 cajones/i.test(name)?2:1;
+ const {w,h,d}=it,name=it.n||'',floating=/flotante/i.test(name),columns=/6 cajones|isla central/i.test(name)?2:1;
  const rows=floating?1:/4 cajones/i.test(name)?4:columns===2?3:2;
  const t=Math.min(1.8,w*.07,h*.07,d*.06),base=floating?0:Math.min(9,h*.12),frontZ=d/2-2.2;
  const body=partFinish(primary.clone(),'carcass'),top=partFinish(primary.clone(),'top'),front=partFinish(primary.clone(),'fronts');
@@ -1752,6 +1761,7 @@ function bedroomDoor(g,it,k,{x,y,z,width,height,side,front,metal}){
 
 function buildBedroomWardrobe(g,it,primary){
  const {w,h,d}=it,name=it.n||'',corner=/esquinero/i.test(name),sliding=/correder/i.test(name),legacy=it.t==='armario';
+ const dressing=isVestidorItem(it),dressingDoors=/cerrado/i.test(name),dressingDrawers=/cajones/i.test(name);
  const t=Math.min(2.1,w*.06,d*.07),bottom=6+t,top=h-t,frontZ=d/2-(sliding?7:2.1);
  const body=partFinish(primary.clone(),'carcass'),front=partFinish(primary.clone(),'doors'),shelf=partFinish(M('#d5ccbf',.69,.03),'shelves');
  const drawer=partFinish(primary.clone(),'drawers'),inside=partFinish(M('#c9bfb0',.72,.025),'drawerInterior');
@@ -1775,9 +1785,15 @@ function buildBedroomWardrobe(g,it,primary){
   const entry=new T.Group();entry.position.set(a[0],0,a[1]);entry.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]);g.add(entry);
   for(let k=0;k<2;k++)bedroomDoor(entry,it,k,{x:k?length-1:1,y:bottom+.6,z:0,width:length/2-1.5,height:top-bottom-1.2,side:k?-1:1,front,metal});
   bedroomTube(g,[-w*.37,h*.69,-d*.19],[w*.31,h*.69,-d*.19],1.45,rail);
+  const bankWidth=length*.66,depth=d*.28,drawerZ=-5;
+  const bankBottom=bottom+t,bankTop=bankBottom+h*.208;
+  const bankX=length/2,bankZ=drawerZ-depth/2;
+  for(const side of [-1,1])B(entry,t,bankTop-bottom,depth,bankX+side*(bankWidth+t)/2,(bankTop+bottom)/2,bankZ,body);
+  B(entry,bankWidth+2*t,t,depth,bankX,bankTop+t/2,bankZ,shelf);
+  B(entry,bankWidth,bankTop-bottom,t,bankX,(bankTop+bottom)/2,drawerZ-depth+t/2,body);
   for(let k=0;k<2;k++){
-   const y=bottom+1+k*h*.105;
-   furnitureDrawer(g,it,k+2,{x:-w*.245,width:w*.43,depth:d*.55,frontZ:d*.13,bottom:y,top:y+h*.1,ceiling:y+h*.1-1.2,front:drawer,inside,metal});
+   const slot=(bankTop-bankBottom)/2,y=bankBottom+k*slot;
+   furnitureDrawer(entry,it,k+2,{x:bankX,width:bankWidth,depth:depth-t+.4,frontZ:drawerZ,bottom:y,top:y+slot,ceiling:y+slot-1.2,front:drawer,inside,metal});
   }
   return;
  }
@@ -1801,10 +1817,10 @@ function buildBedroomWardrobe(g,it,primary){
    B(leaf,2,22,.5,side*(leafW/2-4),h*.52,1,partFinish(metal.clone(),'handles'));
    mv(leaf,{it,k,t:'x',dx:-side*travel,exclusive:true});
   }
- }else{
+ }else if(!dressing||dressingDoors){
   for(let k=0;k<2;k++)bedroomDoor(g,it,k,{x:(k?1:-1)*(inner/2-.5),y:bottom+.6,z:frontZ,width:inner/2-1,height:top-bottom-1.2,side:k?-1:1,front,metal});
  }
- if(!legacy)for(let k=0;k<2;k++){
+ if(!legacy&&(!dressing||dressingDrawers))for(let k=0;k<2;k++){
   const y=bottom+1+k*h*.105;
   furnitureDrawer(g,it,k+2,{x:cx,width:inner/2-t,depth,frontZ:frontZ-3,bottom:y,top:y+h*.1,ceiling:y+h*.1-1.2,front:drawer,inside,metal});
  }
@@ -1849,13 +1865,76 @@ function buildBedroomLamp(g,it,primary){
  const {w,h,d}=it,r=Math.min(w,d)/2;
  const shade=partFinish(primary.clone(),'shade'),base=partFinish(M('#655c50',.38,.25),'base');
  const stem=partFinish(M('#817661',.32,.63),'body'),bulb=partFinish(M('#fff0d0',.22,.01),'hardware');
- const baseH=Math.min(3,h*.09),low=h*.53;
+ const baseH=Math.min(3,h*.09),shadeH=Math.min(h*.47,36),low=h-shadeH;
  const foot=new T.Mesh(new T.CylinderGeometry(r*.54,r*.58,baseH,48),base);foot.position.y=baseH/2;g.add(foot);
- bedroomTube(g,[0,baseH,0],[0,low+h*.21,0],Math.min(1.45,r*.13),stem);
- const profile=[[r*.94,low],[r,h*.55],[r*.65,h*.985],[r*.61,h],[r*.58,h*.988],[r*.93,h*.553],[r*.91,low]].map(([x,y])=>new T.Vector2(x,y));
+ bedroomTube(g,[0,baseH,0],[0,low+shadeH*.447,0],Math.min(1.45,r*.13),stem);
+ const profile=[[r*.94,low],[r,low+shadeH*.043],[r*.65,h-shadeH*.032],[r*.61,h],[r*.58,h-shadeH*.026],[r*.93,low+shadeH*.049],[r*.91,low]].map(([x,y])=>new T.Vector2(x,y));
  const shell=new T.Mesh(new T.LatheGeometry(profile,72),shade);shell.castShadow=true;g.add(shell);
- const globe=new T.Mesh(new T.SphereGeometry(Math.min(3,r*.18),24,16),bulb);globe.position.y=low+h*.22;g.add(globe);
- for(const side of [-1,1])bedroomTube(g,[0,low+h*.31,0],[side*r*.67,low+h*.31,0],.24,bulb);
+ const globe=new T.Mesh(new T.SphereGeometry(Math.min(3,r*.18),24,16),bulb);globe.position.y=low+shadeH*.468;g.add(globe);
+ applyLampLight(g,it,globe,shade);
+ for(const side of [-1,1])bedroomTube(g,[0,low+shadeH*.66,0],[side*r*.67,low+shadeH*.66,0],.24,bulb);
+}
+function applyLampLight(g,it,bulb,shade){
+ if(!it.lightOn)return;
+ const warm='#ffe4b7';
+ bulb.material=bulb.material.clone();
+ bulb.material.emissive.set(warm);bulb.material.emissiveIntensity=2.6;
+ if(shade?.emissive){shade.emissive.set(warm);shade.emissiveIntensity=.18}
+ const light=new T.PointLight(warm,1.35,320,1);
+ light.name='Luz de lámpara';light.position.copy(bulb.position);g.add(light);
+}
+
+function buildDressingShoeRack(g,it,primary){
+ const {w,h,d}=it,pullOut=/extra[ií]ble/i.test(it.n||'');
+ const t=Math.min(1.8,w*.06,h*.06,d*.06),innerW=w-2*t,frontZ=d/2-2;
+ const sides=partFinish(primary.clone(),'sides'),frame=partFinish(primary.clone(),'frame');
+ const back=partFinish(M('#a59c8e',.68,.03),'back'),shelves=partFinish(M('#c8baaa',.57,.025),'shelves');
+ const metal=partFinish(M('#89969a',.34,.78),'hardware');
+ const base=5,top=h-t;
+ for(const x of [-1,1])B(g,t,h-base-t,d,x*(w-t)/2,(base+top)/2,0,sides);
+ B(g,w,t,d,0,h-t/2,0,frame);
+ B(g,innerW,t,d,0,base+t/2,0,frame);
+ B(g,innerW,base,d-7,0,base/2,-1,frame);
+ B(g,innerW,top-base-t,t,0,(top+base+t)/2,-d/2+t/2,back);
+ const count=pullOut?4:5,space=(top-base-t)/(count+.6);
+ const width=innerW-(pullOut?3:1),depth=d-t-4;
+ it.op=it.op||[];
+ for(let i=0;i<count;i++){
+  const y=base+t+space*(i+.63),rack=new T.Group();rack.name='Bandeja '+(i+1);
+  rack.position.set(0,y,frontZ);g.add(rack);
+  if(!pullOut)rack.rotation.x=.12;
+  B(rack,width,1.5,depth,0,0,-depth/2,shelves);
+  B(rack,width,2.6,1.3,0,1.35,-.65,metal);
+  B(rack,width,2.6,1.3,0,1.35,-depth+.65,shelves);
+  for(const side of [-1,1]){
+   if(pullOut){
+    const x=side*(width/2-.6);
+    B(rack,1.2,2.6,depth,x,1.35,-depth/2,shelves);
+    B(rack,.7,1.1,depth*.81,side*(width/2+.35),-.2,-depth*.52,metal);
+    B(g,.9,1.6,depth*.94,side*(innerW/2-.55),y-.25,frontZ-depth*.53,metal);
+   }else{
+    B(g,1.4,1.6,3,side*(innerW/2-.7),y-1.35,frontZ-3,metal);
+    B(g,1.4,1.6,3,side*(innerW/2-.7),y+depth*Math.sin(.12)-1.6,frontZ-depth+3,metal);
+   }
+  }
+  if(pullOut){
+   barPull(rack,0,1,0,Math.min(18,width*.26),metal,false,'hardware');
+   mv(rack,{it,k:i,t:'s',z:frontZ,sl:Math.min(25,depth*.58)});
+  }
+ }
+}
+
+function buildDressingBench(g,it,primary){
+ const {w,h,d}=it,frame=partFinish(primary.clone(),'frame'),seat=partFinish(M('#cfbca4',.85,.025),'seat');
+ const feet=partFinish(M('#514b41',.61,.08),'feet');
+ const seatH=h*.19,deck=h-seatH,leg=4,deckT=3;
+ B(g,w*.95,deckT,d*.92,0,deck-deckT/2,0,frame);
+ for(const x of [-1,1])for(const z of [-1,1]){
+  B(g,leg,deck-deckT,d*.092,x*w*.4,(deck-deckT)/2,z*d*.34,feet);
+ }
+ for(const z of [-1,1])B(g,w*.8,5,2.4,0,deck-deckT-2.5,z*d*.34,frame);
+ for(const x of [-1,1])B(g,2.4,5,d*.68,x*w*.4,deck-deckT-2.5,0,frame);
+ bedCushion(g,0,deck-.08,0,w*.91,seatH,d*.85,seat,10);
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
@@ -1994,6 +2073,7 @@ case'seat':{
  break;
 }
 case'bench':{
+ if(isVestidorItem(it)){buildDressingBench(g,it,mt);break;}
  const wood=M(it.col||'#a88f78',.55,.12),metal=M('#434b50',.38,.7),uphol=M('#c7b9a8',.9,.01);
  B(g,w*.96,h*.16,d*.82,0,h*.68,0,wood);B(g,w*.9,h*.035,d*.76,0,h*.78,0,uphol);
  for(const x of [-1,1])for(const z of [-1,1]){tube([x*w*.4,h*.62,z*d*.32],[x*w*.42,3,z*d*.34],2.6,metal)}
@@ -2070,7 +2150,7 @@ case'table':{
 }
 case'bed':{buildBedroomBed(g,it,mt);break;}
 case'dresser':{
- if(isBedroomItem(it)){buildBedroomDresser(g,it,mt);break;}
+ if(isBedroomItem(it)||isVestidorItem(it)){buildBedroomDresser(g,it,mt);break;}
  const name=(it.n||'').toLowerCase(),body=M(it.col||'#b7a58e',.62,.06),inside=M('#c9c2b8',.82,.02),metal=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.28);
  const mobile=/móvil|movil/.test(name),count=/6 cajones/.test(name)?6:/2 cajones/.test(name)?2:3,th=2.2,dep=d*.88,frontZ=dep/2+1.5;
  it.op=it.op||[];
@@ -2118,7 +2198,7 @@ case'console':{
 
 
 case'wardrobe':{
- if(isBedroomItem(it)){buildBedroomWardrobe(g,it,mt);break;}
+ if(isBedroomItem(it)||isVestidorItem(it)){buildBedroomWardrobe(g,it,mt);break;}
  const body=M(it.col||'#b7a58e',.58,.08),inside=M('#d0c7ba',.82,.02),rail=M('#aeb5b8',.28,.82),dark=M('#30363b',.45,.22),th=Math.max(1.8,w*.025),dep=d*.92;
  it.op=it.op||[];
  // Casco hueco con costados, techo, suelo y trasera; nunca un bloque macizo.
@@ -2149,6 +2229,7 @@ case'wardrobe':{
  break;
 }
 case'shelf':{
+ if(isVestidorItem(it)){buildDressingShoeRack(g,it,mt);break;}
  const name=(it.n||'').toLowerCase(),library=/librería/.test(name),side=M(library?'#b39c7d':'#343b40',library?.72:.38,library?.035:.72),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
  for(const x of [-1,1]){if(library)box(x*(w/2-1.5),h/2,0,3,h,d,side);else{tube([x*(w/2-2),3,-d*.42],[x*(w/2-2),h-3,-d*.42],2.2,side);tube([x*(w/2-2),3,d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);tube([x*(w/2-2),h-3,-d*.42],[x*(w/2-2),h-3,d*.42],2.2,side)}}
  if(library)box(0,h/2,-d/2+1.2,w-3,h-3,2.4,back);else for(let y of [.2,.5,.8])box(0,h*y,-d*.42,w-5,1.4,2,side);
@@ -2321,7 +2402,7 @@ case'cabinet':{
  const door=new T.Group();door.position.set(-w/2+th/2,0,frontZ+1);g.add(door);const panel=new T.Mesh(new T.BoxGeometry(innerW,Math.max(12,h-zone-th-2),2),mt);panel.position.set(innerW/2,(h+zone)/2,0);door.add(panel);mv(door,{it,k:count,t:'d',sg:-1});break;
 }
 case'mirror':{
- if(isBedroomItem(it)){buildBedroomMirror(g,it,mt);break;}
+ if(isBedroomItem(it)||isVestidorItem(it)){buildBedroomMirror(g,it,mt);break;}
  if(it.roomType==='baño'||it.c==='Baño'){
   const back=partFinish(M('#555a58',.54,.32),'frame'),reflect=partFinish(M('#c9d1d2',.09,.95),'glass'),radius=Math.min(w,h)*.075;
   const rounded=(inset)=>{
@@ -2376,6 +2457,7 @@ case'lamp':{
  const rim=new T.Mesh(new T.TorusGeometry(w*.46,Math.max(.6,w*.009),10,64),metal);rim.position.y=sh.position.y;g.add(rim);
  const socket=new T.Mesh(new T.CylinderGeometry(Math.max(2,w*.055),Math.max(2,w*.07),h*.055,24),dark);socket.position.y=sh.position.y-h*.045;g.add(socket);
  const globe=new T.Mesh(new T.SphereGeometry(1,32,20),bulb);globe.scale.set(w*.105,h*.07,w*.105);globe.position.y=sh.position.y-h*.12;g.add(globe);
+ applyLampLight(g,it,globe,shade);
  if(floor){for(const a of [-1,1]){tube([0,h*.05,0],[a*w*.34,2,a*d*.34],2,metal)}}
  if(table){const neck=new T.Mesh(new T.CylinderGeometry(2.5,3.5,h*.12,20),metal);neck.position.y=h*.61;g.add(neck)}
  if(hanging){for(let k=0;k<3;k++){const a=k*Math.PI*2/3;tube([Math.cos(a)*w*.12,h*.72,Math.sin(a)*d*.12],[Math.cos(a)*w*.4,h*.91,Math.sin(a)*d*.4],.8,metal)}}
@@ -3176,10 +3258,11 @@ items.forEach((o,i)=>{const it=Object.assign({op:[],ang:100,fl:false},JSON.parse
 cam4.aspect=260/150;cam4.position.set(920,700,1120);cam4.lookAt(0,90,0);cam4.updateProjectionMatrix();r4.setSize(260,150);r4.render(sc4,cam4);const url=r4.domElement.toDataURL('image/jpeg',.86);g4.clear();MV=savedMV;PV=savedPV;ROOM_COVERS.set(room.key,url);return url}
 function fitCam(){const it=pvIt,m=Math.max(it.w,it.h,it.d);cam4.position.set(m*.9,it.h*.6+m*.3,m*1.6);oc4.target.set(0,it.h/2,0);oc4.update()}
 function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX='hidden';P2.style.minHeight='90px';P2.style.maxHeight='none';P2.innerHTML='';[['Anchura','w'],['Altura','h'],['Fondo','d']].forEach(([l,f])=>{const i=document.createElement('input');i.type='number';i.value=pvIt[f];i.onchange=()=>{pvIt[f]=Math.max(2,+i.value);buildPrev(pvIt,1);fitCam();pvUI()};P2.append(l+' ',i,' ')});
+ appendMotionButton(P2,pvIt,PV);
+ if(isLamp(pvIt))appendLightButton(P2,pvIt,()=>buildPrev(pvIt,1));
  if(hasTaggedFinishes(pvIt))partColorUI(pvIt,P2,()=>buildPrev(pvIt,1));
  if(!pvIt.cfg&&pvIt.t!='model'){const c=document.createElement('input');c.type='color';c.value=pvIt.col;c.oninput=()=>{pvIt.col=c.value;buildPrev(pvIt,1)};P2.append(' Color ',c)}P2.append(document.createElement('br'));
  const pending=pvIt.t=='model'&&pendingModel&&pendingModel.entry.mid==pvIt.mid;
- const b1=document.createElement('button');b1.type='button';b1.textContent='Abrir/cerrar puertas y cajones';b1.onclick=()=>{const keys=[...new Set(PV.map(m=>m.k))];if(!keys.length){b1.textContent='Este modelo no tiene aperturas animadas';setTimeout(()=>{if(b1.isConnected)b1.textContent='Abrir/cerrar puertas y cajones'},1800);return}const open=keys.some(k=>!pvIt.op[k]);keys.forEach(k=>{pvIt.op[k]=open});b1.textContent=open?'Cerrar puertas y cajones':'Abrir puertas y cajones'};P2.append(b1,' ');
  if(pending&&CATALOG_MASTER){const q=pendingModel.quality,info=document.createElement('div');info.style.cssText='margin:8px 0;padding:8px;background:#252a33;border:1px solid #64748b;border-radius:6px;font-size:12px';info.textContent='Revisión técnica superada: '+q.meshes+' mallas · '+q.triangles.toLocaleString('es-ES')+' triángulos · '+q.materials+' materiales · '+q.textures+' texturas PBR · dimensiones '+q.dimensions.join(' × ')+' cm. Gira el modelo y comprueba su aspecto antes de aceptarlo.';P2.append(info);
   const ok=document.createElement('button');ok.textContent='✓ Aceptar modelo y guardarlo en biblioteca';ok.style.cssText='background:#26734d;margin:4px 4px 4px 0';ok.onclick=async()=>{try{await catalogSaveModel(pendingModel.data);await idbPut(pendingModel.data);pendingModel=null;pvUI();libUI();hint('Modelo validado y compartido para todos')}catch(err){alert('No se pudo compartir el modelo: '+err.message)}};P2.append(ok);
   const no=document.createElement('button');no.textContent='Descartar modelo';no.onclick=()=>{const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;pvOpen=false;$('#pv').style.display='none';libUI();refresh();hint('Modelo descartado; no se ha guardado')};P2.append(no,' ');
@@ -4293,8 +4376,31 @@ function applyItemPartColors(g,it,primary){
  if(defaults)modelPartDefaults.set(it,defaults);
 }
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}applyItemPartColors(g,it,mt)}
-function motionKeysForItem(it){const saved=MV;MV=[];try{const g=new T.Group();buildItemGeometry(g,it,M(it.col||'#ccc',.5,0),M('#999',.3,.9));return [...new Set(MV.map(m=>m.k))]}catch(err){console.warn('No se pudieron identificar las aperturas del mueble',err);return []}finally{MV=saved}}
-function toggleItemMotion(it){it.op=it.op||[];if(mode!=='3d')setMode('3d');const keys=motionKeysForItem(it);if(!keys.length){hint('Este elemento no tiene puertas o cajones animados');return}const open=keys.some(k=>!it.op[k]);keys.forEach(k=>{it.op[k]=open});hint(open?'Puertas y cajones abriéndose':'Puertas y cajones cerrándose')}
+function motionButtonLabel(it,motions){
+ const open=motions.every(m=>m.it.op?.[m.k]);
+ if((it.shape==='bed'||it.t==='cama')&&motions.every(m=>m.t==='u'))return open?'Bajar somier':'Levantar somier';
+ return open?'Cerrar':'Abrir';
+}
+function appendMotionButton(panel,it,motions,save,show3D=false){
+ if(!motions.length)return;
+ const button=document.createElement('button');button.type='button';
+ button.textContent=motionButtonLabel(it,motions);
+ button.onclick=()=>{
+  if(show3D&&mode!=='3d')setMode('3d');
+  const open=motions.some(m=>!m.it.op?.[m.k]);
+  for(const m of motions){m.it.op=m.it.op||[];m.it.op[m.k]=open}
+  button.textContent=motionButtonLabel(it,motions);
+  save?.();
+ };
+ panel.append(button,' ');
+}
+function appendLightButton(panel,it,save){
+ const button=document.createElement('button');button.type='button';
+ const update=()=>{button.textContent=it.lightOn?'Apagar luz':'Encender luz';button.setAttribute('aria-pressed',String(!!it.lightOn))};
+ update();
+ button.onclick=()=>{it.lightOn=!it.lightOn;update();save()};
+ panel.append(button,' ');
+}
 $('#fmod').onchange=async e=>{if(!CATALOG_MASTER){alert('Solo MASTER puede importar muebles y objetos 3D.');e.target.value='';return}const files=[...e.target.files];if(files.length>1){alert('Importa un modelo cada vez para poder revisarlo visualmente antes de aceptarlo.');e.target.value='';return}const f=files[0];if(!f){return}const ext=f.name.split('.').pop().toLowerCase(),name=prompt('Nombre del producto:',f.name.replace(/\.[^.]+$/,''));if(!name){e.target.value='';return}const brand=prompt('Fabricante (opcional):','')||'',ref=prompt('Referencia comercial (opcional):','')||'',author=prompt('Autor del modelo (si procede):','')||'',source=prompt('URL de procedencia del modelo:','')||'',lic=prompt('Licencia (ej.: CC0 1.0, CC BY 4.0):','No indicada')||'No indicada',cat=prompt('Categoría (ej.: Sofás, Sillas, Sanitarios):','Importados')||'Importados',un=({m:100,cm:1,mm:.1})[prompt('Unidades del modelo: m, cm o mm (los GLB suelen ir en m):','m')]||100;const m={id:'m'+Date.now()+Math.random().toString(36).slice(2,6),name,brand,ref,author,source,lic,cat,units:un,ext,date:new Date().toISOString().slice(0,10),data:ext=='glb'?await f.arrayBuffer():await f.text()};try{const result=await addModel(m);pendingModel={data:m,entry:result.entry,quality:result.quality};openPrevObj(result.entry);hint('Revisa el modelo en 3D. Todavía no se ha guardado.')}catch(er){alert('Modelo rechazado o no se pudo leer: '+er.message)}e.target.value=''};
 /* ===== Modo edición con teclado ===== */
 function camFwd(){if(mode!='3d')return[0,-1];const fx=oc.target.x-cam.position.x,fz=oc.target.z-cam.position.z;return Math.abs(fx)>Math.abs(fz)?[Math.sign(fx),0]:[0,Math.sign(fz)||-1]}
