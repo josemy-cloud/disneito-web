@@ -17,11 +17,29 @@ async function enterEditor(signal=AbortSignal.timeout(8000)){
     throw new Error(data.error||'Cloudflare no pudo abrir la sesión (HTTP '+response.status+').');
   }
   const cookieCheck=await fetch('/api/sesion',{signal,cache:'no-store',headers:{Authorization:'Bearer '+token}});
-  if(cookieCheck.status!==204)throw new Error('El navegador no guardó la cookie de Disenito. Permite las cookies de este sitio e inténtalo de nuevo.');
+  signal.throwIfAborted();
   const target=new URL('/',location.origin);
   target.search=location.search;
   target.searchParams.set('_acceso','1');
-  location.replace(target);
+  if(cookieCheck.status===204){
+    location.replace(target);
+    return;
+  }
+
+  // The session was accepted, but this browser cannot round-trip the cookie.
+  // Use a same-origin navigation POST so the token stays out of the URL.
+  target.pathname='/editor';
+  const navigation=document.createElement('form');
+  navigation.method='post';
+  navigation.action=target.href;
+  navigation.hidden=true;
+  const accessToken=document.createElement('input');
+  accessToken.type='hidden';
+  accessToken.name='access_token';
+  accessToken.value=token;
+  navigation.append(accessToken);
+  document.body.append(navigation);
+  navigation.submit();
 }
 async function leaveEditor(){
   const token=SES?.access_token;
