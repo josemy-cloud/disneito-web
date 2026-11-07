@@ -1,0 +1,8 @@
+**/*.map
+**/.env
+**/.env.*
+**/config.json
+**/*.pem
+**/*.key
+**/*.bat
+**/pruebas-local/**

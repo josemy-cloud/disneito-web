@@ -156,7 +156,16 @@ export default {
         return Response.json({ error: "Utiliza POST." }, { status: 405 });
       }
 
+      const match = /^Bearer\s+(\S+)$/i.exec(request.headers.get("Authorization") || "");
+      const deviceId = request.headers.get("X-FotoIA-Device") || "";
       try {
+        const user = match ? await getSupabaseUser(match[1]) : null;
+        const access = await fotoIAMasterAccess(request, env, user, deviceId);
+        if (!access.master) {
+          return Response.json({ error: "Se requiere autorización MASTER." }, {
+            status: 403, headers: { "Cache-Control": "no-store" }
+          });
+        }
         const form = new FormData();
         form.append("prompt", "A photorealistic modern living room, natural daylight, realistic materials and professional interior photography.");
         form.append("width", "256");
@@ -177,10 +186,10 @@ export default {
         const binary = Uint8Array.from(atob(result.image), c => c.charCodeAt(0));
 
         return new Response(binary, {
-          headers: { "Content-Type": "image/png" }
+          headers: { "Content-Type": "image/png", "Cache-Control": "no-store" }
         });
       } catch (error) {
-        return Response.json({ error: String(error.message || error) }, { status: 500 });
+        return Response.json({ error: "No se pudo generar la imagen de prueba." }, { status: 500 });
       }
     }
 
@@ -245,8 +254,7 @@ export default {
         return Response.json({ ...stats, ok: true, zonaHoraria: "Europe/Madrid" }, { headers: { "Cache-Control": "no-store" } });
       } catch (error) {
         return Response.json({
-          error: "No se pudo consultar el límite de Foto IA.",
-          detalle: String(error.message || error)
+          error: "No se pudo consultar el límite de Foto IA."
         }, { status: 502 });
       }
     }
@@ -382,8 +390,7 @@ export default {
         }
 
         return Response.json({
-          error: "Error al editar la habitación.",
-          detalle: String(error.message || error)
+          error: "Error al editar la habitación."
         }, { status: 500 });
       }
     }
