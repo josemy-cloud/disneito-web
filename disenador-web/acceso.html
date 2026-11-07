@@ -11,13 +11,58 @@
   </style>
 </head>
 <body>
-  <script src="/auth.js"></script>
+  <main id="accessFallback" style="max-width:34rem;margin:3rem auto;padding:1rem">
+    <h1>Accede a Disenito</h1>
+    <p id="accessFallbackStatus" role="status">Preparando el formulario de acceso…</p>
+    <a href="/acceso" style="color:#a9ded3">Volver a cargar</a>
+    <noscript><p>Activa JavaScript para iniciar sesión.</p></noscript>
+  </main>
+  <script>
+    const accessLoadTimer=setTimeout(()=>{
+      document.getElementById('accessFallbackStatus').textContent='El formulario está tardando en cargar. Puedes volver a intentarlo.';
+    },8000);
+  </script>
+  <script src="/auth.js?v=2"></script>
   <script>
     (async()=>{
-      if(SES&&!location.hash){
-        try{await enterEditor();return}catch{}
+      const fallback=document.getElementById('accessFallback');
+      if(typeof accountPanel!=='function'){
+        clearTimeout(accessLoadTimer);
+        document.getElementById('accessFallbackStatus').textContent='No se pudo cargar el formulario. Vuelve a intentarlo.';
+        return;
       }
-      await accountPanel({entry:true});
+      try{
+        await accountPanel({entry:true});
+        clearTimeout(accessLoadTimer);
+        fallback.hidden=true;
+        const box=document.getElementById('accountBox');
+        const status=document.createElement('p');
+        status.setAttribute('role','status');
+        box.append(status);
+        if(new URLSearchParams(location.search).has('_acceso')){
+          status.textContent='No se pudo abrir el editor con la sesión anterior. Inicia sesión de nuevo.';
+          return;
+        }
+        if(!SES||location.hash)return;
+
+        const cancel=new AbortController();
+        const stop=()=>cancel.abort();
+        box.addEventListener('focusin',stop,{once:true});
+        box.addEventListener('pointerdown',stop,{once:true});
+        status.textContent='Comprobando la sesión guardada…';
+        try{await enterEditor(AbortSignal.any([cancel.signal,AbortSignal.timeout(8000)]))}
+        catch{
+          status.textContent=cancel.signal.aborted?'':'No se pudo recuperar la sesión guardada. Puedes iniciar sesión de nuevo.';
+        }finally{
+          box.removeEventListener('focusin',stop);
+          box.removeEventListener('pointerdown',stop);
+        }
+      }catch{
+        clearTimeout(accessLoadTimer);
+        fallback.hidden=false;
+        document.getElementById('accountBox')?.remove();
+        document.getElementById('accessFallbackStatus').textContent='No se pudo abrir el formulario. Vuelve a intentarlo.';
+      }
     })();
   </script>
 </body>

@@ -25,6 +25,7 @@ function sessionResponse(value, clear = false) {
 
 async function getSupabaseUser(token) {
   const r = await fetch(SUPABASE_URL + "/auth/v1/user", {
+    signal: AbortSignal.timeout(6000),
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + token }
   });
   if (!r.ok) return null;

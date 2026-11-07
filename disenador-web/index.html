@@ -136,8 +136,17 @@ async function createRender(container, j, opt, cb) {
 
 window.RENDER_ENGINE = { PRESETS, adapt, makeEnv, createRender };
 </script>
-<script src="/auth.js"></script>
-<script>if(!SES)location.replace("/acceso"+location.search+location.hash);</script>
+<script src="/auth.js?v=2"></script>
+<script>
+if(!SES)location.replace("/acceso"+location.search+location.hash);
+else {
+  const url=new URL(location.href);
+  if(url.searchParams.has('_acceso')){
+    url.searchParams.delete('_acceso');
+    history.replaceState(null,'',url);
+  }
+}
+</script>
 <script src="/vendor/three@0.128.0/build/three.min.js"></script>
 <script src="/vendor/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="/vendor/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
