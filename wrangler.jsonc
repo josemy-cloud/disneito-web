@@ -7,8 +7,13 @@
     "directory": "./disenador-web",
     "binding": "ASSETS",
     "run_worker_first": [
-      "/api/*"
-    ]
+      "/*",
+      "!/vendor/*",
+      "!/auth.js",
+      "!/ui-redesign.css",
+      "!/adaptive.css"
+    ],
+    "html_handling": "none"
   },
   "previews": {
     "ai": {

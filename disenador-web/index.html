@@ -136,6 +136,8 @@ async function createRender(container, j, opt, cb) {
 
 window.RENDER_ENGINE = { PRESETS, adapt, makeEnv, createRender };
 </script>
+<script src="/auth.js"></script>
+<script>if(!SES)location.replace("/acceso"+location.search+location.hash);</script>
 <script src="/vendor/three@0.128.0/build/three.min.js"></script>
 <script src="/vendor/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="/vendor/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -147,7 +149,15 @@ const $=s=>document.querySelector(s),T=THREE,R=Math.round,D=Math.PI/180;
 const fresh=()=>({nm:'Proyecto 1',w:[],o:[],i:[],fl:{m:'madera',sz:60,j:.3,jc:'#555',r:0,img:null},pt:'#f1ede4',id:1,cm:[],v:2,rooms:[],rid:1});
 let wallVis=false,wvMode='hid',showCeil=true,rvCeil='full',RVo=false,editMode=false,mvDirty=false,smode=false,selPart=null,HL=[],ghost=null,place=null,measA=null,catF="",roomF="",libQuery="",S=fresh(),H=[JSON.stringify(S)],F=[],sel=null,tool='sel',mode='2d',dualView=false,dualRatio=.44,armed=null,k=.7,ox=80,oy=80,drag=null,cur=null,buf='',walk=false,clip=null;
 const gr=()=>$('#ck').checked?10:1,sn=v=>R(v/gr())*gr();
-function commit(){roomsUpdate();H.push(JSON.stringify(S));F=[];try{localStorage.setItem('auto',H[H.length-1])}catch(e){}setCloudSaveState('pending','Cambios guardados localmente; sincronización pendiente.');psaveSoon();refresh()}
+const draftAccount=(()=>{try{return JSON.parse(atob(SES.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub||''}catch{return ''}})();
+const draftKey=draftAccount?'auto:'+draftAccount:'auto';
+if(draftAccount)try{
+ if(!localStorage.getItem('auto:owner')&&localStorage.getItem('auto')){
+   if(!localStorage.getItem(draftKey))localStorage.setItem(draftKey,localStorage.getItem('auto'));
+   localStorage.setItem('auto:owner',draftAccount);
+ }
+}catch{}
+function commit(){roomsUpdate();H.push(JSON.stringify(S));F=[];try{localStorage.setItem(draftKey,H[H.length-1])}catch(e){}setCloudSaveState('pending','Cambios guardados localmente; sincronización pendiente.');psaveSoon();refresh()}
 function loadS(s){S=migrate(JSON.parse(s));roomsUpdate();sel=null;refresh()}
 function undo(){if(H.length>1){F.push(H.pop());loadS(H[H.length-1])}}
 function redo(){if(F.length){const s=F.pop();H.push(s);loadS(s)}}
@@ -2440,24 +2450,6 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
  document.body.append(modal);
  const $f=id=>modal.querySelector('#'+id);
  let originalBlob=null,originalUrl='',resultUrl='',busy=false;
- const fotoIADeviceId=()=>{
-  let id=localStorage.getItem('fotoIA_device_id');
-  if(!id){id=crypto.randomUUID();localStorage.setItem('fotoIA_device_id',id)}
-  return id;
- };
- const masterTestStorageKey='fotoIA_master_test_session';
- const activateAnonymousMaster=async()=>{
-  const secret=prompt('Modo de pruebas MASTER. Introduce la clave privada configurada en Cloudflare:');
-  if(!secret)return false;
-  const response=await fetch('/api/master/test-session',{method:'POST',headers:{
-   'X-FotoIA-Device':fotoIADeviceId(),'X-Master-Test-Key':secret
-  },cache:'no-store'});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.error||'No se pudo autorizar el modo de pruebas MASTER.');
-  if(!data.token)throw new Error('El servidor no ha devuelto una sesión válida.');
-  sessionStorage.setItem(masterTestStorageKey,data.token);
-  return true;
- };
  const fotoIAInventario=()=>{
   const nombres={base:'mueble bajo de cocina',cajonera:'cajonera',alto:'mueble alto',columna:'columna de almacenamiento',frigo:'frigorífico',lavadora:'lavadora o lavavajillas',sofa:'sofá',mesa:'mesa',tv:'mueble de televisión',armario:'armario',cama:'cama',lavabo:'mueble de lavabo',inodoro:'inodoro',planta:'planta',alfombra:'alfombra',lampara:'lámpara',model:'modelo 3D importado',roomObject:'objeto de mobiliario'};
   const objs=(S.i||[]).filter(it=>it&&!it.hid);
@@ -2490,32 +2482,24 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    'Interpreta cada elemento según su nombre y categoría. No confundas sanitarios distintos: bidé, inodoro, lavabo y bañera son piezas diferentes. Distingue también camas, sofás, vehículos y electrodomésticos. Conserva el número, identidad, posición, orientación, dimensiones relativas y función de cada objeto. No sustituyas un objeto por otro parecido ni inventes piezas.'
   ].filter(Boolean).join('\n').slice(0,12000);
  };
- const fotoIAHeaders=async()=>{
-  const h={'X-FotoIA-Device':fotoIADeviceId()};
-  if(SES)h.Authorization='Bearer '+await sbTok();
-  else{
-   const masterSession=sessionStorage.getItem(masterTestStorageKey);
-   if(masterSession)h['X-Master-Test-Session']=masterSession;
-  }
-  return h;
- };
+ let remaining=0;
+ const syncGenerate=()=>{$f('fotoIAGenerar').disabled=busy||!originalBlob||remaining<1};
+ const fotoIAHeaders=async()=>({Authorization:'Bearer '+await sbTok()});
+ const resetMessage='El cupo se renueva a medianoche, hora peninsular española.';
  const refreshFotoIAStats=async()=>{
   const box=$f('fotoIAContador');
+  remaining=0;syncGenerate();
   try{
    const r=await fetch('/api/ia/estadisticas',{headers:await fotoIAHeaders(),cache:'no-store'});
    const j=await r.json().catch(()=>({}));
+   if(r.status===401){await leaveEditor();return}
    if(!r.ok)throw new Error(j.error||'No se pudo consultar el contador.');
-   if(j.master){
-    box.textContent='Uso ilimitado de Foto IA'+(j.generacionesPrueba==null?'':' · '+j.generacionesPrueba+' generaciones registradas');
-    box.style.background='#202a39';box.style.borderColor='#536b91';box.style.color='#d7e6ff';
-    return;
-   }
-   box.style.background='#17251f';box.style.borderColor='#315b45';box.style.color='#bfe8cf';
-   const tipo=j.registrado?'con cuenta':'sin iniciar sesión';
-   box.textContent='Te quedan '+j.disponibles+' de '+j.limite+' imágenes hoy ('+tipo+').';
+   remaining=Math.max(0,Number(j.disponibles)||0);
+   box.textContent=remaining?'Te quedan '+remaining+' de '+j.limite+' imágenes hoy. '+resetMessage:'Has agotado las imágenes de hoy. '+resetMessage;
   }catch(e){box.textContent='No se pudo consultar el límite: '+(e.message||e)}
+  finally{syncGenerate()}
  };
- const close=()=>{modal.style.display='none';if(originalUrl)URL.revokeObjectURL(originalUrl);if(resultUrl)URL.revokeObjectURL(resultUrl);originalBlob=null;originalUrl='';resultUrl='';$f('fotoIAOriginal').removeAttribute('src');$f('fotoIAResultado').removeAttribute('src');$f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;$f('fotoIAGenerar').disabled=false;$f('fotoIAEstado').textContent='Captura preparada.'};
+ const close=()=>{modal.style.display='none';if(originalUrl)URL.revokeObjectURL(originalUrl);if(resultUrl)URL.revokeObjectURL(resultUrl);originalBlob=null;originalUrl='';resultUrl='';$f('fotoIAOriginal').removeAttribute('src');$f('fotoIAResultado').removeAttribute('src');$f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;syncGenerate();$f('fotoIAEstado').textContent='Captura preparada.'};
  $f('fotoIACerrar').onclick=close;
  modal.addEventListener('click',e=>{if(e.target===modal&&!busy)close()});
  $f('fotoIANivel').oninput=()=>{const n=+$f('fotoIANivel').value;$f('fotoIANivelTxt').textContent=n<34?'Más libertad para interpretar la apariencia, sin cambiar la distribución.':n<67?'Equilibrado: realismo y fidelidad al diseño.':'Prioridad máxima a conservar geometría, muebles y detalles existentes.'};
@@ -2541,11 +2525,11 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl='';
    $f('fotoIAResultado').style.display='none';$f('fotoIAVacio').style.display='flex';$f('fotoIAGuardar').disabled=true;
    $f('fotoIAEstado').textContent='Captura lista. Ajusta el equilibrio y pulsa «Generar Foto IA».';
-   $f('fotoIAGenerar').disabled=false;
+   syncGenerate();
   }catch(err){console.error('Foto IA captura:',err);$f('fotoIAEstado').textContent='No se pudo capturar la vista 3D: '+err.message;$f('fotoIAGenerar').disabled=true}
  };
  $f('fotoIAGenerar').onclick=async()=>{
-  if(busy||!originalBlob)return;
+  if(busy||!originalBlob||remaining<1)return;
   busy=true;$f('fotoIAGenerar').disabled=true;$f('fotoIAEstado').textContent='Enviando la captura a Foto IA…';
   try{
    const form=new FormData();form.append('imagen',originalBlob,'vista-3d.jpg');form.append('nivel',$f('fotoIANivel').value);form.append('inventario',fotoIAInventario());
@@ -2556,7 +2540,6 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    $f('fotoIAResultado').src=resultUrl;$f('fotoIAResultado').style.display='block';$f('fotoIAVacio').style.display='none';$f('fotoIAGuardar').disabled=false;
    const countSynced=response.headers.get('X-FotoIA-Count-Synced')!=='false';
    $f('fotoIAEstado').textContent=countSynced?'¡Imagen generada! Compara el original y el resultado antes de guardarlo.':'Imagen generada, pero no se pudo sincronizar el contador. Vuelve a consultar en unos segundos.';
-   refreshFotoIAStats();
    $f('fotoIAGuardar').onclick=()=>{
     if(!resultUrl)return;
     const mime=$f('fotoIAResultado').src?($f('fotoIAResultado').naturalWidth? 'image/png':'image/png'):'image/png';
@@ -2570,7 +2553,7 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
     $f('fotoIAEstado').textContent='Descarga iniciada. Si Chrome pregunta dónde guardarla, elige la carpeta que prefieras.';
    };
   }catch(err){console.error('Foto IA:',err);$f('fotoIAEstado').textContent='No se pudo generar la imagen: '+err.message}
-  finally{busy=false;$f('fotoIAGenerar').disabled=false}
+  finally{await refreshFotoIAStats();busy=false;syncGenerate()}
  };
 })(); 
 $('#fm').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(im,0,0,256,256);S.cm.push(c.toDataURL('image/jpeg',.85));commit();libUI()};im.src=r.result};r.readAsDataURL(f)};
@@ -2608,7 +2591,7 @@ function psd(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[
 function pdist(A,B){let best={d:1e9};[[A,B],[B,A]].forEach(([X,Y],f)=>X.forEach(p=>{for(let n=0;n<4;n++){const r=psd(p,Y[n],Y[(n+1)%4]);if(r.d<best.d)best=f?{d:r.d,p:r.q,q:r.p}:r}}));return best}
 function mres(m){const A=rectOf(m.a),B=rectOf(m.b);return A&&B?pdist(A,B):null}
 function setGap(m,r,v){const A=S[m.a.k].find(e=>e.id==m.a.id),B=S[m.b.k].find(e=>e.id==m.b.id),u=[(r.q[0]-r.p[0])/(r.d||1),(r.q[1]-r.p[1])/(r.d||1)],dd=v-r.d;if(m.b.k=='i'){B.x+=u[0]*dd;B.y+=u[1]*dd}else if(m.a.k=='i'){A.x-=u[0]*dd;A.y-=u[1]*dd}}
-function commitQ(){H.push(JSON.stringify(S));F=[];try{localStorage.setItem('auto',H[H.length-1])}catch(e){}}
+function commitQ(){H.push(JSON.stringify(S));F=[];try{localStorage.setItem(draftKey,H[H.length-1])}catch(e){}}
 const vel={x:0,z:0};
 function inside(x,z){let c=0;S.w.forEach(w=>{if((w.y1>z)!=(w.y2>z)&&x<w.x1+(z-w.y1)/(w.y2-w.y1)*(w.x2-w.x1))c++});return c%2==1}
 function blocked(x,z){const R0=25;for(const w of S.w){const s=segd(w,x,z);if(s.d<w.t/2+R0){const o=S.o.find(o=>o.w==w.id&&o.ty=='d'&&Math.abs(o.p-s.p)<o.wd/2-10&&o.s<=15);if(!(o&&o.op&&o.op[0]))return true}}
@@ -3458,96 +3441,30 @@ function rvUI(e){S.rv=S.rv||[];const Z=S.rv.filter(z=>z.w==e.id),L=Math.round(le
  Z.forEach((z,i)=>{P.insertAdjacentHTML('beforeend','<b>Zona '+(i+1)+'</b>');sel2('Cara',['frontal','trasera'],z.side<0?'trasera':'frontal',v=>z.side=v=='trasera'?-1:1);row('Desde (cm del inicio)',z.x0,v=>z.x0=v);row('Hasta (cm)',z.x1,v=>z.x1=v);row('Altura inferior (cm)',z.y0,v=>z.y0=v);row('Altura superior (cm)',z.y1,v=>z.y1=v);
   if(Math.min(z.x0,z.x1)<0||Math.max(z.x0,z.x1)>L||Math.min(z.y0,z.y1)<0||Math.max(z.y0,z.y1)>e.h)P.insertAdjacentHTML('beforeend','<small style="color:#f55">⚠ La zona sale de la pared ('+L+'×'+e.h+' cm): se recorta al dibujar.</small>');patUI(z);btn('✕ Eliminar zona '+(i+1),()=>S.rv=S.rv.filter(q=>q!=z))});
  btn('+ Zona de revestimiento',()=>S.rv.push({w:e.id,side:1,x0:0,x1:L,y0:0,y1:e.h,pat:'recta',tw:30,th:60,j:.3,jc:'#cccccc',base:'#e9e6df',fin:'brillante'}))}
-/* ===== Mis proyectos: guardado automático, versiones y exportación. Almacén intercambiable (local ahora; nube = window.NUBE_STORE) ===== */
+/* ===== Mis proyectos: guardado automático, versiones y exportación. Almacén en Supabase con recuperación de proyectos locales ===== */
 const PDBo=()=>new Promise((ok,ko)=>{const r=indexedDB.open('proyectos',1);r.onupgradeneeded=()=>r.result.createObjectStore('p',{keyPath:'id'});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
 const pq=async(m,f)=>{const d=await PDBo();return new Promise((ok,ko)=>{const t=d.transaction('p',m),rq=f(t.objectStore('p'));t.oncomplete=()=>ok(rq&&rq.result);t.onerror=()=>ko(t.error)})};
 const LOCAL={list:()=>pq('readonly',o=>o.getAll()).then(a=>(a||[]).map(r=>({id:r.id,name:r.name,updated:r.updated,nv:(r.versions||[]).length})).sort((a,b)=>b.updated-a.updated)),get:id=>pq('readonly',o=>o.get(id)),put:r=>pq('readwrite',o=>o.put(r)),del:id=>pq('readwrite',o=>o.delete(id))};
-const PST=()=>window.NUBE_STORE||LOCAL;
+const PST=()=>SES?CLOUD:LOCAL;
 /* ===== Nube (Supabase vía API REST, sin librerías): acceso con correo + proyectos en la nube ===== */
-const SBU='https://aqfqwvzbsbjrixzgxtro.supabase.co',SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZnF3dnpic2Jqcml4emd4dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTA5MjMsImV4cCI6MjEwOTEyNjkyM30.VWRIowVOECv7ycW3Nnpz-EQNJx2izM7yx7xOxkNWVZo';
-let SES=null,REMEMBER_SESSION=true;try{const savedLocal=localStorage.getItem('sbSes');if(savedLocal){SES=JSON.parse(savedLocal);REMEMBER_SESSION=true}else{const savedTab=sessionStorage.getItem('sbSes');if(savedTab){SES=JSON.parse(savedTab);REMEMBER_SESSION=false}}}catch(e){}
-const sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}window.NUBE_STORE=x?CLOUD:null};
-async function sbAuth(path,body){const r=await fetch(SBU+'/auth/v1/'+path,{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
-async function sbRecover(email){const address=String(email||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw new Error('Introduce un correo electrónico válido.');const redirectTo=window.location.origin+window.location.pathname;const r=await fetch(SBU+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify({email:address})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo enviar el correo de recuperación.');return j}
-const sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
-async function sbTok(){if(!SES)throw new Error('Sin sesión: entra con tu correo en «Mis proyectos».');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token});sesSave(sesFrom(j))}return SES.access_token}
 async function sbq(path,o){o=o||{};const r=await fetch(SBU+'/rest/v1/'+path,{method:o.method||'GET',headers:Object.assign({apikey:SBK,Authorization:'Bearer '+await sbTok(),'Content-Type':'application/json'},o.h||{}),body:o.body?JSON.stringify(o.body):undefined});if(!r.ok)throw new Error('Nube: '+r.status+' '+(await r.text()).slice(0,200));return r.status==204?null:r.json().catch(()=>null)}
 const CLOUD={list:async()=>(await sbq('proyectos?select=id,name,updated&order=updated.desc')).map(r=>({...r,nv:0})),get:async id=>(await sbq('proyectos?id=eq.'+encodeURIComponent(id)+'&select=*'))[0],put:r=>sbq('proyectos',{method:'POST',h:{Prefer:'resolution=merge-duplicates,return=minimal'},body:{id:r.id,name:r.name,created:r.created,updated:r.updated,data:r.data,versions:r.versions||[]}}),del:id=>sbq('proyectos?id=eq.'+encodeURIComponent(id),{method:'DELETE'})};
-if(SES)window.NUBE_STORE=CLOUD;
+
 
 /* ===== Cuenta independiente ===== */
-async function accountPanel(){
- let box=document.getElementById('accountBox');if(box){box.remove();return}
- box=document.createElement('div');box.id='accountBox';box.style.cssText='position:fixed;inset:60px 20px 20px;z-index:80;background:#1a1d24;border:1px solid #556;border-radius:12px;padding:18px;overflow:auto;color:#eee;font:14px Arial;box-shadow:0 16px 50px #0009';
- document.body.append(box);
- const btn=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.style.cssText='margin:5px 5px 5px 0;padding:8px 12px';b.onclick=async()=>{try{await fn()}catch(e){alert(e.message||e)}};return b};
- const field=(label,type='text',value='',autocomplete='')=>{const wrap=document.createElement('label');wrap.style.cssText='display:block;margin:10px 0;color:#bbc4d2';wrap.textContent=label;const i=document.createElement('input');i.type=type;if(autocomplete)i.autocomplete=autocomplete;i.value=value;i.style.cssText='display:block;box-sizing:border-box;width:min(100%,420px);padding:10px;margin-top:5px;background:#252c38;color:#fff;border:1px solid #566;border-radius:6px';wrap.append(i);return {wrap,input:i}};
- const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent='Mi cuenta';title.style.margin='0';head.append(title,btn('✕ Cerrar',()=>box.remove()));box.append(head);
- const content=document.createElement('div');content.style.cssText='max-width:720px;margin:18px auto';box.append(content);
- const authFetch=async(method,body)=>{const token=await sbTok();const r=await fetch(SBU+'/auth/v1/user',{method,headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo actualizar la cuenta ('+r.status+')');return j};
- const recoveryParams=new URLSearchParams(window.location.hash.replace(/^#/,''));
- const drawPasswordReset=(token)=>{
-  content.innerHTML='<p style="color:#b9c4d4">Introduce tu nueva contraseña. El enlace de recuperación solo puede utilizarse una vez.</p>';
-  const p1=field('Nueva contraseña (mínimo 8 caracteres)','password','','new-password');
-  const p2=field('Repite la nueva contraseña','password','','new-password');
-  content.append(p1.wrap,p2.wrap);
-  content.append(btn('Guardar nueva contraseña',async()=>{
-   const password=p1.input.value;
-   if(password.length<8)throw new Error('La contraseña debe tener al menos 8 caracteres.');
-   if(password!==p2.input.value)throw new Error('Las contraseñas no coinciden.');
-   const r=await fetch(SBU+'/auth/v1/user',{method:'PUT',headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password})});
-   const j=await r.json().catch(()=>({}));
-   if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'El enlace ha caducado o no es válido. Solicita uno nuevo.');
-   const refreshToken=recoveryParams.get('refresh_token');
-   const expiresAt=Number(recoveryParams.get('expires_at'))||Math.floor(Date.now()/1000)+Number(recoveryParams.get('expires_in')||3600);
-   history.replaceState(null,document.title,window.location.pathname+window.location.search);
-   if(refreshToken){REMEMBER_SESSION=true;sesSave({access_token:token,refresh_token:refreshToken,expires_at:expiresAt,email:j.email||''});await drawProfile()}
-   else{sesSave(null);drawLogin();alert('Contraseña actualizada. Ya puedes iniciar sesión con ella.')}
-  }));
-  content.append(btn('Cancelar y volver al inicio de sesión',()=>{history.replaceState(null,document.title,window.location.pathname+window.location.search);drawLogin()}));
- };
- const drawLogin=()=>{
-  content.innerHTML='<p style="color:#b9c4d4">Inicia sesión para acceder a tu perfil y a tus diseños guardados en otros dispositivos.</p>';
-  const em=field('Correo electrónico','email','','username'),pw=field('Contraseña','password','','current-password');content.append(em.wrap,pw.wrap);
-  const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);content.append(rememberWrap);
-  content.append(btn('Iniciar sesión',async()=>{if(!em.input.value||!pw.input.value)throw new Error('Introduce el correo y la contraseña.');const j=await sbAuth('token?grant_type=password',{email:em.input.value,password:pw.input.value});REMEMBER_SESSION=remember.checked;sesSave(sesFrom(j));await drawProfile()}));
-  content.append(btn('¿Has olvidado tu contraseña?',async()=>{
-   await sbRecover(em.input.value);
-   content.innerHTML='<p style="color:#b9c4d4;line-height:1.6">Si existe una cuenta asociada a ese correo, recibirás un mensaje con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.</p>';
-   content.append(btn('Volver al inicio de sesión',drawLogin));
-  }));
-  content.append(btn('Crear cuenta',async()=>{pw.input.autocomplete='new-password';if(!em.input.value||pw.input.value.length<6)throw new Error('Introduce un correo y una contraseña de al menos 6 caracteres.');await sbAuth('signup',{email:em.input.value,password:pw.input.value});alert('Cuenta creada. Si se solicita confirmar el correo, revisa tu bandeja de entrada. Después podrás iniciar sesión.')}))
- };
- const drawProfile=async()=>{
-  if(!SES){drawLogin();return}
-  content.innerHTML='<p>Consultando los datos de tu cuenta…</p>';
-  let u;try{u=await authFetch('GET')}catch(e){content.innerHTML='';content.append(document.createTextNode('No se ha podido validar la sesión. '+e.message+' '),btn('Volver al inicio de sesión',()=>{sesSave(null);CATALOG_MASTER=false;drawLogin()}));return}
-  await catalogLoadPermissions();
-  libUI();
-  const meta=u.user_metadata||{},avatar=meta.avatar_data||meta.avatar_url||'';
-  content.innerHTML='';
-  const profile=document.createElement('div');profile.style.cssText='display:flex;align-items:center;gap:14px;margin:12px 0 20px';
-  const img=document.createElement('img');img.alt='Foto de perfil';img.src=avatar||'';img.style.cssText='width:76px;height:76px;border-radius:50%;object-fit:cover;background:#303846;border:1px solid #64748b';if(!avatar)img.style.display='none';
-  const info=document.createElement('div');const nm=document.createElement('b');nm.textContent=meta.full_name||u.email||SES.email||'Usuario';const mail=document.createElement('div');mail.textContent=u.email||SES.email||'';mail.style.color='#aeb8c8';profile.append(img,info);info.append(nm,mail);content.append(profile);
-  const name=field('Nombre visible','text',meta.full_name||''),email=field('Correo electrónico','email',u.email||'','email'),pass=field('Nueva contraseña (déjalo vacío si no quieres cambiarla)','password','','new-password');content.append(name.wrap,email.wrap,pass.wrap);
-  const photo=document.createElement('input');photo.type='file';photo.accept='image/*';photo.style.display='none';content.append(photo);
-  content.append(btn('Cambiar foto',()=>photo.click()),btn('Eliminar foto',async()=>{const m={...meta};delete m.avatar_data;delete m.avatar_url;await authFetch('PUT',{data:m});await drawProfile()}));
-  photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',.78))};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await authFetch('PUT',{data:{...meta,avatar_data:data}});await drawProfile()};
-  content.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value)body.password=pass.input.value;if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
-  const note=document.createElement('p');note.style.cssText='color:#9eabbc;font-size:12px';note.textContent='La contraseña se cambia mediante Supabase Auth. El cambio de correo puede requerir confirmación. La foto se guarda en los metadatos de tu cuenta.';content.append(note);
-  content.append(btn('Cerrar sesión',async()=>{sesSave(null);CATALOG_MASTER=false;libUI();curProj=null;try{localStorage.removeItem('curProj')}catch(e){};await drawLogin();const b=document.getElementById('bAcc');if(b)b.textContent='👤 Mi cuenta'}));
-  const b=document.getElementById('bAcc');if(b){const label=(meta.full_name||u.email||'Mi cuenta').slice(0,18);if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label}
- };
- const recoveryType=recoveryParams.get('type'),recoveryToken=recoveryParams.get('access_token'),recoveryError=recoveryParams.get('error_description')||recoveryParams.get('error');
- if(recoveryType==='recovery'&&recoveryToken)drawPasswordReset(recoveryToken);
- else if(recoveryError){content.innerHTML='<p style="color:#ffb4a9;line-height:1.6">El enlace de recuperación ha caducado, ya se ha utilizado o no es válido. Solicita uno nuevo desde «¿Has olvidado tu contraseña?».</p>';content.append(btn('Volver al inicio de sesión',()=>{history.replaceState(null,document.title,window.location.pathname+window.location.search);drawLogin()}));}
- else await drawProfile();
+function cloudBar(redraw){
+ const d=document.createElement('div');
+ d.style.cssText='margin:8px 0;padding:8px;border:1px solid #445;border-radius:6px;background:#202633';
+ const button=document.createElement('button');
+ button.textContent='Copiar mis proyectos locales a la nube';
+ button.onclick=async()=>{try{
+   const projects=await LOCAL.list();
+   for(const p of projects)await CLOUD.put(await LOCAL.get(p.id));
+   alert(projects.length+' proyectos copiados.');redraw();
+ }catch(error){alert(error.message)}};
+ d.append(document.createTextNode('Proyectos en la nube · '+(SES?.email||'')+' '),button);
+ return d;
 }
-
-function cloudBar(redraw){const d=document.createElement('div');d.style.cssText='margin:8px 0;padding:8px;border:1px solid #445;border-radius:6px;background:#202633';const b=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.style.margin='2px 3px';e.onclick=async()=>{try{await fn()}catch(x){alert(x.message||x)}};return e};
- if(SES){d.append(document.createTextNode('☁ Nube: '+SES.email+' — los proyectos de esta lista están en la nube. '),b('Copiar mis proyectos locales a la nube',async()=>{const L=await LOCAL.list();for(const p of L)await CLOUD.put(await LOCAL.get(p.id));alert(L.length+' proyectos copiados.');redraw()}),b('Salir de la nube',async()=>{sesSave(null);CATALOG_MASTER=false;curProj=null;redraw()}))}
- else{d.append(document.createTextNode('☁ Nube desactivada (se guarda solo en este navegador). '));const em=document.createElement('input'),pw=document.createElement('input');em.placeholder='correo';em.type='email';em.autocomplete='username';pw.placeholder='contraseña (mín. 6)';pw.type='password';pw.autocomplete='current-password';d.append(em,pw,b('Entrar',async()=>{sesSave(sesFrom(await sbAuth('token?grant_type=password',{email:em.value,password:pw.value})));SES.email=em.value;sesSave(SES);await catalogLoadPermissions();await catLoad();redraw()}),b('Crear cuenta',async()=>{await sbAuth('signup',{email:em.value,password:pw.value});alert('Cuenta creada. Si Supabase pide confirmar el correo, abre el email que te han enviado y luego pulsa Entrar.')}),b('¿Has olvidado tu contraseña?',async()=>{await sbRecover(em.value);alert('Si existe una cuenta asociada a ese correo, recibirás un mensaje con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.')}))}
- return d}
 let curProj=null,psT=0;try{curProj=localStorage.getItem('curProj')}catch(e){}
 function pushVer(rec,data,why,now){const v=rec.versions=rec.versions||[],l=v[v.length-1];if(why=='auto'&&l&&now-l.t<6e5)return false;v.push({t:now,data,why});while(v.length>20)v.shift();return true}
 function setCloudSaveState(state,detail=''){
@@ -3910,7 +3827,7 @@ async function catalogPost(path,body){const token=await sbTok(),r=await fetch(pa
 async function catalogSaveProduct(p){if(!CATALOG_MASTER)throw new Error('Solo MASTER puede modificar el catálogo.');const clean={...p};delete clean.docId;delete clean.fotos;delete clean.commercialData;await catalogPost('/api/catalogo/productos',clean)}
 async function catalogSaveModel(m){if(!CATALOG_MASTER)throw new Error('Solo MASTER puede importar modelos 3D.');const bytes=m.data instanceof ArrayBuffer?new Uint8Array(m.data):new TextEncoder().encode(String(m.data));if(bytes.byteLength>17*1024*1024)throw new Error('Modelo superior a 17 MB.');let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));await catalogPost('/api/catalogo/modelos',{...m,data:btoa(bin)})}
 async function catalogLoadPermissions(){CATALOG_MASTER=false;try{const headers=SES?{Authorization:'Bearer '+await sbTok()}:{};const r=await fetch('/api/catalogo/permisos',{headers,cache:'no-store'});if(r.ok)CATALOG_MASTER=(await r.json()).master===true}catch(e){CATALOG_MASTER=false}}
-async function catalogLoadSharedModels(){const r=await fetch('/api/catalogo/modelos',{cache:'no-store'});if(!r.ok)return;const j=await r.json();for(const meta of j.models||[]){if(MODS[meta.id])continue;try{const mr=await fetch('/api/catalogo/modelo/'+encodeURIComponent(meta.id),{cache:'no-store'});if(!mr.ok)continue;const m=await mr.json(),bin=atob(m.data),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);m.data=m.ext==='glb'?bytes.buffer:new TextDecoder().decode(bytes);await idbPut(m);await addModel(m)}catch(e){console.warn('Modelo compartido no disponible:',meta.id,e)}}}
+async function catalogLoadSharedModels(){const options={headers:{Authorization:'Bearer '+await sbTok()},cache:'no-store'};const r=await fetch('/api/catalogo/modelos',options);if(!r.ok)return;const j=await r.json();for(const meta of j.models||[]){if(MODS[meta.id])continue;try{const mr=await fetch('/api/catalogo/modelo/'+encodeURIComponent(meta.id),options);if(!mr.ok)continue;const m=await mr.json(),bin=atob(m.data),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);m.data=m.ext==='glb'?bytes.buffer:new TextDecoder().decode(bytes);await idbPut(m);await addModel(m)}catch(e){console.warn('Modelo compartido no disponible:',meta.id,e)}}}
 
 /* ===== CATÁLOGOS Y FABRICANTES ===== */
 const CATS=['Baño','mueble bajo','mueble alto','columna','armario','cajonera','horno','microondas','frigorífico','lavadora','secadora','lavavajillas','campana','placa','vinoteca','sofá','cama','mesa','fregadero','grifería','otro'];
@@ -3940,7 +3857,8 @@ async function catLoad(){
  PRODS=(await dbq('p','readonly',t=>t.objectStore('p').getAll()))||[];
  for(let i=LIB.length-1;i>=0;i--)if(LIB[i].pid)LIB.splice(i,1);
  try{
-  const [rr,ar,sr]=await Promise.all([fetch('/catalogo/productos-comerciales.json',{cache:'no-store'}),fetch('/api/catalogo/aprobaciones',{cache:'no-store'}),fetch('/api/catalogo/productos',{cache:'no-store'})]);
+  const options={headers:{Authorization:'Bearer '+await sbTok()},cache:'no-store'};
+  const [rr,ar,sr]=await Promise.all([fetch('/catalogo/productos-comerciales.json',options),fetch('/api/catalogo/aprobaciones',options),fetch('/api/catalogo/productos',options)]);
   CATALOG_APPROVALS=ar.ok?await ar.json():{};
   if(rr.ok){const registry=await rr.json();(registry.products||[]).forEach(p=>{
    const dims=p.dimensions_mm||{},model=p.model||{};if(!p.id||!model.type||typeof BUILD[model.type]!=='function')return;
@@ -4045,7 +3963,9 @@ const p={id:'nob-'+r.id+'-'+k,fab,nombre:r.tipo+(r.referencia?' '+r.referencia:'
 saveFabs();await catLoad();libUI();catUI();alert(n+' fichas importadas. '+sk+' omitidas por no tener medidas completas documentadas (columnas, esquineros, complementarios).')}catch(e){alert('No se pudo importar: '+e.message)}};i.click()}
 $('#bPbr').onclick=pbrLib;$('#bPry').onclick=projLib;$('#bAcc').onclick=accountPanel;$('#bReal').onclick=realMode;
 /* Arranque */
-try{const a=localStorage.getItem('auto');if(a){S=JSON.parse(a);H=[a]}}catch(e){}
+window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
+window.addEventListener('storage',e=>{if(e.key==='sbSes'&&!e.newValue&&REMEMBER_SESSION&&!localStorage.getItem('sbSes'))location.reload()});
+try{const a=localStorage.getItem(draftKey);if(a){S=JSON.parse(a);H=[a]}}catch(e){}
 try{JSON.parse(localStorage.getItem('ml')||'[]').forEach(o=>{ML.push(o);LIB.push(o)})}catch(e){}
 r3.outputEncoding=r4.outputEncoding=T.sRGBEncoding;r3.shadowMap.type=T.PCFSoftShadowMap;
 drawTools();libUI();hint();setSun();setQ();refresh();animate();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});

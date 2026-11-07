@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accede a Disenito</title>
+  <style>
+    body {margin:0;background:#101b1a;color:#fff;font:16px system-ui,sans-serif}
+    #accountBox {inset:clamp(8px,4vw,32px) !important;margin:auto;max-width:530px;max-height:620px}
+    button {border:1px solid #607673;border-radius:8px;background:#28413e;color:#fff;min-height:44px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <script src="/auth.js"></script>
+  <script>
+    (async()=>{
+      if(SES&&!location.hash){
+        try{await enterEditor();return}catch{}
+      }
+      await accountPanel({entry:true});
+    })();
+  </script>
+</body>
+</html>
