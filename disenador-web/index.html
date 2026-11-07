@@ -1167,35 +1167,36 @@ function buildCabinetConstruction(g,it,baseMaterial){
  g.userData.construction={family:'cabinetry',schemaVersion:1,dimensionsCm:{width:w,height:h,depth:d},panelThicknessCm:t,components:['carcass','back-panel','adjustable-shelves','drawer-boxes','telescopic-runners','hinges','handles','leveling-feet'],status:'reconstructed-pending-visual-and-interaction-verification'};
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 }
-BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o)};switch(it.shape){
+BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
- const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),piping=M('#d5c8b8',.78,.03),frame=M('#383b3c',.48,.32),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
+ const tag=(mesh,key)=>{if(mesh)mesh.userData.part={t:key};return mesh};const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),piping=M('#d5c8b8',.78,.03),frame=M('#383b3c',.48,.32),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const baseY=h*.13,seatY=h*.31,seatDepth=d*.58,seatFront=d*.34,seatBack=-d*.24,seatH=h*.14,backY=h*.68,backH=h*.34;
- B(g,w*.92,h*.13,d*.78,0,baseY,-d*.015,frame);B(g,w*.86,h*.055,d*.72,0,h*.225,-d*.015,upholstery);
- for(const x of [-1,1])B(g,4,h*.08,d*.7,x*w*.39,h*.18,-d*.015,frame);
+ tag(B(g,w*.92,h*.13,d*.78,0,baseY,-d*.015,frame),'frame');tag(B(g,w*.86,h*.055,d*.72,0,h*.225,-d*.015,upholstery),'seat');
+ for(const x of [-1,1])tag(B(g,4,h*.08,d*.7,x*w*.39,h*.18,-d*.015,frame),'frame');
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad)=>{const r=Math.min(rad,sx*.22,sz*.22),s=new T.Shape();s.moveTo(-sx/2+r,-sz/2);s.lineTo(sx/2-r,-sz/2);s.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);s.lineTo(sx/2,sz/2-r);s.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);s.lineTo(-sx/2+r,sz/2);s.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);s.lineTo(-sx/2,-sz/2+r);s.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:sy,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:Math.min(1.8,sy*.22),bevelThickness:Math.min(1.6,sy*.2),curveSegments:12});geo.rotateX(Math.PI/2);const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy/2,z);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
  const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad)=>{const r=Math.min(rad,sx*.2,sy*.2),s=new T.Shape();s.moveTo(-sx/2+r,-sy/2);s.lineTo(sx/2-r,-sy/2);s.quadraticCurveTo(sx/2,-sy/2,sx/2,-sy/2+r);s.lineTo(sx/2,sy/2-r);s.quadraticCurveTo(sx/2,sy/2,sx/2-r,sy/2);s.lineTo(-sx/2+r,sy/2);s.quadraticCurveTo(-sx/2,sy/2,-sx/2,sy/2-r);s.lineTo(-sx/2,-sy/2+r);s.quadraticCurveTo(-sx/2,-sy/2,-sx/2+r,-sy/2);s.closePath();const geo=new T.ExtrudeGeometry(s,{depth:sz,bevelEnabled:true,bevelSegments:4,bevelSize:Math.min(1.8,sz*.2),bevelThickness:Math.min(1.5,sz*.18),curveSegments:12});const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-sz/2);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
  const seats=corner?3:modular?4:Math.max(2,Math.min(3,Math.round(w/90))),seatW=w*(corner?.29:modular?.205:.78/seats),seatZ=seatFront-seatDepth/2;
- const addSeat=(x,z,sx,sz)=>{pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(5,sx*.1));for(const side of [-1,1])tube([x+side*sx*.34,seatY+seatH*.82,z+sz*.32],[x+side*sx*.34,seatY+seatH*.82,z-sz*.32],.45,stitch)};
- if(corner){for(let k=0;k<2;k++){const x=(k-.5)*w*.34;addSeat(x,seatZ,w*.31,seatDepth*.82)}pad(g,w*.31,seatY,-d*.02,w*.28,seatH,d*.34,upholstery,4);for(let k=0;k<3;k++){const x=(k-1)*w*.3;verticalPad(g,x,backY,-d*.31,w*.29,backH,d*.12,upholstery,5)}verticalPad(g,w*.31,backY,-d*.02,w*.28,backH,d*.12,upholstery,5)}
- else{for(let k=0;k<seats;k++){const x=(k-(seats-1)/2)*w*.78/seats;addSeat(x,seatZ,seatW,seatDepth*.82);verticalPad(g,x,backY,-d*.31,seatW*.94,backH,d*.12,upholstery,5)}if(chaise){pad(g,-w*.25,seatY,-d*.015,w*.42,seatH,d*.72,upholstery,5);verticalPad(g,-w*.25,backY,-d*.31,w*.42,backH,d*.12,upholstery,5)}}
- for(const side of [-1,1]){const ax=side*w*.43;B(g,w*.13,h*.34,d*.72,ax,h*.39,-d*.015,frame);verticalPad(g,ax,h*.43,-d*.015,w*.13,h*.31,d*.7,upholstery,4);B(g,w*.105,h*.035,d*.62,ax,h*.57,-d*.015,piping);for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2.2,2.8,h*.12,20),feet);leg.position.set(side*w*.39,h*.06,z*d*.3);g.add(leg)}}
+ const addSeat=(x,z,sx,sz)=>{tag(pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(5,sx*.1)),'seat');for(const side of [-1,1])tag(tube([x+side*sx*.34,seatY+seatH*.82,z+sz*.32],[x+side*sx*.34,seatY+seatH*.82,z-sz*.32],.45,stitch),'piping')};
+ if(corner){for(let k=0;k<2;k++){const x=(k-.5)*w*.34;addSeat(x,seatZ,w*.31,seatDepth*.82)}tag(pad(g,w*.31,seatY,-d*.02,w*.28,seatH,d*.34,upholstery,4),'seat');for(let k=0;k<3;k++){const x=(k-1)*w*.3;tag(verticalPad(g,x,backY,-d*.31,w*.29,backH,d*.12,upholstery,5),'back')}tag(verticalPad(g,w*.31,backY,-d*.02,w*.28,backH,d*.12,upholstery,5),'back')}
+ else{for(let k=0;k<seats;k++){const x=(k-(seats-1)/2)*w*.78/seats;addSeat(x,seatZ,seatW,seatDepth*.82);tag(verticalPad(g,x,backY,-d*.31,seatW*.94,backH,d*.12,upholstery,5),'back')}if(chaise){tag(pad(g,-w*.25,seatY,-d*.015,w*.42,seatH,d*.72,upholstery,5),'seat');tag(verticalPad(g,-w*.25,backY,-d*.31,w*.42,backH,d*.12,upholstery,5),'back')}}
+ for(const side of [-1,1]){const ax=side*w*.43;tag(B(g,w*.13,h*.34,d*.72,ax,h*.39,-d*.015,frame),'frame');tag(verticalPad(g,ax,h*.43,-d*.015,w*.13,h*.31,d*.7,upholstery,4),'arms');tag(B(g,w*.105,h*.035,d*.62,ax,h*.57,-d*.015,piping),'piping');for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2.2,2.8,h*.12,20),feet);leg.position.set(side*w*.39,h*.06,z*d*.3);tag(leg,'feet');g.add(leg)}}
  if(outdoor){for(let k=0;k<6;k++)B(g,w*.84,1.2,1.1,0,h*.16,-d*.34+k*d*.12,frame)}
  g.userData.upholsteryConstruction={schemaVersion:2,seatCount:seats,layout:corner?'L-corner':chaise?'chaise-longue':modular?'modular':'straight',cushionGeometry:'rounded-extruded-panels',status:'integrated-pending-visual-validation'};
  break;
 }
 case'outdoorsofa':{
- const frame=M('#5c5146',.52,.18),fabric=M(it.col||'#a9b2a5',.86,.02),rope=M('#b99d7c',.82,.02),feet=M('#303638',.48,.35);
- B(g,w*.92,h*.16,d*.82,0,h*.14,0,frame);
+ const tag=(mesh,key)=>{if(mesh)mesh.userData.part={t:key};return mesh};const frame=M('#5c5146',.52,.18),fabric=M(it.col||'#a9b2a5',.86,.02),rope=M('#b99d7c',.82,.02),feet=M('#303638',.48,.35);
+ tag(B(g,w*.92,h*.16,d*.82,0,h*.14,0,frame),'frame');
  for(const side of [-1,1]){
   for(let z=-d*.38;z<=d*.38;z+=d*.055)tube([side*w*.43,h*.18,z],[side*w*.43,h*.68,z],.8,rope);
   for(let y=h*.2;y<=h*.66;y+=h*.055)tube([side*w*.43,y,-d*.4],[side*w*.43,y,d*.4],.8,rope);
-  const arm=new T.Mesh(new T.SphereGeometry(1,28,18),frame);arm.scale.set(w*.075,h*.23,d*.42);arm.position.set(side*w*.43,h*.43,0);g.add(arm);
+  tag(B(g,w*.15,h*.22,d*.72,side*w*.43,h*.43,0,frame),'frame');
  }
  const n=Math.max(2,Math.min(4,Math.round(w/75)));
- for(let k=0;k<n;k++){const x=(k-(n-1)/2)*w*.8/n,seat=new T.Mesh(new T.SphereGeometry(1,32,24),fabric);seat.scale.set(w*.8/n*.52,h*.09,d*.34);seat.position.set(x,h*.29,0);g.add(seat);const back=new T.Mesh(new T.SphereGeometry(1,32,24),fabric);back.scale.set(w*.8/n*.52,h*.22,d*.09);back.position.set(x,h*.62,-d*.34);g.add(back)}
- for(const x of [-1,1])for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2,2.8,h*.14,16),feet);leg.position.set(x*w*.38,h*.07,z*d*.34);g.add(leg)}
+ const cushion=(x,y,z,sx,sy,sz,key)=>{const r=Math.min(6,sx*.16,sz*.16),sh=new T.Shape();sh.moveTo(-sx/2+r,-sz/2);sh.lineTo(sx/2-r,-sz/2);sh.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);sh.lineTo(sx/2,sz/2-r);sh.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);sh.lineTo(-sx/2+r,sz/2);sh.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);sh.lineTo(-sx/2,-sz/2+r);sh.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);sh.closePath();const geo=new T.ExtrudeGeometry(sh,{depth:sy,bevelEnabled:true,bevelSegments:5,bevelSize:Math.min(2,sy*.18),bevelThickness:Math.min(1.8,sy*.16),curveSegments:16});geo.rotateX(Math.PI/2);const mesh=new T.Mesh(geo,fabric);mesh.position.set(x,y+sy/2,z);mesh.castShadow=mesh.receiveShadow=true;mesh.userData.part={t:key};g.add(mesh);return mesh};
+ for(let k=0;k<n;k++){const x=(k-(n-1)/2)*w*.8/n;cushion(x,h*.25,0,w*.8/n*.92,h*.14,d*.66,'seat');cushion(x,h*.49,-d*.34,w*.8/n*.92,h*.28,d*.15,'back')}
+ for(const x of [-1,1])for(const z of [-1,1]){const leg=new T.Mesh(new T.CylinderGeometry(2,2.8,h*.14,16),feet);leg.position.set(x*w*.38,h*.07,z*d*.34);tag(leg,'feet');g.add(leg)}
  break;
 }
 case'seat':{
