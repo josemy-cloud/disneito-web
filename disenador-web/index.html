@@ -35,9 +35,9 @@ body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
 #pvp{display:block;box-sizing:border-box;width:100%;height:calc(100dvh - clamp(170px,32dvh,300px) - 105px);min-height:90px;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
 #pvp select,#pvp input,#pvp button{max-width:100%;box-sizing:border-box}
 @media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}#pvp{height:calc(100dvh - clamp(150px,27dvh,230px) - 90px)}}
-</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=2">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
-<div id="top"><button id="compactMenu" aria-controls="top" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
+<div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
 <button id="bU" title="Deshacer (Ctrl+Z)">↶</button><button id="bR" title="Rehacer (Ctrl+Y)">↷</button>
 <button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">☁ Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><select id="bSt" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select>cm <span class="seg view-modes" role="group" aria-label="Modos de visualización">
@@ -56,7 +56,7 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 </div>
 <div id="main"><div id="tools"></div>
 <div class="side" id="lib"></div>
-<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="hint"></div><div id="walkTouch">
+<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="hint"></div><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
@@ -600,39 +600,68 @@ c2.onmousemove=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
 window.onmouseup=()=>{if(!drag)return;const d=drag;drag=null;if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved&&d.mv=='i'&&!fits(d.e)){d.e.x=d.x0;d.e.y=d.y0;if(d.e.rel)updateChildOffset(d.e);syncSupportedChildren(d.e);refresh();hint('Movimiento cancelado: colisión física con pared u objeto')}else if(d.moved)commit();else refresh()};
 c2.onwheel=e=>{e.preventDefault();const r=c2.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,[wx,wy]=W2(mx,my);k=Math.max(.15,Math.min(4,k*(e.deltaY<0?1.1:.9)));ox=mx-wx*k;oy=my-wy*k;draw()};
 c2.ondblclick=()=>{cur=null;draw()};
-// Touch input uses the same editor operations and undo history as the mouse.
-let planFinger=null;
+// A tap edits the active tool. A drag navigates unless it starts an explicit edit.
+let planTouch=null;
+const planMove=$('#planMove');
+planMove.onclick=()=>{
+  const editing=planMove.getAttribute('aria-pressed')!=='true';
+  planMove.setAttribute('aria-pressed',String(editing));
+  planMove.textContent=editing?'Mover elementos':'Desplazar plano';
+};
+function planPinch(touches){
+  const [a,b]=touches,r=c2.getBoundingClientRect();
+  return {x:(a.clientX+b.clientX)/2-r.left,y:(a.clientY+b.clientY)/2-r.top,
+    span:Math.max(1,Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY))};
+}
+function pressPlan(t){c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button:0})}
 c2.addEventListener('touchstart',e=>{
   e.preventDefault();
-  if(planFinger!==null||e.touches.length!==1)return;
-  const t=e.changedTouches[0];
-  planFinger=t.identifier;
-  if(tool!=='wall'&&tool!=='place'&&tool!=='door'&&tool!=='win'&&tool!=='measure'){
-    c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button:0});
+  if(e.touches.length===2){
+    if(planTouch?.kind==='edit')window.onmouseup();
+    const {x,y,span}=planPinch(e.touches);
+    planTouch={kind:'pinch',anchor:W2(x,y),span,scale:k};
+  }else if(e.touches.length===1){
+    const t=e.touches[0];
+    planTouch={kind:'tap',start:t,ox,oy,tool};
   }
 },{passive:false});
 c2.addEventListener('touchmove',e=>{
   e.preventDefault();
+  if(!planTouch)return;
+  if(planTouch.kind==='pinch'){
+    if(e.touches.length!==2)return;
+    const {x,y,span}=planPinch(e.touches);
+    k=Math.max(.15,Math.min(4,planTouch.scale*span/planTouch.span));
+    ox=x-planTouch.anchor[0]*k;
+    oy=y-planTouch.anchor[1]*k;
+    draw();
+    return;
+  }
   if(e.touches.length!==1)return;
-  const t=e.touches[0];
-  if(t.identifier===planFinger)c2.onmousemove(t);
+  const t=e.touches[0],dx=t.clientX-planTouch.start.clientX,dy=t.clientY-planTouch.start.clientY;
+  if(planTouch.kind==='tap'&&Math.hypot(dx,dy)>8){
+    const edit=tool===planTouch.tool&&(tool==='room'||(tool==='sel'&&planMove.getAttribute('aria-pressed')==='true'));
+    planTouch.kind=edit?'edit':'pan';
+    if(edit)pressPlan(planTouch.start);
+  }
+  if(planTouch.kind==='edit')c2.onmousemove(t);
+  if(planTouch.kind==='pan'){ox=planTouch.ox+dx;oy=planTouch.oy+dy;draw()}
 },{passive:false});
 c2.addEventListener('touchend',e=>{
-  const t=[...e.changedTouches].find(t=>t.identifier===planFinger);
-  if(!t)return;
   e.preventDefault();
-  planFinger=null;
-  if(e.touches.length===0&&['wall','place','door','win','measure'].includes(tool)){
-    c2.onmousemove(t);
-    c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button:0});
-  }
-  window.onmouseup();
-},{passive:false});
-c2.addEventListener('touchcancel',e=>{
-  if([...e.changedTouches].some(t=>t.identifier===planFinger)){
-    planFinger=null;
+  if(!planTouch||e.touches.length)return;
+  const gesture=planTouch;
+  planTouch=null;
+  if(gesture.kind==='tap'&&gesture.tool===tool){
+    const t=e.changedTouches[0];
+    if(tool==='wall'||tool==='place')c2.onmousemove(t);
+    pressPlan(t);
     window.onmouseup();
-  }
+  }else if(gesture.kind==='edit')window.onmouseup();
+},{passive:false});
+c2.addEventListener('touchcancel',()=>{
+  if(planTouch?.kind==='edit')window.onmouseup();
+  planTouch=null;
 });
 /* Los muros/aperturas usan wd (ancho) para la apertura; normalizamos nombres */
 S.o.forEach(o=>{});
@@ -2387,7 +2416,7 @@ let dualSplitDrag=false;
 dualSplitter.addEventListener('pointerdown',e=>{if(!dualView)return;dualSplitDrag=true;dualSplitter.setPointerCapture(e.pointerId);e.preventDefault()});
 dualSplitter.addEventListener('pointermove',e=>{if(!dualSplitDrag)return;const r=$('#view').getBoundingClientRect();dualRatio=Math.max(.25,Math.min(.72,(e.clientY-r.top)/r.height));$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');resize();draw()});
 dualSplitter.addEventListener('pointerup',()=>dualSplitDrag=false);dualSplitter.addEventListener('pointercancel',()=>dualSplitDrag=false);
-function setMode(m){dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI()}
+function setMode(m){dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
@@ -2617,30 +2646,71 @@ document.addEventListener('pointerlockchange',()=>{if(walk&&!document.pointerLoc
 r3.domElement.addEventListener('click',e=>{if(walk&&!touchWalk&&!document.pointerLockElement&&e.pointerType!=='touch')r3.domElement.requestPointerLock?.()});
 r3.domElement.addEventListener('wheel',e=>{if(walk){cam.fov=Math.max(30,Math.min(90,cam.fov+e.deltaY*.03));cam.updateProjectionMatrix()}});
 document.body.classList.add('adaptive');
-$('#compactMenu').onclick=()=>{
-  const open=$('#top').classList.toggle('expanded');
-  $('#compactMenu').setAttribute('aria-expanded',String(open));
+const mobileTop=$('#top'),mobileMenu=$('#compactMenu');
+const mobileActions=document.createElement('div');
+mobileActions.id='compactActions';
+mobileActions.setAttribute('aria-label','Acciones del proyecto');
+const mobileDock=[mobileMenu,$('#tl'),$('#tr'),mobileTop.querySelector('.view-modes')];
+const topNodes=[...mobileTop.childNodes];
+function arrangeMobileTop(){
+  if(useCompact()){
+    for(const node of topNodes)if(!mobileDock.includes(node))mobileActions.append(node);
+    mobileTop.append(mobileActions);
+  }else{
+    mobileActions.remove();
+    mobileTop.append(...topNodes);
+  }
+}
+function setMobileMenu(open){
+  mobileTop.classList.toggle('expanded',open);
+  mobileMenu.setAttribute('aria-expanded',String(open));
+  if(!open)mobileActions.querySelectorAll('.dd.open').forEach(menu=>menu.classList.remove('open'));
+}
+function setMobilePanel(panelId){
+  for(const [id,buttonId] of [['lib','tl'],['pr','tr']]){
+    $('#'+id).classList.toggle('adaptive-open',id===panelId);
+    $('#'+buttonId).setAttribute('aria-expanded',String(id===panelId));
+  }
+}
+const useCompact=()=>compact.matches&&!document.body.classList.contains('ui-legacy');
+mobileMenu.onclick=()=>{
+  const open=!mobileTop.classList.contains('expanded');
+  if(open)setMobilePanel(null);
+  setMobileMenu(open);
 };
 for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Propiedades']]){
   const button=$('#'+buttonId),panel=$('#'+panelId);
   button.setAttribute('aria-controls',panelId);
   button.onclick=()=>{
-    if(compact.matches&&!document.body.classList.contains('ui-legacy')){
+    if(useCompact()){
       panel.style.display='';
-      const open=panel.classList.toggle('adaptive-open');
-      const other=panelId==='lib'?'pr':'lib';
-      $('#'+other).classList.remove('adaptive-open');
-      $(other==='lib'?'#tl':'#tr').setAttribute('aria-expanded','false');
-      button.setAttribute('aria-expanded',String(open));
-    }else panel.style.display=panel.style.display==='none'?'':'none';
+      setMobileMenu(false);
+      setMobilePanel(panel.classList.contains('adaptive-open')?null:panelId);
+    }else{
+      panel.style.display=panel.style.display==='none'?'':'none';
+      button.setAttribute('aria-expanded',String(panel.style.display!=='none'));
+    }
   };
   const labelPanel=()=>{
-    button.textContent=compact.matches?label:buttonId==='tl'?'◧ Izq.':'Der. ◨';
-    button.setAttribute('aria-expanded',String(compact.matches?panel.classList.contains('adaptive-open'):panel.style.display!=='none'));
+    button.textContent=useCompact()?label:buttonId==='tl'?'◧ Izq.':'Der. ◨';
+    button.setAttribute('aria-expanded',String(useCompact()?panel.classList.contains('adaptive-open'):panel.style.display!=='none'));
   };
   compact.addEventListener('change',labelPanel);
   labelPanel();
 }
+compact.addEventListener('change',()=>{setMobileMenu(false);arrangeMobileTop()});
+arrangeMobileTop();
+mobileActions.addEventListener('click',e=>{
+  if(useCompact()&&e.target.closest('button:not(#bF):not(#bX)'))setMobileMenu(false);
+});
+document.addEventListener('pointerdown',e=>{
+  if(!useCompact())return;
+  if(!mobileTop.contains(e.target))setMobileMenu(false);
+  if(e.target.closest('#view,#tools'))setMobilePanel(null);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&useCompact()){setMobileMenu(false);setMobilePanel(null)}
+});
 /* ===== Previsualización 3D real ===== */
 const r4=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}),sc4=new T.Scene(),cam4=new T.PerspectiveCamera(40,520/330,5,6000),oc4=new T.OrbitControls(cam4,r4.domElement),g4=new T.Group();sc4.add(g4,new T.HemisphereLight('#fff','#887',.9));const dl4=new T.DirectionalLight('#fff',.8);dl4.position.set(300,500,400);sc4.add(dl4);sc4.background=new T.Color('#2b303a');
 let PV=[],pvIt=null,pvOpen=false,pendingModel=null;
