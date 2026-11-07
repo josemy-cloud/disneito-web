@@ -22,7 +22,7 @@
       document.getElementById('accessFallbackStatus').textContent='El formulario está tardando en cargar. Puedes volver a intentarlo.';
     },8000);
   </script>
-  <script src="/auth.js?v=4"></script>
+  <script src="/auth.js?v=5"></script>
   <script>
     (async()=>{
       const fallback=document.getElementById('accessFallback');
@@ -39,10 +39,6 @@
         const status=document.createElement('p');
         status.setAttribute('role','status');
         box.append(status);
-        if(new URLSearchParams(location.search).has('_acceso')){
-          status.textContent='No se pudo abrir el editor con la sesión anterior. Inicia sesión de nuevo.';
-          return;
-        }
         if(!SES||location.hash)return;
 
         const cancel=new AbortController();
@@ -50,7 +46,7 @@
         box.addEventListener('focusin',stop,{once:true});
         box.addEventListener('pointerdown',stop,{once:true});
         status.textContent='Comprobando la sesión guardada…';
-        try{await enterEditor(AbortSignal.any([cancel.signal,AbortSignal.timeout(8000)]))}
+        try{await enterEditor(AbortSignal.any([cancel.signal,AbortSignal.timeout(12000)]))}
         catch{
           status.textContent=cancel.signal.aborted?'':'No se pudo recuperar la sesión guardada. Puedes iniciar sesión de nuevo.';
         }finally{

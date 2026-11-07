@@ -1,51 +1,41 @@
-const SBU='https://aqfqwvzbsbjrixzgxtro.supabase.co',SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZnF3dnpic2Jqcml4emd4dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTA5MjMsImV4cCI6MjEwOTEyNjkyM30.VWRIowVOECv7ycW3Nnpz-EQNJx2izM7yx7xOxkNWVZo';
-let SES=null,REMEMBER_SESSION=true;try{const savedLocal=localStorage.getItem('sbSes');if(savedLocal){SES=JSON.parse(savedLocal);REMEMBER_SESSION=true}else{const savedTab=sessionStorage.getItem('sbSes');if(savedTab){SES=JSON.parse(savedTab);REMEMBER_SESSION=false}}}catch(e){}
-const sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}};
+var SBU='https://aqfqwvzbsbjrixzgxtro.supabase.co',SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZnF3dnpic2Jqcml4emd4dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTA5MjMsImV4cCI6MjEwOTEyNjkyM30.VWRIowVOECv7ycW3Nnpz-EQNJx2izM7yx7xOxkNWVZo';
+var SES,REMEMBER_SESSION;
+if(typeof SES==='undefined'){SES=null;REMEMBER_SESSION=true;try{const savedLocal=localStorage.getItem('sbSes');if(savedLocal){SES=JSON.parse(savedLocal);REMEMBER_SESSION=true}else{const savedTab=sessionStorage.getItem('sbSes');if(savedTab){SES=JSON.parse(savedTab);REMEMBER_SESSION=false}}}catch(e){}
+}
+var sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}};
 async function sbAuth(path,body,signal=AbortSignal.timeout(10000)){const r=await fetch(SBU+'/auth/v1/'+path,{signal,method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
 async function sbRecover(email){const address=String(email||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw new Error('Introduce un correo electrónico válido.');const redirectTo=window.location.origin+'/acceso';const r=await fetch(SBU+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify({email:address})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo enviar el correo de recuperación.');return j}
-const sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
+var sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
 async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para continuar.');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token},signal);signal?.throwIfAborted();sesSave(sesFrom(j))}return SES.access_token}
 
-async function enterEditor(signal=AbortSignal.timeout(8000)){
+async function enterEditor(signal=AbortSignal.timeout(12000)){
   const token=await sbTok(signal);
-  const response=await fetch('/api/sesion',{
-    method:'POST',signal,headers:{Authorization:'Bearer '+token}
+  const response=await fetch('/api/editor',{
+    signal,cache:'no-store',redirect:'error',headers:{Authorization:'Bearer '+token}
   });
-  signal.throwIfAborted();
   if(!response.ok){
     const data=await response.json().catch(()=>({}));
-    throw new Error(data.error||'Cloudflare no pudo abrir la sesión (HTTP '+response.status+').');
+    throw new Error(data.error||'Cloudflare no pudo cargar el editor (HTTP '+response.status+').');
   }
-  const cookieCheck=await fetch('/api/sesion',{signal,cache:'no-store',headers:{Authorization:'Bearer '+token}});
+  const html=await response.text();
   signal.throwIfAborted();
-  const target=new URL('/',location.origin);
-  target.search=location.search;
-  target.searchParams.set('_acceso','1');
-  if(cookieCheck.status===204){
-    location.replace(target);
-    return;
+  if(response.headers.get('X-Disenito-Editor')!=='1'||!html.includes('id="c2"')){
+    throw new Error('Cloudflare no devolvió el editor. Inténtalo de nuevo cuando termine el despliegue.');
   }
-
-  // The session was accepted, but this browser cannot round-trip the cookie.
-  // Use a same-origin navigation POST so the token stays out of the URL.
-  target.pathname='/editor';
-  const navigation=document.createElement('form');
-  navigation.method='post';
-  navigation.action=target.href;
-  navigation.hidden=true;
-  const accessToken=document.createElement('input');
-  accessToken.type='hidden';
-  accessToken.name='access_token';
-  accessToken.value=token;
-  navigation.append(accessToken);
-  document.body.append(navigation);
-  navigation.submit();
+  const target=new URL('/editor',location.origin);
+  target.search=location.search;
+  target.searchParams.delete('_acceso');
+  history.replaceState(null,'',target);
+  // Render the authenticated HTML from our own Worker without a second navigation.
+  document.open();
+  document.write(html);
+  document.close();
 }
 async function leaveEditor(){
   const token=SES?.access_token;
   sesSave(null);
   try{localStorage.removeItem('curProj')}catch{}
-  const response=await fetch('/api/sesion',{method:'DELETE',headers:token?{Authorization:'Bearer '+token}:{}});
+  const response=await fetch('/api/sesion',{method:'DELETE',signal:AbortSignal.timeout(9000),headers:token?{Authorization:'Bearer '+token}:{}});
   if(!response.ok)throw new Error('No se pudo cerrar la sesión. Inténtalo de nuevo.');
   location.replace('/acceso');
 }

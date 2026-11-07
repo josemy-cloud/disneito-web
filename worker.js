@@ -117,6 +117,33 @@ export default {
       return sessionResponse(token);
     }
 
+    if (url.pathname === "/api/editor") {
+      if (request.method !== "GET") return new Response(null, { status: 405, headers: NO_STORE });
+      const token = bearer(request);
+      try {
+        if (!token || !await getSupabaseUser(token)) {
+          return Response.json({ error: "Tu sesión ha caducado. Vuelve a iniciar sesión." }, { status: 401, headers: NO_STORE });
+        }
+      } catch {
+        return Response.json({ error: "No se pudo validar la cuenta con Supabase." }, { status: 503, headers: NO_STORE });
+      }
+
+      const assetURL = new URL("/index.html", url.origin);
+      let asset = await env.ASSETS.fetch(new Request(assetURL, { redirect: "manual" }));
+      // Some preview asset configurations redirect /index.html to the directory URL.
+      if ((asset.status >= 300 && asset.status < 400) || asset.status === 404) {
+        assetURL.pathname = "/";
+        asset = await env.ASSETS.fetch(new Request(assetURL, { redirect: "manual" }));
+      }
+      if (!asset.ok) {
+        return Response.json({ error: "La versión publicada del editor no está disponible." }, { status: 502, headers: NO_STORE });
+      }
+      const headers = new Headers(asset.headers);
+      headers.set("Cache-Control", NO_STORE["Cache-Control"]);
+      headers.set("X-Disenito-Editor", "1");
+      return new Response(asset.body, { status: 200, headers });
+    }
+
     // Only the account-based generation path may invoke the image model.
     if (url.pathname === "/api/ia/prueba" || url.pathname === "/api/master/test-session") {
       return Response.json({ error: "Ruta retirada." }, { status: 410, headers: NO_STORE });
@@ -517,29 +544,17 @@ export default {
     }
 
     const accessPage = url.pathname === "/acceso" || url.pathname === "/acceso.html";
-    const editorPost = url.pathname === "/editor" && request.method === "POST";
     if (!accessPage) {
-      let token;
-      if (editorPost) {
-        const type = request.headers.get("Content-Type") || "";
-        if (request.headers.get("Origin") !== url.origin || !type.startsWith("application/x-www-form-urlencoded")) {
-          return new Response(null, { status: 403, headers: NO_STORE });
-        }
-        const form = await request.formData().catch(() => null);
-        token = form?.get("access_token");
-        if (typeof token !== "string" || token.length > 4096) token = "";
-      } else {
-        token = (url.pathname.startsWith("/catalogo/") && request.method === "GET" ? bearer(request) : "") || sessionCookie(request);
-      }
+      const token = (url.pathname.startsWith("/catalogo/") && request.method === "GET" ? bearer(request) : "") || sessionCookie(request);
       if (!token || !await getSupabaseUser(token).catch(() => null)) {
-        return new Response(null, { status: editorPost ? 303 : 302, headers: {
+        return new Response(null, { status: 302, headers: {
           ...NO_STORE, Location: "/acceso" + url.search
         } });
       }
     }
     if (accessPage) url.pathname = "/acceso.html";
     else if (url.pathname === "/" || url.pathname === "/index" || url.pathname === "/editor") url.pathname = "/index.html";
-    const asset = await env.ASSETS.fetch(editorPost ? new Request(url) : new Request(url, request));
+    const asset = await env.ASSETS.fetch(new Request(url, request));
     const headers = new Headers(asset.headers);
     headers.set("Cache-Control", NO_STORE["Cache-Control"]);
     return new Response(asset.body, { status: asset.status, headers });
