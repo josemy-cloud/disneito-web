@@ -764,6 +764,41 @@ function tex(m,sz,j,jc,img){const key=m+j+jc;if(!img&&TC[key])return TC[key].clo
  t.needsUpdate=true;TC[key]=t;return t.clone()}
 function sm(m,col,w,h,sz,j,jc,rot){if(m&&m.startsWith('pbr:')){const pm=pbrMat(m.slice(4));if(pm)return pm}if(!m)return new T.MeshStandardMaterial({color:col,roughness:.9});const im=m.startsWith('img')?S.cm[+m.slice(3)]:null,t=tex(im?'x':m,sz,j,jc,im);t.repeat.set(Math.max(.1,w/sz),Math.max(.1,h/sz));t.center.set(.5,.5);t.rotation=(rot||0)*D;t.needsUpdate=true;return new T.MeshStandardMaterial({map:t,roughness:m=='mármol'?.15:.65})}
 /* ===== 3D ===== */
+function closeDropdowns(root=document){
+  root.querySelectorAll('.dd.open').forEach(dropdown=>{
+    dropdown.classList.remove('open');
+    dropdown.firstElementChild.setAttribute('aria-expanded','false');
+  });
+}
+function positionDropdown(button,menu){
+  const gap=6,edge=8,anchor=button.getBoundingClientRect();
+  const width=document.documentElement.clientWidth,height=document.documentElement.clientHeight;
+  menu.style.maxHeight='';
+  const below=Math.max(0,height-anchor.bottom-gap-edge);
+  const above=Math.max(0,anchor.top-gap-edge);
+  const openUp=menu.offsetHeight>below&&above>below;
+  menu.style.maxHeight=(openUp?above:below)+'px';
+  menu.style.left=Math.max(edge,Math.min(anchor.left,width-menu.offsetWidth-edge))+'px';
+  menu.style.top=(openUp?anchor.top-gap-menu.offsetHeight:anchor.bottom+gap)+'px';
+}
+document.querySelectorAll('.dd>button').forEach(button=>{
+  button.setAttribute('aria-expanded','false');
+  button.onclick=event=>{
+    event.stopPropagation();
+    const dropdown=button.parentElement,wasOpen=dropdown.classList.contains('open');
+    closeDropdowns();
+    if(wasOpen)return;
+    dropdown.classList.add('open');
+    button.setAttribute('aria-expanded','true');
+    const menu=dropdown.querySelector('.ddm');
+    if(dropdown.closest('#top'))positionDropdown(button,menu);
+    else menu.style.top=menu.style.left=menu.style.maxHeight='';
+  };
+});
+document.addEventListener('click',()=>closeDropdowns());
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeDropdowns()});
+$('#top').addEventListener('scroll',event=>closeDropdowns(event.currentTarget));
+window.addEventListener('resize',()=>closeDropdowns());
 const d3=$('#d3'),r3=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,powerPreference:'high-performance'}),sc=new T.Scene(),cam=new T.PerspectiveCamera(48,1,5,10000),root=new T.Group(),oc=new T.OrbitControls(cam,r3.domElement);
 r3.outputEncoding=T.sRGBEncoding;r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=.92;r3.shadowMap.type=T.PCFSoftShadowMap;r3.domElement.style.display='block';r3.domElement.style.outline='none';
 sc.background=new T.Color('#e8e7e2');sc.add(root);d3.append(r3.domElement);cam.position.set(500,500,700);oc.target.set(150,50,150);oc.enableDamping=true;oc.dampingFactor=.075;oc.minDistance=90;oc.maxDistance=6500;oc.maxPolarAngle=Math.PI*.49;
@@ -3569,41 +3604,6 @@ let RE=null,rcv=null;const rp=document.createElement('div');rp.style.cssText='po
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
 function modeUI(){const q=$('#sq').value,m3=mode=='3d';[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
 $('#mv2').onclick=()=>setMode('2d');$('#mvDual').onclick=()=>setMode(dualView?'2d':'dual');[['mvf','f'],['mvm','m'],['mvq','q']].forEach(([id,v])=>$('#'+id).onclick=()=>{$('#sq').value=v;setMode('3d');setQ();modeUI()});
-function closeDropdowns(root=document){
-  root.querySelectorAll('.dd.open').forEach(dropdown=>{
-    dropdown.classList.remove('open');
-    dropdown.firstElementChild.setAttribute('aria-expanded','false');
-  });
-}
-function positionDropdown(button,menu){
-  const gap=6,edge=8,anchor=button.getBoundingClientRect();
-  const width=document.documentElement.clientWidth,height=document.documentElement.clientHeight;
-  menu.style.maxHeight='';
-  const below=Math.max(0,height-anchor.bottom-gap-edge);
-  const above=Math.max(0,anchor.top-gap-edge);
-  const openUp=menu.offsetHeight>below&&above>below;
-  menu.style.maxHeight=(openUp?above:below)+'px';
-  menu.style.left=Math.max(edge,Math.min(anchor.left,width-menu.offsetWidth-edge))+'px';
-  menu.style.top=(openUp?anchor.top-gap-menu.offsetHeight:anchor.bottom+gap)+'px';
-}
-document.querySelectorAll('.dd>button').forEach(button=>{
-  button.setAttribute('aria-expanded','false');
-  button.onclick=event=>{
-    event.stopPropagation();
-    const dropdown=button.parentElement,wasOpen=dropdown.classList.contains('open');
-    closeDropdowns();
-    if(wasOpen)return;
-    dropdown.classList.add('open');
-    button.setAttribute('aria-expanded','true');
-    const menu=dropdown.querySelector('.ddm');
-    if(mobileTop.contains(dropdown))positionDropdown(button,menu);
-    else menu.style.top=menu.style.left=menu.style.maxHeight='';
-  };
-});
-document.addEventListener('click',()=>closeDropdowns());
-document.addEventListener('keydown',event=>{if(event.key==='Escape')closeDropdowns()});
-mobileTop.addEventListener('scroll',()=>closeDropdowns(mobileTop));
-window.addEventListener('resize',()=>closeDropdowns());
 $('#ckc').onchange=()=>{showCeil=$('#ckc').checked;build3d()};$('#ckMeasures').onchange=()=>{S.showMeasures=$('#ckMeasures').checked;commit()};
 const NMK={puerta:'Puerta',cajon:'Cajón',hueco:'Zona / hueco',estante:'Estante',app:'Hueco electrodoméstico',barra:'Barra de colgar',separador:'Separador',encimera:'Encimera',espejo:'Espejo',lavabo:'Lavabo'};let elSel=0;
 function libWarn(it,o){const c=it.cfg,iw=it.w-4,Hi=ihl(it);libMig(c,iw,Hi);const E=c.el,bad=libBad(c,iw,Hi);E.forEach((e,i)=>{const nm=NMK[e.k]+' '+(i+1);if(bad.has(i))o.push(nm+': sale del interior ('+iw+'×'+Hi+' cm) o se solapa con otro: NO se dibuja');
