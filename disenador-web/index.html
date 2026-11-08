@@ -177,6 +177,10 @@ const nid=()=>S.id++,get=()=>sel&&S[sel.k].find(e=>e.id==sel.id);
 const len=w=>Math.hypot(w.x2-w.x1,w.y2-w.y1);
 /* ===== Biblioteca inicial (modelos paramétricos propios) ===== */
 const KITCHEN_PRESETS=new WeakMap();
+const LAUNDRY_FRONT_LOADERS={
+ lavadora:{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Lavadora frontal",w:60,h:85,d:62,e:0,col:"#b6a28d",s:"nórdico",variant:0},
+ secadora:{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Secadora frontal",w:60,h:85,d:62,e:0,col:"#8c9aa5",s:"industrial",variant:1}
+};
 const LIB=[
 {t:'base',n:'Mueble bajo cocina 60',c:'Cocina',s:'moderno',w:60,h:87,d:60,e:0,col:'#e9e6df'},
 {t:'base',n:'Mueble bajo cocina 90 (2 puertas)',c:'Cocina',s:'moderno',w:90,h:87,d:60,e:0,col:'#3b4a5a'},
@@ -250,8 +254,8 @@ LIB.push(
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"dresser",n:"Cajonera móvil",w:42,h:58,d:52,e:0,col:"#d2c8b8",s:"rústico",variant:1},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"computer",n:"Monitor y teclado",w:65,h:48,d:22,e:0,col:"#a88f78",s:"moderno",variant:2},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"computer",n:"Portátil",w:35,h:21,d:24,e:0,col:"#7b8286",s:"moderno",variant:0,role:"surface-accessory"},
-{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Lavadora frontal",w:60,h:85,d:62,e:0,col:"#b6a28d",s:"nórdico",variant:0},
-{t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Secadora frontal",w:60,h:85,d:62,e:0,col:"#8c9aa5",s:"industrial",variant:1},
+LAUNDRY_FRONT_LOADERS.lavadora,
+LAUNDRY_FRONT_LOADERS.secadora,
 {t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"sink",n:"Lavadero con pila",w:80,h:90,d:60,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
 {t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"cabinet",n:"Armario limpieza",w:65,h:205,d:42,e:0,col:"#d2c8b8",s:"rústico",variant:0},
 {t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"basket",n:"Cesto ropa",w:42,h:62,d:42,e:0,col:"#a88f78",s:"moderno",variant:1},
@@ -441,6 +445,7 @@ function libUI(q=''){
  // Si el modelo ya tiene estancia asignada, esa asignación prevalece sobre su categoría.
  // Así los elementos "Exterior" no aparecen duplicados en Terraza y Jardín.
  const belongs=(o,room)=>{
+  if(room.key==='cocina'&&(o===LAUNDRY_FRONT_LOADERS.lavadora||o===LAUNDRY_FRONT_LOADERS.secadora))return true;
   if(o.roomType)return o.roomType===room.key;
   if(o.c==='Importados'||o.c==='Mi biblioteca')return room.key==='salón';
   return room.cats.includes(o.c);
@@ -2410,11 +2415,11 @@ function panelWithCutouts(w,h,holes,t,segments=40){
  return new T.ExtrudeGeometry(shape,{depth:t,bevelEnabled:false,curveSegments:segments});
 }
 
-function buildLaundryWasher(g,it,primary){
+function buildLaundryWasher(g,it,primary,{owner=it,index=0,finishes={}}={}){
  const {w,h,d}=it,upper=/superior/i.test(it.n||''),dryer=/secadora/i.test(it.n||'');
- const body=partFinish(primary.clone(),'body'),panel=partFinish(M('#d0d4d3',.46,.15),'control');
- const trim=partFinish(M('#353c40',.42,.28),'trim'),steel=partFinish(M('#959da2',.31,.68),'drum');
- const door=partFinish(M('#465158',.4,.39),'door'),glass=partFinish(new T.MeshStandardMaterial({color:'#738690',roughness:.13,transparent:true,opacity:.62,metalness:.2}),'glass');
+ const body=partFinish(primary.clone(),'body'),panel=partFinish(finishes.panel||M('#d0d4d3',.46,.15),'control');
+ const trim=partFinish(finishes.trim||M('#353c40',.42,.28),'trim'),steel=partFinish(M('#959da2',.31,.68),'drum');
+ const door=partFinish(finishes.door||M('#465158',.4,.39),'door'),glass=partFinish(finishes.glass||new T.MeshStandardMaterial({color:'#738690',roughness:.13,transparent:true,opacity:.62,metalness:.2}),'glass');
  const t=Math.min(1.3,w*.055,d*.05,h*.05),base=h*.038,r=Math.min(w*.35,d*.36,h*.29);
  const front=d/2-t,back=-d/2+t,cy=h*.47;
  for(const side of [-1,1])B(g,t,h-base,d,side*(w-t)/2,(h+base)/2,0,body);
@@ -2433,7 +2438,7 @@ function buildLaundryWasher(g,it,primary){
   else{lift.position.set(0,cy,front);lift.rotation.z=a;B(lift,2,2,drumDepth*.74,0,r*.92,-drumDepth/2,steel)}
   g.add(lift);
  }
- it.op=it.op||[];
+ owner.op=owner.op||[];
  if(upper){
   B(g,w-2*t,h-base-t,t,0,(h+base-t)/2,front+t/2,body);
   const top=new T.Mesh(panelWithCutouts(w-2*t,d,[[0,0,r,r]],t),body);
@@ -2443,7 +2448,7 @@ function buildLaundryWasher(g,it,primary){
   B(lid,w*.84,t,d*.69,0,t/2,d*.345,door);
   B(lid,w*.44,.8,d*.055,0,t+.35,d*.61,trim);
   B(g,w*.78,1.4,d*.10,0,h-.45,-d*.425,panel);
-  stepMV(mv(lid,{it,k:0,t:'u',angle:82}));
+  stepMV(mv(lid,{it:owner,k:index,t:'u',angle:82}));
  }else{
   const plateH=h-base;
   const face=new T.Mesh(panelWithCutouts(w-2*t,plateH,[[0,cy-(h+base)/2,r,r]],t),body);
@@ -2451,7 +2456,7 @@ function buildLaundryWasher(g,it,primary){
   B(g,w-2*t,t,d,0,h-t/2,0,body);
   B(g,w*.89,h*.13,1.2,0,h*.907,d/2+.55,panel);
   B(g,w*.26,h*.055,1.4,w*.24,h*.915,d/2+1,trim);
-  const knob=new T.Mesh(new T.CylinderGeometry(w*.056,w*.056,2.3,28),trim);
+  const knob=new T.Mesh(new T.CylinderGeometry(w*.056,w*.056,2.3,28),finishes.knob||trim);
   knob.rotation.x=Math.PI/2;knob.position.set(0,h*.907,d/2+1.65);g.add(knob);
   if(!dryer){
    const tray=partFinish(M('#e4e1da',.61),'drawer'),slotW=w*.28,drawer=new T.Group(),z=d/2+1.3;
@@ -2464,9 +2469,9 @@ function buildLaundryWasher(g,it,primary){
   const rim=new T.Mesh(new T.TorusGeometry(r*1.02,1.75,14,64),door);rim.position.x=-hinge;pivot.add(rim);
   const window=new T.Mesh(new T.SphereGeometry(1,40,24),glass);
   window.scale.set(r*.94,r*.94,d*.035);window.position.x=-hinge;pivot.add(window);
-  B(pivot,1.7,6,1.6,r*2.03,0,1.35,door);
+  B(pivot,1.7,6,1.6,r*2.03,0,1.35,finishes.handle||door);
   B(g,2.7,5,1.2,hinge,cy,d/2+.45,trim);
-  stepMV(mv(pivot,{it,k:0,t:'d',sg:-1,angle:100}));
+  stepMV(mv(pivot,{it:owner,k:index,t:'d',sg:-1,angle:100}));
  }
 }
 
@@ -4981,9 +4986,26 @@ LAY['esquina riñón']=(g,it,c,Mx,y0,H,iw)=>{
 };
 LAY['torre']=(g,it,c,Mx,y0,H,iw)=>{let y=y0+2;(c.slots||[]).forEach((s,i)=>{const hh=s.h;B(g,iw,1.6,it.d-3,0,y-1,0,Mx.mc);if(s.k=='puerta')fdoor(g,it,i*2,-iw/2,iw,y+.3,hh-.6,it.fl,Mx);else if(s.k=='cajon')ndrw(g,it,i*2,-iw/2,iw,y+.3,hh-.6,Mx);else if(s.k!='hueco'){const kd=s.k=='hornoc'?'horno':s.k;appl(g,kd,iw-.4,hh,Math.min(APD[kd]||50,it.d-2),s.mat||s.fin||'acero',it,i*2,y,it.d/2)}y+=hh})};
 function tagp(o,t,i,it){o.userData.part={t,i};if(it&&selPart&&selPart.id==it.id&&selPart.t==t&&selPart.i==i)HL.push(o);return o}
+function buildKitchenPlinth(g,it,height){
+ const {w,d,cfg}=it,plate=Math.min(2,d*.09),recess=Math.min(7,d*.22),front=d/2-recess,back=front-plate;
+ const mat=pb(cfg,'cz')||fm(cfg.cz,'mate');
+ tagp(B(g,w-Math.min(2,w*.18),height,plate,0,height/2,front-plate/2,mat),'zócalo');
+ const footRadius=Math.min(3.1,w*.11,(back+d/2)*.16),margin=footRadius+Math.min(1.5,d*.05);
+ const x=w/2-footRadius-Math.min(4,w*.1),frontFoot=back-margin,backFoot=-d/2+margin;
+ const metal=M('#737d83',.34,.82),poly=M('#292e32',.72,.04);
+ const leg=(radiusTop,radiusBottom,from,to,xx,zz,material)=>{
+  const mesh=new T.Mesh(new T.CylinderGeometry(radiusTop,radiusBottom,to-from,20),material);
+  mesh.position.set(xx,(from+to)/2,zz);mesh.name='Pata niveladora';g.add(mesh);
+ };
+ for(const xx of [-x,x])for(const zz of [backFoot,frontFoot]){
+  leg(footRadius*.87,footRadius,0,height*.32,xx,zz,poly);
+  leg(footRadius*.38,footRadius*.44,height*.32,height*.88,xx,zz,metal);
+  leg(footRadius*.66,footRadius*.62,height*.88,height,xx,zz,metal);
+ }
+}
 BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=kitchenHasTop(c),y0=kitchenBaseY(c),H=ihl(it)+2,mc=pb(c,'cc')||fm(c.cc,c.acab),Mx={mf:pb(c,'cf')||fm(c.cf,c.acab,c.mf),mh:M(c.ct,.3,.9),mc},t=1.8,iw=w-2*t,L=c.lay;
  /* Casco de tablero de 18 mm: laterales, suelo, trasera encastrada y travesaños abiertos. */
- tagp(B(g,t,H,d,-w/2+t/2,y0+H/2,0,mc),'lateral izquierdo');tagp(B(g,t,H,d,w/2-t/2,y0+H/2,0,mc),'lateral derecho');tagp(B(g,iw,t,d-t,0,y0+t/2,-t/2,mc),'parte inferior');tagp(B(g,iw,H-2*t,.8,0,y0+H/2,-d/2+.4,mc),'fondo');tagp(B(g,iw,t,t,0,y0+H-t/2,d/2-t/2,mc),'travesaño superior delantero');tagp(B(g,iw,t,t,0,y0+H-t/2,-d/2+t/2,mc),'travesaño superior trasero');tagp(B(g,iw,.5,.35,0,y0+t*.55,d/2-.18,M('#c9c6bf',.78,.04)),'canto inferior');if(y0>0)tagp(B(g,w-2,y0,2,0,y0/2,d/2-7,pb(c,'cz')||fm(c.cz,'mate')),'zócalo');
+ tagp(B(g,t,H,d,-w/2+t/2,y0+H/2,0,mc),'lateral izquierdo');tagp(B(g,t,H,d,w/2-t/2,y0+H/2,0,mc),'lateral derecho');tagp(B(g,iw,t,d-t,0,y0+t/2,-t/2,mc),'parte inferior');tagp(B(g,iw,H-2*t,.8,0,y0+H/2,-d/2+.4,mc),'fondo');tagp(B(g,iw,t,t,0,y0+H-t/2,d/2-t/2,mc),'travesaño superior delantero');tagp(B(g,iw,t,t,0,y0+H-t/2,-d/2+t/2,mc),'travesaño superior trasero');tagp(B(g,iw,.5,.35,0,y0+t*.55,d/2-.18,M('#c9c6bf',.78,.04)),'canto inferior');
  if(!c.shl){c.shl=[];if(['puertas','armario alto','fregadero'].includes(L)||L==='columna'&&c.nc===0)for(let i=1;i<=(c.sh||0);i++)c.shl.push({y:H*i/((c.sh||0)+1)})}c.dvs=c.dvs||[];c.rods=c.rods||[];c.xd=c.xd||[];
  c.shl.forEach((q,i)=>{
   const th=Math.max(1.2,q.t||1.6),dd=Math.min(q.d||d-3,d-3),sy=y0+Math.min(Math.max(q.y,th/2+2),H-th/2-2),sz=-d/2+1.5+dd/2;
@@ -5006,18 +5028,7 @@ BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=
   const sy=y0+Math.min(Math.max(q.y,1),H-1);
   B(g,iw-.5,.55,.65,0,sy,d/2-.25,edgeBand);
  });
- /* Bastidor de apoyo y patas niveladoras ocultas tras el zócalo en bajos y columnas. */
- if(K=='base'||K=='col'){
-  const footMetal=M('#737d83',.34,.82),footPoly=M('#292e32',.72,.04);
-  for(const sx of [-1,1])for(const sz of [-1,1]){
-   const fx=sx*(w/2-t-4),fz=sz*(d/2-t-5);
-   const pad=new T.Mesh(new T.CylinderGeometry(2.7,3.1,3.2,20),footPoly);pad.position.set(fx,1.6,fz);g.add(pad);
-   const stem=new T.Mesh(new T.CylinderGeometry(1.15,1.35,5.8,16),footMetal);stem.position.set(fx,6.1,fz);g.add(stem);
-   const collar=new T.Mesh(new T.CylinderGeometry(2,2,1.2,16),footMetal);collar.position.set(fx,9.2,fz);g.add(collar);
-  }
-  B(g,iw*.9,2.2,2.2,0,y0-1.1,-d/2+t*1.6,footMetal);
-  B(g,iw*.9,2.2,2.2,0,y0-1.1,d/2-t*1.6,footMetal);
- }
+ if(y0>0)buildKitchenPlinth(g,it,y0);
  /* Herrajes de suspensión regulable para muebles altos, atornillados a la trasera. */
  if(K=='alto'){
   const hanger=M('#8b969d',.32,.84);
@@ -5036,7 +5047,14 @@ BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=
  g.userData.kitchenConstruction={schemaVersion:2,category:K,layout:L,panelThicknessCm:t,components:['18mm-carcass','captured-back','edge-banding','shelf-supports','hinged-fronts','drawer-runners','adjustable-feet','plinth-frame',...(K=='alto'?['wall-hangers']:[])],status:'integrated-pending-browser-visual-and-interaction-validation'};
  if(c.led&&K=='alto')B(g,iw-8,1,2,0,.6,d/2-6,LEDM);if(LAY[L])LAY[L](g,it,c,Mx,y0,H,iw)};
 /* Electrodomésticos independientes */
-function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0,y0,zf-d/2);g.add(a);const SP=typeof fin=='object'&&fin?fin:{g:fin},pm=(c,def)=>{const f=SP[c]||def||SP.g;return f[0]=='#'?M(f,.4,.1):finM(f)},m=pm('carc'),mp=pm('puerta'),mf=pm('marco'),dk=pm('cristal','cristal oscuro'),pn=pm('panel','cristal oscuro'),hd=pm('tirador','gris metal'),kn=pm('mandos','gris metal');
+function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0,y0,zf-d/2);g.add(a);const SP=typeof fin=='object'&&fin?fin:{g:fin},pm=(c,def)=>{const f=SP[c]||def||SP.g||'acero';return f[0]=='#'?M(f,.4,.1):finM(f)},m=pm('carc'),mp=pm('puerta'),mf=pm('marco'),dk=pm('cristal','cristal oscuro'),pn=pm('panel','cristal oscuro'),hd=pm('tirador','gris metal'),kn=pm('mandos','gris metal');
+ const laundry=LAUNDRY_FRONT_LOADERS[kd];
+ if(laundry){
+  const hasCustomFinish=SP.carc||(SP.g&&SP.g!=='acero');
+  const primary=hasCustomFinish?m:M(laundry.col,.55);
+  const finishes={panel:SP.panel?pn:null,trim:SP.marco?mf:null,door:SP.puerta?mp:null,glass:SP.cristal?dk:null,knob:SP.mandos?kn:null,handle:SP.tirador?hd:null};
+  buildLaundryWasher(a,{n:laundry.n,w,h,d},primary,{owner:it,index:k0,finishes});return;
+ }
  const frm=(p,ww,hh,cx,y,z,mt)=>[[0,hh/2+.4,ww+1.6,.8],[0,-hh/2-.4,ww+1.6,.8],[-ww/2-.4,0,.8,hh],[ww/2+.4,0,.8,hh]].forEach(([x,yy,bw,bh])=>B(p,bw,bh,.4,cx+x,y+yy,z,mt)),pv=(x,y,k,o)=>{const q=new T.Group();q.position.set(x,y,d/2);a.add(q);mv(q,Object.assign({it,k},o));return q};
  const rub=M('#151515',.9,0),stl=M('#c9ccd0',.35,.85),enam=M('#26272a',.6,.2),wht=M('#e9e9e6',.45,0),gls=new T.MeshStandardMaterial({color:'#9fb3c0',roughness:.05,metalness:.1,transparent:true,opacity:.35}),lcd=new T.MeshStandardMaterial({color:'#0c1013',emissive:'#4fd0ff',emissiveIntensity:.7,roughness:.3}),lit=new T.MeshStandardMaterial({color:'#ffffff',emissive:'#fff6dd',emissiveIntensity:.8}),zc=-.5;
  const shell=(cx,cy,cw,ch,im)=>{const D=d-1,x0=cx-cw/2,x1=cx+cw/2,y0=cy-ch/2,y1=cy+ch/2;B(a,x0+w/2,h,D,(x0-w/2)/2,h/2,zc,m);B(a,w/2-x1,h,D,(x1+w/2)/2,h/2,zc,m);B(a,cw,y0,D,cx,y0/2,zc,m);B(a,cw,h-y1,D,cx,(y1+h)/2,zc,m);B(a,cw,ch,2,cx,cy,-d/2+1,im)};
@@ -5211,44 +5229,6 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   B(p,w-7,h-17,.35,0,(h-12)/2-1,1.7,mf);B(p,w*.58,1.8,2.8,0,h-15,3.2,hd);B(p,w*.42,.45,.35,0,h-15,4.9,stl);
   [-1,1].forEach(side=>B(p,2.8,3.5,2,side*(w/2-7),.7,-.2,stl));
   B(a,w-7,.8,.7,0,cy+ch/2-2,d/2-3,rub);
- } else if(kd=='lavadora'||kd=='secadora'){
-  const chrome=M('#aeb5bb',.26,.80);
-  const cs=Math.min(w*.62,h*.52),cy=h*.47,innerR=cs*.43,depth=Math.min(d*.55,d-8);
-  // Carcasa hueca con abertura circular real en el frontal; no hay una placa opaca detrás del cristal.
-  const openingR=cs*.49,frontZ=d/2-1.2;
-  // Frontal de una sola pieza con hueco circular: sin juntas ni cortes en la zona inferior.
-  B(a,2.2,h-2,d-2,-w/2+1.1,h/2,-.5,m);B(a,2.2,h-2,d-2,w/2-1.1,h/2,-.5,m);
-  B(a,w-4,2,d-2,0,1,-.5,m);B(a,w-4,2,d-2,0,h-1,-.5,m);
-  B(a,w-4,h-4,2,0,h/2,-d/2+1,m);
-  const fasciaShape=new T.Shape();
-  fasciaShape.moveTo(0,0);fasciaShape.lineTo(w-4,0);fasciaShape.lineTo(w-4,h-4);fasciaShape.lineTo(0,h-4);fasciaShape.lineTo(0,0);
-  const fasciaHole=new T.Path();fasciaHole.absarc((w-4)/2,cy-2,openingR,0,Math.PI*2,true);fasciaShape.holes.push(fasciaHole);
-  const fascia=new T.Mesh(new T.ShapeGeometry(fasciaShape,64),mp);fascia.position.set(-w/2+2,2,frontZ);a.add(fascia);
-  const apertureRim=new T.Mesh(new T.TorusGeometry(openingR-1,1.1,10,48),chrome);apertureRim.position.set(0,cy,frontZ+1.1);a.add(apertureRim);
-  const tub=new T.Mesh(new T.CylinderGeometry(cs*.47,cs*.47,depth,40,1,true),stl);tub.rotation.x=Math.PI/2;tub.position.set(0,cy,-.2);a.add(tub);
-  const rear=new T.Mesh(new T.CircleGeometry(cs*.46,40),enam);rear.position.set(0,cy,-depth/2-.3);a.add(rear);
-  const drum=new T.Mesh(new T.CylinderGeometry(innerR,innerR,depth*.72,40,1,true),stl);drum.rotation.x=Math.PI/2;drum.position.set(0,cy,-.1);a.add(drum);
-  const backDrum=new T.Mesh(new T.CircleGeometry(innerR*.96,40),M('#777e83',.45,.5));backDrum.position.set(0,cy,-depth*.46);a.add(backDrum);
-  for(let q=0;q<28;q++){const ang=q*Math.PI*2/28,hole=new T.Mesh(new T.SphereGeometry(.48,6,5),rub);hole.position.set(Math.cos(ang)*innerR*.9,cy+Math.sin(ang)*innerR*.9,d/2-7);a.add(hole)}
-  for(let q=0;q<3;q++){const rib=new T.Mesh(new T.BoxGeometry(1.2,innerR*.8,depth*.45),wht);rib.position.set(0,cy,0);rib.rotation.z=q*Math.PI*2/3;a.add(rib)}
-  const gasket=new T.Mesh(new T.TorusGeometry(cs*.47,2.1,12,48),rub);gasket.position.set(0,cy,d/2-1.6);a.add(gasket);
-  const trim=new T.Mesh(new T.TorusGeometry(cs*.43,1.2,10,48),stl);trim.position.set(0,cy,d/2+.1);a.add(trim);
-  const glass=new T.Mesh(new T.CircleGeometry(cs*.405,48),new T.MeshPhysicalMaterial({color:'#233743',roughness:.08,metalness:.25,clearcoat:.8,clearcoatRoughness:.08,transparent:true,opacity:.82}));glass.position.set(0,cy,d/2+.25);a.add(glass);
-  const innerGlass=new T.Mesh(new T.CircleGeometry(cs*.29,40),new T.MeshStandardMaterial({color:'#8297a0',roughness:.12,metalness:.2,transparent:true,opacity:.55}));innerGlass.position.set(0,cy,d/2+.35);a.add(innerGlass);
-  B(a,w-2,9,1.4,0,h-5,d/2+.3,pn);B(a,w*.27,5,.4,-w*.32,h-5,d/2+1.05,wht);B(a,w*.12,2.4,.3,0,h-5,d/2+1.05,lcd);
-  const dial=new T.Mesh(new T.CylinderGeometry(3.1,3.1,1.8,28),kn);dial.rotation.x=Math.PI/2;dial.position.set(w*.29,h-5,d/2+1.2);a.add(dial);
-  B(a,.5,2.3,.4,w*.29,h-3.8,d/2+1.5,stl);for(let q=0;q<4;q++)B(a,2.2,1.2,.35,w*.12+q*3.2,h-5,d/2+1.1,kn);
-  // Escotilla circular independiente: solo gira el aro y el cristal; el frontal de la lavadora permanece fijo.
-  const pr=cs*.405,hingeX=-pr,centerX=pr;
-  const p=pv(hingeX,cy,k0,{t:'d',sg:-1});
-  const pFrame=new T.Mesh(new T.TorusGeometry(pr+2.4,3.2,14,56),stl);pFrame.position.set(centerX,0,1.8);p.add(pFrame);
-  const pGasket=new T.Mesh(new T.TorusGeometry(pr-2.2,2.1,12,52),rub);pGasket.position.set(centerX,0,2.05);p.add(pGasket);
-  const pGlass=new T.Mesh(new T.CircleGeometry(pr-3.2,52),new T.MeshPhysicalMaterial({color:'#233743',roughness:.08,metalness:.18,clearcoat:.9,clearcoatRoughness:.06,transparent:true,opacity:.48,side:T.DoubleSide}));pGlass.position.set(centerX,0,2.12);p.add(pGlass);
-  const pInner=new T.Mesh(new T.TorusGeometry(pr*.68,1.15,10,44),chrome);pInner.position.set(centerX,0,2.2);p.add(pInner);
-  const pWindow=new T.Mesh(new T.CircleGeometry(pr*.65,44),new T.MeshPhysicalMaterial({color:'#91a8b1',roughness:.14,metalness:.12,transparent:true,opacity:.24,side:T.DoubleSide}));pWindow.position.set(centerX,0,2.18);p.add(pWindow);
-  // Asa corta integrada en el borde derecho de la escotilla.
-  const pHandle=new T.Mesh(new T.CylinderGeometry(1.25,1.25,Math.max(5,pr*.34),12),hd);pHandle.position.set(centerX+pr*.84,0,2.8);p.add(pHandle);
-  [-1,1].forEach(side=>B(p,2.4,3.2,1.8,centerX-pr*.9,side*pr*.68,-.15,stl));
  } else if(kd=='americano'){
   // Frigorífico side-by-side: dos cámaras, puertas independientes y dispensador de agua/hielo.
   const innerW=w-8,innerD=d-10,glassShelf=GLS;
@@ -5423,7 +5403,7 @@ const tw=(n,sl,w)=>{const o=colm(n,w||60,240,'torre',{slots:sl});return o};
 LIB.push(base('Esquinero riñón extraíble (articulado)',90,'esquina riñón',{kn:2,kh:12,ks:24},90),base('Mueble libre (vacío)',60,'libre',{el:[]}));
 LIB.push(colm('Columna libre: cajón + horno + micro + puerta',60,184,'libre',{el:[{k:'cajon',x:0,y:0,w:56,h:25,d:0,ft:2},{k:'app',ap:'horno',x:0,y:25,w:56,h:59},{k:'app',ap:'micro',x:0,y:84,w:56,h:38},{k:'puerta',x:0,y:122,w:56,h:46,hg:'izq',op:'lateral'}]}));
 LIB.push(tw('Torre lavadora+horno+micro+armario',[{k:'lavadora',h:82},{k:'horno',h:60},{k:'micro',h:38},{k:'puerta',h:45}]),tw('Torre horno compacto+micro+armarios',[{k:'cajon',h:30},{k:'puerta',h:70},{k:'hornoc',h:45},{k:'micro',h:38},{k:'puerta',h:38}]),tw('Torre horno + micro',[{k:'cajon',h:25},{k:'horno',h:60},{k:'micro',h:38},{k:'puerta',h:90}]),tw('Columna frigorífico integrable',[{k:'frigo',h:177,fin:'blanco'},{k:'puerta',h:47}]));
-LIB.push(appo('Horno 60 cm','horno',59.5,59.5,55),appo('Horno compacto 45 cm','horno',59.5,45,55),appo('Microondas integrable','micro',59.5,38,35),appo('Lavadora carga frontal','lavadora',60,85,60),appo('Secadora','secadora',60,85,60),appo('Lavavajillas independiente','lavavajillas',60,85,60),appo('Lavavajillas integrable','lavavajillas',59.5,82,56),appo('Frigorífico 1 puerta','frigo',55,85,58),appo('Frigorífico combi','combi',60,185,65),appo('Frigorífico americano','americano',91,178,70),appo('Vinoteca','vinoteca',60,82,58),appo('Campana inclinada','campana_inc',90,80,50,150),appo('Campana decorativa','campana_dec',60,90,50,150),appo('Campana integrada','campana_int',60,20,30,155));
+LIB.push(appo('Horno 60 cm','horno',59.5,59.5,55),appo('Horno compacto 45 cm','horno',59.5,45,55),appo('Microondas integrable','micro',59.5,38,35),appo('Lavavajillas independiente','lavavajillas',60,85,60),appo('Lavavajillas integrable','lavavajillas',59.5,82,56),appo('Frigorífico 1 puerta','frigo',55,85,58),appo('Frigorífico combi','combi',60,185,65),appo('Frigorífico americano','americano',91,178,70),appo('Vinoteca','vinoteca',60,82,58),appo('Campana inclinada','campana_inc',90,80,50,150),appo('Campana decorativa','campana_dec',60,90,50,150),appo('Campana integrada','campana_int',60,20,30,155));
 // Las variantes son puntos de partida. El plano guarda la configuración elegida, igual que antes.
 const kitchenGroups=[
  ['Bajo con puertas',o=>o.cfg.k==='base'&&o.cfg.lay==='puertas','Bajo 60 puertas'],
