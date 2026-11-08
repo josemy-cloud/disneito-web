@@ -470,6 +470,10 @@ function libUI(q=''){
  const render=()=>{
   content.innerHTML='';const qv=(search.value||'').trim().toLowerCase();
   const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>!o.libraryHidden&&((qv||(!roomF&&!catF)||roomF&&belongs(o,rooms.find(r=>r.n==roomF))||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')+' '+(KITCHEN_PRESETS.get(o)||[]).map(p=>p.n).join(' ')).toLowerCase().includes(qv))));
+  if(roomF==='Cocina'){
+   const appliance=o=>o.t==='app'||o.c==='Electrodomésticos'||Object.values(LAUNDRY_FRONT_LOADERS).includes(o);
+   matches.sort((a,b)=>Number(appliance(a.o))-Number(appliance(b.o))||a.ix-b.ix);
+  }
   if(!catF&&!roomF&&!qv){
    const label=document.createElement('div');label.textContent='Estancias';label.style.cssText='font-size:12px;color:#b8c2d2;margin:4px 0 8px;font-weight:600';content.append(label);
    const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px';content.append(grid);
@@ -509,7 +513,7 @@ function openCatalogSource(value){
   } catch {}
 }
 function row(l,v,cb,t='number'){const K=CB;const d=document.createElement('label');d.className='r';const label=document.createElement('span');label.textContent=l;d.append(label);const i=document.createElement('input');i.type=t;i.value=v;i.onchange=()=>{cb(t=='number'?+i.value:i.value);K()};d.append(i);P.append(d)}
-function sel2(l,opts,v,cb){const K=CB;const d=document.createElement('label');d.className='r';const label=document.createElement('span');label.textContent=l;d.append(label);const s=document.createElement('select');opts.forEach(o=>{const e=document.createElement('option');e.value=o;e.textContent=o;s.append(e)});s.value=v;s.onchange=()=>{cb(s.value);K()};d.append(s);P.append(d)}
+function sel2(l,opts,v,cb,labels){const K=CB;const d=document.createElement('label');d.className='r';const label=document.createElement('span');label.textContent=l;d.append(label);const s=document.createElement('select');opts.forEach(o=>{const e=document.createElement('option');e.value=o;e.textContent=labels?.[o]||o;s.append(e)});s.value=v;s.onchange=()=>{cb(s.value);K()};d.append(s);P.append(d)}
 function btn(l,cb){const K=CB;const b=document.createElement('button');b.textContent=l;b.style.margin='3px 3px 0 0';b.onclick=()=>{cb();K()};P.append(b)}
 /* Componentes cromáticos específicos por familia. Las claves se guardan por objeto. */
 const ITEM_COLOR_PARTS={
@@ -4349,12 +4353,12 @@ r3.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId);
  if(rm&&!it&&!mv&&!wl){sel={k:'rooms',id:rm};selPart=null;refresh();return}
  if(opening!=null){
   sel={k:'o',id:opening};selPart=null;
-  if(mv){mv.it.op[mv.k]=!mv.it.op[mv.k];commitQ();draw();props()}
+  if(mv){toggleMotion(mv);commitQ();draw();props()}
   else refresh();
   return;
  }
- if(mv&&!it){mv.it.op[mv.k]=!mv.it.op[mv.k];commitQ();return}
- if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){e2.op[mv.k]=!e2.op[mv.k];commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
+ if(mv&&!it){toggleMotion(mv);commitQ();return}
+ if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
 /* ===== Control general ===== */
 function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;$('#pn').textContent=S.nm;sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
 const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';$('#view').append(dualSplitter);
@@ -4695,7 +4699,7 @@ function fitCam(){const it=pvIt,m=Math.max(it.w,it.h,it.d);cam4.position.set(m*.
 function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX='hidden';P2.style.minHeight='90px';P2.style.maxHeight='none';P2.innerHTML='';
  if(pvKitchenPresets){
   const label=document.createElement('label'),select=document.createElement('select');
-  label.textContent='Variante inicial ';
+  label.textContent=Object.hasOwn(HOOD_MODELS,pvIt.cfg?.ap)?'Modelo de campana ':'Variante inicial ';
   pvKitchenPresets.forEach((item,i)=>select.add(new Option(item.n,String(i))));
   select.value=String(pvKitchenVariant);
   select.onchange=()=>openPrevObj(pvKitchenPresets[+select.value],pvKitchenPresets,+select.value);
@@ -4723,6 +4727,7 @@ window.addEventListener('resize',()=>{if(pvOpen)resizePreviewRenderer()});
 $('#pvx').onclick=()=>{if(pendingModel){const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;libUI();refresh()}pvOpen=false;$('#pv').style.display='none'};
 /* ===== Configurador modular de cocina ===== */
 function mv(o,p){const m=Object.assign({o,v:p.it.op[p.k]?1:0,x0:o.position.x,y0:o.position.y,z0:o.position.z},p);o.userData.mv=m;MV.push(m);return m}
+function toggleMotion(m){if(m.toggle)m.toggle();else m.it.op[m.k]=!m.it.op[m.k]}
 function stepMV(m){const t=m.it.op[m.k]&&!(m.exclusive&&m.k===1&&m.it.op[0])?1:0;m.v+=(t-m.v)*.14;const a=(m.angle||m.it.ang||100)*D,o=m.o,v=m.v;switch(m.t){case'd':o.rotation.y=m.sg*a*v;break;case's':o.position.z=m.z+v*m.sl;break;case'u':o.rotation.x=-a*v;break;case'h':o.rotation.x=a*v;break;case'e':o.position.y=m.y0+v*m.dy;break;case'f':o.rotation.y=m.sg*a*.55*v;m.c.rotation.y=-m.sg*a*1.1*v;break;case'x':o.position.x=m.x0+v*(m.dx||0);o.position.z=m.z0+v*(m.dz||0);o.rotation.y=v*(m.ry||0)}m.update?.()}
 const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardMaterial({color:'#bfe3f5',transparent:true,opacity:.3,roughness:.05}),LEDM=new T.MeshStandardMaterial({color:'#fff',emissive:'#fff',emissiveIntensity:1});
 const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.35,.1],'cristal negro':['#0b0e12',.05,.35],'negro mate':['#1a1a1c',.75,.1],'negro brillante':['#0c0c0e',.08,.2],'acero antihuellas':['#b9bcc1',.45,.85],'blanco mate':['#eeeeec',.8,.05],'blanco brillante':['#fafafa',.1,.05],gris:['#8d9096',.45,.3],grafito:['#3b3e44',.4,.5],'cristal blanco':['#f1f3f5',.05,.2],'cristal oscuro':['#10131a',.05,.4],'gris metal':['#999999',.3,.9],aluminio:['#d0d3d8',.4,.95],dorado:['#c9a24a',.3,1],cobre:['#b87333',.35,1],bronce:['#6b5a3e',.35,1]},finM=f=>{const a=AFIN[f]||AFIN.acero;return M(a[0],a[1],a[2])};
@@ -4883,24 +4888,65 @@ LAY['fregadero']=(g,it,c,Mx,y0,H,iw)=>{const p=new T.Group();p.position.set(0,y0
 LAY['placa']=(g,it,c,Mx,y0,H,iw)=>LAY['cajones'](g,it,Object.assign({},c,{nc:3,dh:true}),Mx,y0,H,iw);
 LAY['columna']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(0,c.nc|0),lo=n?H*.35:0,n2=Math.max(1,c.nd|0),w=iw/n2;for(let i=0;i<n;i++)ndrw(g,it,i,-iw/2,iw,y0+1+i*lo/n,lo/n-.6,Mx);for(let i=0;i<n2;i++)fdoor(g,it,10+i,-iw/2+i*w,w-.3,y0+lo+1.5,H-lo-3,n2>1?i>=n2/2:it.fl,Mx)};
 const trayM=M('#cfd3d6',.4,.6),tray=(g,r,x,y,z,full)=>{const m=new T.Mesh(full?new T.CylinderGeometry(r,r,1.5,32):new T.CylinderGeometry(r,r,1.5,28,1,false,.6,4.9),trayM);m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
-function syncCornerDoor(door){
+const cornerPhase=(v,start,end)=>Math.max(0,Math.min(1,(v-start)/(end-start)));
+function buildCornerBaskets(g,it,side,opening,y0,H,iw){
+ const front=it.d/2,entry=side*(iw-opening)/2,blind=-side*opening/2;
+ const w=Math.min(opening,iw-opening)-7,d=it.d-12;
+ if(w<6||d<8)return;
+ const rail=M('#9ca6ac',.31,.76),base=M('#c3c8ca',.54,.26);
+ const frame=new T.Group(),rear=new T.Group();
+ g.add(frame,rear);
+ for(const basket of [frame,rear]){
+  for(const y of [y0+H*.26,y0+H*.62]){
+   B(basket,w,1.1,d,0,y,0,base);
+   for(const x of [-w/2,w/2]){
+    for(const z of [-d/2,d/2])B(basket,.65,8,.65,x,y+4,z,rail);
+    for(const dy of [3,7])B(basket,.55,.55,d,x,y+dy,0,rail);
+   }
+   for(const z of [-d/2,d/2])for(const dy of [3,7])B(basket,w,.55,.55,0,y+dy,z,rail);
+  }
+  B(basket,w*.75,2,d*.88,0,y0+3,0,rail);
+ }
+ const z=front-d/2-4;
+ B(g,Math.abs(entry-blind)+w*.8,1.2,d*.8,(entry+blind)/2,y0+2.4,z,rail);
+ const motion=mv(frame,{it,k:0,t:'e',dy:0});rear.userData.mv=motion;
+ motion.update=()=>{
+  frame.position.set(entry,0,z+(d+8)*cornerPhase(motion.v,.52,.75));
+  rear.position.set(blind+(entry-blind)*cornerPhase(motion.v,.75,.89),0,z+5*cornerPhase(motion.v,.89,1));
+ };
+ motion.update();
+}
+function syncCornerDoor(door,extension=()=>0){
  const motion=door.userData.mv;motion.angle=105;
- motion.update=()=>{door.rotation.y=motion.sg*motion.angle*D*Math.min(1,motion.v/.48)};
+ motion.update=()=>{door.rotation.y=motion.sg*motion.angle*D*cornerPhase(Math.max(motion.v,extension()),0,.48)};
  motion.update();
 }
 const corner=mode=>(g,it,c,Mx,y0,H,iw)=>{const s=it.fl?-1:1,fw=iw*.55,bw=iw-fw,hh=H-3,yy=y0+1.5,b=new T.Group();b.position.set(s>0?-iw/2+bw/2:iw/2-bw/2,yy+hh/2,it.d/2);g.add(b);pan(b,bw-.3,hh,0,c,Mx.mf);
  const cc=Object.assign({},c,{op:mode==2?c.op:'lateral'}),it2=Object.assign({},it,{cfg:cc}),p=fdoor(g,it2,0,s>0?-iw/2+bw:-iw/2,fw-.3,yy,hh,it.fl,Mx);
  if(mode!==2)syncCornerDoor(p);
- if(mode===0)buildCornerPullouts(g,it,{side:s,opening:fw,y0,H,iw,count:2,articulated:false});
+ if(mode===0)buildCornerBaskets(g,it,s,fw,y0,H,iw);
  if(mode===1){
   const q=new T.Group();q.position.set(0,0,-it.d*.05);g.add(q);
   B(q,2.5,H-4,2.5,0,y0+H/2,0,M('#888',.3,.9));
-  for(const l of [.28,.62])tray(q,Math.min(iw,it.d)*.36,0,y0+H*l,0,true);
+  for(const l of [.28,.62]){
+   const r=Math.min(iw,it.d)*.36,y=y0+H*l;
+   tray(q,r,0,y,0,true);
+   const rim=new T.Mesh(new T.TorusGeometry(r-.5,.55,8,48),trayM);
+   rim.rotation.x=Math.PI/2;rim.position.y=y+3;q.add(rim);
+   for(let j=0;j<8;j++){
+    const a=j*Math.PI/4;
+    B(q,.65,3,.65,Math.cos(a)*(r-.5),y+1.7,Math.sin(a)*(r-.5),trayM);
+   }
+   B(q,5,2,5,0,y-1.6,0,trayM);
+  }
   const m=mv(q,{it,k:0,t:'e',dy:0});
   m.update=()=>{q.rotation.y=s*Math.PI*1.1*Math.max(0,(m.v-.40)/.60)};
   m.update();
  }
- if(mode===2)for(const l of [.33,.66])B(g,iw,1.6,it.d-5,0,y0+H*l,-1,Mx.mc);
+ if(mode===2){
+  if(cc.op==='plegable')p.userData.mv.angle=150;
+  for(const l of [.33,.66])B(g,iw-1,1.6,it.d-8,0,y0+H*l,-2,Mx.mc);
+ }
 };
 LAY['esquina riñonera']=corner(0);LAY['esquina carrusel']=corner(1);LAY['esquina 90°']=corner(2);
 let PT=0,drSel=0;
@@ -4937,13 +4983,19 @@ const kidP=(r1,r2,L)=>{const A=[L,0,r1],Q=[0,-(r1-r2),r2],F=(x,y)=>A[2]*A[2]/((x
 const trayD=M('#4a4b50',.6,.2),railM=M('#1b1b1e',.4,.5);
 function kidTray(r1,r2,L){const P=kidP(r1,r2,L),sh=new T.Shape();P.forEach(([x,y],i)=>i?sh.lineTo(x,y):sh.moveTo(x,y));const ge=new T.ExtrudeGeometry(sh,{depth:1.6,bevelEnabled:false});ge.rotateX(-Math.PI/2);const m=new T.Group(),b=new T.Mesh(ge,trayD);b.castShadow=true;m.add(b);
  m.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(P.map(([x,y])=>new T.Vector3(x,5,-y)),true),120,.35,6,true),railM));return m}
-function buildCornerPullouts(g,it,{side,opening,y0,H,iw,count,articulated}){
+function buildCornerPullouts(g,it,{side,opening,y0,H,iw,count,door}){
  const c=it.cfg,front=it.d/2,center=side*(iw-opening)/2;
  const gap=Math.max(2,Math.min(3,opening*.1)),width=Math.max(2,Math.min(opening-gap*2,c.kw||Infinity));
  const depth=Math.max(5,Math.min(it.d-7,c.kd||48)),rail=M('#687276',.38,.7);
- const slides=[];
+ const motions=[],doorMotion=door.userData.mv,legacyOpen=it.op.length===1&&!!it.op[0];
+ doorMotion.toggle=()=>{
+  it.op[0]=!it.op[0];
+  if(!it.op[0])for(const motion of motions)it.op[motion.k]=false;
+ };
+ doorMotion.cornerControl='puerta';
+ syncCornerDoor(door,()=>Math.max(0,...motions.map(m=>m.v)));
  for(let k=0;k<count;k++){
-  const y=articulated?y0+(c.kh||12)+k*(c.ks||24):y0+H*(k?.62:.30);
+  const y=y0+(c.kh||12)+k*(c.ks||24);
   if(y>y0+H-6||y<y0+3)continue;
   const holder=new T.Group();holder.name='Bandeja extraíble '+(k+1);
   const tray=kidTray(17,10,23),box=new T.Box3().setFromObject(tray),size=box.getSize(new T.Vector3()),mid=box.getCenter(new T.Vector3());
@@ -4951,6 +5003,8 @@ function buildCornerPullouts(g,it,{side,opening,y0,H,iw,count,articulated}){
   tray.scale.set(depth/size.x,1,width/size.z);
   tray.position.set(-mid.x*tray.scale.x,0,-mid.z*tray.scale.z);
   rotated.rotation.y=Math.PI/2;rotated.add(tray);
+  const pivot=new T.Mesh(new T.CylinderGeometry(Math.min(3,width*.17),Math.min(3,width*.17),1.3,18),rail);
+  pivot.position.y=-.55;holder.add(pivot);
   const glide=new T.Group(),middle=new T.Group();glide.add(holder);g.add(glide,middle);
   const x=center+side*Math.max(-gap+.7,Math.min(gap-.7,c.kx||0)),z=front-depth/2-2;
   for(const s of [-1,1]){
@@ -4959,30 +5013,32 @@ function buildCornerPullouts(g,it,{side,opening,y0,H,iw,count,articulated}){
    B(middle,1.12,1.1,depth*.97,offset,-1.8,0,rail);
    B(glide,1.05,1.2,depth*.92,offset,-1.2,0,rail);
   }
-  slides.push({glide,middle,holder,x,y,z});
- }
- const group=new T.Group();g.add(group);
- const m=mv(group,{it,k:0,t:'e',dy:0});
- m.update=()=>{
-  const travel=Math.min(1,Math.max(0,(m.v-.54)/.34));
-  const turn=articulated?Math.max(0,(m.v-.88)/.12):0;
-  const safety=Math.hypot(width,depth)/2-depth/2+2;
-  const offset=travel*(depth+5+(articulated?safety:0));
-  for(const {glide,middle,holder,x,y,z} of slides){
+  const index=k+1;
+  if(it.op[index]==null)it.op[index]=legacyOpen;
+  const motion=mv(glide,{it,k:index,t:'e',dy:0,cornerControl:'bandeja '+index});
+  motions.push(motion);
+  motion.toggle=()=>{
+   it.op[index]=!it.op[index];
+   if(it.op[index])it.op[0]=true;
+  };
+  motion.update=()=>{
+   const v=motion.v;
+   const turn=cornerPhase(v,.88,1),safety=Math.hypot(width,depth)/2-depth/2+2;
+   const offset=cornerPhase(v,.54,.88)*(depth+5+safety);
    glide.position.set(x,y,z+offset);middle.position.set(x,y,z+offset*.5);
    holder.rotation.y=-side*turn*.63;
-  }
- };
- for(const {glide} of slides)glide.userData.mv=m;
- m.update();
+  };
+  motion.update();
+ }
+ doorMotion.update();
 }
 LAY['esquina riñón']=(g,it,c,Mx,y0,H,iw)=>{
  const side=c.kor==='der'?-1:1,opening=Math.max(Math.min(20,iw*.55),Math.min(c.ow||Math.round(iw*.5),iw-8)),fixed=iw-opening;
  const hh=H-3,yy=y0+1.5,blank=new T.Group();
  blank.position.set(-side*opening/2,yy+hh/2,it.d/2);g.add(blank);pan(blank,fixed-.3,hh,0,c,Mx.mf);
  const leaf={...it,cfg:{...c,op:'lateral'}};
- syncCornerDoor(fdoor(g,leaf,0,side>0?-iw/2+fixed:-iw/2,opening-.3,yy,hh,side<0,Mx));
- buildCornerPullouts(g,it,{side,opening,y0,H,iw,count:Math.max(1,Math.min(c.kn||2,5)),articulated:true});
+ const door=fdoor(g,leaf,0,side>0?-iw/2+fixed:-iw/2,opening-.3,yy,hh,side<0,Mx);
+ buildCornerPullouts(g,it,{side,opening,y0,H,iw,count:Math.max(1,Math.min(c.kn||2,5)),door});
 };
 LAY['torre']=(g,it,c,Mx,y0,H,iw)=>{let y=y0+2;(c.slots||[]).forEach((s,i)=>{const hh=s.h;B(g,iw,1.6,it.d-3,0,y-1,0,Mx.mc);if(s.k=='puerta')fdoor(g,it,i*2,-iw/2,iw,y+.3,hh-.6,it.fl,Mx);else if(s.k=='cajon')ndrw(g,it,i*2,-iw/2,iw,y+.3,hh-.6,Mx);else if(s.k!='hueco'){const kd=s.k=='hornoc'?'horno':s.k;appl(g,kd,iw-.4,hh,Math.min(APD[kd]||50,it.d-2),s.mat||s.fin||'acero',it,i*2,y,it.d/2)}y+=hh})};
 function tagp(o,t,i,it){o.userData.part={t,i};if(it&&selPart&&selPart.id==it.id&&selPart.t==t&&selPart.i==i)HL.push(o);return o}
@@ -5061,6 +5117,30 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
  const rack=(x,y,z,ww,dd,mt)=>{B(a,ww,.5,.5,x,y,z-dd/2,mt);B(a,ww,.5,.5,x,y,z+dd/2,mt);B(a,.5,.5,dd,x-ww/2,y,z,mt);B(a,.5,.5,dd,x+ww/2,y,z,mt);for(let q=1;q<6;q++)B(a,.35,.35,dd,x-ww/2+ww*q/6,y,z,mt)};
  const knob=(x,y,r)=>{const k=new T.Mesh(new T.CylinderGeometry(r,r,1.6,16),kn);k.rotation.x=Math.PI/2;k.position.set(x,y,d/2+1.1);a.add(k)};
  const hinge2=(p,y,hw)=>[-1,1].forEach(q=>B(p,3.5,2.2,1.6,q*hw,y,-.2,stl));
+ if(kd==='campana_t'||kd==='campana_vert'){
+  const vertical=kd==='campana_vert',capH=vertical?h*.68:Math.min(6,h*.15);
+  const capD=vertical?d*.38:d*.98,capZ=vertical?-d*.12:0,front=capZ+capD/2;
+  const ductD=d*.38,ductZ=capZ-capD*.12;
+  B(a,w*.37,h-capH+.5,ductD,0,(h+capH-.5)/2,ductZ,m);
+  B(a,w*.985,capH,capD,0,capH/2,capZ,m);
+  if(vertical){
+   B(a,w*.94,capH*.73,.65,0,capH*.57,front+.28,dk);
+   B(a,w*.84,capH*.1,.5,0,capH*.14,front+.22,rub);
+   for(let i=-8;i<=8;i++)B(a,w*.015,capH*.08,.25,i*w*.046,capH*.14,front+.45,stl);
+  }
+  const filterW=w*.35,filterD=capD*.57;
+  for(const side of [-1,1]){
+   const x=side*w*.19;
+   B(a,filterW,1,filterD,x,.38,capZ,stl);
+   B(a,filterW*.92,.5,filterD*.9,x,.03,capZ,rub);
+   for(let i=-5;i<=5;i++)B(a,filterW*.045,.32,filterD*.86,x+i*filterW*.08,-.19,capZ,stl);
+   const led=new T.Mesh(new T.CylinderGeometry(Math.min(2,capD*.075),Math.min(2,capD*.075),.6,20),lit);
+   led.position.set(side*w*.38,.12,capZ+capD*.23);a.add(led);
+  }
+  B(a,w*.19,Math.min(capH*.26,2.4),.7,0,vertical?capH*.32:capH*.53,front+.38,pn);
+  for(let i=-1;i<=1;i++)B(a,w*.011,.38,.25,i*w*.045,vertical?capH*.32:capH*.53,front+.78,lcd);
+  return;
+ }
  if(kd=='campana_inc'){
   // Campana inclinada con cuerpo unido: chimenea solapada con visera y conjunto inferior alineado.
   const ductW=w*.36,ductD=d*.38,ductH=h*.72,tilt=-.34;
@@ -5391,11 +5471,15 @@ function base(n,w,lay,x,d){d=d||60;return{t:'mod',n,c:'Cocina modular',s:'modern
 function alto(n,w,x,h,d){const o=base(n,w,'armario alto',Object.assign({k:'alto',top:true,zoc:0,sh:2,cf:'#f4f1ea'},x||{}),d||35);o.h=h||70;o.e=140;return o}
 function colm(n,w,h,lay,x){const o=base(n,w,lay,Object.assign({k:'col',top:false,nd:2,nc:2,cf:'#c8a27a'},x||{}));o.h=h;return o}
 function appo(n,kd,w,h,d,e){return{t:'app',n,c:'Electrodomésticos',s:'moderno',w,h,d,e:e||0,col:'#c4c7cc',cfg:{ap:kd,fin:'acero'}}}
+const HOOD_MODELS={
+ campana_inc:'Inclinada',campana_t:'T invertida',campana_vert:'Vertical de cristal',
+ campana_dec:'Piramidal',campana_int:'Integrada'
+};
 const kitchenCatalogStart=LIB.length;
 [30,40,45,50,60,80,90].forEach(w=>LIB.push(base('Bajo '+w+' puertas',w,'puertas',{nd:w>=80?2:1})));
 [1,2,3,4].forEach(n=>LIB.push(base('Cajonera '+n+(n===1?' cajón':' cajones'),60,'cajones',{nc:n,dh:n>2})));
 LIB.push(base('Bajo puerta + 1 cajón',60,'puertas+cajones',{nc:1,nd:1}),base('Bajo 2 puertas + 2 cajones',90,'puertas+cajones',{nc:2,nd:2}),base('Bajo fregadero 80',80,'fregadero'),base('Bajo fregadero 120',120,'fregadero',{nd:2}),base('Bajo placa 60',60,'placa'),base('Bajo placa 90',90,'placa'),base('Bajo push (sin tirador)',60,'puertas',{ti:'push'}),base('Bajo tirador integrado',60,'cajones',{ti:'integrado',nc:3}),base('Bajo frente estriado',60,'puertas',{fr:'estriada',cf:'#c8a27a'}),
- base('Esquinero 90° puerta',90,'esquina 90°',{},90),base('Esquinero 90° plegable',90,'esquina 90°',{op:'plegable'},90),base('Esquinero riñonera',90,'esquina riñonera',{},90),base('Esquinero carrusel',90,'esquina carrusel',{},90));
+ base('Esquinero 90° puerta',90,'esquina 90°',{},90),base('Esquinero 90° plegable',90,'esquina 90°',{op:'plegable'},90),base('Esquinero con cestas sincronizadas',90,'esquina riñonera',{},90),base('Esquinero con carrusel giratorio',90,'esquina carrusel',{},90));
 [[30,70],[40,70],[45,70],[60,70],[80,70],[60,90],[60,35]].forEach(([w,h])=>LIB.push(alto('Alto '+w+'×'+h,w,{nd:w>=80?2:1},h)));
 LIB.push(alto('Alto abatible horizontal',80,{op:'abatible',nd:2},40),alto('Alto elevable',80,{op:'elevable',nd:1},50),alto('Alto plegable',80,{op:'plegable',nd:1},70),alto('Vitrina con cristal',60,{fr:'cristal',nd:1,led:true},70),alto('Alto con LED',90,{led:true,nd:2},70),alto('Alto profundo 45',60,{},70,45));
 LIB.push(colm('Columna despensa con puertas',60,230,'columna',{nc:0,sh:4}),colm('Columna despensa 60',60,230,'columna'),colm('Columna 2 cajones + puertas',60,210,'columna',{nc:2}));
@@ -5403,7 +5487,7 @@ const tw=(n,sl,w)=>{const o=colm(n,w||60,240,'torre',{slots:sl});return o};
 LIB.push(base('Esquinero riñón extraíble (articulado)',90,'esquina riñón',{kn:2,kh:12,ks:24},90),base('Mueble libre (vacío)',60,'libre',{el:[]}));
 LIB.push(colm('Columna libre: cajón + horno + micro + puerta',60,184,'libre',{el:[{k:'cajon',x:0,y:0,w:56,h:25,d:0,ft:2},{k:'app',ap:'horno',x:0,y:25,w:56,h:59},{k:'app',ap:'micro',x:0,y:84,w:56,h:38},{k:'puerta',x:0,y:122,w:56,h:46,hg:'izq',op:'lateral'}]}));
 LIB.push(tw('Torre lavadora+horno+micro+armario',[{k:'lavadora',h:82},{k:'horno',h:60},{k:'micro',h:38},{k:'puerta',h:45}]),tw('Torre horno compacto+micro+armarios',[{k:'cajon',h:30},{k:'puerta',h:70},{k:'hornoc',h:45},{k:'micro',h:38},{k:'puerta',h:38}]),tw('Torre horno + micro',[{k:'cajon',h:25},{k:'horno',h:60},{k:'micro',h:38},{k:'puerta',h:90}]),tw('Columna frigorífico integrable',[{k:'frigo',h:177,fin:'blanco'},{k:'puerta',h:47}]));
-LIB.push(appo('Horno 60 cm','horno',59.5,59.5,55),appo('Horno compacto 45 cm','horno',59.5,45,55),appo('Microondas integrable','micro',59.5,38,35),appo('Lavavajillas independiente','lavavajillas',60,85,60),appo('Lavavajillas integrable','lavavajillas',59.5,82,56),appo('Frigorífico 1 puerta','frigo',55,85,58),appo('Frigorífico combi','combi',60,185,65),appo('Frigorífico americano','americano',91,178,70),appo('Vinoteca','vinoteca',60,82,58),appo('Campana inclinada','campana_inc',90,80,50,150),appo('Campana decorativa','campana_dec',60,90,50,150),appo('Campana integrada','campana_int',60,20,30,155));
+LIB.push(appo('Horno 60 cm','horno',59.5,59.5,55),appo('Horno compacto 45 cm','horno',59.5,45,55),appo('Microondas integrable','micro',59.5,38,35),appo('Lavavajillas independiente','lavavajillas',60,85,60),appo('Lavavajillas integrable','lavavajillas',59.5,82,56),appo('Frigorífico 1 puerta','frigo',55,85,58),appo('Frigorífico combi','combi',60,185,65),appo('Frigorífico americano','americano',91,178,70),appo('Vinoteca','vinoteca',60,82,58),appo('Campana inclinada','campana_inc',90,80,50,150),appo('Campana en T invertida','campana_t',90,75,50,150),appo('Campana vertical de cristal','campana_vert',80,76,37,155),appo('Campana piramidal','campana_dec',60,90,50,150),appo('Campana integrada','campana_int',60,20,30,155));
 // Las variantes son puntos de partida. El plano guarda la configuración elegida, igual que antes.
 const kitchenGroups=[
  ['Bajo con puertas',o=>o.cfg.k==='base'&&o.cfg.lay==='puertas','Bajo 60 puertas'],
@@ -5441,7 +5525,12 @@ function warnX(it,o){if(it.cfg.lay=='libre')return libWarn(it,o);const c=it.cfg,
  if(c.lay=='esquina riñón'){const n=c.kn||2;if((c.kw||0)>iw-(c.ow||Math.round(iw*.5))-1)o.push('Bandeja más ancha que el espacio tras la apertura ('+(iw-(c.ow||Math.round(iw*.5))-1)+' cm): se limita al dibujar');if((c.kd||0)>it.d-6)o.push('Bandeja más profunda que el mueble');if((c.kh||12)+(n-1)*(c.ks||24)>ihl(it)-2)o.push('Alguna bandeja queda fuera por altura (no se dibuja)');if((c.ks||24)<10)o.push('Separación entre bandejas muy pequeña')}return o}
 function cfgUI(it){const c=it.cfg,A=(l,k,o)=>sel2(l,o,c[k],v=>c[k]=v),N=(l,k)=>row(l,c[k]==null?0:c[k],v=>c[k]=Math.max(0,v)),C=(l,k)=>row(l,c[k],v=>c[k]=v,'color');
  P.insertAdjacentHTML('beforeend','<h4>Configurador</h4>');if(it.id!=null&&it.t=='mod'){btn(smode?'✔ Salir de edición de estructura':'Editar estructura del mueble',()=>{smode=!smode;selPart=null});if(smode)structUI(it)}
- if(it.t=='app'){A('Electrodoméstico','ap',['horno','micro','cafetera','lavadora','secadora','lavavajillas','frigo','combi','americano','campana_inc','campana_dec','campana_int','vinoteca','placa']);appUI(it.cfg);return}
+ if(it.t=='app'){
+  if(Object.hasOwn(HOOD_MODELS,c.ap)){
+   if(it!==pvIt||!pvKitchenPresets)sel2('Modelo de campana',Object.keys(HOOD_MODELS),c.ap,v=>{c.ap=v},HOOD_MODELS);
+  }else A('Electrodoméstico','ap',['horno','micro','cafetera','lavadora','secadora','lavavajillas','frigo','combi','americano','vinoteca','placa',...Object.keys(HOOD_MODELS)]);
+  appUI(it.cfg);return;
+ }
  if(it.roomType&&it.roomType!=='cocina'){P.insertAdjacentHTML('beforeend','<div style="color:#9ec5ff;font-size:12px;margin:4px 0">Editor personalizado · '+htmlText(it.c)+' · '+htmlText(it.family||'Mueble a medida')+'</div>');c.k='base';if(!c.lay)c.lay='puertas'}else{sel2('Familia',['base','alto','col'],c.k,v=>{c.k=v;c.top=v=='base';c.zoc=v==='alto'?0:10;if(c.lay!=='libre')c.lay={base:'puertas',alto:'armario alto',col:'columna'}[v];Object.assign(it,{base:{h:87,d:60,e:0},alto:{h:70,d:35,e:140},col:{h:210,d:60,e:0}}[v])})}
  A('Distribución','lay',{base:['puertas','cajones','puertas+cajones','fregadero','placa','esquina 90°','esquina riñonera','esquina carrusel','esquina riñón','libre'],alto:['armario alto','libre'],col:['columna','torre','libre']}[c.k]);
  if(c.lay!='libre'&&c.lay!='esquina riñón'){N('Nº de puertas','nd');N('Nº de cajones','nc')}A('Apertura de puertas','op',['lateral','abatible','elevable','plegable']);A('Diseño de frente','fr',['lisa','marco','relieve','estriada','acanalada','cristal']);A('Tirador','ti',['barra','boton','unero','integrado','push','ninguno']);N('Tamaño tirador (cm)','tl');row('Baldas (regenera uniformes)',c.shl?c.shl.length:(c.sh||0),v=>{c.sh=Math.max(0,v);c.shl=null});N('Zócalo (cm)','zoc');A('Acabado','acab',['mate','satinado','brillo']);A('Material del frente','mf',['liso','madera','mármol','cemento','piedra','gres']);
@@ -5907,6 +5996,22 @@ function motionButtonLabel(it,motions){
 }
 function appendMotionButton(panel,it,motions,save,show3D=false){
  if(!motions.length)return;
+ const corner=motions.filter(m=>m.cornerControl);
+ if(corner.length){
+  const controls=corner.map(m=>{
+   const button=document.createElement('button');button.type='button';
+   const label=()=>{
+    const open=!!m.it.op[m.k];
+    button.textContent=(m.k===0?(open?'Cerrar ':'Abrir '):(open?'Recoger ':'Extraer '))+m.cornerControl;
+   };
+   button.onclick=()=>{
+    if(show3D&&mode!=='3d')setMode('3d');
+    toggleMotion(m);controls.forEach(update=>update());save?.();
+   };
+   label();panel.append(button,' ');return label;
+  });
+  return;
+ }
  const button=document.createElement('button');button.type='button';
  button.textContent=motionButtonLabel(it,motions);
  button.onclick=()=>{
