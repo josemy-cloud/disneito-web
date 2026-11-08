@@ -125,10 +125,10 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4">
+</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
-<span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
+<span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
 <button id="bU" title="Deshacer (Ctrl+Z)">↶</button><button id="bR" title="Rehacer (Ctrl+Y)">↷</button>
 <button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">☁ Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><select id="bSt" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select>cm <span class="seg view-modes" role="group" aria-label="Modos de visualización">
 <button id="mv2" class="view-mode" title="Vista 2D · Plano técnico" aria-label="Vista 2D"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h18v15H3zM8 4.5v6h5v-6M3 15h5v4.5M13 10.5h8M13 15h8"/></svg><span>2D</span></button>
@@ -1648,7 +1648,7 @@ function polyMesh(poly,y,mat,down){const pts=poly.map(p=>new T.Vector2(p[0],p[1]
  tri.forEach(([a,b,c])=>{const ay=(pts[b].x-pts[a].x)*(pts[c].y-pts[a].y)-(pts[b].y-pts[a].y)*(pts[c].x-pts[a].x),up=-ay>0;if(up==!down)idx.push(a,b,c);else idx.push(a,c,b)});
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();const m=new T.Mesh(g,mat);return{mesh:m,minx,miny,fw,fd}}
 function addRooms(){(S.rooms||[]).forEach(R=>{if(!R.poly)return;const fc=R.floor||S.fl,xs=R.poly.map(p=>p[0]),ys=R.poly.map(p=>p[1]),minx=Math.min(...xs),miny=Math.min(...ys),fw=Math.max(...xs)-minx||1,fd=Math.max(...ys)-miny||1;
-  const mat=fc.pat?tileMat(fc,[-minx,-miny]):sm(fc.m,'#ccc',fw,fd,fc.sz,fc.j,fc.jc,fc.r),f=polyMesh(R.poly,0,mat,false).mesh;f.receiveShadow=true;f.material.side=T.DoubleSide;f.material.needsUpdate=true;f.userData.fl=1;f.userData.room=R.id;root.add(f);
+  const mat=fc.pat?tileMat(fc,[-minx,-miny]):sm(fc.m,fc.observedColor||'#ccc',fw,fd,fc.sz,fc.j,fc.jc,fc.r),f=polyMesh(R.poly,0,mat,false).mesh;f.receiveShadow=true;f.material.side=T.DoubleSide;f.material.needsUpdate=true;f.userData.fl=1;f.userData.room=R.id;root.add(f);
   if(R.ceil&&R.ceil.on!==false&&ceilOn()){const cm=sm(R.ceil.m||'madera',R.ceil.col||'#f4f2ee',fw,fd,R.ceil.sz||60,R.ceil.j==null ? .3 : R.ceil.j,R.ceil.jc||'#ddd',R.ceil.r||0);cm.side=T.DoubleSide;cm.needsUpdate=true;const c=polyMesh(R.poly,Math.max(150,+R.ceil.h||250),cm,true).mesh;c.castShadow=c.receiveShadow=true;c.userData.ceil=1;c.userData.room=R.id;root.add(c)}})}
 function wvToggle(w){if(wvMode=='hid'){w.hid=!w.hid;if(w.hid)w.tr=false}else{w.tr=!w.tr;if(w.tr)w.hid=false}}
 function wvBar(){let b=document.getElementById('wvb');if(!wallVis){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='wvb';b.style.cssText='position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(20,24,32,.96);color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 18px #0008;font:12px Arial;display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:80vw';document.body.append(b)}
@@ -6513,6 +6513,60 @@ function frameProject(){
  oc.target.copy(center);cam.position.copy(center).addScaledVector(direction,distance);oc.update();
 }
 $('#fitProject').onclick=frameProject;
+function importScannedRoom(data,project,sources){
+ if(S!==project)throw Error('El proyecto ha cambiado. Abre Escanear habitación desde el proyecto actual.');
+ const interior=data.edges.map(([a])=>a),t=10;
+ // Los puntos marcados son caras interiores. El editor almacena ejes de pared.
+ const axes=offsetPoly(interior,interior.map(()=>t/2),-Math.sign(area2(interior)));
+ const minX=Math.min(...axes.map(p=>p[0])),minY=Math.min(...axes.map(p=>p[1]));
+ const maxExisting=[...S.w.map(wrect),...S.i].reduce((max,item)=>cors(item).reduce((m,[x])=>Math.max(m,x),max),-Infinity);
+ const xOffset=(Number.isFinite(maxExisting)?maxExisting+70:0)-minX,yOffset=-minY;
+ let nextId=S.id;
+ const walls=axes.map(([x1,y1],i)=>{
+  const [x2,y2]=axes[(i+1)%axes.length];
+  return {id:nextId++,x1:x1+xOffset,y1:y1+yOffset,x2:x2+xOffset,y2:y2+yOffset,t,h:data.height,c:data.wallColor};
+ });
+ if(detectRooms(walls).length!==1)throw Error('El editor no pudo cerrar el perímetro. Revisa los tramos y las esquinas.');
+ const openings=data.openings.map(o=>{
+  const w=walls[o.wall],length=len(w),a=interior[o.wall],start=axes[o.wall];
+  const p=o.p+((a[0]-start[0])*(w.x2-w.x1)+(a[1]-start[1])*(w.y2-w.y1))/length;
+  if(p-o.wd/2<-.01||p+o.wd/2>length+.01)throw Error('Un hueco queda fuera de la pared al aplicar su grosor.');
+  return {id:nextId++,w:w.id,ty:o.ty,variant:o.ty==='d'?'abatible':'fija',p,wd:o.wd,h:o.h,s:o.s};
+ });
+ const items=data.items.map(o=>{
+  const source=sources[o.model];
+  if(!source||source.libraryHidden)throw Error('Un modelo confirmado ya no está disponible en la biblioteca.');
+  const it=JSON.parse(JSON.stringify(KITCHEN_PRESETS.get(source)?.[0]||source));
+  Object.assign(it,{id:nextId++,x:o.x+xOffset,y:o.y+yOffset,w:o.w,d:o.d,h:o.h,r:o.r,col:o.color,e:o.e,op:[],lk:false,hid:false});
+  if(o.colorEdited&&it.cfg?.cf){it.cfg.cf=o.color;delete it.cfg.pbr?.cf}
+  delete it.rel;delete it.supportTop;
+  return it;
+ });
+ if(data.floorMaterial&&data.floorMaterial!=='observed'&&!surfaceOptions().includes(data.floorMaterial))
+  throw Error('El material del suelo ya no está disponible.');
+ S.w.push(...walls);S.o.push(...openings);S.i.push(...items);S.id=nextId;
+ roomsUpdate();
+ const wallIds=new Set(walls.map(w=>w.id));
+ const room=S.rooms.find(r=>r.walls.length===wallIds.size&&r.walls.every(id=>wallIds.has(id)));
+ if(room){
+  room.scan={method:'planar-reference',perimeter:data.geometryMeasured?'user-measured':'estimated',height:data.heightMeasured?'measured':'estimated'};
+  if(data.floorMaterial)room.floor={...S.fl,pat:null,m:data.floorMaterial==='observed'?null:data.floorMaterial,
+   ...(data.floorMaterial==='observed'?{observedColor:data.floorColor}:{})};
+ }
+ tool='sel';sel=room?{k:'rooms',id:room.id}:null;selPart=null;cur=null;place=null;ghost=null;armed=null;drag=null;
+ setMode('2d');commit();drawTools();frameProject();
+ $('#editorHint').textContent='Habitación importada. Revisa las dimensiones estimadas en el plano.';
+}
+$('#bScanRoom').onclick=async()=>{
+ const project=S;
+ try{
+  const {openRoomScanner}=await import('/scan-room.mjs');
+  const sources=[...LIB];
+  const catalog=sources.flatMap((o,id)=>!o.libraryHidden&&o.w>0&&o.d>0&&o.h>0
+   ?[{id,name:o.n,w:o.w,d:o.d,h:o.h,e:Math.max(0,+o.e||0),color:/^#[0-9a-f]{6}$/i.test(o.cfg?.cf||o.col)?o.cfg?.cf||o.col:'#a8a19a'}]:[]);
+  openRoomScanner({catalog,materials:surfaceMaterials().map(d=>['pbr:'+d[0],d[1],d[4]]),onImport:data=>importScannedRoom(data,project,sources)});
+ }catch(error){alert('No se pudo abrir Escanear habitación. '+(error.message||error))}
+};
 $('#mv2').onclick=()=>setMode('2d');$('#mvDual').onclick=()=>setMode(dualView?'2d':'dual');[['mvf','f'],['mvm','m'],['mvq','q']].forEach(([id,v])=>$('#'+id).onclick=()=>{$('#sq').value=v;setMode('3d');setQ();modeUI()});
 $('#ckc').onchange=()=>{showCeil=$('#ckc').checked;build3d()};$('#ckMeasures').onchange=()=>{S.showMeasures=$('#ckMeasures').checked;commit()};
 const NMK={puerta:'Puerta',cajon:'Cajón',hueco:'Zona / hueco',estante:'Estante',app:'Hueco electrodoméstico',barra:'Barra de colgar',separador:'Separador',encimera:'Encimera',espejo:'Espejo',lavabo:'Lavabo'};let elSel=0;

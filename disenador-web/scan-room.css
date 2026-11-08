@@ -1,0 +1,27 @@
+#scanRoom{width:min(960px,calc(100% - 20px));max-height:calc(100% - 20px);max-height:calc(100dvh - 20px);overflow:auto;overscroll-behavior:contain;border:1px solid #cbd5e1;border-radius:15px;background:#fbfcfe;color:#243247;padding:14px;font:14px/1.45 system-ui,sans-serif}
+#scanRoom::backdrop{background:#172337c4}
+#scanRoom h2,#scanRoom h3,#scanRoom p{margin:0 0 8px}
+#scanRoom header,#scanRoom .scan-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+#scanRoom header{justify-content:space-between}
+#scanRoom button,#scanRoom input,#scanRoom select{min-height:44px;max-width:100%}
+#scanRoom button[aria-pressed=true],#scanRoom .scan-primary{background:#185da8!important;color:white!important}
+#scanRoom .scan-columns{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;align-items:start}
+#scanRoom .scan-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:6px;margin:8px 0}
+#scanRoom label{display:block;min-width:0}
+#scanRoom label :is(input:not([type=checkbox]),select){display:block;width:100%;min-width:0}
+#scanRoom .scan-image,#scanRoom video{display:block;width:100%;height:auto;max-height:52dvh;object-fit:contain;background:#eaf0f7;border-radius:8px}
+#scanRoom .scan-image{max-height:none;cursor:crosshair}
+#scanRoom .scan-plan{display:block;width:100%;height:auto;background:#f0f5fb;border:1px solid #ccd8e6;border-radius:8px}
+#scanRoom #scanFrames{display:flex;gap:5px;overflow:auto}
+#scanRoom #scanFrames button{flex:0 0 auto}
+#scanRoom details{margin:8px 0;border-top:1px solid #dde5ef;padding-top:7px}
+#scanRoom summary{cursor:pointer;font-weight:650;min-height:32px}
+#scanRoom #scanDrop{display:block;border:1px dashed #8ea8c7;padding:10px;border-radius:8px;margin:8px 0}
+#scanRoom #scanNotice{background:#e9f1fc;border-radius:7px;padding:7px;min-height:30px}
+#scanRoom [hidden]{display:none!important}
+@media(max-width:680px){
+ #scanRoom{padding:9px}
+ #scanRoom .scan-columns{grid-template-columns:minmax(0,1fr)}
+ #scanRoom :is(input:not([type=checkbox]),select){font-size:16px!important}
+}
+
