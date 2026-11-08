@@ -587,7 +587,8 @@ const isOfficeCornerDesk=it=>isOfficeItem(it)&&it.shape==='desk'&&/en l|ala late
 const isLaundryItem=it=>it.t==='roomObject'&&(it.roomType==='lavadero'||it.c==='Lavadero');
 const isGarageItem=it=>it.t==='roomObject'&&(it.roomType==='garaje'||it.c==='Garaje');
 const isStorageItem=it=>it.t==='roomObject'&&(it.roomType==='trastero'||it.c==='Trastero');
-const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it)||isOfficeItem(it)||isLaundryItem(it)||isGarageItem(it)||isStorageItem(it);
+const isTerraceItem=it=>it.t==='roomObject'&&it.roomType==='terraza';
+const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it)||isOfficeItem(it)||isLaundryItem(it)||isGarageItem(it)||isStorageItem(it)||isTerraceItem(it);
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
 const isDiningPendant=it=>it.roomType==='comedor'&&isLamp(it)&&/suspend|colgante/i.test(it.n||'');
 const BEDROOM_COLOR_PARTS={
@@ -631,11 +632,16 @@ const STORAGE_COLOR_PARTS={
  box:STORAGE_CONTAINER_PARTS,trunk:STORAGE_CONTAINER_PARTS,
  suitcase:[...STORAGE_CONTAINER_PARTS.filter(([key])=>key!=='lid'),['wheels','Ruedas']]
 };
+const TERRACE_COLOR_PARTS={
+ outdoorsofa:[...ITEM_COLOR_PARTS.outdoorsofa,['arms','Reposabrazos']],
+ seat:[...ITEM_COLOR_PARTS.seat,['rope','Trenzado']],
+ bbq:ITEM_COLOR_PARTS.bbq.map(([key,label])=>[key,key==='frame'?'Bastidor y patas':label])
+};
 function itemColorParts(it){
  const shape=it.shape||(it.t==='cama'?'bed':it.t==='armario'&&isBedroomItem(it)?'wardrobe':it.t==='mesa'?'table':it.t==='lampara'?'lamp':it.t);
  return ((isBedroomItem(it)||isVestidorItem(it))&&BEDROOM_COLOR_PARTS[shape])||
   (isBathroomItem(it)&&BATH_COLOR_PARTS[it.t==='lavabo'?'vanity':shape])||
-  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||(isOfficeItem(it)&&OFFICE_COLOR_PARTS[shape])||(isLaundryItem(it)&&LAUNDRY_COLOR_PARTS[shape])||(isGarageItem(it)&&GARAGE_COLOR_PARTS[shape==='van'?'car':shape])||(isStorageItem(it)&&STORAGE_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
+  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||(isOfficeItem(it)&&OFFICE_COLOR_PARTS[shape])||(isLaundryItem(it)&&LAUNDRY_COLOR_PARTS[shape])||(isGarageItem(it)&&GARAGE_COLOR_PARTS[shape==='van'?'car':shape])||(isStorageItem(it)&&STORAGE_COLOR_PARTS[shape])||(isTerraceItem(it)&&TERRACE_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
 }
 function partColorUI(e,panel=P,save=commit){
  const defaults=modelPartDefaults.get(e);
@@ -2908,6 +2914,206 @@ function buildStorageLadder(g,it,primary){
  m.update();
 }
 
+function buildTerraceSeat(g,it,primary){
+ const {w,h,d}=it,single=it.shape==='seat',frame=partFinish(M('#51463a',.57),'frame');
+ const fabric=partFinish(primary.clone(),'seat'),back=partFinish(primary.clone(),'back');
+ const arms=partFinish(M('#857058',.68),'arms'),rope=partFinish(M('#a18b70',.8),'rope');
+ const feet=partFinish(M('#454949',.48,.45),'feet'),count=single?1:3;
+ const y=h*.41,t=Math.min(4.4,w*.07),depth=d*.79,x=w*.45,z=-d*.37;
+ B(g,w*.91,t,depth,0,y-t/2,0,frame);
+ for(const a of [-1,1]){
+  for(const b of [-1,1])B(g,t,y-t,t,a*x,(y-t)/2,b*d*.35,feet);
+  for(const zz of [z,d*.33])B(g,t,h*.25,t,a*x,y+h*.125,zz,frame);
+  B(g,t*1.25,t,d*.75,a*x,y+h*.25,0,arms);
+  for(let k=0;k<12;k++)B(g,.95,h*.24,1.1,a*x,y+h*.12,d*(-.33+k*.058),rope);
+  B(g,t,h-y,t,a*x,(h+y)/2,z,frame);
+ }
+ B(g,2*x,t,t,0,h-t/2,z,frame);
+ for(let k=0;k<19;k++)B(g,1.05,h-y-t,1.2,w*(-.415+k*.046),y+(h-y-t)/2,z,rope);
+ const sw=w*.81/count;
+ for(let k=0;k<count;k++){
+  const xx=(k-(count-1)/2)*sw;
+  bedCushion(g,xx,y,d*.015,sw-.75,h*.125,d*.66,fabric,5);
+  const pad=new T.Group();pad.position.set(xx,y+h*.13,z+d*.037);pad.rotation.x=-.1;g.add(pad);
+  B(pad,sw-.9,h*.35,d*.105,0,h*.175,0,back);
+ }
+}
+
+function buildTerraceTable(g,it,primary){
+ const {w,h,d}=it,wood=partFinish(primary.clone(),'top'),legs=partFinish(M('#535950',.52,.45),'legs');
+ const frame=partFinish(M('#727264',.58),'apron');
+ const t=Math.min(3,h*.065),under=h-t,rail=Math.min(4,w*.07,d*.08),gap=.5,sw=(w-gap*7)/8;
+ for(let k=0;k<8;k++)B(g,sw,t,d,(k-3.5)*(sw+gap),h-t/2,0,wood);
+ for(const x of [-1,1]){
+  B(g,rail,rail,d*.83,x*w*.425,under-rail/2,0,frame);
+  for(const z of [-1,1])B(g,rail,under,rail,x*w*.425,under/2,z*d*.41,legs);
+ }
+ for(const z of [-1,1])B(g,w*.85,rail,rail,0,under-rail/2,z*d*.41,frame);
+}
+
+function buildTerraceLounger(g,it,primary){
+ const {w,h,d}=it,adjustable=/reclinable/i.test(it.n||''),cloth=partFinish(primary.clone(),'fabric');
+ const frame=partFinish(M('#646c66',.42,.48),'frame'),metal=partFinish(M('#8f9691',.38,.63),'hinges');
+ const foot=partFinish(M('#393e3a',.56,.21),'feet');
+ const y=h*.84,t=Math.min(4.2,w*.075),hingeZ=d*.035,x=w*.425,rear=d*.49,front=-d*.49;
+ for(const s of [-1,1]){
+  B(g,t,t,rear-front,s*x,y-t/2,0,frame);
+  for(const z of [-d*.36,d*.365]){
+   B(g,t,y-t,t,s*x,(y-t)/2,z,frame);
+   B(g,t*1.24,1.1,t*1.3,s*x,.55,z,foot);
+  }
+ }
+ for(const z of [-d*.37,hingeZ,d*.38])B(g,2*x,t,t,0,y-t/2,z,frame);
+ B(g,w*.86,h-y,hingeZ-front-.9,0,y+(h-y)/2,(hingeZ+front)/2-.45,cloth);
+ const back=new T.Group();back.name='Respaldo';back.position.set(0,y,hingeZ);g.add(back);
+ const length=rear-hingeZ;
+ B(back,w*.86,h-y,length,0,(h-y)/2,length/2,cloth);
+ for(const s of [-1,1]){
+  B(back,t*.75,t*.67,length,s*x,-t*.33,length/2,frame);
+  B(g,3,3.6,2.6,s*x,y,hingeZ,metal);
+ }
+ if(!adjustable)return;
+ it.op=it.op||[];
+ const m=mv(back,{it,k:0,t:'u',angle:42,lounger:true});
+ const up=new T.Vector3(0,1,0),end=new T.Vector3(),direction=new T.Vector3();
+ const bars=[-1,1].map(side=>B(g,1.5,1,1.5,side*x,0,0,metal));
+ m.update=()=>{
+  back.updateMatrix();
+  for(let i=0;i<2;i++){
+   const sx=(i?1:-1)*x,anchor=new T.Vector3(sx,y-t*.7,rear-length*.16);
+   end.set(sx,-t*.34,length*.60).applyMatrix4(back.matrix);
+   direction.subVectors(end,anchor);
+   const lengthBar=direction.length(),bar=bars[i];
+   bar.position.copy(anchor).lerp(end,.5);bar.scale.y=lengthBar;
+   bar.quaternion.setFromUnitVectors(up,direction.divideScalar(lengthBar));
+  }
+ };
+ stepMV(m);
+}
+
+function buildTerraceUmbrella(g,it,primary){
+ const {w,h,d}=it,r=Math.min(w,d)*.493,drop=h*.125,top=h-3;
+ const pole=partFinish(M('#635a4f',.45,.48),'pole'),rib=partFinish(M('#7c817a',.43,.51),'ribs');
+ const cloth=partFinish(primary.clone(),'fabric'),base=partFinish(M('#4b504a',.61,.12),'base');
+ cloth.side=T.DoubleSide;
+ const stand=new T.Mesh(new T.CylinderGeometry(r*.20,r*.23,5,40),base);
+ stand.position.y=2.5;g.add(stand);
+ bedroomTube(g,[0,5,0],[0,top+1,0],Math.min(2.6,r*.025),pole);
+ const shade=new T.Group();shade.name='Toldo';shade.position.y=top;g.add(shade);
+ const fabric=new T.Mesh(new T.LatheGeometry([[.1,0],[r*.32,-drop*.16],[r*.69,-drop*.58],[r,-drop]].map(([x,y])=>new T.Vector2(x,y)),8),cloth);
+ shade.add(fabric);
+ for(let i=0;i<8;i++){
+  const a=i*Math.PI/4,x=Math.sin(a)*r,z=Math.cos(a)*r;
+  bedroomTube(shade,[0,-.5,0],[x*.68,-drop*.59-.55,z*.68],1,rib);
+  bedroomTube(shade,[x*.68,-drop*.59-.55,z*.68],[x,-drop-.55,z],1,rib);
+ }
+ const slider=new T.Mesh(new T.CylinderGeometry(3.1,3.1,6,24),rib);g.add(slider);
+ const bars=Array.from({length:8},()=>B(g,1.1,1,1.1,0,0,0,rib));
+ const yAxis=new T.Vector3(0,1,0),delta=new T.Vector3(),head=new T.Vector3(),end=new T.Vector3();
+ it.op=it.op||[];
+ const m=mv(shade,{it,k:0,t:'e',dy:0,umbrella:true});
+ let previous=-1;
+ m.update=()=>{
+  const v=m.v;
+  if(Math.abs(v-previous)<.00005)return;
+  previous=v;
+  const radial=1-v*.87,vertical=1+v*2.48;
+  shade.scale.set(radial,vertical,radial);
+  slider.position.y=top-drop*(1.21+v*1.42);
+  head.set(0,slider.position.y,0);
+  bars.forEach((bar,i)=>{
+   const a=i*Math.PI/4;
+   end.set(Math.sin(a)*r*.68*radial,top-(drop*.59+.55)*vertical,Math.cos(a)*r*.68*radial);
+   delta.subVectors(end,head);
+   const len=delta.length();
+   bar.position.copy(head).lerp(end,.5);bar.scale.y=len;
+   bar.quaternion.setFromUnitVectors(yAxis,delta.divideScalar(len));
+  });
+ };
+ stepMV(m);
+}
+
+function buildTerracePergola(g,it,primary){
+ const {w,h,d}=it,movable=/bioclim/i.test(it.n||''),frame=partFinish(primary.clone(),'frame');
+ const slats=partFinish(M('#aeb4aa',.56,.26),'slats'),metal=partFinish(M('#606a66',.45,.56),'hardware');
+ const t=Math.min(10,w*.065,d*.065,h*.085),x=w/2-t*.62,z=d/2-t*.62,roof=h-t*.65;
+ for(const a of [-1,1])for(const b of [-1,1]){
+  B(g,t,roof,t,a*x,roof/2,b*z,frame);
+  B(g,t*1.22,2.2,t*1.22,a*x,1.1,b*z,metal);
+ }
+ for(const s of [-1,1]){
+  B(g,w,t*1.3,t,0,roof,s*z,frame);
+  B(g,t,t*1.3,2*z-t,s*x,roof,0,frame);
+ }
+ const pivot=new T.Group();pivot.name='Lamas';g.add(pivot);
+ const count=movable?13:9,space=(2*z-t)/count,rotors=[];
+ for(let i=0;i<count;i++){
+  const leaf=new T.Group(),zz=(i-(count-1)/2)*space;leaf.position.set(0,roof,zz);pivot.add(leaf);rotors.push(leaf);
+  B(leaf,2*x-t+.3,movable?2.4:t*.60,space*(movable?.974:.58),0,0,0,slats);
+  for(const s of [-1,1])B(pivot,3.4,1.65,1.65,s*(x-t/2),roof,zz,metal);
+ }
+ if(!movable)return;
+ it.op=it.op||[];
+ const m=mv(pivot,{it,k:0,t:'e',dy:0,louvres:true});
+ m.update=()=>{for(const leaf of rotors)leaf.rotation.x=-1.19*m.v};
+ m.update();
+}
+
+function buildTerracePlanter(g,it,primary){
+ const {w,h,d}=it,body=partFinish(primary.clone(),'pot'),soil=partFinish(M('#514135',.98),'soil');
+ const leaves=[partFinish(M('#597a49',.88),'leaves'),partFinish(M('#759354',.89),'leaves')];
+ const rx=w*.487,rz=d*.482,top=h*.68,t=Math.min(2,rz*.16);
+ body.side=T.DoubleSide;
+ bathShell(g,[[rx*.80,rz*.80,0],[rx*.83,rz*.83,2],[rx,rz,top-1],[rx,rz,top],[rx-t,rz-t,top],[rx*.83-t,rz*.83-t,2]],6,body);
+ B(g,rx*1.60,1.8,rz*1.6,0,.9,0,body);
+ const shape=new T.Shape(),baseX=rx*.94-t,baseZ=rz*.94-t;
+ for(let k=0;k<=48;k++){
+  const a=k*Math.PI/24,x=Math.cos(a),z=Math.sin(a),f=1/Math.pow(x**6+z**6,1/6);
+  shape[k?'lineTo':'moveTo'](x*baseX*f,z*baseZ*f);
+ }
+ const earth=new T.Mesh(new T.ShapeGeometry(shape,24),soil);earth.rotation.x=-Math.PI/2;earth.position.y=top-2.4;g.add(earth);
+ for(let k=0;k<23;k++){
+  const a=k*2.399,x=(k%7-3)*w*.113,z=Math.sin(a)*rz*.54,cy=top+h*(.10+(k%3)*.026);
+  bedroomTube(g,[x*.94,top-2.6,z*.8],[x,cy,z],.28,leaves[k%2]);
+  const leaf=new T.Mesh(new T.SphereGeometry(1,12,9),leaves[k%2]);
+  leaf.scale.set(w*.054,h*.102,rz*.11);leaf.position.set(x,cy,z);leaf.rotation.z=Math.sin(a)*.92;g.add(leaf);
+ }
+}
+
+function buildTerraceBBQ(g,it,primary){
+ const {w,h,d}=it,body=partFinish(primary.clone(),'body'),cover=partFinish(primary.clone(),'lid');
+ const rack=partFinish(M('#9ca6a9',.33,.68),'grate'),frame=partFinish(M('#424849',.45,.51),'frame');
+ const shelves=partFinish(M('#7f8785',.48,.41),'shelves'),controls=partFinish(M('#303738',.53,.35),'controls');
+ const cy=h*.75,t=Math.min(2.2,d*.075),bw=w*.66,bd=d*.85,base=h*.58,front=bd/2;
+ B(g,bw,t,bd,0,base+t/2,0,body);
+ for(const s of [-1,1]){
+  B(g,t,cy-base-t,bd,s*(bw-t)/2,(cy+base+t)/2,0,body);
+  B(g,bw-2*t,cy-base-t,t,0,(cy+base+t)/2,s*(bd-t)/2,body);
+ }
+ for(let k=0;k<16;k++)bedroomTube(g,[(k-7.5)*bw*.055,cy-2,-front+t],[(k-7.5)*bw*.055,cy-2,front-t],.46,rack);
+ for(const z of [-1,1])B(g,bw-2*t,1.4,1.4,0,cy-2.75,z*bd*.41,rack);
+ const lid=new T.Group();lid.name='Tapa';lid.position.set(0,cy+.3,-front+.7);g.add(lid);
+ const height=h-cy-.3;
+ B(lid,bw,t,bd,0,height-t/2,front-.7,cover);
+ for(const s of [-1,1]){
+  B(lid,t,height-t,bd,s*(bw-t)/2,(height-t)/2,front-.7,cover);
+  B(lid,bw-2*t,height-t,t,0,(height-t)/2,front-.7+s*(bd-t)/2,cover);
+ }
+ barPull(lid,0,height*.55,bd-.7,bw*.46,controls,false,'controls');
+ for(const x of [-1,1]){
+  B(g,w*.165,t,d*.67,x*w*.412,cy-t/2,0,shelves);
+  B(g,w*.179,2,d*.56,x*w*.405,cy-t-1,0,frame);
+  B(g,4,base,4,x*bw*.44,base/2,-bd*.36,frame);
+  B(g,4,base,4,x*bw*.44,base/2,bd*.36,frame);
+  B(g,4,4.1,2.3,x*bw*.34,cy-.8,-front+.8,frame);
+  const knob=new T.Mesh(new T.CylinderGeometry(2.2,2.2,1.8,24),controls);
+  knob.rotation.x=Math.PI/2;knob.position.set(x*bw*.22,base+(cy-base)*.47,front+.85);g.add(knob);
+ }
+ B(g,bw*.93,2,bd*.79,0,h*.14,0,frame);
+ it.op=it.op||[];
+ stepMV(mv(lid,{it,k:0,t:'u',angle:86}));
+}
+
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
@@ -2992,6 +3198,7 @@ case'sofa':{
  break;
 }
 case'outdoorsofa':{
+ if(isTerraceItem(it)){buildTerraceSeat(g,it,mt);break;}
  const tag=(mesh,key)=>{if(mesh)mesh.userData.part={t:key};return mesh};const frame=M('#5c5146',.52,.18),fabric=M(it.col||'#a9b2a5',.86,.02),rope=M('#b99d7c',.82,.02),feet=M('#303638',.48,.35);
  tag(B(g,w*.92,h*.16,d*.82,0,h*.14,0,frame),'frame');
  for(const side of [-1,1]){
@@ -3006,6 +3213,7 @@ case'outdoorsofa':{
  break;
 }
 case'seat':{
+ if(isTerraceItem(it)){buildTerraceSeat(g,it,mt);break;}
  const name=(it.n||'').toLowerCase(),uphol=M(it.col||'#9d8264',.9,.02),wood=M('#795d43',.52,.12),metal=M('#444b50',.38,.72),pouf=/puf/.test(name),wing=/orejero/.test(name);
  if(pouf){
   const radius=Math.min(w,d)*.47,bodyH=h*.81;
@@ -3120,6 +3328,7 @@ case'panel':{
  break;
 }
 case'table':{
+ if(isTerraceItem(it)){buildTerraceTable(g,it,mt);break;}
  const wood=partFinish(mt.clone(),'top'),edge=partFinish(M('#6f5339',.55,.1),'apron'),steel=partFinish(M('#343b40',.32,.78),'hardware'),name=(it.n||'').toLowerCase(),round=/redond|oval|circular/.test(name),extensible=/extensible/.test(name),small=/auxiliar|centro/.test(name),topT=Math.max(2.8,h*.055),topY=h-topT/2;
  if(extensible&&isLivingItem(it)){buildDiningExtension(g,it,wood,edge,steel);break;}
  if(round){
@@ -3848,6 +4057,7 @@ case'computer':{
  break;
 }
 case'sunbed':{
+ if(isTerraceItem(it)){buildTerraceLounger(g,it,mt);break;}
  const frame=M('#aeb5b8',.3,.78),fabric=M(it.col||'#a9b2a5',.82,.02),dark=M('#343a3e',.55,.2);
  const bedW=w*.88,bedD=d*.9,seatY=h*.56;
  // Bastidor lateral con patas, travesaños y articulaciones de respaldo.
@@ -3865,6 +4075,7 @@ case'sunbed':{
  break;
 }
 case'umbrella':{
+ if(isTerraceItem(it)){buildTerraceUmbrella(g,it,mt);break;}
  const pole=M('#9c8c70',.36,.78),rib=M('#737d7c',.52,.5),fabric=M(it.col||'#d0c6b7',.82,.02),dark=M('#343a3d',.5,.3);
  const radius=Math.min(w,d)*.49,topY=h*.88;
  tube([0,3,0],[0,h*.91,0],Math.max(2,w*.012),pole);
@@ -3883,6 +4094,7 @@ case'umbrella':{
  break;
 }
 case'pergola':{
+ if(isTerraceItem(it)){buildTerracePergola(g,it,mt);break;}
  const frame=M(it.col||'#a8a9a4',.38,.72),dark=M('#555e60',.46,.62),seal=M('#30383b',.52,.35);
  for(const x of [-1,1])for(const z of [-1,1]){B(g,10, h*.94,10,x*w*.46,h*.47,z*d*.46,frame);B(g,18,3,18,x*w*.46,1.5,z*d*.46,seal)}
  // Vigas perimetrales con uniones visibles y canalón de evacuación.
@@ -3894,6 +4106,7 @@ case'pergola':{
  break;
 }
 case'planter':{
+ if(isTerraceItem(it)){buildTerracePlanter(g,it,mt);break;}
  const ceramic=M(it.col||'#9b765e',.72,.04),soil=M('#4d3c2d',.98,.01),green1=M('#477b4b',.96,.01),green2=M('#6b965e',.94,.01);
  // Jardinera hueca y troncocónica, con pared real y borde superior.
  const rx=w*.48,rz=d*.48,profile=[new T.Vector2(rx*.68,2),new T.Vector2(rx*.72,h*.08),new T.Vector2(rx*.88,h*.78),new T.Vector2(rx,h*.84),new T.Vector2(rx*.94,h*.88)];
@@ -3913,6 +4126,7 @@ case'tree':{
 
 
 case'bbq':{
+ if(isTerraceItem(it)){buildTerraceBBQ(g,it,mt);break;}
  it.op=it.op||[];
  const body=M('#343a3d',.42,.58),metal=M('#aeb5b8',.28,.86),grate=M('#545d62',.34,.82),heat=M('#171b1d',.72,.16);
  const fireH=h*.42,topY=h*.76;
@@ -4163,11 +4377,35 @@ function detachChildren(parent){S.i.forEach(child=>{if(child.rel&&child.rel.pare
 function syncSupportedChildren(parent){if(!parent||parent.id==null)return;S.i.forEach(child=>{const r=child.rel;if(!r||r.parentId!=parent.id)return;const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a);child.x=parent.x+r.dx*c-r.dy*s;child.y=parent.y+r.dx*s+r.dy*c;child.r=(parent.r||0)+(r.dr||0);child.e=supportHeight(parent)+(r.dz||0)});updateSupportTop(parent)}
 function updateChildOffset(child){if(!child||!child.rel)return;const p=S.i.find(x=>x.id==child.rel.parentId);if(!p)return;const a=(p.r||0)*D,c=Math.cos(a),s=Math.sin(a),dx=child.x-p.x,dy=child.y-p.y;child.rel.dx=dx*c+dy*s;child.rel.dy=-dx*s+dy*c;child.rel.dr=(child.r||0)-(p.r||0);updateSupportTop(p)}
 function updateSupportTop(parent){if(!parent||parent.id==null)return;const children=S.i.filter(x=>x.rel&&x.rel.parentId==parent.id);if(!children.length||(isOfficeItem(parent)&&parent.shape==='desk'&&!children.some(x=>x.t==='fregadero'))){delete parent.supportTop;return}const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a);let x0=-parent.w/2,x1=parent.w/2,z0=-parent.d/2,z1=parent.d/2;children.filter(ch=>ch.t=='fregadero').forEach(ch=>{const dx=ch.x-parent.x,dy=ch.y-parent.y,lx=dx*c+dy*s,ly=-dx*s+dy*c,ang=((ch.r||0)-(parent.r||0))*D,hw=Math.abs(Math.cos(ang))*ch.w/2+Math.abs(Math.sin(ang))*ch.d/2,hd=Math.abs(Math.sin(ang))*ch.w/2+Math.abs(Math.cos(ang))*ch.d/2;x0=Math.min(x0,lx-hw-2);x1=Math.max(x1,lx+hw+2);z0=Math.min(z0,ly-hd-2);z1=Math.max(z1,ly+hd+2)});parent.supportTop={x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0,d:z1-z0}}
+function terraceCollisionParts(it){
+ if(!isTerraceItem(it)||!['pergola','umbrella'].includes(it.shape))return null;
+ const {w,h,d}=it,e=+it.e||0,angle=(it.r||0)*D,c=Math.cos(angle),s=Math.sin(angle);
+ const part=(x,z,width,depth,bottom,height)=>({x:it.x+x*c-z*s,y:it.y+x*s+z*c,w:width,d:depth,r:it.r||0,e:e+bottom,h:height});
+ if(it.shape==='umbrella'){
+  const radius=Math.min(w,d)*.493,closed=it.op?.[0],scale=closed?.13:1;
+  const pole=Math.min(5.2,radius*.05),low=h-3-h*.125*(closed?3.48:1);
+  return [part(0,0,radius*.46,radius*.46,0,5),part(0,0,pole,pole,5,h-5),part(0,0,radius*2*scale,radius*2*scale,low,h-low)];
+ }
+ const t=Math.min(10,w*.065,d*.065,h*.085),x=w/2-t*.62,z=d/2-t*.62,base=t*1.22;
+ const roof=h-t*1.3,parts=[part(0,0,w,d,roof,h-roof)];
+ for(const a of [-1,1])for(const b of [-1,1]){
+  parts.push(part(a*x,b*z,t,t,0,roof));
+  parts.push(part(a*x,b*z,base,base,0,2.2));
+ }
+ return parts;
+}
+function itemCollision(a,b){
+ const aa=terraceCollisionParts(a)||[a],bb=terraceCollisionParts(b)||[b];
+ return aa.some(p=>bb.some(q=>{
+  const low=+p.e||0,other=+q.e||0;
+  return low<other+(+q.h||0)-.01&&other<low+(+p.h||0)-.01&&sat(cors(p),cors(q));
+ }));
+}
 function fits(g){
  const w=+g.w,h=+g.h,d=+g.d,e=+(g.e||0);
  if(![w,h,d,e,g.x,g.y,g.r||0].every(Number.isFinite)||w<=0||h<=0||d<=0||e<0)return false;
  const A=cors(g);
- if(S.i.some(o=>{if(o.hid||o.id===g.id)return false;if(g.rel&&g.rel.parentId==o.id||o.rel&&o.rel.parentId==g.id)return false;const ge=e,oe=+o.e||0;return ge<oe+(+o.h||0)-.01&&oe<ge+h-.01&&sat(A,cors(o))}))return false;
+ if(S.i.some(o=>{if(o.hid||o.id===g.id)return false;if(g.rel&&g.rel.parentId==o.id||o.rel&&o.rel.parentId==g.id)return false;const ge=e,oe=+o.e||0;return ge<oe+(+o.h||0)-.01&&oe<ge+h-.01&&sat(A,cors(o))&&itemCollision(g,o)}))return false;
  return !S.w.some(wall=>e<(+wall.h||250)&&e+h>0&&sat(A,cors(wrect(wall))))
 }
 function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place);g.x=sn(wx);g.y=sn(wy);g.r=place.r||0;delete g.rel;
@@ -4193,7 +4431,17 @@ function commitQ(){H.push(JSON.stringify(S));F=[];try{localStorage.setItem(draft
 const vel={x:0,z:0};
 function inside(x,z){let c=0;S.w.forEach(w=>{if((w.y1>z)!=(w.y2>z)&&x<w.x1+(z-w.y1)/(w.y2-w.y1)*(w.x2-w.x1))c++});return c%2==1}
 function blocked(x,z){const R0=25;for(const w of S.w){const s=segd(w,x,z);if(s.d<w.t/2+R0){const o=S.o.find(o=>o.w==w.id&&o.ty=='d'&&Math.abs(o.p-s.p)<o.wd/2-10&&o.s<=15);if(!(o&&o.op&&o.op[0])||(openingKind(o)==='corredera'&&s.p>o.p-10))return true}}
- for(const i of S.i){if(i.hid||i.h<12)continue;const dx=x-i.x,dz=z-i.y,c=Math.cos(-i.r*D),sn_=Math.sin(-i.r*D);if(Math.abs(dx*c-dz*sn_)<i.w/2+R0&&Math.abs(dx*sn_+dz*c)<i.d/2+R0)return true}return false}
+ for(const i of S.i){
+  if(i.hid||i.h<12)continue;
+  const parts=terraceCollisionParts(i);
+  for(const p of parts||[i]){
+   if(parts&&p.e>=180)continue;
+   const dx=x-p.x,dz=z-p.y,c=Math.cos(-p.r*D),sn_=Math.sin(-p.r*D);
+   if(Math.abs(dx*c-dz*sn_)<p.w/2+R0&&Math.abs(dx*sn_+dz*c)<p.d/2+R0)return true;
+  }
+ }
+ return false;
+}
 const compact=matchMedia('(max-width:1050px)');
 const touchControls=matchMedia('(any-pointer:coarse)');
 let touchWalk=touchControls.matches,walkX=0,walkY=0;
@@ -5428,6 +5676,9 @@ function applyItemPartColors(g,it,primary){
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}applyItemPartColors(g,it,mt)}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
+ if(motions.some(m=>m.umbrella))return open?'Abrir sombrilla':'Cerrar sombrilla';
+ if(motions.some(m=>m.lounger))return open?'Bajar respaldo':'Elevar respaldo';
+ if(motions.some(m=>m.louvres))return open?'Cerrar lamas':'Abrir lamas';
  if(motions.some(m=>m.ladder))return open?'Plegar escalera':'Desplegar escalera';
  if(isLaundryItem(it)&&it.shape==='washer')return (open?'Cerrar ':'Abrir ')+(motions[0]?.t==='u'?'tapa':'puerta');
  if(it.shape==='computer'&&motions.length&&motions.every(m=>m.t==='u'))return open?'Cerrar portátil':'Abrir portátil';
