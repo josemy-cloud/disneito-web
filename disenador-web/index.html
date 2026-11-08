@@ -257,10 +257,10 @@ if(draftAccount)try{
  }
 }catch{}
 function commit(){roomsUpdate();H.push(JSON.stringify(S));F=[];try{localStorage.setItem(draftKey,H[H.length-1])}catch(e){}setCloudSaveState('pending','Cambios guardados localmente; sincronización pendiente.');psaveSoon();refresh()}
-function loadS(s){S=migrate(JSON.parse(s));roomsUpdate();sel=null;refresh()}
+function loadS(s){if(drag?.group||drag?.marquee)drag=null;S=migrate(JSON.parse(s));roomsUpdate();sel=null;refresh()}
 function undo(){if(H.length>1){F.push(H.pop());loadS(H[H.length-1])}}
 function redo(){if(F.length){const s=F.pop();H.push(s);loadS(s)}}
-const nid=()=>S.id++,get=()=>sel&&S[sel.k].find(e=>e.id==sel.id);
+const nid=()=>S.id++,get=()=>sel&&S[sel.k]?.find(e=>e.id==sel.id);
 const len=w=>Math.hypot(w.x2-w.x1,w.y2-w.y1);
 /* ===== Biblioteca inicial (modelos paramétricos propios) ===== */
 const KITCHEN_PRESETS=new WeakMap();
@@ -498,7 +498,7 @@ function applyArmedFloor(floor){
  finishMaterialPlacement();
 }
 function finishMaterialPlacement(){armed=null;commit();libUI();hint()}
-function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?'Material activo para un solo clic. Toca un suelo o una pared. Esc para cancelar.':({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
+function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?'Material activo para un solo clic. Toca un suelo o una pared. Esc para cancelar.':({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar muebles. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
 function createCustomFurniture(){
  const data={'Cocina modular':{key:'cocina',items:[['Mueble bajo a medida',60,87,60,true],['Mueble alto a medida',60,70,35,false],['Columna a medida',60,210,60,false]]},'Baño':{key:'baño',items:[['Mueble de lavabo',120,55,48,true],['Columna de baño',40,180,35,false],['Mueble auxiliar',60,80,35,false]]},'Dormitorio':{key:'dormitorio',items:[['Armario a medida',180,220,60,false],['Cómoda',100,90,45,true],['Mesita de noche',50,55,40,true]]},'Vestidor':{key:'vestidor',items:[['Módulo de vestidor',100,220,60,false],['Módulo zapatero',80,100,40,false],['Módulo de cajones',80,90,55,false]]},'Salón':{key:'salón',items:[['Mueble de televisión',180,50,42,true],['Aparador',140,85,45,true],['Librería',100,210,35,false],['Vitrina',80,190,40,false]]},'Recibidor':{key:'recibidor',items:[['Consola',100,85,35,true],['Zapatero',100,110,30,false],['Banco con almacenamiento',100,48,40,true]]},'Despacho':{key:'despacho',items:[
   ['Escritorio recto a medida',140,75,70,true,'desk','custom-despacho-escritorio'],
@@ -845,6 +845,10 @@ function partColorUI(e,panel=P,save=commit){
 
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
 function props(){P.innerHTML='';const e=get();
+ if(sel?.k==='group'){
+  P.innerHTML='<h4>Selección múltiple</h4><small>'+sel.ids.size+' muebles seleccionados. Arrastra uno en el plano 2D para moverlos juntos.</small>';
+  return;
+ }
  if(sel&&sel.k=='ms'){const m=S.ms[sel.id];P.innerHTML='<h4>Cota manual</h4>';const mr=m&&mres(m);P.insertAdjacentHTML('beforeend','<small>'+(mr?R(mr.d)+' cm':'Los objetos medidos ya no están disponibles')+'</small>');btn(m&&m.visible!==false?'🙈 Ocultar esta medida':'👁 Mostrar esta medida',()=>{m.visible=m.visible===false});btn('Eliminar solo esta medida',()=>{S.ms.splice(sel.id,1);sel=null});return}
   if(!e){P.innerHTML='<h4>Proyecto</h4>';row('Nombre',S.nm,v=>S.nm=v,'text');btn('Borrar mediciones',()=>S.ms=[]);P.insertAdjacentHTML('beforeend','<h4>Gestión de cotas manuales</h4><small>Las cotas ocultas se conservan y pueden volver a mostrarse.</small>');(S.ms||[]).forEach((m,mi)=>{const rr=document.createElement('div');rr.className='r';rr.style.cssText='padding:3px 0;border-bottom:1px solid #333';const mr=mres(m),tx=document.createElement('span');tx.textContent='Cota '+(mi+1)+' · '+(mr?R(mr.d)+' cm':'sin referencia')+' · '+(m.visible===false?'oculta':'visible');rr.append(tx);const sh=document.createElement('button');sh.textContent=m.visible===false?'Mostrar':'Ocultar';sh.onclick=()=>{m.visible=m.visible===false;commit()};const del=document.createElement('button');del.textContent='Eliminar';del.onclick=()=>{S.ms.splice(mi,1);commit()};rr.append(sh,del);P.append(rr)});row('Altura de paredes',S.w[0]?S.w[0].h:250,v=>S.w.forEach(w=>w.h=v));
   P.insertAdjacentHTML('beforeend','<h4>Suelo</h4>');sel2('Material',surfaceOptions(S.fl.m),S.fl.m,v=>{S.fl.m=v;S.fl.pat=null},surfaceLabels());row('Tamaño pieza (cm)',S.fl.sz,v=>S.fl.sz=Math.max(5,v));row('Junta (cm)',S.fl.j,v=>S.fl.j=v);row('Color junta',S.fl.jc,v=>S.fl.jc=v,'color');sel2('Orientación',['0','45','90'],''+S.fl.r,v=>S.fl.r=+v);patUI(S.fl,true);
@@ -919,19 +923,75 @@ function draw(){const W=c2.width=c2.clientWidth,Hh=c2.height=c2.clientHeight;x2.
   S.o.filter(o=>o.w==w.id).forEach(o=>drawOpening2D(w,o));
   const L=len(w),ux=(w.x2-w.x1)/L,uy=(w.y2-w.y1)/L;
   const nx=uy,ny=-ux,of=w.t/2+22,ax=w.x1+nx*of,ay=w.y1+ny*of,bx=w.x2+nx*of,by=w.y2+ny*of;if(S.showMeasures!==false){x2.strokeStyle='#c0392b';x2.lineWidth=1/k;x2.beginPath();x2.moveTo(ax,ay);x2.lineTo(bx,by);[[w.x1,w.y1],[w.x2,w.y2]].forEach(([a,b])=>{x2.moveTo(a+nx*(of-8),b+ny*(of-8));x2.lineTo(a+nx*(of+8),b+ny*(of+8))});x2.stroke();if(S.showMeasures!==false){x2.fillStyle='#c0392b';x2.font='bold '+(12/k)+'px sans-serif';x2.textAlign='center';x2.fillText(R(L)+' cm (editar)',(ax+bx)/2,(ay+by)/2-3/k)}}});
- S.i.forEach(i=>{if(i.hid)return;x2.save();x2.translate(i.x,i.y);x2.rotate(i.r*D);x2.fillStyle=i.col;x2.globalAlpha=.85;traceFurniturePlan(x2,i);x2.fill();x2.globalAlpha=1;x2.strokeStyle=sel&&sel.id==i.id?'#3d7be0':'#555';x2.lineWidth=sel&&sel.id==i.id?3/k:1/k;x2.stroke();x2.beginPath();x2.moveTo(-i.w/2,i.d/2);x2.lineTo(isLCarousel(i)?cornerArm(i)-i.w/2:i.w/2,i.d/2);x2.lineWidth=3/k;x2.stroke();x2.fillStyle='#000';x2.font=(10/k)+'px sans-serif';x2.textAlign='center';x2.fillText(R(i.w)+'×'+R(i.d),0,0);x2.restore()});
+ S.i.forEach(i=>{if(i.hid)return;x2.save();x2.translate(i.x,i.y);x2.rotate(i.r*D);x2.fillStyle=i.col;x2.globalAlpha=.85;traceFurniturePlan(x2,i);x2.fill();x2.globalAlpha=1;x2.strokeStyle=planItemSelected(i.id)?'#176cc1':'#555';x2.lineWidth=planItemSelected(i.id)?3/k:1/k;x2.stroke();x2.beginPath();x2.moveTo(-i.w/2,i.d/2);x2.lineTo(isLCarousel(i)?cornerArm(i)-i.w/2:i.w/2,i.d/2);x2.lineWidth=3/k;x2.stroke();x2.fillStyle='#000';x2.font=(10/k)+'px sans-serif';x2.textAlign='center';x2.fillText(R(i.w)+'×'+R(i.d),0,0);x2.restore()});
  const dimLabelBoxes=[];(S.ms||[]).forEach(m=>{if(S.showMeasures===false||m.visible===false)return;const r=mres(m);if(!r)return;x2.strokeStyle='#16a34a';x2.lineWidth=2/k;x2.setLineDash([6/k,4/k]);x2.beginPath();x2.moveTo(r.p[0],r.p[1]);x2.lineTo(r.q[0],r.q[1]);x2.stroke();x2.setLineDash([]);const label=R(r.d)+' cm',mx=(r.p[0]+r.q[0])/2,my=(r.p[1]+r.q[1])/2;x2.font='bold '+(13/k)+'px sans-serif';x2.textAlign='center';const tw=x2.measureText(label).width/k+12,th=20/k,ux=r.q[0]-r.p[0],uy=r.q[1]-r.p[1],ll=Math.hypot(ux,uy)||1,nx=-uy/ll,ny=ux/ll;const candidates=[0,1,-1,2,-2,3,-3].map(v=>[mx+nx*v*th*1.15,my+ny*v*th*1.15]);let pos=candidates.find(([cx,cy])=>!dimLabelBoxes.some(q=>Math.abs(cx-q.x)<(tw+q.w)/2+3/k&&Math.abs(cy-q.y)<(th+q.h)/2+3/k));if(!pos)pos=candidates[6];const [lx,ly]=pos;dimLabelBoxes.push({x:lx,y:ly,w:tw,h:th});x2.fillStyle='#fafafa';x2.fillRect(lx-tw/2,ly-th/2,tw,th);x2.fillStyle='#16a34a';x2.fillText(label,lx,ly+4/k)});
  if(tool=='place'&&ghost){S.i.forEach(o=>{if(o.hid)return;x2.strokeStyle='#d946ef';x2.lineWidth=1/k;x2.setLineDash([5/k,5/k]);if(Math.abs(o.x-ghost.x)<1||Math.abs(o.y-ghost.y)<1){x2.beginPath();x2.moveTo(o.x,o.y);x2.lineTo(ghost.x,ghost.y);x2.stroke()}x2.setLineDash([])});x2.save();x2.translate(ghost.x,ghost.y);x2.rotate(ghost.r*D);x2.globalAlpha=.55;x2.fillStyle=ghost.ok?'#22c55e':'#ef4444';traceFurniturePlan(x2,ghost);x2.fill();x2.restore()}
  if(cur&&cur.x2!=null){x2.strokeStyle='#3d7be0';x2.lineWidth=10;x2.beginPath();x2.moveTo(cur.x1,cur.y1);x2.lineTo(cur.x2,cur.y2);x2.stroke();x2.fillStyle='#3d7be0';x2.font=(14/k)+'px sans-serif';x2.fillText(R(Math.hypot(cur.x2-cur.x1,cur.y2-cur.y1))+' cm'+(buf?' → '+buf:''),(cur.x1+cur.x2)/2,(cur.y1+cur.y2)/2-15/k)}
+ if(drag?.marquee&&drag.moved){
+  const {x,y,cx,cy}=drag;
+  x2.fillStyle='rgba(23,108,193,.18)';x2.strokeStyle='#176cc1';x2.lineWidth=1/k;
+  x2.fillRect(x,y,cx-x,cy-y);x2.strokeRect(x,y,cx-x,cy-y);
+ }
  if(drag&&drag.rm){x2.strokeStyle='#3d7be0';x2.lineWidth=2/k;x2.strokeRect(drag.x,drag.y,drag.cx-drag.x,drag.cy-drag.y)}
  x2.restore()}
 const segd=(w,x,y)=>{const L=len(w),t=Math.max(0,Math.min(L,((x-w.x1)*(w.x2-w.x1)+(y-w.y1)*(w.y2-w.y1))/L)),ux=(w.x2-w.x1)/L,uy=(w.y2-w.y1)/L;return{d:Math.hypot(x-w.x1-ux*t,y-w.y1-uy*t),p:t}};
 function addW(x1,y1,x2,y2){if(Math.hypot(x2-x1,y2-y1)<5)return;S.w.push({id:nid(),x1,y1,x2,y2,t:10,h:S.w[0]?S.w[0].h:250})}
 function room(x,y,w,d,exact){const t=10,a=exact?x-t/2:x,b=exact?y-t/2:y,W=exact?w+t:w,Dd=exact?d+t:d;addW(a,b,a+W,b);addW(a+W,b,a+W,b+Dd);addW(a+W,b+Dd,a,b+Dd);addW(a,b+Dd,a,b)}
 function exact(){const v=prompt('Medidas interiores de la habitación en cm (ancho x fondo):','288x260');if(!v)return;const m=v.toLowerCase().split(/[x×]/).map(Number);if(m.length<2||!m[0]||!m[1])return;const [px,py]=W2(c2.clientWidth/2-m[0]*k/2,c2.clientHeight/2-m[1]*k/2);room(sn(px),sn(py),m[0],m[1],true);commit()}
+function planItemSelected(id){
+ return sel?.k==='group'?sel.ids.has(id):sel?.k==='i'&&sel.id===id;
+}
+function selectPlanItems(ids){
+ sel=ids.size>1?{k:'group',ids}:ids.size===1?{k:'i',id:ids.values().next().value}:null;
+ selPart=null;
+}
+function planSelectionIds(){
+ return sel?.k==='group'?new Set(sel.ids):new Set(sel?.k==='i'?[sel.id]:[]);
+}
+function planFurnitureAt(x,y){
+ for(let n=S.i.length-1;n>=0;n--){
+  const it=S.i[n];if(it.hid)continue;
+  const dx=x-it.x,dy=y-it.y,c=Math.cos(-it.r*D),s=Math.sin(-it.r*D);
+  if(insideFurniturePlan(it,dx*c-dy*s,dx*s+dy*c))return it;
+ }
+ return null;
+}
+function startPlanGroupDrag(x,y){
+ const ids=planSelectionIds();
+ if(S.i.some(it=>ids.has(it.id)&&it.lk)){
+  $('#editorHint').textContent='Desbloquea los muebles de la selección para moverlos juntos.';
+  return;
+ }
+ // Los accesorios que ya están apoyados viajan una sola vez con su soporte.
+ let added;
+ do{
+  added=false;
+  for(const it of S.i){
+   if(!ids.has(it.id)&&ids.has(it.rel?.parentId)){ids.add(it.id);added=true}
+  }
+ }while(added);
+ drag={group:true,sx:x,sy:y,ids,items:S.i.filter(it=>ids.has(it.id)).map(it=>({it,x:it.x,y:it.y}))};
+}
+function shiftPlanGroup(d,dx,dy){
+ for(const {it,x,y} of d.items){it.x=x+dx;it.y=y+dy}
+}
+function finishPlanMarquee(d){
+ if(!d.moved){
+  if(!d.additive){sel=d.fallback;selPart=null}
+ }else{
+  const ids=d.additive?planSelectionIds():new Set();
+  const left=Math.min(d.x,d.cx),right=Math.max(d.x,d.cx),top=Math.min(d.y,d.cy),bottom=Math.max(d.y,d.cy);
+  for(const it of S.i){
+   if(!it.hid&&cors(it).every(([x,y])=>x>=left&&x<=right&&y>=top&&y<=bottom))ids.add(it.id);
+  }
+  selectPlanItems(ids);
+ }
+ refresh();hint();
+}
 c2.oncontextmenu=e=>e.preventDefault();
 c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.left,e.clientY-r.top),x=sn(wx),y=sn(wy);
  if(e.button==2){drag={pan:1,sx:e.clientX,sy:e.clientY,ox,oy};return}
+ if(e.button!==0)return;
  if(tool=='wall'){if(cur&&cur.x2!=null){addW(cur.x1,cur.y1,cur.x2,cur.y2);commit();cur={x1:cur.x2,y1:cur.y2,x2:cur.x2,y2:cur.y2}}else cur={x1:x,y1:y,x2:x,y2:y};buf='';return}
  if(tool=='room'){drag={rm:1,x,y,cx:x,cy:y};return}
  const type=openingTool();
@@ -955,11 +1015,28 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  }
  if(tool=='place'&&place){ghostCalc(wx,wy);if(ghost.ok){const o=JSON.parse(JSON.stringify(ghost));o.id=nid();delete o.ok;o.r=Math.round(o.r*100)/100;o.op=[];S.i.push(o);if(o.rel){const p=S.i.find(x=>x.id==o.rel.parentId);if(p)updateSupportTop(p)}sel={k:'i',id:o.id};ghost=null;tool='sel';drawTools();hint();commit()}return}
  // seleccionar
+ const itemHit=tool==='sel'?planFurnitureAt(wx,wy):null;
+ if(tool==='sel'&&!armed&&!wallVis){
+  if(e.shiftKey&&itemHit){
+   const ids=planSelectionIds();
+   if(ids.has(itemHit.id))ids.delete(itemHit.id);else ids.add(itemHit.id);
+   selectPlanItems(ids);refresh();hint();return;
+  }
+  if(itemHit&&sel?.k==='group'&&sel.ids.has(itemHit.id)){
+   startPlanGroupDrag(wx,wy);return;
+  }
+ }
  if(tool=='measure'){S.ms=S.ms||[];for(const m of S.ms){if(m.visible===false)continue;const r=mres(m);if(r&&Math.abs(wx-(r.p[0]+r.q[0])/2)<30/k&&Math.abs(wy-(r.p[1]+r.q[1])/2)<10/k){const v=prompt('Separación exacta (cm):',R(r.d));if(v!==null&&v!==''){setGap(m,r,+v);commit()}return}}const pk=pick(wx,wy);if(!pk){sel=null;selPart=null;refresh();return}if(!measA){measA=pk;$('#editorHint').textContent='Ahora elige el segundo objeto'}else{S.ms.push({a:measA,b:pk});measA=null;commit()}return}
  if(tool=='sel'){for(let mi=0;mi<(S.ms||[]).length;mi++){const m=S.ms[mi],mr=mres(m);if(S.showMeasures!==false&&m.visible!==false&&mr&&Math.abs(wx-(mr.p[0]+mr.q[0])/2)<30/k&&Math.abs(wy-(mr.p[1]+mr.q[1])/2)<10/k){sel={k:'ms',id:mi};refresh();return}}for(const w of S.w){const L=len(w),nx=(w.y2-w.y1)/L,ny=-(w.x2-w.x1)/L,of=w.t/2+22,cx=(w.x1+w.x2)/2+nx*of,cy=(w.y1+w.y2)/2+ny*of;if(Math.abs(wx-cx)<45/k&&Math.abs(wy-cy)<10/k){const v=prompt('Longitud de la pared (cm):',R(L));if(v&&+v>0){setLen(w,+v);sel={k:'w',id:w.id};commit()}return}}}
- let hit=null;for(const i of S.i.slice().reverse()){if(i.hid)continue;const dx=wx-i.x,dy=wy-i.y,c=Math.cos(-i.r*D),s=Math.sin(-i.r*D),lx=dx*c-dy*s,ly=dx*s+dy*c;if(insideFurniturePlan(i,lx,ly)){hit={k:'i',id:i.id,o:i};break}}
+ const item=itemHit||planFurnitureAt(wx,wy);
+ let hit=item?{k:'i',id:item.id,o:item}:null;
  if(!hit)for(const w of S.w){const s=segd(w,wx,wy);if(s.d<Math.max(w.t,14)/2+3){const o=S.o.find(o=>o.w==w.id&&Math.abs(o.p-s.p)<o.wd/2);hit=o?{k:'o',id:o.id}:{k:'w',id:w.id,o:w};break}}
  if(!hit){const R=(S.rooms||[]).find(r=>r.poly&&inPoly(wx,wy,r.poly));if(R)hit={k:'rooms',id:R.id,o:R}}
+ if(tool==='sel'&&!armed&&!wallVis&&!e.touch&&(!hit||hit.k==='rooms')){
+  drag={marquee:true,x:wx,y:wy,cx:wx,cy:wy,additive:e.shiftKey,
+   fallback:hit?{k:hit.k,id:hit.id}:null};
+  return;
+ }
  sel=hit?{k:hit.k,id:hit.id}:null;selPart=null;
  if(wallVis&&hit&&hit.k=='w'){wvToggle(hit.o);sel=null;commit();return}
  if(armed){
@@ -981,13 +1058,42 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
 c2.onmousemove=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.left,e.clientY-r.top),x=sn(wx),y=sn(wy);
  mouse=[wx,wy];if(tool=='place'&&place){ghostCalc(wx,wy);draw()}if(cur){let a=x,b=y;if(e.shiftKey){Math.abs(x-cur.x1)>Math.abs(y-cur.y1)?b=cur.y1:a=cur.x1}cur.x2=a;cur.y2=b;cur.mx=a;draw()}
  if(!drag)return;if(drag.pan){ox=drag.ox+e.clientX-drag.sx;oy=drag.oy+e.clientY-drag.sy}
+ else if(drag.marquee){
+  drag.cx=wx;drag.cy=wy;drag.moved||=Math.hypot(wx-drag.x,wy-drag.y)*k>4;
+ }
+ else if(drag.group){
+  const dx=sn(wx-drag.sx),dy=sn(wy-drag.sy);
+  shiftPlanGroup(drag,dx,dy);drag.moved=!!(dx||dy);
+ }
  else if(drag.rm){drag.cx=x;drag.cy=y}
  else if(drag.mv=='i'){drag.e.x=sn(wx-drag.dx);drag.e.y=sn(wy-drag.dy);if(drag.e.rel)updateChildOffset(drag.e);syncSupportedChildren(drag.e);drag.moved=1}
  else if(drag.mv=='w'){const w=drag.e,dx=sn(wx-drag.sx),dy=sn(wy-drag.sy);[w.x1,w.y1,w.x2,w.y2]=[drag.o[0]+dx,drag.o[1]+dy,drag.o[2]+dx,drag.o[3]+dy];drag.moved=1}
  else if(drag.ep){S.w.forEach(w=>{if(w.x1==drag.px&&w.y1==drag.py){w.x1=x;w.y1=y}if(w.x2==drag.px&&w.y2==drag.py){w.x2=x;w.y2=y}});drag.px=x;drag.py=y;drag.moved=1}
  else if(drag.op){const w=S.w.find(w=>w.id==drag.op.w),s=segd(w,wx,wy);drag.op.p=sn(s.p);drag.moved=1}
  draw()};
-window.onmouseup=()=>{if(!drag)return;const d=drag;drag=null;if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved&&d.mv=='i'&&!fits(d.e)){d.e.x=d.x0;d.e.y=d.y0;if(d.e.rel)updateChildOffset(d.e);syncSupportedChildren(d.e);refresh();hint('Movimiento cancelado: colisión física con pared u objeto')}else if(d.moved)commit();else refresh()};
+window.addEventListener('mousemove',e=>{
+ if((drag?.marquee||drag?.group)&&e.target!==c2)c2.onmousemove(e);
+});
+window.addEventListener('blur',()=>{
+ if(drag?.group)shiftPlanGroup(drag,0,0);
+ else if(!drag?.marquee)return;
+ drag=null;refresh();
+});
+window.onmouseup=()=>{
+ if(!drag)return;
+ const d=drag;drag=null;
+ if(d.marquee){finishPlanMarquee(d);return}
+ if(d.group){
+  if(!d.moved){refresh();return}
+  if(d.items.some(({it})=>!it.hid&&!fits(it,d.ids))){
+   shiftPlanGroup(d,0,0);refresh();
+   $('#editorHint').textContent='Movimiento del grupo cancelado: hay una colisión con una pared u objeto.';
+   return;
+  }
+  for(const {it} of d.items)if(it.rel&&!d.ids.has(it.rel.parentId))updateChildOffset(it);
+  commit();hint();return;
+ }
+ if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved&&d.mv=='i'&&!fits(d.e)){d.e.x=d.x0;d.e.y=d.y0;if(d.e.rel)updateChildOffset(d.e);syncSupportedChildren(d.e);refresh();hint('Movimiento cancelado: colisión física con pared u objeto')}else if(d.moved)commit();else refresh()};
 c2.onwheel=e=>{e.preventDefault();const r=c2.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,[wx,wy]=W2(mx,my);k=Math.max(.15,Math.min(4,k*(e.deltaY<0?1.1:.9)));ox=mx-wx*k;oy=my-wy*k;draw()};
 c2.ondblclick=()=>{cur=null;draw()};
 // A tap edits the active tool. A drag navigates unless it starts an explicit edit.
@@ -1003,7 +1109,7 @@ function planPinch(touches){
   return {x:(a.clientX+b.clientX)/2-r.left,y:(a.clientY+b.clientY)/2-r.top,
     span:Math.max(1,Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY))};
 }
-function pressPlan(t){c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button:0})}
+function pressPlan(t){c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button:0,touch:true})}
 c2.addEventListener('touchstart',e=>{
   e.preventDefault();
   if(e.touches.length===2){
@@ -1057,7 +1163,7 @@ c2.addEventListener('touchcancel',()=>{
 S.o.forEach(o=>{});
 document.addEventListener('keydown',e=>{if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();if(e.target.tagName=='INPUT'&&e.target.type!='range')return;if(['SELECT','TEXTAREA'].includes(e.target.tagName))return;if(editMode&&!walk&&sel&&sel.k=='i'){const it=get();if(it&&!it.lk){const before={x:it.x,y:it.y,e:it.e,r:it.r};if(moveStep(it,e.key,e.shiftKey,e.ctrlKey,+$('#bSt').value,camFwd())){e.preventDefault();if(it.rel)updateChildOffset(it);syncSupportedChildren(it);if(!fits(it)){Object.assign(it,before);if(it.rel)updateChildOffset(it);syncSupportedChildren(it);sbUpdate('Movimiento cancelado: colisión física con pared u objeto');refresh();return}mvDirty=true;refresh();sbUpdate();return}}}
  if(e.ctrlKey&&e.key=='z'){undo();return}if(e.ctrlKey&&e.key=='y'){redo();return}
- if(e.key=='Escape'){ghost=null;place=null;measA=null;smode=false;selPart=null;$('#pv').style.display='none';pvOpen=false;exitWalk();cur=null;armed=null;tool='sel';buf='';drawTools();libUI();hint();draw()}
+ if(e.key=='Escape'){if(drag?.group){shiftPlanGroup(drag,0,0);drag=null}if(drag?.marquee)drag=null;if(sel?.k==='group'){sel=null;refresh()}ghost=null;place=null;measA=null;smode=false;selPart=null;$('#pv').style.display='none';pvOpen=false;exitWalk();cur=null;armed=null;tool='sel';buf='';drawTools();libUI();hint();draw()}
  if((e.key=='Delete'||e.key=='Backspace')&&sel){const el=get();if(!el)return;if(sel.k=='rooms')return;if(sel.k=='w')S.o=S.o.filter(o=>o.w!=el.id);S[sel.k]=S[sel.k].filter(x=>x!=el);sel=null;commit()}
  if(cur&&/[0-9]/.test(e.key)){buf+=e.key;draw()}
  if(cur&&e.key=='Enter'&&buf){const dx=cur.x2-cur.x1,dy=cur.y2-cur.y1,L=Math.hypot(dx,dy)||1,v=+buf;addW(cur.x1,cur.y1,cur.x1+dx/L*v,cur.y1+dy/L*v);const n=S.w[S.w.length-1];commit();cur={x1:n.x2,y1:n.y2,x2:n.x2,y2:n.y2};buf=''}
@@ -4707,7 +4813,7 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
- S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(sel&&sel.k=='i'&&sel.id==it.id){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
+ S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planItemSelected(it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
  fitSunToProject();setSun();
 }
 const walkOverlay=$('#walkTouch');
@@ -4948,11 +5054,11 @@ function itemCollision(a,b){
   return low<other+(+q.h||0)-.01&&other<low+(+p.h||0)-.01&&sat(cors(p),cors(q));
  }));
 }
-function fits(g){
+function fits(g,ignored){
  const w=+g.w,h=+g.h,d=+g.d,e=+(g.e||0);
  if(![w,h,d,e,g.x,g.y,g.r||0].every(Number.isFinite)||w<=0||h<=0||d<=0||e<0)return false;
  const A=cors(g);
- if(S.i.some(o=>{if(o.hid||o.id===g.id)return false;if(g.rel&&g.rel.parentId==o.id||o.rel&&o.rel.parentId==g.id)return false;const ge=e,oe=+o.e||0;return ge<oe+(+o.h||0)-.01&&oe<ge+h-.01&&sat(A,cors(o))&&itemCollision(g,o)}))return false;
+ if(S.i.some(o=>{if(o.hid||o.id===g.id||ignored?.has(o.id))return false;if(g.rel&&g.rel.parentId==o.id||o.rel&&o.rel.parentId==g.id)return false;const ge=e,oe=+o.e||0;return ge<oe+(+o.h||0)-.01&&oe<ge+h-.01&&sat(A,cors(o))&&itemCollision(g,o)}))return false;
  const plan=isLCarousel(g)?furnitureCollisionParts(g).map(cors):[A];
  return !S.w.some(wall=>e<(+wall.h||250)&&e+h>0&&plan.some(part=>sat(part,cors(wrect(wall)))))
 }
@@ -6591,7 +6697,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':'NAVEGACIÓN · la cámara')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: EDICIÓN':'Modo: navegación';b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':'NAVEGACIÓN · la cámara')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' muebles seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: EDICIÓN':'Modo: navegación';b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
