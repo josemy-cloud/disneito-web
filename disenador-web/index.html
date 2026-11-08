@@ -512,7 +512,7 @@ function createCustomFurniture(){
   }else if(r==='Cocina modular'){
    o=name.startsWith('Mueble alto')?alto(name,w,{lay:'libre',el:[]},h,d):name.startsWith('Columna')?colm(name,w,h,'libre',{el:[]}):base(name,w,'libre',{el:[]},d);
   }else{
-   o=base(name,w,'puertas',{k:'base',top:r=='Cocina modular'&&top,zoc:10,dvs:[],rods:[],xd:[],cc:'#f1eee8',cf:colors[r],ct:'#252525',cz:'#333333',cn:'#d7d1c7',cm:'laminado',acab:'satinado',fr:'lisa',ti:'barra',tl:30,op:'lateral',mf:'liso'},d);o.c=r;o.roomType=p.key;o.family=name;o.h=h;o.e=0;o.col=colors[r];
+   o=base(name,w,'puertas',{k:'base',top:r=='Cocina modular'&&top,zoc:10,dvs:[],rods:[],xd:[],cc:'#f1eee8',cf:colors[r],ct:'#252525',cz:'#333333',cn:'#d7d1c7',countertop:'color',acab:'satinado',fr:'lisa',ti:'barra',tl:30,op:'lateral',mf:'liso'},d);o.c=r;o.roomType=p.key;o.family=name;o.h=h;o.e=0;o.col=colors[r];
   }
   box.remove();openPrevObj(o)};actions.append(cancel,create);box.append(actions);document.body.append(box);
 }
@@ -1115,6 +1115,30 @@ const PARQUET_FINISHES=[
  ['nogal-oscuro','Efecto nogal oscuro']
 ];
 const isParquet=id=>PARQUET_FINISHES.some(([finish])=>finish===id);
+// Acabados de encimera propios. Los identificadores no forman parte del catálogo de suelos.
+const COUNTERTOPS=[
+ ['enc-porcelanico-blanco','Blanco ártico','Porcelánico','grain','#f2f1ee',.32,0,.08,120],
+ ['enc-porcelanico-arena','Arena mate','Porcelánico','cloud','#d3c3a9',.66,0,.14,135],
+ ['enc-porcelanico-cemento','Gris cemento','Porcelánico','cloud','#a2a09b',.66,0,.26,150],
+ ['enc-porcelanico-basalto','Basalto antracita','Porcelánico','grain','#36383b',.58,0,.20,120],
+ ['enc-porcelanico-calacatta','Calacatta cálido','Porcelánico','enc-vein-bold','#f3eee3',.34,0,.06,205],
+ ['enc-roble','Roble natural aceitado','Madera','enc-wood','#bb915f',.47,0,.38,120],
+ ['enc-fresno','Fresno claro','Madera','enc-wood','#d9c4a0',.48,0,.32,130],
+ ['enc-iroko','Iroko miel','Madera','enc-wood','#ae753f',.43,0,.38,135],
+ ['enc-nogal','Nogal oscuro','Madera','enc-wood','#664332',.43,0,.34,150],
+ ['enc-marmol-carrara','Carrara blanco','Mármol','enc-vein-fine','#e5e7e9',.24,0,.07,160],
+ ['enc-marmol-calacatta','Calacatta dorado','Mármol','enc-vein-bold','#eee3cc',.24,0,.06,240],
+ ['enc-marmol-marquina','Negro Marquina','Mármol','enc-vein-dark','#242328',.22,0,.06,180],
+ ['enc-marmol-verde','Verde oscuro veteado','Mármol','enc-vein-dark','#254439',.27,0,.08,205],
+ ['enc-cuarzo-blanco','Blanco nieve','Cuarzo','grain','#ececec',.23,0,.05,110],
+ ['enc-cuarzo-gris','Gris perla','Cuarzo','granite','#bdc0c5',.37,0,.08,75],
+ ['enc-cuarzo-beige','Beige avellana','Cuarzo','grain','#baa58b',.34,0,.08,100],
+ ['enc-granito-blanco','Blanco moteado','Granito','granite','#cbc7be',.28,0,.24,95],
+ ['enc-granito-negro','Negro de grano fino','Granito','granite','#303039',.26,0,.18,135],
+ ['enc-granito-rosa','Rosa granulado','Granito','granite','#b88d83',.31,0,.23,88],
+ ['enc-travertino','Travertino romano beige','Travertino','travert','#c7b493',.52,0,.30,150]
+];
+const COUNTERTOP_BY_ID=new Map(COUNTERTOPS.map(d=>[d[0],d]));
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
 const availableCustomMaterials=()=> (S.pbr||[]).filter(d=>String(d[1]).trim().toLowerCase()!=='mármol negro (copia)');
 const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),surfaceMaterials=()=>SURFACE_SCANS.concat([pbrDef('nogal-oscuro')],availableCustomMaterials()),
@@ -1151,7 +1175,20 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
  fb=(u,v,fx,fy,o)=>{let s0=0,am=.5,tot=0;for(let k=0;k<4;k++){s0+=am*nz(u,v,fx<<k,fy<<k,o+k);tot+=am;am/=2}return s0/tot},
  T0=new Float32Array(N*N),H0=new Float32Array(N*N),R0=new Float32Array(N*N);
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const u=x/N,v=y/N,i=y*N+x;let t=0,h=.5,r=0;
-  if(gen=='wood'){const w=fb(u,v,1,16,1),ring=Math.sin(2*Math.PI*(34*v+3*fb(u,v,2,3,2))),pore=nz(u,v,48,6,3);t=(ring*.5+.5)*.34-.17+(w-.5)*.35-(pore>.78?.12:0);h=.5+(ring*.5+.5)*.12-(pore>.78?.22:0);r=(ring*.5+.5)*.06}
+  if(gen==='enc-wood'){
+   const grain=fb(u,v,2,24,21),bend=fb(u,v,2,5,22),pore=nz(u,v,42,13,23);
+   const growth=Math.sin(2*Math.PI*(27*v+1.6*bend));
+   t=(grain-.5)*.34+growth*.055-(pore>.74?.1:0);
+   h=.5+growth*.075+(pore-.5)*.12;r=(grain-.5)*.08;
+  }else if(/^enc-vein-/.test(gen)){
+   const bend=fb(u,v,3,3,24),coarse=Math.abs(Math.sin(2*Math.PI*(u+v+1.5*bend)));
+   const fine=Math.abs(Math.sin(2*Math.PI*(u+2*v+.95*fb(u,v,4,4,25))));
+   const vein=Math.exp(-(gen==='enc-vein-bold'?5:13)*coarse);
+   const hairline=Math.exp(-27*fine);
+   const cloud=(fb(u,v,5,6,26)-.5)*.12;
+   t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.28)-hairline*.14;
+   h=.5;r=vein*.035;
+  }else if(gen=='wood'){const w=fb(u,v,1,16,1),ring=Math.sin(2*Math.PI*(34*v+3*fb(u,v,2,3,2))),pore=nz(u,v,48,6,3);t=(ring*.5+.5)*.34-.17+(w-.5)*.35-(pore>.78?.12:0);h=.5+(ring*.5+.5)*.12-(pore>.78?.22:0);r=(ring*.5+.5)*.06}
   else if(gen=='travert'){const bd=Math.sin(2*Math.PI*(14*v+1.5*fb(u,v,2,4,16))),pit=nz(u,v,40,10,17)>.82;t=bd*.08+(fb(u,v,4,4,18)-.5)*.12-(pit?.18:0);h=.5-(pit?.25:0)+bd*.04;r=pit?.1:0}
   else if(gen=='marble'||gen=='marbleg'){const w=fb(u,v,3,3,4),vein=Math.abs(Math.sin(2*Math.PI*(2*u+v+2.2*w))),f=Math.exp(-9*vein),f2=Math.exp(-30*Math.abs(Math.sin(2*Math.PI*(u-v+1.6*fb(u,v,4,4,5)))));t=-(f*.5+f2*.3)+(fb(u,v,6,6,6)-.5)*.12;h=.5;r=f*.05}
   else if(gen=='granite'){const a=nz(u,v,96,96,7),b=nz(u,v,70,70,8);t=(a>.72?-.45:a<.25?.35:0)+(b>.8?.3:0)+(fb(u,v,8,8,9)-.5)*.15;h=.5+(a-.5)*.15;r=(a>.72?.08:0)}
@@ -1162,7 +1199,8 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
   T0[i]=t;H0[i]=h;R0[i]=r}
  return{T0,H0,R0}}
 const PCH={},MCH={};
-function pbrTex(d){const asset=scanAsset(d);if(asset)return scanTextures(d,asset);const k=d.slice(3,8).join('|');if(PCH[k])return PCH[k];const N=512,F=pbrField(d[3],N,[...d[3]].reduce((a,c)=>a*31+c.charCodeAt(0),7)),mk=()=>{const c=document.createElement('canvas');c.width=c.height=N;return[c,c.getContext('2d'),null]},[ca,xa]=mk(),[cr,xr]=mk(),[cn,xn]=mk(),ia=xa.createImageData(N,N),ir=xr.createImageData(N,N),inn=xn.createImageData(N,N),hx=parseInt(d[4].slice(1),16),br=hx>>16&255,bg=hx>>8&255,bb=hx&255,cl=x=>Math.max(0,Math.min(255,x));
+const pbrSeed=d=>[...(COUNTERTOP_BY_ID.has(d[0])?d[0]:String(d[3]))].reduce((a,c)=>a*31+c.charCodeAt(0),7);
+function pbrTex(d){const asset=scanAsset(d);if(asset)return scanTextures(d,asset);const k=(COUNTERTOP_BY_ID.has(d[0])?d[0]+'|':'')+d.slice(3,8).join('|');if(PCH[k])return PCH[k];const N=512,F=pbrField(d[3],N,pbrSeed(d)),mk=()=>{const c=document.createElement('canvas');c.width=c.height=N;return[c,c.getContext('2d'),null]},[ca,xa]=mk(),[cr,xr]=mk(),[cn,xn]=mk(),ia=xa.createImageData(N,N),ir=xr.createImageData(N,N),inn=xn.createImageData(N,N),hx=parseInt(d[4].slice(1),16),br=hx>>16&255,bg=hx>>8&255,bb=hx&255,cl=x=>Math.max(0,Math.min(255,x));
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,o=i*4,t=F.T0[i]*(d[3]=='marble'&&(br+bg+bb)/3<110?-1.6:1),vv=Math.min(1,Math.abs(F.T0[i])*1.7),dx=F.H0[y*N+(x+1)%N]-F.H0[y*N+(x-1+N)%N],dy=F.H0[((y+1)%N)*N+x]-F.H0[((y-1+N)%N)*N+x],l=Math.hypot(dx*3,dy*3,1);
   ia.data.set(d[3]=='marbleg'?[cl(br+(201-br)*vv),cl(bg+(162-bg)*vv),cl(bb+(74-bb)*vv),255]:[cl(br*(1+t)),cl(bg*(1+t)),cl(bb*(1+t)),255],o);const rg=cl((d[5]+F.R0[i])*255);ir.data.set([rg,rg,rg,255],o);inn.data.set([cl((-dx*3/l*.5+.5)*255),cl((-dy*3/l*.5+.5)*255),cl((1/l*.5+.5)*255),255],o)}
  xa.putImageData(ia,0,0);xr.putImageData(ir,0,0);xn.putImageData(inn,0,0);const tx=(c,srgb)=>{const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;if(srgb)t.encoding=T.sRGBEncoding;return t};
@@ -1170,7 +1208,8 @@ function pbrTex(d){const asset=scanAsset(d);if(asset)return scanTextures(d,asset
 function wuv(m,U){m.userData.U=U;m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vOP;varying vec3 vON;uniform float uW;').replace('#include <begin_vertex>','#include <begin_vertex>\nvOP=uW>.5?(modelMatrix*vec4(position,1.)).xyz:position;vON=uW>.5?normalize(mat3(modelMatrix)*normal):normal;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vOP;varying vec3 vON;uniform vec2 uT;uniform vec2 uO;uniform float uSw;uniform float uR;vec2 wUv;').replace('#include <uv_pars_fragment>','#include <uv_pars_fragment>\n#define vUv wUv').replace('void main() {','void main() {\nvec3 an=abs(vON);vec2 q=an.x>an.y&&an.x>an.z?vOP.zy:(an.y>an.z?vOP.xz:vOP.xy);if(uSw>.5)q=q.yx;float cr=cos(uR),sr=sin(uR);q=vec2(cr*q.x-sr*q.y,sr*q.x+cr*q.y);wUv=(q+uO)/uT;')}}
-function pbrMat(id,o){o=o||{};const d=pbrDef(id);if(!d)return null;const key=id+'|'+d.slice(3,10).join('|')+'|'+(o.sw?1:0)+(o.w?'w':'')+'|'+(o.rot||0);if(MCH[key])return MCH[key];const t=pbrTex(d),m=new T.MeshStandardMaterial({color:'#ffffff',map:t.a,roughnessMap:t.r,normalMap:t.n,roughness:scanAsset(d)?d[5]:1,metalness:d[6]});m.normalScale.set(d[7],d[7]);
+function pbrMat(id,o){return materialFromDefinition(pbrDef(id),o)}
+function materialFromDefinition(d,o){if(!d)return null;o=o||{};const key=d[0]+'|'+d.slice(3,10).join('|')+'|'+(o.sw?1:0)+(o.w?'w':'')+'|'+(o.rot||0);if(MCH[key])return MCH[key];const t=pbrTex(d),m=new T.MeshStandardMaterial({color:'#ffffff',map:t.a,roughnessMap:t.r,normalMap:t.n,roughness:scanAsset(d)?d[5]:1,metalness:d[6]});m.normalScale.set(d[7],d[7]);
  wuv(m,{uT:{value:new T.Vector2(d[8]||60,d[8]||60)},uSw:{value:o.sw?1:0},uR:{value:(o.rot||0)*D},uO:{value:new T.Vector2(0,0)},uW:{value:o.w?1:0}});return MCH[key]=m}
 const pb=(c,k)=>{const id=c.pbr&&c.pbr[k];return id?pbrMat(id,{sw:k=='cf'&&c.pvt!='horizontal',w:k=='cn'}):null};
 SURFACE_SCANS.forEach(d=>MATS.push('pbr:'+d[0]));
@@ -1371,7 +1410,7 @@ const PTH={};function pbrThumb(d){
  if(!x)return c;
  const fallback=()=>{x.fillStyle=/^#[0-9a-f]{6}$/i.test(d[4]||'')?d[4]:'#b8b8b8';x.fillRect(0,0,64,64);x.strokeStyle='rgba(0,0,0,.16)';x.lineWidth=2;x.strokeRect(1,1,62,62);return PTH[k]=c};
  try{
-  const N=64,F=pbrField(d[3],N,[...String(d[3])].reduce((a,ch)=>a*31+ch.charCodeAt(0),7)),im=x.createImageData(N,N);
+  const N=64,F=pbrField(d[3],N,pbrSeed(d)),im=x.createImageData(N,N);
   const hx=parseInt(/^#[0-9a-f]{6}$/i.test(d[4]||'')?d[4].slice(1):'b8b8b8',16),br=hx>>16&255,bg=hx>>8&255,bb=hx&255;
   const cl=v=>Math.max(0,Math.min(255,Math.round(v)));
   for(let i=0;i<N*N;i++){
@@ -5101,7 +5140,12 @@ const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardM
 const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.35,.1],'cristal negro':['#0b0e12',.05,.35],'negro mate':['#1a1a1c',.75,.1],'negro brillante':['#0c0c0e',.08,.2],'acero antihuellas':['#b9bcc1',.45,.85],'blanco mate':['#eeeeec',.8,.05],'blanco brillante':['#fafafa',.1,.05],gris:['#8d9096',.45,.3],grafito:['#3b3e44',.4,.5],'cristal blanco':['#f1f3f5',.05,.2],'cristal oscuro':['#10131a',.05,.4],'gris metal':['#999999',.3,.9],aluminio:['#d0d3d8',.4,.95],dorado:['#c9a24a',.3,1],cobre:['#b87333',.35,1],bronce:['#6b5a3e',.35,1]},finM=f=>{const a=AFIN[f]||AFIN.acero;return M(a[0],a[1],a[2])};
 const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lavavajillas:81,frigo:120,combi:150,vinoteca:80,puerta:15,cajon:12,hueco:0},APD={cafetera:45,horno:55,micro:38,lavadora:55,secadora:55,lavavajillas:56,frigo:55,combi:55,vinoteca:55};
 function fm(c,acab,mat){if(mat&&mat!='liso')return sm(mat,c,60,60,30,.2,'#999');const f=FIN[acab||'satinado'];return new T.MeshStandardMaterial({color:c,roughness:f[0],metalness:f[1]})}
-function topMat(c){const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='madera')return pbrMat('madera-tablero',{w:true});if(m=='mármol')return sm(m,'#fff',100,100,60,.1,'#999');if(m=='granito')return sm('piedra','#fff',100,100,40,.1,'#777');return new T.MeshStandardMaterial({color:c.cn,roughness:m=='laminado'?.6:.2})}
+function topMat(c){
+ const d=COUNTERTOP_BY_ID.get(c.countertop);
+ if(d)return materialFromDefinition(d,{w:true});
+ if(c.countertop==='color')return M(c.cn||'#d8d2c4',.42);
+ // Compatibilidad con encimeras guardadas antes del catálogo independiente.
+ const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='madera')return pbrMat('madera-tablero',{w:true});if(m=='mármol')return sm(m,'#fff',100,100,60,.1,'#999');if(m=='granito')return sm('piedra','#fff',100,100,40,.1,'#777');return new T.MeshStandardMaterial({color:c.cn,roughness:m=='laminado'?.6:.2})}
 const polishedBase=c=>c.k==='base'&&c.lay==='puertas'&&(!c.fr||c.fr==='lisa'||c.fr==='liso');
 function pan(p,w,h,cx,c,mf){
  const f=c.fr||'liso',z=1,edge=M('#b9b5ad',.62,.08),shadow=M('#77766f',.78,.02),limit=Math.max(2,Math.min(w,h)*.12);
@@ -5902,7 +5946,7 @@ BUILD.app=(g,it)=>{it.op=it.op||[];appl(g,it.cfg.ap,it.w,it.h,it.d,it.cfg.mat||i
 BUILD.fregadero=(g,it,mt)=>{const w=Math.max(12,it.w),h=Math.max(5,it.h),d=Math.max(12,it.d),rim=M('#d8dcde',.28,.48),inside=M('#b7c0c4',.24,.32),dark=M('#59636a',.35,.55),bw=w*.76,bd=d*.72,rad=Math.min(bw,bd)*.46;B(g,w,Math.max(1.5,h*.12),d,0,h*.94,0,rim);const prof=[new T.Vector2(0,1),new T.Vector2(rad*.52,1),new T.Vector2(rad*.68,h*.12),new T.Vector2(rad*.9,h*.66),new T.Vector2(rad,h*.82),new T.Vector2(rad*.98,h*.94),new T.Vector2(rad*.84,h*.88),new T.Vector2(rad*.72,h*.2),new T.Vector2(rad*.48,h*.12),new T.Vector2(0,h*.12)];const bowl=new T.Mesh(new T.LatheGeometry(prof,56),inside);bowl.scale.z=bd/bw;bowl.position.y=h*.04;g.add(bowl);const lip=new T.Mesh(new T.TorusGeometry(rad*.96,Math.max(.8,h*.035),10,56),rim);lip.scale.z=bd/bw;lip.position.y=h*.82;g.add(lip);const drain=new T.Mesh(new T.CylinderGeometry(Math.max(1,Math.min(w,d)*.035),Math.max(1,Math.min(w,d)*.035),.8,28),dark);drain.position.set(0,h*.18,0);g.add(drain);const hole=new T.Mesh(new T.TorusGeometry(Math.max(1,Math.min(w,d)*.035),.5,6,20),rim);hole.position.set(0,h*.2,0);g.add(hole)};
 BUILD.griferia=(g,it)=>{const m=M('#aeb6bb',.32,.78),dark=M('#515c64',.48,.35),baseR=Math.max(2,Math.min(it.w,it.d)*.12),h=Math.max(12,it.h),w=Math.max(12,it.w),tubeR=Math.max(.8,baseR*.24);const b=new T.Mesh(new T.CylinderGeometry(baseR*.92,baseR*1.08,Math.max(1.5,h*.07),32),m);b.position.y=h*.035;g.add(b);const collar=new T.Mesh(new T.TorusGeometry(baseR*.78,.8,8,32),dark);collar.rotation.x=Math.PI/2;collar.position.y=h*.075;g.add(collar);const p=new T.Mesh(new T.CylinderGeometry(tubeR*1.25,tubeR*1.55,h*.57,24),m);p.position.y=h*.36;g.add(p);const cv=new T.CatmullRomCurve3([new T.Vector3(0,h*.62,0),new T.Vector3(0,h*.83,0),new T.Vector3(w*.12,h*.91,0),new T.Vector3(w*.34,h*.88,0),new T.Vector3(w*.38,h*.72,0)]);g.add(new T.Mesh(new T.TubeGeometry(cv,48,tubeR,12,false),m));const aer=new T.Mesh(new T.CylinderGeometry(tubeR*.9,tubeR*1.15,Math.max(1.5,tubeR*1.1),24),dark);aer.rotation.x=Math.PI/2;aer.position.set(w*.38,h*.7,0);g.add(aer);const lever=new T.Mesh(new T.CylinderGeometry(tubeR*.65,tubeR*.9,h*.2,16),m);lever.position.set(-baseR*.7,h*.68,0);lever.rotation.z=-.5;g.add(lever);const cap=new T.Mesh(new T.SphereGeometry(tubeR*1.15,16,12),m);cap.position.set(-baseR*.7,h*.78,0);g.add(cap)};
 /* Catálogo modular generado (parámetros, no modelos externos) */
-function base(n,w,lay,x,d){d=d||60;return{t:'mod',n,c:'Cocina modular',s:'moderno',w,h:87,d,e:0,col:'#8fa58f',cfg:Object.assign({k:'base',lay,nd:w>60?2:1,nc:3,op:'lateral',fr:'lisa',ti:'barra',tl:30,sh:1,zoc:10,acab:'satinado',cc:'#f4f1ea',cf:'#8fa58f',ct:'#111111',cz:'#2f3a40',cn:'#d8d2c4',cm:'cuarzo',mf:'liso',top:true,led:false},x||{})}}
+function base(n,w,lay,x,d){d=d||60;return{t:'mod',n,c:'Cocina modular',s:'moderno',w,h:87,d,e:0,col:'#8fa58f',cfg:Object.assign({k:'base',lay,nd:w>60?2:1,nc:3,op:'lateral',fr:'lisa',ti:'barra',tl:30,sh:1,zoc:10,acab:'satinado',cc:'#f4f1ea',cf:'#8fa58f',ct:'#111111',cz:'#2f3a40',cn:'#d8d2c4',countertop:'enc-cuarzo-beige',mf:'liso',top:true,led:false},x||{})}}
 function alto(n,w,x,h,d){const o=base(n,w,'armario alto',Object.assign({k:'alto',top:true,zoc:0,sh:2,cf:'#f4f1ea'},x||{}),d||35);o.h=h||70;o.e=140;return o}
 function colm(n,w,h,lay,x){const o=base(n,w,lay,Object.assign({k:'col',top:false,nd:2,nc:2,cf:'#c8a27a'},x||{}));o.h=h;return o}
 function appo(n,kd,w,h,d,e){return{t:'app',n,c:'Electrodomésticos',s:'moderno',w,h,d,e:e||0,col:'#c4c7cc',cfg:{ap:kd,fin:'acero'}}}
@@ -5912,7 +5956,7 @@ const HOOD_MODELS={
 };
 const kitchenCatalogStart=LIB.length;
 [30,40,45,50,60,80,90].forEach(w=>LIB.push(base('Bajo '+w+' puertas',w,'puertas',{
- nd:w>=80?2:1,...(w===60?{cm:'madera',ct:'#303237'}:{})
+ nd:w>=80?2:1,...(w===60?{countertop:'enc-roble',ct:'#303237'}:{})
 })));
 [1,2,3,4].forEach(n=>LIB.push(base('Cajonera '+n+(n===1?' cajón':' cajones'),60,'cajones',{nc:n,dh:n>2})));
 LIB.push(base('Bajo puerta + 1 cajón',60,'puertas+cajones',{nc:1,nd:1}),base('Bajo 2 puertas + 2 cajones',90,'puertas+cajones',{nc:2,nd:2}),base('Bajo fregadero 80',80,'fregadero'),base('Bajo fregadero 120',120,'fregadero',{nd:2}),base('Bajo placa 60',60,'placa'),base('Bajo placa 90',90,'placa'),base('Bajo push (sin tirador)',60,'puertas',{ti:'push'}),base('Bajo tirador integrado',60,'cajones',{ti:'integrado',nc:3}),base('Bajo frente estriado',60,'puertas',{fr:'estriada',cf:'#c8a27a'}),
@@ -5971,7 +6015,7 @@ function cfgUI(it){const c=it.cfg,A=(l,k,o)=>sel2(l,o,c[k],v=>c[k]=v),N=(l,k)=>r
  if(it.roomType&&it.roomType!=='cocina'){P.insertAdjacentHTML('beforeend','<div style="color:#9ec5ff;font-size:12px;margin:4px 0">Editor personalizado · '+htmlText(it.c)+' · '+htmlText(it.family||'Mueble a medida')+'</div>');c.k='base';if(!c.lay)c.lay='puertas'}else{sel2('Familia',['base','alto','col'],c.k,v=>{c.k=v;c.top=v=='base';c.zoc=v==='alto'?0:10;if(c.lay!=='libre')c.lay={base:'puertas',alto:'armario alto',col:'columna'}[v];Object.assign(it,{base:{h:87,d:60,e:0},alto:{h:70,d:35,e:140},col:{h:210,d:60,e:0}}[v])})}
  A('Distribución','lay',{base:['puertas','cajones','puertas+cajones','fregadero','placa','esquina 90°','esquina riñonera','esquina carrusel','esquina riñón','libre'],alto:['armario alto','libre'],col:['columna','torre','libre']}[c.k]);
  if(c.lay!='libre'&&c.lay!='esquina riñón'){N('Nº de puertas','nd');N('Nº de cajones','nc')}A('Apertura de puertas','op',['lateral','abatible','elevable','plegable']);A('Diseño de frente','fr',['lisa','marco','relieve','estriada','acanalada','cristal']);A('Tirador','ti',['barra','boton','unero','integrado','push','ninguno']);N('Tamaño tirador (cm)','tl');row('Baldas (regenera uniformes)',c.shl?c.shl.length:(c.sh||0),v=>{c.sh=Math.max(0,v);c.shl=null});N('Zócalo (cm)','zoc');A('Acabado','acab',['mate','satinado','brillo']);A('Material del frente','mf',['liso','madera','mármol','cemento','piedra','gres']);
- C('Color carcasa/laterales','cc');C('Color frente','cf');C('Color tirador','ct');C('Color zócalo','cz');if(c.k=='base'){C('Color encimera','cn');A('Material encimera','cm',['cuarzo','granito','mármol','madera','laminado'])}
+ C('Color carcasa/laterales','cc');C('Color frente','cf');C('Color tirador','ct');C('Color zócalo','cz');if(c.k==='base'&&c.top!==false)countertopUI(c);
  if(c.k=='alto')sel2('Luz LED',['no','sí'],c.led?'sí':'no',v=>c.led=v=='sí');
  if(c.lay=='torre'){c.slots=c.slots||[];P.insertAdjacentHTML('beforeend','<h4>Huecos (de abajo arriba)</h4>');c.slots.forEach((q,i)=>{sel2('Hueco '+(i+1),Object.keys(MINH),q.k,v=>{q.k=v;q.h=Math.max(q.h,MINH[v])});row('· alto (cm)',q.h,v=>q.h=v);if(APD[q.k]||q.k=='hornoc')sel2('· acabado',Object.keys(AFIN),q.fin||'acero',v=>q.fin=v);btn('↑',()=>{if(i<c.slots.length-1)[c.slots[i],c.slots[i+1]]=[c.slots[i+1],c.slots[i]]});btn('↓',()=>{if(i>0)[c.slots[i],c.slots[i-1]]=[c.slots[i-1],c.slots[i]]});btn('✕',()=>c.slots.splice(i,1))});btn('+ Añadir hueco',()=>c.slots.push({k:'puerta',h:40}))}
  if(c.lay=='libre')libreUI(it);if(c.lay=='esquina riñón')kidUI(it);if(it.cfg&&it.cfg.k)pbrUI(it);
@@ -5984,9 +6028,38 @@ const COMP=[['carc','Carcasa exterior'],['puerta','Puerta'],['cristal','Cristal'
 function appUI(o){const AF=Object.keys(AFIN),m=o.mat=o.mat||{g:o.fin||'acero'};P.insertAdjacentHTML('beforeend','<h4>Acabados del electrodoméstico</h4>');
  sel2('Acabado general',AF,AFIN[m.g]?m.g:'acero',v=>{m.g=v;o.fin=v});
  COMP.forEach(([k,l])=>{const c=m[k],h=c&&c[0]=='#';sel2(l,['(por defecto)',...AF,'personalizado'],!c?'(por defecto)':h?'personalizado':c,v=>{if(v=='(por defecto)')delete m[k];else if(v=='personalizado')m[k]=h?c:'#808080';else m[k]=v});if(h)row('· color de '+l.toLowerCase()+' (RGB/HEX)',c,v=>m[k]=v,'color')})}
+function countertopUI(c){
+ const save=CB;
+ const heading=document.createElement('h4');heading.textContent='Encimera';P.append(heading);
+ const field=document.createElement('label');field.className='r';field.textContent='Acabado';
+ const select=document.createElement('select'),current=COUNTERTOP_BY_ID.get(c.countertop);
+ if(!current&&c.countertop!=='color')select.add(new Option('Acabado guardado',''));
+ const groups=new Map();
+ for(const [id,name,family] of COUNTERTOPS){
+  if(!groups.has(family)){
+   const group=document.createElement('optgroup');group.label=family;
+   groups.set(family,group);select.append(group);
+  }
+  groups.get(family).append(new Option(name,id));
+ }
+ select.add(new Option('Color personalizado','color'));
+ select.value=current?.[0]||(c.countertop==='color'?'color':'');
+ select.onchange=()=>{c.countertop=select.value;delete c.pbr?.cn;save()};
+ field.append(select);P.append(field);
+ if(current){
+  const sample=document.createElement('canvas');sample.width=128;sample.height=48;
+  sample.style.cssText='display:block;width:100%;height:48px;border-radius:6px;margin:4px 0';
+  sample.setAttribute('role','img');sample.setAttribute('aria-label',current[2]+' · '+current[1]);
+  const ctx=sample.getContext('2d'),thumb=pbrThumb(current);
+  ctx.drawImage(thumb,0,20,64,24,0,0,128,48);
+  P.append(sample);
+ }else if(c.countertop==='color'){
+  row('Color encimera',c.cn||'#d8d2c4',v=>c.cn=v,'color');
+ }
+}
 /* UI: materiales PBR del mueble + biblioteca */
 function pbrUI(it){const c=it.cfg,L=SURFACE_SCANS.concat(PL0,availableCustomMaterials()),nm=id=>(pbrDef(id)||[])[1]||'(color normal)';P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');c.pbr=c.pbr||{};
- [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']].concat(c.k=='base'?[['cn','Encimera']]:[]).forEach(([k,l])=>{
+ [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']].forEach(([k,l])=>{
   const current=pbrDef(c.pbr[k]),choices=current&&!L.includes(current)?[current,...L]:L;
   sel2(l,['(color normal)',...choices.map(d=>d[1])],nm(c.pbr[k]),v=>{const d=choices.find(x=>x[1]==v);if(d)c.pbr[k]=d[0];else delete c.pbr[k]});
  });
@@ -6557,7 +6630,7 @@ function thumbO(o){
  try{
   r4.render(sc4,cam4);
   const u=r4.domElement.toDataURL();TH.set(o,u);
-  if(o.t==='mod'&&studio&&o.cfg.cm==='madera'&&!o.cfg.pbr?.cn&&!thumbnailRefresh.has(o)){
+  if(o.t==='mod'&&studio&&!o.cfg.countertop&&o.cfg.cm==='madera'&&!o.cfg.pbr?.cn&&!thumbnailRefresh.has(o)){
    thumbnailRefresh.set(o,pbrTex(pbrDef('madera-tablero')).ready.then(loaded=>{if(loaded)TH.delete(o)}));
   }
   return u;
