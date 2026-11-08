@@ -5081,8 +5081,9 @@ $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render
    const j=await r.json().catch(()=>({}));
    if(r.status===401){await leaveEditor();return}
    if(!r.ok)throw new Error(j.error||'No se pudo consultar el contador.');
-   remaining=Math.max(0,Number(j.disponibles)||0);
-   box.textContent=remaining?'Te quedan '+remaining+' de '+j.limite+' imágenes hoy. '+resetMessage:'Has agotado las imágenes de hoy. '+resetMessage;
+   const unlimited=j.ilimitado===true;
+   remaining=unlimited?Infinity:Math.max(0,Number(j.disponibles)||0);
+   box.textContent=unlimited?'Foto IA sin límite diario.':remaining?'Te quedan '+remaining+' de '+j.limite+' imágenes hoy. '+resetMessage:'Has agotado las imágenes de hoy. '+resetMessage;
   }catch(e){box.textContent='No se pudo consultar el límite: '+(e.message||e)}
   finally{syncGenerate()}
  };

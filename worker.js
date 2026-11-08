@@ -50,6 +50,24 @@ async function fotoIARpc(token, functionName, args = {}, apiKey = SUPABASE_ANON_
   return data;
 }
 
+const FOTO_IA_DAILY_LIMIT = 2;
+const isMasterAccount = (env, user) => !!(user && env.MASTER_USER_ID && user.id === env.MASTER_USER_ID);
+
+async function fotoIAStats(env, token, userId) {
+  const stats = await fotoIAQuota(env, token, userId, "consultar");
+  const hoy = stats?.hoy ?? (Number.isSafeInteger(stats?.limite) && Number.isSafeInteger(stats?.disponibles)
+    ? stats.limite - stats.disponibles : NaN);
+  if (!Number.isSafeInteger(hoy) || hoy < 0) throw new Error("Contador de Foto IA inválido.");
+  return { ...stats, hoy, limite: FOTO_IA_DAILY_LIMIT, disponibles: Math.max(0, FOTO_IA_DAILY_LIMIT - hoy) };
+}
+
+function fotoIALimitResponse(stats) {
+  return Response.json({
+    error: "Has alcanzado el límite diario de Foto IA. Se renueva a medianoche, hora peninsular española.",
+    hoy: stats.hoy, limite: FOTO_IA_DAILY_LIMIT, disponibles: 0, fecha: stats.fecha
+  }, { status: 429, headers: NO_STORE });
+}
+
 function fotoIAQuota(env, token, userId, operation, reservation) {
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
   if (key) {
@@ -155,7 +173,9 @@ export default {
       try {
         const user = token && await getSupabaseUser(token);
         if (!user) return Response.json({ error: "Inicia sesión para continuar." }, { status: 401, headers: NO_STORE });
-        const stats = await fotoIAQuota(env, token, user.id, "consultar");
+        const stats = isMasterAccount(env, user)
+          ? { ilimitado: true, limite: null, disponibles: null }
+          : await fotoIAStats(env, token, user.id);
         return Response.json({ ...stats, ok: true, zonaHoraria: "Europe/Madrid" }, { headers: NO_STORE });
       } catch {
         return Response.json({ error: "No se pudo consultar el límite de Foto IA." }, { status: 502, headers: NO_STORE });
@@ -205,18 +225,28 @@ export default {
           return Response.json({ error: "La imagen supera el límite de 5 MB." }, { status: 413 });
         }
 
-        reservation = await fotoIAQuota(env, token, user.id, "reservar");
+        if (!isMasterAccount(env, user)) {
+          const legacyQuota = !env.SUPABASE_SERVICE_ROLE_KEY;
+          if (legacyQuota) {
+            const before = await fotoIAStats(env, token, user.id);
+            if (before.disponibles === 0) return fotoIALimitResponse(before);
+          }
 
-        if (reservation?.ok === false) {
-          return Response.json({
-            error: "Has alcanzado el límite diario de Foto IA. Se renueva a medianoche, hora peninsular española.",
-            hoy: reservation.hoy,
-            limite: reservation.limite,
-            disponibles: 0,
-            fecha: reservation.fecha
-          }, { status: 429, headers: NO_STORE });
+          reservation = await fotoIAQuota(env, token, user.id, "reservar");
+          if (reservation?.ok === false) return fotoIALimitResponse(reservation);
+          if (reservation?.ok !== true || !reservation.id) throw new Error("Reserva inválida");
+
+          if (legacyQuota) {
+            // La reserva antigua permite tres. Verificar el total tras reservar
+            // evita que dos solicitudes simultáneas excedan el cupo del Worker.
+            const after = await fotoIAStats(env, token, user.id);
+            if (after.hoy > FOTO_IA_DAILY_LIMIT) {
+              await fotoIAQuota(env, token, user.id, "cancelar", reservation.id);
+              reservation = null;
+              return fotoIALimitResponse(after);
+            }
+          }
         }
-        if (reservation?.ok !== true || !reservation.id) throw new Error("Reserva inválida");
 
         const aiForm = new FormData();
 
@@ -279,7 +309,7 @@ export default {
       const user = rawToken && await getSupabaseUser(rawToken).catch(() => null);
       if (!user) return Response.json({ error: "Inicia sesión para continuar." }, { status: 401, headers: NO_STORE });
 
-      const isMaster = !!(user && env.MASTER_USER_ID && user.id === env.MASTER_USER_ID);
+      const isMaster = isMasterAccount(env, user);
 
       const denied = () => isMaster
         ? null
