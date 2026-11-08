@@ -64,15 +64,18 @@
 /* Compact editor panels */
 body.adaptive:not(.ui-legacy) {height:100dvh}
 body.adaptive:not(.ui-legacy) #top {padding:4px 8px!important;gap:4px!important}
-body.adaptive:not(.ui-legacy) #top > button,
-body.adaptive:not(.ui-legacy) #top .dd > button {padding:4px 8px!important;font-size:12px}
+body.adaptive:not(.ui-legacy) #top > :is(button,select),
+body.adaptive:not(.ui-legacy) #top .dd > button {padding:3px 7px!important;font-size:12px}
+body.adaptive:not(.ui-legacy) #top #pn {font-size:13px;margin-right:4px!important}
+body.adaptive:not(.ui-legacy) #top > label {font-size:12px}
+body.adaptive:not(.ui-legacy) #top :is(#bU,#bR) {min-width:30px}
 body.adaptive:not(.ui-legacy) #top .view-modes {gap:2px;padding:2px}
-body.adaptive:not(.ui-legacy) #top .view-mode {min-height:35px;min-width:54px;gap:1px;padding:3px 6px!important}
+body.adaptive:not(.ui-legacy) #top .view-mode {min-height:32px;min-width:54px;gap:4px;padding:3px 6px!important;flex-direction:row}
 body.adaptive:not(.ui-legacy) #top .view-mode svg {width:16px;height:16px}
 body.adaptive:not(.ui-legacy) #top .view-mode#mvDual {min-width:54px}
 body.adaptive:not(.ui-legacy) :is(#lib,#pr) {padding:8px!important}
 body.adaptive:not(.ui-legacy) :is(#lib,#pr) h4 {margin:9px 0 5px!important}
-body.adaptive:not(.ui-legacy) #pr h4 {padding:4px 0}
+body.adaptive:not(.ui-legacy) #pr h4 {padding:2px 0 4px!important}
 body.adaptive:not(.ui-legacy) #pr .r {margin:0!important;padding:3px 0!important;gap:5px!important}
 body.adaptive:not(.ui-legacy) #pr .r :is(input,select) {padding:3px 6px!important}
 body.adaptive:not(.ui-legacy) #pr button {margin:2px 3px 2px 0!important}
@@ -84,19 +87,30 @@ body.adaptive:not(.ui-legacy) #pr button {margin:2px 3px 2px 0!important}
 body.adaptive:not(.ui-legacy) #lib .library-actions .it {margin:0!important;text-align:center;padding:4px 3px!important;font-size:11px;line-height:1.2}
 .room-card-grid,.material-grid {display:grid;gap:4px}
 .room-card-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
-.material-grid {grid-template-columns:repeat(auto-fit,minmax(65px,1fr))}
+.material-grid {grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}
 body.adaptive:not(.ui-legacy) #lib .material-grid .surface-swatch {
   width:100%;min-width:0;min-height:0;margin:0;padding:0!important
 }
-body.adaptive:not(.ui-legacy) #lib .surface-preview {height:37px;flex:none}
-body.adaptive:not(.ui-legacy) #lib .surface-swatch span {min-height:24px;font-size:10px;padding:2px;flex:1}
-body.adaptive:not(.ui-legacy) #lib .room-card img {height:66px!important}
+body.adaptive:not(.ui-legacy) #lib .surface-preview {height:34px;flex:none;max-width:none;object-fit:cover;background:var(--ui-panel-2)}
+body.adaptive:not(.ui-legacy) #lib .surface-swatch span {min-height:24px;font-size:11px;padding:3px;flex:1;overflow-wrap:anywhere}
+body.adaptive:not(.ui-legacy) #lib .room-card img {height:52px!important}
 body.adaptive:not(.ui-legacy) #lib :is(.catalog-entry,.room-card) {padding:4px!important;line-height:1.2}
 body.adaptive:not(.ui-legacy) #lib .catalog-entry-icon {width:30px!important;height:30px!important;font-size:17px!important}
+body.adaptive:not(.ui-legacy) #lib .catalog-entry {gap:6px!important}
+body.adaptive:not(.ui-legacy) #lib :is(.catalog-entry,.room-card) small {color:var(--ui-muted)!important}
+body.adaptive:not(.ui-legacy) #lib .surface-swatch[aria-pressed="true"] {position:relative}
+body.adaptive:not(.ui-legacy) #lib .surface-swatch[aria-pressed="true"]::after {
+  content:"✓";position:absolute;top:3px;right:3px;display:grid;place-items:center;
+  width:17px;height:17px;border-radius:50%;color:white;background:var(--ui-teal);font-size:11px;
+}
 
 @media (max-width:1050px){
   body.adaptive:not(.ui-legacy) #main.panel-open {--sidebar-width:clamp(0px,49%,264px)}
   body.adaptive:not(.ui-legacy) #compactActions {gap:4px}
+  body.adaptive:not(.ui-legacy) #compactActions #pn {
+    position:sticky;top:-8px;z-index:1;background:var(--ui-panel);padding:6px 0;margin:0!important;
+    overflow-wrap:anywhere;border-bottom:1px solid var(--ui-line);
+  }
   body.adaptive:not(.ui-legacy) #compactActions button {padding:5px 6px!important;white-space:normal}
   body.adaptive:not(.ui-legacy) #pbrbox {inset:8px 8px max(8px,env(safe-area-inset-bottom))!important}
 }
@@ -105,10 +119,22 @@ body.adaptive:not(.ui-legacy) #lib .catalog-entry-icon {width:30px!important;hei
   body.adaptive:not(.ui-legacy) #top > :is(#compactMenu,#tl,#tr) {justify-content:center;min-width:0;min-height:44px}
   body.adaptive:not(.ui-legacy) #top .view-modes {grid-column:1 / -1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%}
   body.adaptive:not(.ui-legacy) #top .view-modes .view-mode {min-width:0!important;min-height:44px;padding:2px!important}
-  body.adaptive:not(.ui-legacy) #main.panel-open {--sidebar-width:min(54%,250px)}
-  body.adaptive:not(.ui-legacy) #main :is(#compactActions,#lib,#pr) {padding:5px!important}
-  body.adaptive:not(.ui-legacy) #pr .r {grid-template-columns:minmax(0,1fr)!important;gap:1px!important}
-  body.adaptive:not(.ui-legacy) #lib .material-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.adaptive:not(.ui-legacy) #top .view-mode {flex-direction:column;gap:2px}
+  body.adaptive:not(.ui-legacy) #main {position:relative}
+  body.adaptive:not(.ui-legacy) #main.panel-open {--sidebar-width:0px}
+  body.adaptive:not(.ui-legacy) #main :is(#compactActions,#lib,#pr) {
+    position:absolute;grid-area:auto;inset:0 auto 58px 0;z-index:5;
+    width:min(calc(100% - 24px),340px)!important;
+    border:1px solid var(--ui-line);border-radius:0 0 12px 0;
+    box-shadow:0 8px 24px #173e3933;
+  }
+  body.adaptive:not(.ui-legacy) #main #pr {
+    right:0;left:auto;border-radius:0 0 0 12px;
+  }
+  body.adaptive:not(.ui-legacy) #pr .r {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  body.adaptive:not(.ui-legacy) #pr .r > span {overflow-wrap:anywhere}
+  body.adaptive:not(.ui-legacy) #lib .room-card-grid {grid-template-columns:repeat(3,minmax(0,1fr))}
+  body.adaptive:not(.ui-legacy) #lib .material-grid {grid-template-columns:repeat(3,minmax(0,1fr))}
   body.adaptive:not(.ui-legacy) #sb {padding:2px 6px!important;font-size:10px}
 }
 @media (pointer:coarse),(any-pointer:coarse){
@@ -124,4 +150,5 @@ body.adaptive:not(.ui-legacy) :is(#top,#lib,#pr,#compactActions) :focus-visible 
 @media (max-width:360px){
   body.adaptive:not(.ui-legacy) #top > :is(#compactMenu,#tl,#tr) {font-size:11px;padding-inline:2px!important}
   body.adaptive:not(.ui-legacy) #top .view-mode span {font-size:9px}
+  body.adaptive:not(.ui-legacy) #lib .room-card-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
 }
