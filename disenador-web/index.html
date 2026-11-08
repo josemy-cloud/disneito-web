@@ -585,7 +585,8 @@ const isHallItem=it=>it.t==='roomObject'&&(it.roomType==='recibidor'||it.c==='Re
 const isOfficeItem=it=>it.t==='roomObject'&&(it.roomType==='despacho'||it.c==='Despacho');
 const isOfficeCornerDesk=it=>isOfficeItem(it)&&it.shape==='desk'&&/en l|ala lateral/i.test(it.n||'');
 const isLaundryItem=it=>it.t==='roomObject'&&(it.roomType==='lavadero'||it.c==='Lavadero');
-const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it)||isOfficeItem(it)||isLaundryItem(it);
+const isGarageItem=it=>it.t==='roomObject'&&(it.roomType==='garaje'||it.c==='Garaje');
+const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it)||isOfficeItem(it)||isLaundryItem(it)||isGarageItem(it);
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
 const isDiningPendant=it=>it.roomType==='comedor'&&isLamp(it)&&/suspend|colgante/i.test(it.n||'');
 const BEDROOM_COLOR_PARTS={
@@ -617,11 +618,18 @@ const LAUNDRY_COLOR_PARTS={
  ironing:[['fabric','Funda'],['frame','Estructura y bisagra'],['feet','Tacos de apoyo']],
  shelf:LIVING_COLOR_PARTS.shelf
 };
+const GARAGE_COLOR_PARTS={
+ car:[...ITEM_COLOR_PARTS.car.filter(([key])=>key!=='wheels'),['wheels','Neumáticos'],['rims','Llantas']],
+ workbench:[...ITEM_COLOR_PARTS.workbench,['drawerInterior','Interior de cajones'],['handles','Tiradores']],
+ toolcab:[...ITEM_COLOR_PARTS.toolcab,['hardware','Herrajes'],['shelves','Baldas']],
+ bike:[...ITEM_COLOR_PARTS.bike,['lights','Faro']],
+ shelf:LIVING_COLOR_PARTS.shelf
+};
 function itemColorParts(it){
  const shape=it.shape||(it.t==='cama'?'bed':it.t==='armario'&&isBedroomItem(it)?'wardrobe':it.t==='mesa'?'table':it.t==='lampara'?'lamp':it.t);
  return ((isBedroomItem(it)||isVestidorItem(it))&&BEDROOM_COLOR_PARTS[shape])||
   (isBathroomItem(it)&&BATH_COLOR_PARTS[it.t==='lavabo'?'vanity':shape])||
-  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||(isOfficeItem(it)&&OFFICE_COLOR_PARTS[shape])||(isLaundryItem(it)&&LAUNDRY_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
+  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||(isOfficeItem(it)&&OFFICE_COLOR_PARTS[shape])||(isLaundryItem(it)&&LAUNDRY_COLOR_PARTS[shape])||(isGarageItem(it)&&GARAGE_COLOR_PARTS[shape==='van'?'car':shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
 }
 function partColorUI(e,panel=P,save=commit){
  const defaults=modelPartDefaults.get(e);
@@ -2387,13 +2395,13 @@ function buildOfficeComputer(g,it,primary){
  B(g,.5,.42,1,w*.374,2.9,kz+.82,mouse);
 }
 
-function laundryCutout(w,h,holes,t){
+function panelWithCutouts(w,h,holes,t,segments=40){
  const shape=new T.Shape();
  shape.moveTo(-w/2,-h/2);shape.lineTo(w/2,-h/2);shape.lineTo(w/2,h/2);shape.lineTo(-w/2,h/2);shape.closePath();
  for(const [x,y,rx,ry] of holes){
   const hole=new T.Path();hole.absellipse(x,y,rx,ry,0,Math.PI*2,true);shape.holes.push(hole);
  }
- return new T.ExtrudeGeometry(shape,{depth:t,bevelEnabled:false,curveSegments:40});
+ return new T.ExtrudeGeometry(shape,{depth:t,bevelEnabled:false,curveSegments:segments});
 }
 
 function buildLaundryWasher(g,it,primary){
@@ -2422,7 +2430,7 @@ function buildLaundryWasher(g,it,primary){
  it.op=it.op||[];
  if(upper){
   B(g,w-2*t,h-base-t,t,0,(h+base-t)/2,front+t/2,body);
-  const top=new T.Mesh(laundryCutout(w-2*t,d,[[0,0,r,r]],t),body);
+  const top=new T.Mesh(panelWithCutouts(w-2*t,d,[[0,0,r,r]],t),body);
   top.rotation.x=-Math.PI/2;top.position.y=h-t;g.add(top);
   const z=-d*.35,lid=new T.Group();lid.name='Tapa superior';
   lid.position.set(0,h-t,z);g.add(lid);
@@ -2432,7 +2440,7 @@ function buildLaundryWasher(g,it,primary){
   stepMV(mv(lid,{it,k:0,t:'u',angle:82}));
  }else{
   const plateH=h-base;
-  const face=new T.Mesh(laundryCutout(w-2*t,plateH,[[0,cy-(h+base)/2,r,r]],t),body);
+  const face=new T.Mesh(panelWithCutouts(w-2*t,plateH,[[0,cy-(h+base)/2,r,r]],t),body);
   face.position.set(0,(h+base)/2,front);g.add(face);
   B(g,w-2*t,t,d,0,h-t/2,0,body);
   B(g,w*.89,h*.13,1.2,0,h*.907,d/2+.55,panel);
@@ -2463,7 +2471,7 @@ function buildLaundrySink(g,it,primary){
  const waste=partFinish(M('#56636a',.47,.34),'waste'),shelf=partFinish(primary.clone(),'shelves');
  const rim=h*.845,t=Math.min(2.5,h*.04),rx=w*(double?.202:.34),rz=d*.335;
  const zs=d*.03,centers=double?[-w*.239,w*.239]:[0];
- const mesh=new T.Mesh(laundryCutout(w,d,centers.map(x=>[x,-zs,rx,rz]),t),top);
+ const mesh=new T.Mesh(panelWithCutouts(w,d,centers.map(x=>[x,-zs,rx,rz]),t),top);
  mesh.rotation.x=-Math.PI/2;mesh.position.y=rim-t;g.add(mesh);
  for(let k=0;k<count;k++){
   const x=centers[k],container=new T.Group();container.position.set(x,0,zs);g.add(container);
@@ -2551,6 +2559,229 @@ function buildLaundryIroning(g,it,primary){
   B(g,w*.56,1.4,6,0,high-.7,z,frame);
  }
  bedroomTube(g,[-w*.30,(low+high)/2,0],[w*.30,(low+high)/2,0],1.8,frame);
+}
+
+function garageMesh(g,points,faces,mat){
+ const geo=new T.BufferGeometry();
+ geo.setAttribute('position',new T.Float32BufferAttribute(points.flat(),3));
+ geo.setIndex(faces);geo.computeVertexNormals();
+ const mesh=new T.Mesh(geo,mat);g.add(mesh);return mesh;
+}
+
+function garageWheel(g,x,y,z,r,width,rubber,rim,spokes=0){
+ const tire=new T.Mesh(new T.LatheGeometry([
+  [r*.63,-width*.43],[r*.87,-width*.49],[r*.97,-width*.37],[r,-width*.20],[r,width*.20],
+  [r*.97,width*.37],[r*.87,width*.49],[r*.63,width*.43],[r*.63,-width*.43]
+ ].map(([a,b])=>new T.Vector2(a,b)),48),rubber);
+ tire.rotation.z=-Math.PI/2;tire.position.set(x,y,z);g.add(tire);
+ const hub=new T.Mesh(new T.CylinderGeometry(r*(spokes?.14:.63),r*(spokes?.14:.63),width*.81,32),rim);
+ hub.rotation.z=-Math.PI/2;hub.position.set(x,y,z);g.add(hub);
+ if(spokes){
+  const hoop=new T.Mesh(new T.TorusGeometry(r*.65,r*.035,8,40),rim);
+  hoop.rotation.y=Math.PI/2;hoop.position.copy(hub.position);g.add(hoop);
+  for(let i=0;i<spokes;i++){
+   const a=i*2*Math.PI/spokes;
+   bedroomTube(g,[x,y,z],[x,y+Math.cos(a)*r*.65,z+Math.sin(a)*r*.65],r*.018,rim);
+  }
+ }
+}
+
+function buildGarageVehicle(g,it,primary){
+ const {w,h,d}=it,van=it.shape==='van',suv=/suv/i.test(it.n||''),sedan=/berlina/i.test(it.n||'');
+ const paint=partFinish(M(it.col,.31,.34),'body'),glass=partFinish(M('#233941',.13,.37),'glass');
+ const rubber=partFinish(M('#26292a',.77),'wheels'),alloy=partFinish(M('#a5aaac',.33,.71),'rims');
+ const trim=partFinish(M('#3e4447',.48,.27),'trim'),white=partFinish(M('#dfe5dd',.25,.18),'lights'),red=partFinish(M('#ac3b34',.3,.17),'lights');
+ paint.side=glass.side=T.DoubleSide;
+ const axle=d*.296,r=h*(van?.151:suv?.205:.228),wheelW=w*.122,well=r*1.065;
+ const stations=[-.5,-.481,-.43,-.37,-.32,-.29,-.26,-.22,-.17,-.08,.08,.17,.22,.26,.29,.32,.37,.43,.481,.5].map(k=>k*d);
+ const points=[],faces=[];
+ for(const z of stations){
+  const end=Math.abs(z)/(d/2),x=w*(.50-Math.max(0,end-.84)*.40);
+  const dist=Math.min(Math.abs(z-axle),Math.abs(z+axle));
+  const bottom=dist<well?Math.max(r*.75,r+Math.sqrt(well**2-dist**2)):r*.75;
+  const belt=h*(van?.61:suv?.66:.67),y=belt-(Math.max(0,end-.64)*h*(z>0?.27:.18));
+  points.push([-x*.96,bottom,z],[-x,y-h*.09,z],[-x*.89,y,z],[x*.89,y,z],[x,y-h*.09,z],[x*.96,bottom,z]);
+ }
+ for(let i=1;i<stations.length;i++)for(let j=0;j<5;j++){
+  const a=(i-1)*6+j,b=i*6+j;faces.push(a,b,a+1,a+1,b,b+1);
+ }
+ for(const a of [0,(stations.length-1)*6])for(let j=1;j<5;j++)faces.push(a,a+j,a+j+1);
+ garageMesh(g,points,faces,paint);
+ const belt=h*(van?.604:suv?.652:.662),rear=van?-.472:sedan?-.294:-.375,front=van?.32:sedan?.219:.245;
+ const roofRear=van?-.435:sedan?-.188:-.312,roofFront=van?.166:.112;
+ const x0=w*.414,x1=w*(van?.39:.335),z0=d*rear,z1=d*front,z2=d*roofRear,z3=d*roofFront;
+ const quad=(a,b,c,d,mat)=>garageMesh(g,[a,b,c,d],[0,1,2,0,2,3],mat);
+ quad([-x1,h,z2],[x1,h,z2],[x1,h,z3],[-x1,h,z3],paint);
+ quad([-x0,belt,z1],[x0,belt,z1],[x1,h,z3],[-x1,h,z3],glass);
+ quad([-x0,belt,z0],[x0,belt,z0],[x1,h,z2],[-x1,h,z2],van?paint:glass);
+ for(const s of [-1,1]){
+  const map=(u,v,offset=0)=>[s*(x0+(x1-x0)*v+offset),belt+(h-belt)*v,(z0+(z1-z0)*u)*(1-v)+(z2+(z3-z2)*u)*v];
+  quad(map(0,0),map(1,0),map(1,1),map(0,1),paint);
+  const windows=van?[[.67,.964]]:[[.06,.36],[.385,.655],[.68,.956]];
+  for(const [a,b] of windows)quad(map(a,.12,.4),map(b,.12,.4),map(b,.92,.4),map(a,.92,.4),glass);
+  for(const z of [-axle,axle])garageWheel(g,s*(w/2-wheelW/2),r,z,r,wheelW,rubber,alloy);
+  B(g,w*.115,h*.065,3,s*w*.345,h*.47,d/2,white);
+  B(g,w*.105,h*.063,3,s*w*.345,h*.42,-d/2,red);
+  B(g,w*.06,h*.045,d*.043,s*w*.467,belt+h*.026,z1-d*.035,trim);
+  for(const z of [d*.08,-d*.13])B(g,1.2,2.2,10,s*w*.48,belt-h*.062,z,trim);
+ }
+ B(g,w*.42,h*.068,2.6,0,h*.34,d*.499,trim);
+ B(g,w*.23,h*.044,1.7,0,h*.27,-d*.499,alloy);
+ B(g,w*.66,r*.41,d*.69,0,r*.64,0,trim);
+}
+
+function buildGarageCycle(g,it,primary){
+ const {w,h,d}=it,bicycle=it.shape==='bicycle',scooter=/scooter/i.test(it.n||'');
+ const frame=partFinish(primary.clone(),'frame'),rubber=partFinish(M('#282b2c',.76),'wheels');
+ const metal=partFinish(M('#a7adae',.32,.68),'metal'),seat=partFinish(M('#373838',.73),'saddle');
+ const bars=partFinish(M('#44494c',.45,.48),'handlebar');
+ const r=Math.min(h*(bicycle?.30:scooter?.191:.252),d*.184),z=d*.315,b=bicycle?1.45:3.1;
+ const beam=(a,q,width=b,mat=frame)=>bedroomTube(g,a,q,width,mat);
+ garageWheel(g,0,r,-z,r,bicycle?3.6:w*.125,rubber,metal,bicycle?18:7);
+ garageWheel(g,0,r,z,r,bicycle?3.6:w*.113,rubber,metal,bicycle?18:7);
+ const pedal=[0,h*.31,-d*.051],post=[0,h*(bicycle?.71:.62),-d*.122],head=[0,h*.71,d*.193];
+ for(const side of [-1,1]){
+  const x=side*(bicycle?2.5:w*.075);
+  beam([x,r,z],[x,head[1],head[2]],b,metal);
+  beam([x,r,-z],pedal,b*.85);
+  beam([x,r,-z],post,b*.82);
+ }
+ beam(pedal,post);beam(pedal,head);
+ if(!scooter)beam(post,head);
+ beam(head,[0,h*.924,d*.144],b,metal);
+ for(const side of [-1,1]){
+  beam([0,h*.924,d*.144],[side*w*.40,h*.96,d*.147],b,bars);
+  beam([side*w*.37,h*.96,d*.147],[side*w*.47,h*.96,d*.126],b*1.14,bars);
+ }
+ const saddleH=h*(bicycle?.795:.665);
+ beam(post,[0,saddleH,post[2]],b,metal);
+ B(g,w*(bicycle?.29:.52),h*.051,d*(bicycle?.135:.29),0,saddleH,post[2]-d*.025,seat);
+ if(bicycle){
+  beam([-w*.23,pedal[1],pedal[2]],[w*.23,pedal[1],pedal[2]],1.35,metal);
+  for(const side of [-1,1])B(g,6,1.6,5,side*w*.23,pedal[1],pedal[2],metal);
+  beam([w*.072,pedal[1]+3,pedal[2]],[w*.072,r+3,-z],.63,metal);
+ }else{
+  const engine=partFinish(M('#57616a',.4,.63),'metal');
+  if(scooter){
+   B(g,w*.48,h*.19,d*.29,0,h*.49,-d*.19,frame);
+   B(g,w*.39,5,d*.29,0,h*.295,d*.012,frame);
+   B(g,w*.44,h*.27,d*.098,0,h*.574,d*.204,frame);
+  }else{
+   const tank=new T.Mesh(new T.SphereGeometry(1,32,20),frame);tank.scale.set(w*.25,h*.115,d*.153);tank.position.set(0,h*.661,d*.044);g.add(tank);
+   B(g,w*.40,h*.22,d*.21,0,h*.40,-d*.022,engine);
+   for(const s of [-1,1])beam([s*w*.18,h*.36,d*.04],[s*w*.25,h*.29,-d*.32],3.2,metal);
+  }
+  const lamp=partFinish(M('#e3dfce',.24,.16),'lights');
+  B(g,w*.26,h*.08,d*.04,0,h*.734,d*.225,lamp);
+ }
+}
+
+function buildGarageBench(g,it,primary){
+ const {w,h,d}=it,panel=/con panel/i.test(it.n||'');
+ const top=partFinish(primary.clone(),'top'),frame=partFinish(M('#4e585b',.48,.53),'frame');
+ const face=partFinish(M('#777e80',.46,.38),'drawers'),inside=partFinish(M('#a6aaa7',.64),'drawerInterior');
+ const metal=partFinish(M('#6a7477',.35,.66),'hardware');
+ const t=Math.min(4,h*.08),y=h-t,post=Math.min(4,d*.09),span=w-2*post,x=w*.43,z=d*.42;
+ B(g,w,t,d,0,h-t/2,0,top);
+ for(const xx of [-x,x])for(const zz of [-z,z])B(g,post,y,post,xx,y/2,zz,frame);
+ for(const xx of [-x,x])B(g,post,post,2*z,xx,y-post/2,0,frame);
+ B(g,2*x,post,post,0,y-post/2,-z,frame);
+ B(g,2*x,2,d*.78,0,h*.16,0,frame);
+ const low=h*.66,high=y-1.2,frontZ=d*.43,depth=d*.67,bay=span*.82,slot=bay/3,backZ=frontZ-depth;
+ B(g,bay,1.6,depth,0,low-.8,(frontZ+backZ)/2,frame);
+ B(g,bay,high-low,1.6,0,(low+high)/2,backZ-.8,frame);
+ for(let k=0;k<=3;k++)B(g,1.3,high-low,depth,(k-1.5)*slot,(low+high)/2,(frontZ+backZ)/2,frame);
+ it.op=it.op||[];
+ for(let k=0;k<3;k++)furnitureDrawer(g,it,k,{x:(k-1)*slot,width:slot-1.3,depth,frontZ,bottom:low,top:high,ceiling:high-1.2,front:face,inside,metal});
+ if(panel){
+  const board=partFinish(M('#666b67',.63,.16),'pegboard');
+  const ph=h*.46,at=-d*.456,holes=[],radius=Math.min(.65,w*.009,ph*.065);
+  for(let i=-8;i<=8;i++)for(let j=1;j<=5;j++)holes.push([i*w*.045,ph*(j/6-.5),radius,radius]);
+  const mesh=new T.Mesh(panelWithCutouts(w*.89,ph,holes,2.2,6),board);
+  mesh.position.set(0,h+ph/2,at-1.1);g.add(mesh);
+  for(const xx of [-x,x])B(g,post,ph+post,post,xx,h+(ph-post)/2,at,frame);
+ }
+}
+
+function buildGarageToolCabinet(g,it,primary){
+ const {w,h,d}=it,body=partFinish(primary.clone(),'carcass'),front=partFinish(primary.clone(),'fronts');
+ const inside=partFinish(M('#abb0af',.57,.19),'drawers'),metal=partFinish(M('#777e80',.34,.68),'hardware');
+ const shelf=partFinish(M('#81888a',.58,.3),'shelves'),foot=partFinish(M('#343a3e',.51,.23),'wheels');
+ const t=Math.min(1.8,w*.055,d*.09,h*.05),base=Math.min(9,h*.1),high=h-t,zone=h*.45,span=w-2*t;
+ const frontZ=d/2-t,depth=d-3*t,z=frontZ-depth/2;
+ for(const side of [-1,1])B(g,t,high-base,d,side*(w-t)/2,(base+high)/2,0,body);
+ B(g,w,t,d,0,h-t/2,0,body);
+ B(g,span,t,d,0,base+t/2,0,body);
+ B(g,span,high-base,t,0,(high+base)/2,-d/2+t/2,body);
+ B(g,span,t,depth,0,zone+t/2,z,shelf);
+ for(const x of [-1,1])for(const zz of [-1,1])buildOfficeCaster(g,x*w*.39,zz*d*.37,base/2.1,foot,metal);
+ it.op=it.op||[];
+ const low=base+t,slot=(zone-low)/4;
+ for(let k=0;k<4;k++)furnitureDrawer(g,it,k,{width:span,depth,frontZ,bottom:low+k*slot,top:low+(k+1)*slot,ceiling:low+(k+1)*slot-1,front,inside,metal});
+ B(g,t,high-zone-t,depth,0,(high+zone+t)/2,z,body);
+ for(let k=0;k<2;k++){
+  const side=k?-1:1,x=-side*(span/2-.5);
+  bedroomDoor(g,it,k+4,{x,y:zone+t+.5,z:frontZ,width:span/2-1.6,height:high-zone-t-1,side,front,metal});
+  for(const y of [zone+(high-zone)*.39,zone+(high-zone)*.69])B(g,span/2-t/2,t,depth-1.5,-side*(span+t)/4,y,z-.75,shelf);
+ }
+}
+
+function buildGarageCompressor(g,it,primary){
+ const {w,h,d}=it,main=partFinish(primary.clone(),'tank'),motor=partFinish(M('#414d50',.49,.42),'motor');
+ const gauge=partFinish(M('#e2dfd4',.42,.23),'gauge'),pipe=partFinish(M('#a28364',.39,.6),'pipes');
+ const frame=partFinish(M('#55595a',.46,.47),'frame'),rubber=partFinish(M('#2a2e31',.78),'wheels');
+ const r=Math.min(w,d)*.375,lo=h*.15,hi=h*.66,round=r*.58;
+ const points=[[0,lo],[r*.66,lo+round*.26],[r*.97,lo+round*.76],[r,lo+round],[r,hi-round],[r*.97,hi-round*.76],[r*.66,hi-round*.26],[0,hi]];
+ g.add(new T.Mesh(new T.LatheGeometry(points.map(([a,b])=>new T.Vector2(a,b)),48),main));
+ const axle=h*.087;
+ for(const s of [-1,1])garageWheel(g,s*w*.39,axle,-d*.225,axle,w*.10,rubber,frame);
+ B(g,w*.75,3,4,0,axle,-d*.225,frame);
+ B(g,w*.62,lo-axle,5,0,(lo+axle)/2,-d*.225,frame);
+ B(g,w*.31,lo,4,0,lo/2,d*.28,frame);
+ B(g,w*.62,3.2,d*.48,0,hi+1.6,0,frame);
+ B(g,w*.42,h*.19,d*.36,-w*.074,h*.77,0,motor);
+ for(let i=0;i<6;i++)B(g,w*.4,1,d*.41,-w*.074,h*.71+i*h*.024,0,motor);
+ const x=w*.27,y=h*.83,z=d*.27,rg=Math.min(4,w*.08),m=new T.Mesh(new T.CylinderGeometry(rg,rg,2,28),gauge);
+ m.rotation.x=Math.PI/2;m.position.set(x,y,z);g.add(m);
+ B(g,.42,rg*.83,.38,x,y+.5,z+1.1,frame).rotation.z=-.55;
+ bedroomTube(g,[x,y-3,z],[x,h*.67,z],1,pipe);
+ bedroomTube(g,[x,h*.67,z],[0,h*.63,0],1,pipe);
+ for(const s of [-1,1])bedroomTube(g,[s*w*.35,hi,-d*.25],[s*w*.35,h-2,-d*.28],2,frame);
+ bedroomTube(g,[-w*.35,h-2,-d*.28],[w*.35,h-2,-d*.28],2,frame);
+}
+
+function buildGarageCart(g,it,primary){
+ const {w,h,d}=it,deck=partFinish(primary.clone(),'deck'),frame=partFinish(M('#536063',.43,.52),'frame');
+ const handle=partFinish(M('#343b3e',.52,.33),'handle'),wheel=partFinish(M('#282d2e',.76),'wheels');
+ const r=Math.min(w,d)*.083,base=r*2.1,top=h*.84;
+ for(const x of [-1,1])for(const z of [-1,1]){
+  const xx=x*w*.42,zz=z*d*.40;
+  buildOfficeCaster(g,xx,zz,r,wheel,frame);
+  B(g,2.5,top-base,2.5,xx,(top+base)/2,zz,frame);
+ }
+ for(const y of [base+1,h*.48,top]){
+  B(g,w*.91,2,d*.88,0,y,0,deck);
+  for(const s of [-1,1]){
+   B(g,1.4,5,d*.88,s*w*.448,y+2,0,deck);
+   B(g,w*.89,5,1.4,0,y+2,s*d*.433,deck);
+  }
+ }
+ for(const x of [-1,1])bedroomTube(g,[x*w*.4,top,-d*.40],[x*w*.4,h-1.5,-d*.45],1.5,handle);
+ bedroomTube(g,[-w*.4,h-1.5,-d*.45],[w*.4,h-1.5,-d*.45],1.5,handle);
+}
+
+function buildGarageTyres(g,it,primary){
+ const {w,h,d}=it,r=Math.min(w,d)/2,t=h/3;
+ const rubber=partFinish(M('#282b2d',.82),'rubber'),side=partFinish(M('#393b3c',.69),'sidewall');
+ for(let k=0;k<3;k++){
+  const y=t*(k+.5),p=[[r*.57,-t*.43],[r*.84,-t*.50],[r*.95,-t*.43],[r,-t*.27],[r,t*.27],[r*.95,t*.43],[r*.84,t*.50],[r*.57,t*.43],[r*.57,-t*.43]];
+  const tire=new T.Mesh(new T.LatheGeometry(p.map(([a,b])=>new T.Vector2(a,b)),56),rubber);
+  tire.position.y=y;g.add(tire);
+  for(const s of [-1,1]){
+   const lip=new T.Mesh(new T.TorusGeometry(r*.71,t*.029,8,48),side);
+   lip.rotation.x=Math.PI/2;lip.position.y=y+s*t*.451;g.add(lip);
+  }
+ }
 }
 
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
@@ -2835,6 +3066,7 @@ case'cabinet':{
  break;
 }
 case'toolcab':{
+ if(isGarageItem(it)){buildGarageToolCabinet(g,it,mt);break;}
  const body=M('#59636a',.38,.72),inside=M('#c0c4c4',.52,.42),metal=M('#b5bdc1',.28,.86),dark=M('#272d31',.62,.22),frontZ=d*.46;
  it.op=it.op||[];B(g,w*.94,h*.94,d*.88,0,h*.48,0,body);B(g,w*.9,2,d*.84,0,h*.95,0,metal);
  const n=4,dh=h*.78/n;
@@ -2888,18 +3120,18 @@ case'wardrobe':{
 }
 case'shelf':{
  if(isVestidorItem(it)){buildDressingShoeRack(g,it,mt);break;}
- const living=isLivingItem(it)||isOfficeItem(it)||isLaundryItem(it),name=(it.n||'').toLowerCase(),library=/librer[ií]a/.test(name),side=M(library?'#b39c7d':'#343b40',library?.72:.38,library?.035:.72),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
+ const living=isLivingItem(it)||isOfficeItem(it)||isLaundryItem(it)||isGarageItem(it),name=(it.n||'').toLowerCase(),library=/librer[ií]a/.test(name),side=M(library?'#b39c7d':'#343b40',library?.72:.38,library?.035:.72),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
  const shelfMat=living?partFinish(mt.clone(),'shelves'):mt,pages=M('#e5dfd2',.9,.01);
  if(living){partFinish(side,library?'sides':'frame');partFinish(back,'back');partFinish(pin,'hardware');partFinish(pages,'pages');bookSpines.forEach(m=>partFinish(m,'books'))}
  for(const x of [-1,1]){if(library)box(x*(w/2-1.5),h/2,0,3,h,d,side);else{tube([x*(w/2-2),3,-d*.42],[x*(w/2-2),h-3,-d*.42],2.2,side);tube([x*(w/2-2),3,d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);tube([x*(w/2-2),h-3,-d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);if(living)for(const z of [-1,1])box(x*(w/2-2),1.55,z*d*.42,4,3.1,4,side)}}
  if(library)box(0,h/2,-d/2+1.2,w-3,h-3,2.4,back);else for(let y of [.2,.5,.8])box(0,h*y,-d*.42,w-5,1.4,2,side);
  if(library)box(0,h/2,0,2.2,h-4,d-3,side);
- const n=it.variant===2?6:5,step=(h-8)/(n-1),shelfYs=[];
+ const n=isGarageItem(it)&&/reforzada/i.test(name)?6:it.variant===2?6:5,step=(h-8)/(n-1),shelfYs=[];
  for(let k=0;k<n;k++){const y=4+k*step;shelfYs.push(y);box(0,y,0,library?w-6:w-3,3.2,d-4,shelfMat);
   for(const x of [-1,1]){cyl(x*(w/2-5),y-2.9,0,1.1,2.4,pin);cyl(x*(w/2-5),y-2.9,d*.28,1.1,2.4,pin)}
   box(0,y-2.25,0,w-8,1.1,d-8,side);box(0,y,d/2-2,w-5,1.2,1.4,side);
  }
- for(let shelf=0;!isLaundryItem(it)&&shelf<n-1;shelf++){
+ for(let shelf=0;!isLaundryItem(it)&&!isGarageItem(it)&&shelf<n-1;shelf++){
   const lowerTop=shelfYs[shelf]+1.6,clearance=shelfYs[shelf+1]-lowerTop-1.6;if(clearance<7)continue;
   const maxBookH=clearance*.76,zones=library?[[-w*.5+5,-3.5],[3.5,w*.5-5]]:[[-w*.5+5,w*.5-5]];
   zones.forEach((zone,zi)=>{let x=zone[0]+(zi?1:0);const end=zone[1],count=zi===0?4+(shelf%2):3+(shelf%3);
@@ -3343,6 +3575,7 @@ case'ironing':{
  break;
 }
 case'car':{
+ if(isGarageItem(it)){buildGarageVehicle(g,it,mt);break;}
  const paint=M(it.col||'#7c8790',.34,.28),glass=new T.MeshStandardMaterial({color:'#243943',roughness:.14,metalness:.42}),rubber=M('#202326',.88,.02),chrome=M('#b6bdc1',.24,.86),lamp=M('#e9e6d8',.22,.08);
  // Silueta de berlina: capó, habitáculo, techo y maletero diferenciados.
  B(g,w*.94,h*.32,d*.92,0,h*.28,0,paint);B(g,w*.72,h*.3,d*.48,0,h*.57,-d*.035,paint);B(g,w*.28,h*.22,d*.18,0,h*.43,d*.36,paint);B(g,w*.28,h*.22,d*.18,0,h*.43,-d*.37,paint);
@@ -3353,6 +3586,7 @@ case'car':{
  break;
 }
 case'van':{
+ if(isGarageItem(it)){buildGarageVehicle(g,it,mt);break;}
  const paint=M(it.col||'#7c8790',.38,.24),glass=new T.MeshStandardMaterial({color:'#273943',roughness:.16,metalness:.35}),rubber=M('#202326',.86,.02),chrome=M('#aeb5bb',.25,.82);
  B(g,w*.94,h*.38,d*.9,0,h*.3,0,paint);B(g,w*.78,h*.34,d*.52,0,h*.63,-d*.08,paint);
  B(g,w*.76,h*.21,1.2,0,h*.66,d*.185,glass);
@@ -3362,6 +3596,7 @@ case'van':{
  break;
 }
 case'bike':{
+ if(isGarageItem(it)){buildGarageCycle(g,it,mt);break;}
  const frame=M('#343d43',.38,.72),rubber=M('#202326',.88,.02),metal=M('#aeb5b8',.28,.86);
  for(const z of [-d*.34,d*.34]){const wheel=new T.Mesh(new T.TorusGeometry(h*.25,2.2,12,48),rubber);wheel.rotation.y=Math.PI/2;wheel.position.set(0,h*.25,z);g.add(wheel);const hub=new T.Mesh(new T.CylinderGeometry(2,2,5,20),metal);hub.rotation.z=Math.PI/2;hub.position.copy(wheel.position);g.add(hub);for(let k=0;k<12;k++){const a=k*Math.PI/6;tube([0,h*.25,z],[Math.sin(a)*h*.23,h*.25+Math.cos(a)*h*.23,z],.45,metal)}}
  tube([0,h*.25,-d*.34],[w*.25,h*.55,0],2.1,frame);tube([w*.25,h*.55,0],[0,h*.25,d*.34],2.1,frame);tube([0,h*.25,d*.34],[-w*.25,h*.55,0],2.1,frame);tube([-w*.25,h*.55,0],[0,h*.25,-d*.34],2.1,frame);
@@ -3370,6 +3605,7 @@ case'bike':{
  break;
 }
 case'bicycle':{
+ if(isGarageItem(it)){buildGarageCycle(g,it,mt);break;}
  const rubber=M('#202326',.88,.02),metal=M('#aeb5b8',.28,.86),frame=M(it.col||'#536d83',.4,.55);
  for(const z of [-d*.34,d*.34]){const wheel=new T.Mesh(new T.TorusGeometry(h*.25,2.2,12,48),rubber);wheel.rotation.y=Math.PI/2;wheel.position.set(0,h*.25,z);g.add(wheel);for(let k=0;k<18;k++){const a=k*Math.PI/9;tube([0,h*.25,z],[Math.sin(a)*h*.24,h*.25+Math.cos(a)*h*.24,z],.4,metal)}}
  tube([0,h*.25,-d*.34],[w*.25,h*.55,0],1.8,frame);tube([w*.25,h*.55,0],[0,h*.25,d*.34],1.8,frame);tube([0,h*.25,d*.34],[-w*.25,h*.55,0],1.8,frame);tube([-w*.25,h*.55,0],[0,h*.25,-d*.34],1.8,frame);
@@ -3379,6 +3615,7 @@ case'bicycle':{
 
 
 case'workbench':{
+ if(isGarageItem(it)){buildGarageBench(g,it,mt);break;}
  const frame=M('#454d53',.34,.78),wood=M('#927858',.55,.12),inside=M('#c2b8a8',.82,.02),steel=M('#aeb5bb',.28,.84);
  const topT=Math.max(4,h*.075),topY=h-topT/2;
  B(g,w,topT,d,0,topY,0,wood);B(g,w*.98,2,d*.96,0,topY-topT/2-1,0,frame);
@@ -3391,6 +3628,7 @@ case'workbench':{
  break;
 }
 case'compressor':{
+ if(isGarageItem(it)){buildGarageCompressor(g,it,mt);break;}
  const tank=M('#6e8791',.42,.55),metal=M('#aeb5bb',.28,.84),dark=M('#30383d',.48,.5),rubber=M('#202528',.78,.03);
  const r=w*.34,cy=h*.43,hh=h*.56;
  const vessel=new T.Mesh(new T.CylinderGeometry(r*.92,r*.92,hh*.78,48,1,true),tank);vessel.position.y=cy;g.add(vessel);
@@ -3405,6 +3643,7 @@ case'compressor':{
  break;
 }
 case'cart':{
+ if(isGarageItem(it)){buildGarageCart(g,it,mt);break;}
  const frame=M('#aeb5b8',.32,.82),deck=M('#525b61',.48,.58),rubber=M('#24292d',.86,.02);
  B(g,w*.9,4,d*.78,0,h*.32,0,deck);
  for(const x of [-1,1]){tube([x*w*.4,h*.34,-d*.34],[x*w*.4,h*.9,-d*.42],2.8,frame);tube([x*w*.4,h*.9,-d*.42],[-x*w*.4,h*.9,-d*.42],2.8,frame);B(g,3,h*.08,d*.72,x*w*.4,h*.37,0,frame)}
@@ -3412,6 +3651,7 @@ case'cart':{
  break;
 }
 case'tyres':{
+ if(isGarageItem(it)){buildGarageTyres(g,it,mt);break;}
  const rubber=M('#24282b',.9,.01),side=M('#343a3d',.7,.04),rim=M('#858d91',.38,.65);
  for(let k=0;k<3;k++){const y=h*.2+k*h*.25,tire=new T.Mesh(new T.TorusGeometry(w*.34,Math.max(4,w*.085),18,64),rubber);tire.rotation.x=Math.PI/2;tire.position.y=y;g.add(tire);const hub=new T.Mesh(new T.CylinderGeometry(w*.23,w*.23,w*.09,48),side);hub.position.y=y;g.add(hub);for(let n=0;n<24;n++){const a=n*Math.PI/12;const tread=B(g,w*.04,1.2,3,Math.cos(a)*w*.4,y,Math.sin(a)*w*.4,side);tread.rotation.y=a}}
  break;
