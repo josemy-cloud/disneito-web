@@ -5086,7 +5086,7 @@ function buildLCarousel(g,it,c,Mx,y0,H,hasTop){
  doors.forEach((door,i)=>{
   const phase=frontW>=frontD?i:1-i;
   const motion=door.userData.mv;motion.ease=.065;
-  motion.update=()=>{door.rotation.y=motion.sg*88*D*smooth(motion.v,phase*.29,(phase+1)*.29)};
+  motion.update=()=>{door.rotation.y=motion.sg*115*D*smooth(motion.v,phase*.29,(phase+1)*.29)};
   motion.update();
  });
  const r=Math.min(arm-3,frontW-hingeInset-3,frontD-hingeInset-3);
