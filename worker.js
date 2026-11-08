@@ -87,9 +87,28 @@ function fotoIAQuota(env, token, userId, operation, reservation) {
   return fotoIARpc(token, legacy[operation], args);
 }
 
+const SCANNER_ASSETS = new Map([
+  ["/scan-room.mjs", "text/javascript; charset=utf-8"],
+  ["/scan-core.mjs", "text/javascript; charset=utf-8"],
+  ["/scan-worker.mjs", "text/javascript; charset=utf-8"],
+  ["/scan-room.css", "text/css; charset=utf-8"]
+]);
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Static scanner code is shared by the editor and its module worker.
+    // Serve only these exact paths without an auth redirect or MIME guessing.
+    const scannerType = SCANNER_ASSETS.get(url.pathname);
+    if (scannerType && (request.method === "GET" || request.method === "HEAD")) {
+      const asset = await env.ASSETS.fetch(request);
+      if (!asset.ok) return asset;
+      const response = new Response(asset.body, asset);
+      response.headers.set("Content-Type", scannerType);
+      response.headers.set("Cache-Control", NO_STORE["Cache-Control"]);
+      return response;
+    }
 
     // Estado del backend
     if (url.pathname === "/api/estado") {
