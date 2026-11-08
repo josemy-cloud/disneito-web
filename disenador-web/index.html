@@ -951,6 +951,22 @@ function selectPlanItems(ids){
 function planSelectionIds(){
  return sel?.k==='group'?new Set(sel.ids):new Set(planKinds.includes(sel?.k)?[sel.id]:[]);
 }
+function deletePlanSelection(){
+ const ids=planSelectionIds();
+ if(!ids.size)return false;
+ const removedWalls=new Set(S.w.filter(w=>ids.has(w.id)).map(w=>w.id));
+ const removedItems=S.i.filter(it=>ids.has(it.id));
+ const affectedSupports=new Set(removedItems.map(it=>it.rel?.parentId).filter(id=>id!=null));
+ for(const it of removedItems)detachChildren(it);
+ S.i=S.i.filter(it=>!ids.has(it.id));
+ for(const it of S.i)if(affectedSupports.has(it.id))updateSupportTop(it);
+ S.w=S.w.filter(w=>!removedWalls.has(w.id));
+ S.o=S.o.filter(o=>!ids.has(o.id)&&!removedWalls.has(o.w));
+ if(S.rv)S.rv=S.rv.filter(z=>!removedWalls.has(z.w));
+ if(S.ms)S.ms=S.ms.filter(m=>!ids.has(m.a?.id)&&!ids.has(m.b?.id));
+ selectPlanItems(new Set());commit();hint();
+ return true;
+}
 function includeSupportedItems(ids){
  let added;
  do{
@@ -1286,7 +1302,11 @@ document.addEventListener('keydown',e=>{if(walk&&(e.key.startsWith('Arrow')||e.k
  }
  if(e.ctrlKey&&e.key=='z'){undo();return}if(e.ctrlKey&&e.key=='y'){redo();return}
  if(e.key=='Escape'){if(drag?.group){shiftPlanGroup(drag,0,0);drag=null}if(drag?.marquee)drag=null;if(sel?.k==='group'){sel=null;refresh()}ghost=null;place=null;measA=null;smode=false;selPart=null;$('#pv').style.display='none';pvOpen=false;exitWalk();cur=null;armed=null;tool='sel';buf='';drawTools();libUI();hint();draw()}
- if((e.key=='Delete'||e.key=='Backspace')&&sel){const el=get();if(!el)return;if(sel.k=='rooms')return;if(sel.k=='w')S.o=S.o.filter(o=>o.w!=el.id);S[sel.k]=S[sel.k].filter(x=>x!=el);sel=null;commit()}
+ if((e.key==='Delete'||e.key==='Backspace')&&sel&&!drag&&!e.target.isContentEditable){
+  if(deletePlanSelection()){e.preventDefault();return}
+  const el=get();if(!el||sel.k==='rooms')return;
+  e.preventDefault();S[sel.k]=S[sel.k].filter(x=>x!==el);sel=null;commit();return;
+ }
  if(cur&&/[0-9]/.test(e.key)){buf+=e.key;draw()}
  if(cur&&e.key=='Enter'&&buf){const dx=cur.x2-cur.x1,dy=cur.y2-cur.y1,L=Math.hypot(dx,dy)||1,v=+buf;addW(cur.x1,cur.y1,cur.x1+dx/L*v,cur.y1+dy/L*v);const n=S.w[S.w.length-1];commit();cur={x1:n.x2,y1:n.y2,x2:n.x2,y2:n.y2};buf=''}
  walkK[e.key.toLowerCase()]=1});
