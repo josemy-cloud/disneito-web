@@ -321,12 +321,12 @@ export function estimateRoomAspect(points,w,h){
 }
 
 /** Locate visible ceiling/wall edge segments. These are guides, not room dimensions. */
-export function proposeCeiling({pixels,width:w,height:h}){
+export function proposeCeiling({pixels,width:w,height:h,boundary}){
   if(w<70||h<55||pixels.length!==w*h*4)return null;
   const gray=new Float32Array(w*h);
   for(let i=0;i<gray.length;i++)gray[i]=.2126*pixels[4*i]+.7152*pixels[4*i+1]+.0722*pixels[4*i+2];
   const edge=(x,y,slope)=>{
-    if(y<5||y>=h-5)return 0;
+    if(y<5||y>=h-5||boundary&&!boundary(x,y,slope))return 0;
     let a=0,b=0;
     for(let i=-1;i<=1;i++){
       const row=Math.round(y+i*slope);
@@ -393,4 +393,68 @@ export function estimatePhotoRoom({ceiling,floor,aspect,width,height}){
   const depth=centimetres(useAspect?roomWidth/aspect:roomWidth*1.1,220,850);
   return {width:roomWidth,depth,height:wallHeight,depthInferred:useAspect};
 }
+
+
+/** Convert the ADE20K semantic map into editable-room candidates, never dimensions. */
+export function semanticRoomGuides({labels,width,height},imageWidth,imageHeight,photo){
+  if(!(labels instanceof Uint8Array)||labels.length!==width*height||width<8||height<8)
+    throw Error('Máscara de segmentación inválida.');
+  const scale=256/Math.max(imageWidth,imageHeight),w=Math.round(imageWidth*scale),h=Math.round(imageHeight*scale);
+  const map=new Uint8Array(w*h),wallPixels=new Uint8ClampedArray(w*h*4),floorPixels=new Uint8ClampedArray(w*h*4);
+  let ceilings=0,walls=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x,label=labels[Math.floor(y*height/h)*width+Math.floor(x*width/w)];
+    map[i]=label;
+    if(label===5)ceilings++;
+    if(label===0)walls++;
+    const tone=label===5?120:label===0?210:165;
+    wallPixels.set([tone,tone,tone,255],4*i);
+    floorPixels.set(label===3?[158,113,72,255]:[216,219,224,255],4*i);
+  }
+  // Only vote where a ceiling-labelled patch meets a wall-labelled patch.
+  const boundary=(x,y,slope)=>{
+    let upper=false,lower=false;
+    for(let d=2;d<=7;d++){
+      const xx=Math.round(x+d*slope*.5),xu=Math.round(x-d*slope*.5);
+      if(xu>=0&&xu<w&&xx>=0&&xx<w){
+        upper||=map[(Math.round(y)-d)*w+xu]===5;
+        lower||=map[(Math.round(y)+d)*w+xx]===0;
+      }
+    }
+    return upper&&lower;
+  };
+  const source=photo?.width===w&&photo.height===h?photo.pixels:wallPixels;
+  const ceiling=walls>w*h*.10&&ceilings>w*h*.035?proposeCeiling({pixels:source,width:w,height:h,boundary}):null;
+  const floor=proposeFloor({pixels:floorPixels,width:w,height:h});
+  const boxes=[];
+  const visited=new Uint8Array(labels.length),queue=new Int32Array(labels.length);
+  for(let i=0;i<labels.length;i++){
+    const label=labels[i];
+    if(visited[i]||(label!==8&&label!==27))continue;
+    let count=1,minX=width,minY=height,maxX=0,maxY=0;
+    visited[i]=1;queue[0]=i;
+    const add=p=>{if(!visited[p]&&labels[p]===label){visited[p]=1;queue[count++]=p}};
+    for(let n=0;n<count;n++){
+      const p=queue[n],x=p%width,y=Math.floor(p/width);
+      minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
+      if(x>0)add(p-1);if(x<width-1)add(p+1);if(y>0)add(p-width);if(y<height-1)add(p+width);
+    }
+    if(count>=labels.length*.003&&maxX-minX>=3&&maxY-minY>=4&&minX>0&&maxX<width-1)
+      boxes.push({label:label===8?'Posible ventana':'Posible espejo',x:minX/width,y:minY/height,w:(maxX-minX+1)/width,h:(maxY-minY+1)/height,area:count});
+  }
+  return {ceiling,floor,aspect:floor&&estimateRoomAspect(floor.points,w,h),width:w,height:h,
+    boxes:boxes.sort((a,b)=>b.area-a.area).slice(0,8)};
+}
+
+export function preferSemanticCeiling(semantic,visual){
+  if(!semantic||!visual)return semantic||visual;
+  const compare=guide=>{
+    const [a,b]=guide.back;
+    const span=b[0]-a[0];
+    return {span,slope:(b[1]-a[1])/span,centre:(a[1]+b[1])/2};
+  };
+  const a=compare(semantic),b=compare(visual);
+  return a.span>=b.span*.78&&Math.abs(a.slope-b.slope)<.12&&Math.abs(a.centre-b.centre)<.07?semantic:visual;
+}
+
 

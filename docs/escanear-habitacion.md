@@ -34,6 +34,14 @@ La primera foto de una sesión intenta abrir la vista rápida automáticamente. 
 
 La altura inicial de 250 cm es una referencia convencional, no una medición. El ancho usa la longitud proyectada de la pared y el encuadre, con límites para evitar valores extremos. Cuando el suelo permite estimar su proporción, se usa para el fondo; si queda oculto, el fondo se etiqueta como supuesto. La foto nunca proporciona por sí sola una escala métrica. Una vista sin guía útil no crea una habitación.
 
+## Evaluación privada con SegFormer
+
+La cuenta máster puede pulsar **Mejorar con IA · prueba privada** en la URL de desarrollo. El navegador descarga la versión cuantizada de [SegFormer B0](https://huggingface.co/Xenova/segformer-b0-finetuned-ade-512-512/tree/d3e5499fa8701ff0453ca940a8dfeae39b2f1504/onnx) (4,42 MB, verificada con SHA-256) y el motor [ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/) para WASM. La descarga inicial conjunta ronda los 16 MB. La foto se procesa dentro de un Worker del navegador y no se transmite a un servicio de inferencia. El análisis habitual sigue disponible si la descarga, la inferencia o el dispositivo fallan.
+
+La máscara semántica ayuda a separar techo, pared y suelo. Las posibles ventanas y espejos se dibujan como sugerencias en la foto. Una guía semántica corta o discordante conserva el análisis visual existente. Los candidatos recortados lateralmente se omiten, pero esta comprobación no identifica reflejos por sí sola. La estimación de dimensiones sigue siendo orientativa y las sugerencias de objetos no se importan automáticamente.
+
+El Worker de Cloudflare solo entrega el módulo de inferencia a la cuenta máster autenticada en el host de desarrollo. El checkpoint de NVIDIA tiene una [licencia de investigación y evaluación no comercial](https://github.com/NVlabs/SegFormer/blob/master/LICENSE). Esta integración está limitada a dicha evaluación privada.
+
 ## Auditoría e integración
 
 - `index.html` sigue siendo el editor. Su modelo guarda paredes en `S.w`, huecos vinculados a paredes en `S.o` y muebles independientes en `S.i`. El escáner crea estos registros con identificadores nuevos y usa `detectRooms`, `roomsUpdate` y el guardado normal. El importador convierte el perímetro interior en ejes de pared para que el grosor no reste medidas al interior.

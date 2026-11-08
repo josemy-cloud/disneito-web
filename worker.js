@@ -110,6 +110,26 @@ export default {
       return response;
     }
 
+    // SegFormer is restricted to private evaluation on the development preview.
+    if (url.pathname === "/scan-segformer-worker.mjs") {
+      if (url.hostname !== "desarrollo-cloudflare-disneito-web.jmgutierrezvalle.workers.dev" ||
+          (request.method !== "GET" && request.method !== "HEAD"))
+        return new Response(null, { status: 404, headers: NO_STORE });
+      const token = sessionCookie(request);
+      const user = token && await getSupabaseUser(token).catch(() => null);
+      if (!isMasterAccount(env, user)) return new Response(null, { status: 403, headers: NO_STORE });
+      const asset = await env.ASSETS.fetch(request);
+      if (!asset.ok) return asset;
+      const response = new Response(asset.body, asset);
+      const runtime = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
+      response.headers.set("Content-Type", "text/javascript; charset=utf-8");
+      response.headers.set("Cache-Control", NO_STORE["Cache-Control"]);
+      response.headers.set("Referrer-Policy", "no-referrer");
+      response.headers.set("Content-Security-Policy",
+        "default-src 'none'; script-src 'self' " + runtime + " 'wasm-unsafe-eval'; connect-src " + runtime + "; worker-src 'none'");
+      return response;
+    }
+
     // Estado del backend
     if (url.pathname === "/api/estado") {
       return Response.json({

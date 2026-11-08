@@ -1,5 +1,7 @@
-import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect,proposeCeiling,estimatePhotoRoom} from './scan-core.mjs';
+import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect,proposeCeiling,estimatePhotoRoom,semanticRoomGuides,preferSemanticCeiling} from './scan-core.mjs';
 
+const SEGFORMER_MODEL='https://huggingface.co/Xenova/segformer-b0-finetuned-ade-512-512/resolve/d3e5499fa8701ff0453ca940a8dfeae39b2f1504/onnx/model_quantized.onnx';
+const SEGFORMER_SHA256='9a98d6daf3d926869ab8cc4c2ed7374a2bc23b889bb7ca3b0915d15e3c4756bb';
 const FRAME_LIMIT=16;
 const VIDEO_LIMIT=200*1024*1024;
 const PHOTO_LIMIT=25*1024*1024;
@@ -38,7 +40,7 @@ function options(select,list){
   select.replaceChildren(...list.map(([id,name])=>new Option(name,id)));
 }
 
-export function openRoomScanner({catalog,materials,onImport}){
+export function openRoomScanner({catalog,materials,onImport,allowAi=false}){
   if(document.querySelector('#scanRoom'))return;
   const d=document.createElement('dialog');
   d.id='scanRoom';d.setAttribute('aria-labelledby','scanTitle');
@@ -51,7 +53,8 @@ export function openRoomScanner({catalog,materials,onImport}){
     <input id="scanVideoFile" type="file" accept="video/*" hidden>
     <video id="scanLive" playsinline muted hidden></video>
     <div class="scan-actions" id="scanLiveActions" hidden><button id="scanCapture" type="button">Capturar vista</button><button id="scanStop" type="button">Pausar cámara</button></div>
-    <p id="scanNotice" role="status">Añade una vista donde se vean cuatro esquinas del mismo rectángulo en el suelo.</p>
+    <p id="scanNotice" role="status">Añade una foto o un vídeo para empezar.</p>
+    <button id="scanAi" type="button" hidden>Mejorar con IA · prueba privada</button>
     <progress id="scanProgress" hidden></progress><button id="scanCancel" type="button" hidden>Cancelar lectura</button>
     <section id="scanQuick" hidden>
       <h3>Tu plano aproximado</h3>
@@ -90,6 +93,46 @@ export function openRoomScanner({catalog,materials,onImport}){
   const frames=[],draft={points:[],geometryMeasured:false,ceilingDraft:false,photoDraft:false,height:250,heightMeasured:false,openings:[],items:[],wallColor:'#f1ede4',floorColor:null,floorMaterial:''};
   let photoEstimate=null,quickFrame=null,proposals=[],proposalIndex=0,ceilingGuide=null,ceilingPoint=null,index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
   const pending=new Map();
+  let aiWorker=null,aiReady=false,aiId=0,aiOverlay=null;
+  function stopAi(){aiWorker?.terminate();aiWorker=null;aiReady=false}
+  function invokeAi(data,transfer,signal){
+    return new Promise((resolve,reject)=>{
+      if(signal.aborted){reject(signal.reason);return}
+      const id=++aiId;
+      const finish=(error,result)=>{
+        clearTimeout(timer);signal.removeEventListener('abort',abort);
+        if(aiWorker){aiWorker.onmessage=null;aiWorker.onerror=null}
+        error?reject(error):resolve(result);
+      };
+      const abort=()=>finish(signal.reason);
+      const timer=setTimeout(()=>finish(Error('El modelo tardó demasiado en este dispositivo.')),45000);
+      signal.addEventListener('abort',abort,{once:true});
+      aiWorker.onmessage=({data:r})=>{if(r.id===id)finish(r.error?Error(r.error):null,r)};
+      aiWorker.onerror=()=>finish(Error('El navegador no pudo ejecutar el modelo local.'));
+      try{aiWorker.postMessage({id,...data},transfer)}catch(error){finish(error)}
+    });
+  }
+  async function runSegFormer(frame,signal){
+    if(!aiReady){
+      notice('Descargando el modelo de IA y su motor. La foto se queda en tu dispositivo…');
+      const response=await fetch(SEGFORMER_MODEL,{credentials:'omit',referrerPolicy:'no-referrer',signal});
+      if(!response.ok)throw Error('No se pudo descargar el modelo.');
+      const model=await response.arrayBuffer();
+      if(model.byteLength!==4418863)throw Error('La descarga del modelo está incompleta.');
+      const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',model))]
+        .map(n=>n.toString(16).padStart(2,'0')).join('');
+      if(hash!==SEGFORMER_SHA256)throw Error('La descarga del modelo no coincide con la versión de prueba.');
+      if(signal.aborted||closed)throw new DOMException('Cancelado','AbortError');
+      aiWorker=new Worker(new URL('./scan-segformer-worker.mjs',import.meta.url),{type:'module'});
+      await invokeAi({model},[model],signal);
+      aiReady=true;
+    }
+    notice('La IA está separando el techo, las paredes y el suelo…');
+    const c=document.createElement('canvas');c.width=c.height=512;
+    const ctx=c.getContext('2d');ctx.drawImage(frame.canvas,0,0,512,512);
+    const pixels=ctx.getImageData(0,0,512,512).data;
+    return invokeAi({pixels},[pixels.buffer],signal);
+  }
   function stopCamera(){
     cameraEpoch++;
     stream?.getTracks().forEach(track=>track.stop());
@@ -103,7 +146,7 @@ export function openRoomScanner({catalog,materials,onImport}){
   d.addEventListener('keydown',e=>e.stopPropagation());
   function discard(){
     if(closed)return;
-    closed=true;job?.abort();stopCamera();clearWorker();
+    closed=true;job?.abort();stopCamera();clearWorker();stopAi();
     for(const f of frames){f.canvas.width=0;f.canvas.height=0}
     image.width=0;image.height=0;$('scanQuickImage').width=0;d.remove();
   }
@@ -158,20 +201,20 @@ export function openRoomScanner({catalog,materials,onImport}){
     const similar=frames.some(f=>frameDifference(stats.descriptor,f.stats.descriptor)<5);
     if(skipSimilar&&similar)return;
     frames.push({canvas,label,stats,similar,ref:[]});
-    $('scanWorkspace').hidden=false;renderFrames();drawImage();
+    $('scanWorkspace').hidden=false;$('scanAi').hidden=!allowAi;renderFrames();drawImage();
     notice(frames.length+' vistas disponibles. '+(quality(frames.at(-1))||'Marca la referencia de escala o añade otra perspectiva.'));
   }
   async function withJob(run){
     if(job||closed)return;
     const ctl=new AbortController();job=ctl;
-    for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport','scanQuickImport','scanQuickReview'])$(id).disabled=true;
+    for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport','scanQuickImport','scanQuickReview','scanAi'])$(id).disabled=true;
     $('scanCancel').hidden=false;
     try{await run(ctl.signal)}
     catch(error){report(error)}
     finally{
       job=null;
       if(!closed){
-        for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport','scanQuickImport','scanQuickReview'])$(id).disabled=false;
+        for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport','scanQuickImport','scanQuickReview','scanAi'])$(id).disabled=false;
         $('scanCancel').hidden=true;$('scanProgress').hidden=true;
       }
     }
@@ -304,6 +347,16 @@ export function openRoomScanner({catalog,materials,onImport}){
     image.width=f.canvas.width;image.height=f.canvas.height;
     const ctx=image.getContext('2d');ctx.drawImage(f.canvas,0,0);
     const proposal=proposals[proposalIndex];
+    if(aiOverlay?.frame===f){
+      const size=Math.max(11,Math.round(image.width/55));
+      ctx.font='bold '+size+'px system-ui';ctx.lineWidth=Math.max(2,image.width/350);
+      for(const box of aiOverlay.boxes){
+        const x=box.x*image.width,y=box.y*image.height;
+        ctx.strokeStyle='#4f45ad';ctx.strokeRect(x,y,box.w*image.width,box.h*image.height);
+        ctx.fillStyle='#4f45ad';ctx.fillRect(x,Math.max(0,y-size-4),ctx.measureText(box.label).width+8,size+4);
+        ctx.fillStyle='#fff';ctx.fillText(box.label,x+4,Math.max(size,y-3));
+      }
+    }
     if(ceilingGuide?.frame===f){
       const segment=(points,color,dashed)=>{
         const [a,b]=points.map(([x,y])=>[x*image.width,y*image.height]);
@@ -453,17 +506,19 @@ export function openRoomScanner({catalog,materials,onImport}){
     $('scanQuick').hidden=!open;
     d.classList.toggle('scan-quick-active',open);
   }
-  async function estimateFromPhoto(signal,frame=frames[index]){
+  async function estimateFromPhoto(signal,frame=frames[index],semantic=null){
     if(!frame)return;
     showQuick(false);photoEstimate=null;quickFrame=null;
     notice('Buscando el suelo y las líneas del techo…');
     const data=imagePixels(frame.canvas,256);
-    const ceiling=await analyseInWorker({...data,ceiling:true},()=>proposeCeiling(data));
+    const visualCeiling=await analyseInWorker({...data,ceiling:true},()=>proposeCeiling(data));
     if(signal.aborted||closed)return;
     const floorData=imagePixels(frame.canvas,192);
-    const floor=await analyseInWorker({...floorData,floor:true},()=>proposeFloor(floorData));
+    const visualFloor=await analyseInWorker({...floorData,floor:true},()=>proposeFloor(floorData));
     if(signal.aborted||closed)return;
-    const aspect=floor&&estimateRoomAspect(floor.points,floorData.width,floorData.height);
+    const ceiling=preferSemanticCeiling(semantic?.ceiling,visualCeiling);
+    const floor=visualFloor||semantic?.floor;
+    const aspect=visualFloor?estimateRoomAspect(visualFloor.points,floorData.width,floorData.height):semantic?.aspect;
     photoEstimate=estimatePhotoRoom({ceiling,floor,aspect,width:data.width,height:data.height});
     if(!photoEstimate){notice('La foto no muestra líneas claras de pared, techo o suelo. Prueba con una vista más amplia.');return}
     quickFrame=frame;index=frames.indexOf(frame);
@@ -481,7 +536,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     ctx.strokeStyle='#185da8';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(x,y,rw,rd);ctx.setLineDash([]);
     $('scanQuickSummary').textContent='Ancho orientativo '+w+' cm · fondo '+(depthInferred?'estimado ':'supuesto ')+dep+' cm · altura de referencia '+h+' cm. Forma rectangular provisional.';
     showQuick(true);
-    notice('Plano aproximado listo. Puedes crearlo directamente o ajustar la propuesta.');
+    notice(semantic?'Análisis de IA listo. Las marcas moradas son sugerencias visuales; el plano mantiene dimensiones orientativas.':'Plano aproximado listo. Puedes crearlo directamente o ajustar la propuesta.');
   }
   function preparePhotoDraft(){
     if(!photoEstimate||!frames.includes(quickFrame))throw Error('Vuelve a analizar la foto.');
@@ -495,6 +550,23 @@ export function openRoomScanner({catalog,materials,onImport}){
     for(const frame of frames){frame.ref=[];frame.suggested=false}
     index=frames.indexOf(quickFrame);renderFrames();drawImage();renderReview();
   }
+  $('scanAi').onclick=()=>withJob(async signal=>{
+    if(!allowAi||!frames.length)return;
+    const frame=frames[index];
+    try{
+      const mask=await runSegFormer(frame,signal);
+      if(signal.aborted||closed)return;
+      const semantic=semanticRoomGuides(mask,frame.canvas.width,frame.canvas.height,imagePixels(frame.canvas,256));
+      aiOverlay={frame,boxes:semantic.boxes};
+      if(draft.points.length){
+        drawImage();
+        notice('Análisis de IA listo. Las marcas son sugerencias y puedes conservar el plano que estabas ajustando.');
+      }else await estimateFromPhoto(signal,frame,semantic);
+    }catch(error){
+      stopAi();
+      if(error?.name!=='AbortError')notice('La IA local no está disponible: '+error.message+'. Puedes seguir con el análisis habitual.');
+    }
+  });
   $('scanQuickImport').onclick=()=>{
     if(job)return;
     try{preparePhotoDraft();importDraft()}catch(error){report(error)}

@@ -6564,7 +6564,8 @@ $('#bScanRoom').onclick=async()=>{
   const sources=[...LIB];
   const catalog=sources.flatMap((o,id)=>!o.libraryHidden&&o.w>0&&o.d>0&&o.h>0
    ?[{id,name:o.n,w:o.w,d:o.d,h:o.h,e:Math.max(0,+o.e||0),color:/^#[0-9a-f]{6}$/i.test(o.cfg?.cf||o.col)?o.cfg?.cf||o.col:'#a8a19a'}]:[]);
-  openRoomScanner({catalog,materials:surfaceMaterials().map(d=>['pbr:'+d[0],d[1],d[4]]),onImport:data=>importScannedRoom(data,project,sources)});
+  const allowAi=CATALOG_MASTER&&location.hostname==='desarrollo-cloudflare-disneito-web.jmgutierrezvalle.workers.dev';
+  openRoomScanner({catalog,allowAi,materials:surfaceMaterials().map(d=>['pbr:'+d[0],d[1],d[4]]),onImport:data=>importScannedRoom(data,project,sources)});
  }catch(error){alert('No se pudo abrir Escanear habitación. '+(error.message||error))}
 };
 $('#mv2').onclick=()=>setMode('2d');$('#mvDual').onclick=()=>setMode(dualView?'2d':'dual');[['mvf','f'],['mvm','m'],['mvq','q']].forEach(([id,v])=>$('#'+id).onclick=()=>{$('#sq').value=v;setMode('3d');setQ();modeUI()});
