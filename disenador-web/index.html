@@ -489,23 +489,7 @@ function libUI(q=''){
    const im=document.createElement('img');im.src=thumb(ix);im.alt='Vista previa 3D de '+o.n;im.style.cssText='width:68px;height:68px;object-fit:contain;flex:none;background:#252a33;border-radius:5px';card.append(im);
    const info=document.createElement('span');info.style.cssText='min-width:0;overflow-wrap:anywhere';const nm=document.createElement('strong');nm.textContent=o.n;nm.style.cssText='display:block;font-size:12px';info.append(nm);
    const sm=document.createElement('small');sm.textContent=(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+' × '+o.d+' × '+o.h+' cm';sm.style.cssText='display:block;color:#aab4c4;font-size:10px;margin-top:3px';info.append(sm);card.append(info);card.onclick=()=>openPrev(ix);parent.append(card)};
-  if(roomF==='Cocina'){
-   const groups=[
-    {name:'Muebles bajos estándar',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&o.cfg.lay==='puertas'},
-    {name:'Cajoneras',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&o.cfg.lay==='cajones'},
-    {name:'Muebles bajos especiales',test:o=>o.t==='mod'&&o.cfg?.k==='base'&&['puertas+cajones','fregadero','placa'].includes(o.cfg.lay)},
-    {name:'Construcción libre',test:o=>o.t==='mod'&&o.cfg?.lay==='libre'},
-    {name:'Esquineros',test:o=>o.t==='mod'&&String(o.cfg?.lay||'').startsWith('esquina')},
-    {name:'Muebles altos',test:o=>o.t==='mod'&&o.cfg?.k==='alto'},
-    {name:'Columnas y torres',test:o=>o.t==='mod'&&o.cfg?.k==='col'&&o.cfg?.lay!=='libre'},
-    {name:'Electrodomésticos',test:o=>o.t==='app'||o.c==='Electrodomésticos'},
-    {name:'Otros productos',test:o=>o.t!=='mod'&&o.t!=='app'&&o.c!=='Electrodomésticos'}
-   ];
-   groups.forEach((group,gi)=>{const items=matches.filter(x=>group.test(x.o));if(!items.length)return;const section=document.createElement('details');section.open=gi===0||group.name==='Construcción libre';section.style.cssText='margin:5px 0 8px;border:1px solid #414957;border-radius:7px;background:#202630;overflow:hidden';
-    const summary=document.createElement('summary');summary.textContent=group.name+' · '+items.length;summary.style.cssText='padding:10px 9px;cursor:pointer;font-size:12px;font-weight:600;color:#e5eaf1;list-style-position:inside';section.append(summary);
-    const list=document.createElement('div');list.style.cssText='padding:4px 6px 7px';items.forEach(x=>renderItem(x,list));section.append(list);content.append(section)
-   });
-  }else matches.forEach(x=>renderItem(x,content));materials()
+  matches.forEach(x=>renderItem(x,content));materials()
  };
  search.oninput=()=>render();render()
 }
@@ -689,7 +673,10 @@ function props(){P.innerHTML='';const e=get();
   const motions=MV.filter(m=>m.it===e||(e.op&&m.it.op===e.op));
   if(motions.length){
    if(motions.some(m=>!m.angle&&['d','u','h','f'].includes(m.t)))row('Ángulo máx. apertura',e.ang||100,v=>e.ang=v);
-   if(motions.some(m=>m.t==='d')&&['mod','frigo','lavadora','base','alto','col'].includes(e.t))btn('Invertir sentido',()=>e.fl=!e.fl);
+   if(motions.some(m=>m.t==='d'||m.t==='f')&&['mod','frigo','lavadora','base','alto','col'].includes(e.t))btn('Invertir sentido',()=>{
+    if(e.t==='mod'&&e.cfg?.lay==='esquina riñón')e.cfg.kor=e.cfg.kor==='der'?'izq':'der';
+    else e.fl=!e.fl;
+   });
    appendMotionButton(P,e,motions,()=>{commitQ();psaveSoon()},true);
   }
   if(isLamp(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
@@ -4878,15 +4865,38 @@ function worktop(g,it,c,y,cut){const mn=topMat(c),w=it.w+1,d=it.d+2;if(!cut){B(g
 const LAY={};
 LAY['puertas']=LAY['armario alto']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(1,c.nd|0),w=iw/n;for(let i=0;i<n;i++)if(!(c.xd||[]).includes(i))fdoor(g,it,i,-iw/2+i*w,w-.3,y0+1.5,H-3,n>1?i>=n/2:it.fl,Mx)};
 LAY['cajones']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(1,c.nc|0),ws=Array.from({length:n},(_,i)=>c.dh?1+(n-1-i)*.6:1),sum=ws.reduce((a,b)=>a+b),av=H-2;let y=y0+1;ws.forEach((q,i)=>{const hh=av*q/sum;ndrw(g,it,i,-iw/2,iw,y,hh-.6,Mx);y+=hh})};
-LAY['puertas+cajones']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(1,c.nc|0),dh=Math.min(18*n,H*.35),n2=Math.max(1,c.nd|0),w=iw/n2;for(let i=0;i<n;i++)ndrw(g,it,i,-iw/2,iw,y0+H-dh+i*dh/n,dh/n-.6,Mx);for(let i=0;i<n2;i++)fdoor(g,it,10+i,-iw/2+i*w,w-.3,y0+1.5,H-dh-2,n2>1?i>=n2/2:it.fl,Mx)};
+LAY['puertas+cajones']=(g,it,c,Mx,y0,H,iw)=>{
+ const n=Math.max(1,c.nc|0),dh=Math.min(18,H*.35),n2=Math.max(1,c.nd|0),w=iw/n2;
+ const drawerW=iw/n,split=y0+H-dh;
+ for(let i=0;i<n;i++){
+  ndrw(g,it,i,-iw/2+i*drawerW+.3,drawerW-.6,split,dh-1.1,Mx);
+  if(i>0)B(g,1.4,dh-1.2,it.d-4,-iw/2+i*drawerW,split+(dh-1.2)/2,-.6,Mx.mc);
+ }
+ for(let i=0;i<n2;i++)fdoor(g,it,10+i,-iw/2+i*w,w-.3,y0+1.5,H-dh-2,n2>1?i>=n2/2:it.fl,Mx);
+};
 LAY['fregadero']=(g,it,c,Mx,y0,H,iw)=>{const p=new T.Group();p.position.set(0,y0+H-8,it.d/2);g.add(p);pan(p,iw-.3,14,0,c,Mx.mf);const n=iw>=80?2:1,w=iw/n;for(let i=0;i<n;i++)fdoor(g,it,i,-iw/2+i*w,w-.3,y0+1.5,H-18,n>1?i>=n/2:it.fl,Mx)};
 LAY['placa']=(g,it,c,Mx,y0,H,iw)=>LAY['cajones'](g,it,Object.assign({},c,{nc:3,dh:true}),Mx,y0,H,iw);
 LAY['columna']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(0,c.nc|0),lo=n?H*.35:0,n2=Math.max(1,c.nd|0),w=iw/n2;for(let i=0;i<n;i++)ndrw(g,it,i,-iw/2,iw,y0+1+i*lo/n,lo/n-.6,Mx);for(let i=0;i<n2;i++)fdoor(g,it,10+i,-iw/2+i*w,w-.3,y0+lo+1.5,H-lo-3,n2>1?i>=n2/2:it.fl,Mx)};
 const trayM=M('#cfd3d6',.4,.6),tray=(g,r,x,y,z,full)=>{const m=new T.Mesh(full?new T.CylinderGeometry(r,r,1.5,32):new T.CylinderGeometry(r,r,1.5,28,1,false,.6,4.9),trayM);m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
+function syncCornerDoor(door){
+ const motion=door.userData.mv;motion.angle=105;
+ motion.update=()=>{door.rotation.y=motion.sg*motion.angle*D*Math.min(1,motion.v/.48)};
+ motion.update();
+}
 const corner=mode=>(g,it,c,Mx,y0,H,iw)=>{const s=it.fl?-1:1,fw=iw*.55,bw=iw-fw,hh=H-3,yy=y0+1.5,b=new T.Group();b.position.set(s>0?-iw/2+bw/2:iw/2-bw/2,yy+hh/2,it.d/2);g.add(b);pan(b,bw-.3,hh,0,c,Mx.mf);
  const cc=Object.assign({},c,{op:mode==2?c.op:'lateral'}),it2=Object.assign({},it,{cfg:cc}),p=fdoor(g,it2,0,s>0?-iw/2+bw:-iw/2,fw-.3,yy,hh,it.fl,Mx);
- if(mode==0){[.3,.62].forEach(l=>tray(p,fw*.42,s*fw*.5,y0+H*l-yy-hh/2,-fw*.5));const q=new T.Group();q.position.set(-s*iw*.12,0,-it.d*.12);g.add(q);[.3,.62].forEach(l=>tray(q,Math.min(iw,it.d)*.3,0,y0+H*l,0));mv(q,{it,k:0,t:'x',dx:s*iw*.06,dz:it.d*.3,ry:-s*.9})}
- if(mode==1){const q=new T.Group();q.position.set(0,0,-it.d*.05);g.add(q);B(q,2.5,H-4,2.5,0,y0+H/2,0,M('#888',.3,.9));[.28,.62].forEach(l=>tray(q,Math.min(iw,it.d)*.36,0,y0+H*l,0,true));mv(q,{it,k:0,t:'x',ry:s*Math.PI*1.1})}};
+ if(mode!==2)syncCornerDoor(p);
+ if(mode===0)buildCornerPullouts(g,it,{side:s,opening:fw,y0,H,iw,count:2,articulated:false});
+ if(mode===1){
+  const q=new T.Group();q.position.set(0,0,-it.d*.05);g.add(q);
+  B(q,2.5,H-4,2.5,0,y0+H/2,0,M('#888',.3,.9));
+  for(const l of [.28,.62])tray(q,Math.min(iw,it.d)*.36,0,y0+H*l,0,true);
+  const m=mv(q,{it,k:0,t:'e',dy:0});
+  m.update=()=>{q.rotation.y=s*Math.PI*1.1*Math.max(0,(m.v-.40)/.60)};
+  m.update();
+ }
+ if(mode===2)for(const l of [.33,.66])B(g,iw,1.6,it.d-5,0,y0+H*l,-1,Mx.mc);
+};
 LAY['esquina riñonera']=corner(0);LAY['esquina carrusel']=corner(1);LAY['esquina 90°']=corner(2);
 let PT=0,drSel=0;
 /* Distribución libre por elementos: cada elemento {k,x,y,w,h,...} se coloca en cm sobre el frontal interior (x desde el lateral izq., y desde la base) */
@@ -4922,12 +4932,53 @@ const kidP=(r1,r2,L)=>{const A=[L,0,r1],Q=[0,-(r1-r2),r2],F=(x,y)=>A[2]*A[2]/((x
 const trayD=M('#4a4b50',.6,.2),railM=M('#1b1b1e',.4,.5);
 function kidTray(r1,r2,L){const P=kidP(r1,r2,L),sh=new T.Shape();P.forEach(([x,y],i)=>i?sh.lineTo(x,y):sh.moveTo(x,y));const ge=new T.ExtrudeGeometry(sh,{depth:1.6,bevelEnabled:false});ge.rotateX(-Math.PI/2);const m=new T.Group(),b=new T.Mesh(ge,trayD);b.castShadow=true;m.add(b);
  m.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(P.map(([x,y])=>new T.Vector3(x,5,-y)),true),120,.35,6,true),railM));return m}
-LAY['esquina riñón']=(g,it,c,Mx,y0,H,iw)=>{const s=c.kor=='der'?-1:1,ow=Math.max(20,Math.min(c.ow||Math.round(iw*.5),iw-8)),hh=H-3,yy=y0+1.5,bw=iw-ow;
- const b=new T.Group();b.position.set(s>0?-iw/2+bw/2:iw/2-bw/2,yy+hh/2,it.d/2);g.add(b);pan(b,bw-.3,hh,0,c,Mx.mf);
- fdoor(g,Object.assign({},it,{cfg:Object.assign({},c,{op:'lateral'})}),0,s>0?-iw/2+bw:-iw/2,ow-.3,yy,hh,s<0,Mx);
- const n=Math.max(1,Math.min(c.kn||2,5)),r1=Math.min(c.kw||iw-ow-1,iw-ow-1)/2,r2=r1*.62,kd=Math.min(c.kd||Math.min(it.d-12,50),it.d-6),L=Math.max(5,Math.min(kd-r1-r2,(r1+r2)*1.05)),sp=c.ks||24,W=new T.Group();W.scale.x=s;g.add(W);
- for(let i=0;i<n;i++){const ty=y0+(c.kh||12)+i*sp;if(ty>y0+H-4)continue;const q=new T.Group();q.position.set(iw/2-ow+(c.kx||0),ty,it.d/2-5);W.add(q);const t=new T.Group();t.rotation.y=Math.PI/2;q.add(t);
-  const m=kidTray(r1,r2,L);m.position.set(r2+1,0,-r1);t.add(m);const r=new T.Mesh(new T.CylinderGeometry(.7,.7,sp+4,10),railM);r.position.set(0,sp/2,0);q.add(r);mv(q,{it,k:0,t:'x',ry:-2.83})}};
+function buildCornerPullouts(g,it,{side,opening,y0,H,iw,count,articulated}){
+ const c=it.cfg,front=it.d/2,center=side*(iw-opening)/2;
+ const gap=Math.max(2,Math.min(3,opening*.1)),width=Math.max(2,Math.min(opening-gap*2,c.kw||Infinity));
+ const depth=Math.max(5,Math.min(it.d-7,c.kd||48)),rail=M('#687276',.38,.7);
+ const slides=[];
+ for(let k=0;k<count;k++){
+  const y=articulated?y0+(c.kh||12)+k*(c.ks||24):y0+H*(k?.62:.30);
+  if(y>y0+H-6||y<y0+3)continue;
+  const holder=new T.Group();holder.name='Bandeja extraíble '+(k+1);
+  const tray=kidTray(17,10,23),box=new T.Box3().setFromObject(tray),size=box.getSize(new T.Vector3()),mid=box.getCenter(new T.Vector3());
+  const rotated=new T.Group();holder.add(rotated);
+  tray.scale.set(depth/size.x,1,width/size.z);
+  tray.position.set(-mid.x*tray.scale.x,0,-mid.z*tray.scale.z);
+  rotated.rotation.y=Math.PI/2;rotated.add(tray);
+  const glide=new T.Group(),middle=new T.Group();glide.add(holder);g.add(glide,middle);
+  const x=center+side*Math.max(-gap+.7,Math.min(gap-.7,c.kx||0)),z=front-depth/2-2;
+  for(const s of [-1,1]){
+   const offset=s*width*.35;
+   B(g,1.4,1.7,depth,x+offset,y-2.2,z,rail);
+   B(middle,1.12,1.1,depth*.97,offset,-1.8,0,rail);
+   B(glide,1.05,1.2,depth*.92,offset,-1.2,0,rail);
+  }
+  slides.push({glide,middle,holder,x,y,z});
+ }
+ const group=new T.Group();g.add(group);
+ const m=mv(group,{it,k:0,t:'e',dy:0});
+ m.update=()=>{
+  const travel=Math.min(1,Math.max(0,(m.v-.54)/.34));
+  const turn=articulated?Math.max(0,(m.v-.88)/.12):0;
+  const safety=Math.hypot(width,depth)/2-depth/2+2;
+  const offset=travel*(depth+5+(articulated?safety:0));
+  for(const {glide,middle,holder,x,y,z} of slides){
+   glide.position.set(x,y,z+offset);middle.position.set(x,y,z+offset*.5);
+   holder.rotation.y=-side*turn*.63;
+  }
+ };
+ for(const {glide} of slides)glide.userData.mv=m;
+ m.update();
+}
+LAY['esquina riñón']=(g,it,c,Mx,y0,H,iw)=>{
+ const side=c.kor==='der'?-1:1,opening=Math.max(Math.min(20,iw*.55),Math.min(c.ow||Math.round(iw*.5),iw-8)),fixed=iw-opening;
+ const hh=H-3,yy=y0+1.5,blank=new T.Group();
+ blank.position.set(-side*opening/2,yy+hh/2,it.d/2);g.add(blank);pan(blank,fixed-.3,hh,0,c,Mx.mf);
+ const leaf={...it,cfg:{...c,op:'lateral'}};
+ syncCornerDoor(fdoor(g,leaf,0,side>0?-iw/2+fixed:-iw/2,opening-.3,yy,hh,side<0,Mx));
+ buildCornerPullouts(g,it,{side,opening,y0,H,iw,count:Math.max(1,Math.min(c.kn||2,5)),articulated:true});
+};
 LAY['torre']=(g,it,c,Mx,y0,H,iw)=>{let y=y0+2;(c.slots||[]).forEach((s,i)=>{const hh=s.h;B(g,iw,1.6,it.d-3,0,y-1,0,Mx.mc);if(s.k=='puerta')fdoor(g,it,i*2,-iw/2,iw,y+.3,hh-.6,it.fl,Mx);else if(s.k=='cajon')ndrw(g,it,i*2,-iw/2,iw,y+.3,hh-.6,Mx);else if(s.k!='hueco'){const kd=s.k=='hornoc'?'horno':s.k;appl(g,kd,iw-.4,hh,Math.min(APD[kd]||50,it.d-2),s.mat||s.fin||'acero',it,i*2,y,it.d/2)}y+=hh})};
 function tagp(o,t,i,it){o.userData.part={t,i};if(it&&selPart&&selPart.id==it.id&&selPart.t==t&&selPart.i==i)HL.push(o);return o}
 BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=kitchenHasTop(c),y0=kitchenBaseY(c),H=ihl(it)+2,mc=pb(c,'cc')||fm(c.cc,c.acab),Mx={mf:pb(c,'cf')||fm(c.cf,c.acab,c.mf),mh:M(c.ct,.3,.9),mc},t=1.8,iw=w-2*t,L=c.lay;
