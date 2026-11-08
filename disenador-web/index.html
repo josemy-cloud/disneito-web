@@ -239,7 +239,7 @@ LIB.push(
 {t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"cabinet",n:"Zapatero",w:100,h:115,d:28,e:0,col:"#d2c8b8",s:"rústico",variant:0},
 {t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"bench",n:"Banco recibidor",w:100,h:48,d:38,e:0,col:"#a88f78",s:"moderno",variant:1},
 {t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"coat",n:"Perchero",w:42,h:180,d:42,e:0,col:"#b6a28d",s:"nórdico",variant:2},
-{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"mirror",n:"Espejo vertical",w:65,h:150,d:5,e:0,col:"#8c9aa5",s:"industrial",variant:0},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"mirror",n:"Espejo vertical",w:65,h:150,d:5,e:30,col:"#8c9aa5",s:"industrial",variant:0},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Escritorio recto",w:150,h:76,d:70,e:0,col:"#9d8264",s:"contemporáneo",variant:1},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Escritorio en L",w:180,h:76,d:150,e:0,col:"#d2c8b8",s:"rústico",variant:2},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Mesa regulable",w:140,h:72,d:70,e:0,col:"#a88f78",s:"moderno",variant:0},
@@ -323,9 +323,9 @@ LIB.push(
 {t:'roomObject',roomType:"comedor",c:"Comedor",shape:"chair",n:"Silla comedor con brazos",w:58,h:88,d:58,e:0,col:"#8f7865",s:"clásico",variant:1},
 {t:'roomObject',roomType:"comedor",c:"Comedor",shape:"chair",n:"Silla comedor tapizada",w:48,h:90,d:54,e:0,col:"#a7a09a",s:"moderno",variant:2},
 {t:'roomObject',roomType:"comedor",c:"Comedor",shape:"lamp",n:"Lámpara comedor suspendida",w:55,h:48,d:55,e:0,col:"#d8c69c",s:"industrial",variant:0},
-{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"console",n:"Consola suspendida",w:110,h:28,d:30,e:0,col:"#b39a7d",s:"minimalista",variant:1},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"console",n:"Consola suspendida",w:110,h:28,d:30,e:58,col:"#b39a7d",s:"minimalista",variant:1},
 {t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"cabinet",n:"Zapatero estrecho",w:90,h:125,d:22,e:0,col:"#d0c7ba",s:"moderno",variant:2},
-{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"mirror",n:"Espejo horizontal recibidor",w:110,h:65,d:5,e:0,col:"#9b8874",s:"industrial",variant:1},
+{t:'roomObject',roomType:"recibidor",c:"Recibidor",shape:"mirror",n:"Espejo horizontal recibidor",w:110,h:65,d:5,e:105,col:"#9b8874",s:"industrial",variant:1},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"desk",n:"Escritorio con ala lateral",w:160,h:76,d:115,e:0,col:"#987d61",s:"contemporáneo",variant:2},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"officechair",n:"Silla de oficina compacta",w:62,h:105,d:62,e:0,col:"#444b55",s:"minimalista",variant:0},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"shelf",n:"Librería con baldas",w:100,h:210,d:32,e:0,col:"#b29b7c",s:"industrial",variant:2},
@@ -580,7 +580,8 @@ const modelPartDefaults=new WeakMap();
 const isBedroomItem=it=>it.roomType==='dormitorio'||it.c==='Dormitorio'||it.t==='cama';
 const isVestidorItem=it=>it.roomType==='vestidor'||it.c==='Vestidor';
 const isLivingItem=it=>['salón','comedor','Salón','Comedor'].includes(it.roomType||it.c)||['sofa','mesa','tv','lampara'].includes(it.t);
-const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it);
+const isHallItem=it=>it.t==='roomObject'&&(it.roomType==='recibidor'||it.c==='Recibidor');
+const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it);
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
 const isDiningPendant=it=>it.roomType==='comedor'&&isLamp(it)&&/suspend|colgante/i.test(it.n||'');
 const BEDROOM_COLOR_PARTS={
@@ -594,11 +595,16 @@ const LIVING_COLOR_PARTS={
  shelf:[...ITEM_COLOR_PARTS.shelf,['books','Lomos de libros'],['pages','Páginas']]
 };
 LIVING_COLOR_PARTS.tv=[...LIVING_COLOR_PARTS.sideboard,...ITEM_COLOR_PARTS.panel.filter(([key])=>key==='frame'||key==='screen')];
+const HALL_COLOR_PARTS={
+ console:[['top','Sobre'],['carcass','Casco'],['frame','Estructura y patas'],['drawers','Frente de cajón'],['drawerInterior','Interior del cajón'],['shelves','Balda'],['handles','Tirador'],['hardware','Guías y fijaciones']],
+ bench:[...ITEM_COLOR_PARTS.bench,['shelves','Balda zapatera']],
+ cabinet:[...ITEM_COLOR_PARTS.cabinet.filter(([key])=>key!=='shelves'),['shelves','Bandejas zapateras']]
+};
 function itemColorParts(it){
  const shape=it.shape||(it.t==='cama'?'bed':it.t==='armario'&&isBedroomItem(it)?'wardrobe':it.t==='mesa'?'table':it.t==='lampara'?'lamp':it.t);
  return ((isBedroomItem(it)||isVestidorItem(it))&&BEDROOM_COLOR_PARTS[shape])||
   (isBathroomItem(it)&&BATH_COLOR_PARTS[it.t==='lavabo'?'vanity':shape])||
-  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
+  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
 }
 function partColorUI(e,panel=P,save=commit){
  const defaults=modelPartDefaults.get(e);
@@ -2110,6 +2116,98 @@ function buildLivingLamp(g,it,primary){
  applyLampLight(g,it,bulb,shade);
 }
 
+function buildHallConsole(g,it,primary){
+ const {w,h,d}=it,wall=/suspendida/i.test(it.n||''),top=partFinish(primary.clone(),'top');
+ const body=partFinish(M('#695b4c',.58,.06),'carcass'),frame=partFinish(M('#424542',.44,.34),'frame');
+ const shelves=partFinish(primary.clone(),'shelves'),front=partFinish(primary.clone(),'drawers');
+ const inside=partFinish(M('#b5a493',.69),'drawerInterior'),metal=partFinish(M('#737d7d',.38,.58),'hardware');
+ const t=Math.min(1.8,w*.05,h*.08,d*.08),cap=t*1.55,boxW=w*.94;
+ const high=h-cap,low=wall?t:h*.72,backZ=-d/2+t,frontZ=d/2-t;
+ const depth=frontZ-backZ,center=(backZ+frontZ)/2,innerW=boxW-2*t;
+ B(g,w,cap,d,0,h-cap/2,0,top);
+ for(const side of [-1,1])B(g,t,high-low+t,depth+t,side*(boxW-t)/2,(high+low-t)/2,center-t/2,body);
+ B(g,innerW,t,depth+t,0,low-t/2,center-t/2,body);
+ B(g,innerW,high-low,t,0,(high+low)/2,backZ-t/2,body);
+ it.op=it.op||[];
+ furnitureDrawer(g,it,0,{width:innerW,depth,frontZ,bottom:low,top:high,ceiling:high-1,front,inside,metal});
+ if(wall){
+  B(g,boxW*.86,Math.min(4,h*.18),.7,0,h*.68,-d/2+.35,metal);
+  for(const side of [-1,1])B(g,3,Math.min(8,h*.32),.8,side*boxW*.34,h*.48,-d/2+.4,metal);
+ }else{
+  const leg=Math.min(3.6,d*.12,w*.06),shelfY=h*.22;
+  for(const x of [-1,1])for(const z of [-1,1])B(g,leg,low,leg,x*(boxW-leg)/2,low/2,z*(d*.42-leg/2),frame);
+  B(g,boxW-2*leg,t,d*.79,0,shelfY,0,shelves);
+  for(const z of [-1,1])B(g,boxW-leg,leg,leg,0,shelfY-leg/2-t/2,z*(d*.42-leg/2),frame);
+ }
+}
+
+function buildHallShoeCabinet(g,it,primary){
+ const {w,h,d}=it,body=partFinish(primary.clone(),'carcass'),front=partFinish(primary.clone(),'doors');
+ const tray=partFinish(M('#b5a794',.72),'shelves'),metal=partFinish(M('#777e7c',.37,.58),'hardware');
+ const base=partFinish(M('#4d4d46',.58,.16),'feet');
+ const t=Math.min(1.8,w*.045,h*.06,d*.08),foot=Math.min(4,h*.045),span=w-2*t;
+ const backZ=-d/2+t,frontZ=d/2-t,depth=frontZ-backZ,center=(backZ+frontZ)/2;
+ for(const side of [-1,1])B(g,t,h-foot,d,side*(w-t)/2,(foot+h)/2,0,body);
+ B(g,span,h-foot-2*t,t,0,(foot+h)/2,backZ-t/2,body);
+ B(g,span,t,d,0,h-t/2,0,body);
+ B(g,w*.88,foot,d*.78,0,foot/2,0,base);
+ const n=3,slot=(h-foot-t)/n;
+ it.op=it.op||[];
+ for(let k=0;k<n;k++){
+  const floor=foot+k*slot,pivotY=floor+t+Math.min(2,slot*.09),gap=Math.min(1,slot*.06);
+  const flap=new T.Group();flap.name='Compartimento '+(k+1);
+  flap.position.set(0,pivotY,frontZ);g.add(flap);
+  B(g,span,t,d-t,0,floor+t/2,center-t/2,body);
+  const bottom=floor+t+gap-pivotY,top=floor+slot-gap-pivotY;
+  B(flap,span-2*gap,top-bottom,t,0,(bottom+top)/2,t/2,front);
+  const trayW=span-2*t,trayD=depth-1.4,stop=Math.min(5,slot*.17);
+  B(flap,trayW,t*.65,trayD,0,t*.55,-trayD/2,tray);
+  B(flap,trayW,stop,t,0,stop/2+t*.85,-trayD+t/2,tray);
+  for(const side of [-1,1]){
+   const x=side*(trayW-t)/2;
+   B(flap,t,stop,trayD,x,stop/2+t*.85,-trayD/2,tray);
+   B(g,t*.7,t*1.4,t*1.8,side*(span-t*.7)/2,pivotY,frontZ-.8,metal);
+   B(flap,t*1.3,t*.9,t*1.2,side*trayW/2,0,-.8,metal);
+  }
+  barPull(flap,0,top-Math.min(5,slot*.16),t,Math.min(23,span*.34),metal);
+  stepMV(mv(flap,{it,k,t:'h',angle:38}));
+ }
+}
+
+function buildHallBench(g,it,primary){
+ const {w,h,d}=it,frame=partFinish(primary.clone(),'frame');
+ const seat=partFinish(M('#bcad99',.9),'seat'),feet=partFinish(M('#504942',.56,.14),'feet');
+ const shelf=partFinish(primary.clone(),'shelves'),pad=h*.18,deck=h-pad,t=Math.min(3,h*.08),leg=Math.min(4,d*.12);
+ B(g,w,t,d,0,deck-t/2,0,frame);
+ for(const x of [-1,1])for(const z of [-1,1])B(g,leg,deck-t,leg,x*w*.4,(deck-t)/2,z*d*.36,feet);
+ for(const z of [-1,1])B(g,w*.80,leg,leg,0,deck-t-leg/2,z*d*.36,frame);
+ const y=h*.22;
+ for(const x of [-1,1])B(g,leg,leg,d*.72,x*w*.4,y-leg/2,0,frame);
+ for(let k=-2;k<=2;k++)B(g,w*.80,t*.6,d*.12,0,y+t*.3,k*d*.15,shelf);
+ bedCushion(g,0,deck-.08,0,w*.94,pad,d*.9,seat,8);
+}
+
+function buildHallCoat(g,it,primary){
+ const {w,h,d}=it,r=Math.min(w,d)/2;
+ const base=partFinish(M('#343b3c',.47,.37),'base'),pole=partFinish(primary.clone(),'pole');
+ const hooks=partFinish(primary.clone(),'hooks'),caps=partFinish(M('#6f7776',.38,.62),'caps');
+ const height=Math.min(5,h*.11),shaft=Math.min(2.5,r*.18);
+ const foot=new T.Mesh(new T.CylinderGeometry(r*.86,r,height,48),base);foot.position.y=height/2;g.add(foot);
+ bedroomTube(g,[0,height,0],[0,h-shaft,0],shaft,pole);
+ const sphere=(x,y,z,rad)=>{
+  const ball=new T.Mesh(new T.SphereGeometry(rad,16,12),caps);ball.position.set(x,y,z);g.add(ball);
+ };
+ sphere(0,h-shaft,0,shaft);
+ for(let k=0;k<7;k++){
+  const lower=k>=4,a=k*Math.PI*(lower?2/3:.5)+(lower?.4:0);
+  const x=Math.cos(a)*r*(lower?.62:.88),z=Math.sin(a)*r*(lower?.62:.88),y=h*(lower?.57:.82);
+  const rHook=Math.min(1.55,r*.12);
+  bedroomTube(g,[0,y,0],[x*.76,y+h*.045,z*.76],rHook,hooks);
+  bedroomTube(g,[x*.76,y+h*.045,z*.76],[x,y+h*.09,z],rHook,hooks);
+  sphere(x,y+h*.09,z,rHook*1.20);
+ }
+}
+
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
@@ -2254,6 +2352,7 @@ case'seat':{
  break;
 }
 case'bench':{
+ if(isHallItem(it)){buildHallBench(g,it,mt);break;}
  if(isVestidorItem(it)){buildDressingBench(g,it,mt);break;}
  if(it.roomType==='comedor'){
   const seat=partFinish(mt.clone(),'seat'),frame=partFinish(M('#675745',.54,.08),'frame'),feet=partFinish(frame.clone(),'feet');
@@ -2383,6 +2482,7 @@ case'sideboard':{
  break;
 }
 case'cabinet':{
+ if(isHallItem(it)){buildHallShoeCabinet(g,it,mt);break;}
  if(it.roomType==='baño'||it.c==='Baño')buildBathCabinet(g,it,mt);
  else buildCabinetConstruction(g,it,mt);
  break;
@@ -2396,6 +2496,7 @@ case'toolcab':{
  break;
 }
 case'console':{
+ if(isHallItem(it)){buildHallConsole(g,it,mt);break;}
  const wood=M(it.col||'#9d8264',.55,.1),metal=M('#aeb5b8',.3,.82),inside=M('#cfc5b7',.82,.02),topT=Math.max(2.5,h*.06),topY=h-topT/2;
  B(g,w,topT,d,0,topY,0,wood);
  const suspended=/suspend/.test((it.n||'').toLowerCase());
@@ -2614,6 +2715,7 @@ case'cabinet':{
  const door=new T.Group();door.position.set(-w/2+th/2,0,frontZ+1);g.add(door);const panel=new T.Mesh(new T.BoxGeometry(innerW,Math.max(12,h-zone-th-2),2),mt);panel.position.set(innerW/2,(h+zone)/2,0);door.add(panel);mv(door,{it,k:count,t:'d',sg:-1});break;
 }
 case'mirror':{
+ if(isHallItem(it)){buildBedroomMirror(g,it,mt);break;}
  if(isLivingItem(it)){if(/redondo/i.test(it.n||''))buildLivingRoundMirror(g,it,mt);else buildBedroomMirror(g,it,mt);break;}
  if(isBedroomItem(it)||isVestidorItem(it)){buildBedroomMirror(g,it,mt);break;}
  if(it.roomType==='baño'||it.c==='Baño'){
@@ -2964,6 +3066,7 @@ case'tyres':{
 
 
 case'coat':{
+ if(isHallItem(it)){buildHallCoat(g,it,mt);break;}
  const metal=M('#aeb5b8',.3,.82),wood=M(it.col||'#7d6047',.52,.12),dark=M('#30373a',.52,.3);
  const base=new T.Mesh(new T.CylinderGeometry(w*.24,w*.3,4,48),dark);base.position.y=2;g.add(base);
  const pole=new T.Mesh(new T.CylinderGeometry(2.2,3.2,h*.86,24),metal);pole.position.y=h*.45;g.add(pole);
