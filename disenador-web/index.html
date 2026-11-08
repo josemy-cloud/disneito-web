@@ -465,19 +465,56 @@ function libUI(q=''){
  const content=document.createElement('div');L.append(content);
  const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
   const grid=document.createElement('div');grid.className='material-grid';content.append(grid);
-  const swatch=(m,name,preview)=>{
-   const d=document.createElement('button');d.type='button';d.className='sw surface-swatch'+(armed?.m===m?' on':'');
-   d.setAttribute('aria-pressed',String(armed?.m===m));d.title=name;
+  const card=(name,preview,active)=>{
+   const d=document.createElement('button');d.type='button';d.className='sw surface-swatch'+(active?' on':'');
+   d.title=name;
    const caption=document.createElement('span');caption.textContent=name;
-   d.append(preview,caption);d.onclick=()=>armMaterial({m});grid.append(d);
+   d.append(preview,caption);grid.append(d);return d;
+  };
+  const swatch=(m,name,preview,parquet=false)=>{
+   const selected=armed?.m===m,d=card(name,preview,selected);
+   d.setAttribute('aria-pressed',String(selected));
+   d.onclick=()=>{
+    armMaterial({m});
+    if(parquet&&useCompact()&&L.classList.contains('adaptive-open')){
+     setMobilePanel(null);$('#tl').focus();
+    }
+   };
   };
   const photo=src=>{const image=document.createElement('img');image.className='surface-preview';image.alt='';image.src=src;return image};
-  for(const def of surfaceMaterials()){
-   const asset=scanAsset(def),preview=asset?photo(scanURL(asset,'color')):pbrThumb(def).cloneNode();
-   if(!asset){preview.className='surface-preview';preview.getContext('2d').drawImage(pbrThumb(def),0,0)}
-   swatch('pbr:'+def[0],def[1],preview);
-  }
-  S.cm.forEach((src,i)=>swatch('img'+i,'Imagen '+(i+1),photo(src)));
+  const previewOf=def=>{
+   const asset=scanAsset(def);
+   if(asset&&!def[9])return photo(scanURL(asset,'color'));
+   const source=pbrThumb(def),preview=source.cloneNode();
+   preview.className='surface-preview';
+   const paint=()=>preview.getContext('2d').drawImage(source,0,0);
+   paint();
+   if(asset)pbrTex(def).ready.then(paint);
+   return preview;
+  };
+  const back=document.createElement('button');back.type='button';back.className='it';
+  back.textContent='← Suelos y revestimientos';
+  const renderCards=showParquet=>{
+   grid.replaceChildren();
+   h.textContent=showParquet?'Parquet de madera':'Suelos y revestimientos';
+   if(showParquet){
+    grid.before(back);
+    PARQUET_FINISHES.forEach(([id,name])=>swatch('pbr:'+id,name,previewOf(pbrDef(id)),true));
+    back.focus();
+    return;
+   }
+   back.remove();
+   const activeId=armed?.m?.slice(4),activeParquet=isParquet(activeId);
+   const parquet=card('Parquet de madera',previewOf(pbrDef(activeParquet?activeId:'parquet-natural')),activeParquet);
+   parquet.setAttribute('aria-label','Parquet de madera, elegir acabado');
+   parquet.onclick=()=>renderCards(true);
+   back.onclick=()=>{renderCards(false);grid.firstElementChild.focus()};
+   for(const def of surfaceMaterials()){
+    if(!isParquet(def[0]))swatch('pbr:'+def[0],def[1],previewOf(def));
+   }
+   S.cm.forEach((src,i)=>swatch('img'+i,'Imagen '+(i+1),photo(src)));
+  };
+  renderCards(false);
   const ph=document.createElement('h4');ph.textContent='Pinturas';content.append(ph);PAINT.forEach(c=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>armMaterial({c});content.append(d)});
   const u=document.createElement('button');u.className='it';u.textContent='+ Añadir material desde imagen';u.onclick=()=>$('#fm').click();content.append(u)
  };
@@ -914,7 +951,7 @@ const PL0=[['roble-natural','Roble natural','Maderas','wood','#b58a58',.55,0,1.2
 ['metal-laton','Latón satinado','Metales','brush','#b59a61',.34,1,.3,40]
 ]);
 const SURFACE_SCANS=[
- ['parquet-natural','Parquet de madera natural','Maderas','wood_floor','#a88560',170,.72],
+ ['parquet-natural','Parquet de madera · natural','Maderas','wood_floor','#a88560',170,.72],
  ['tabla-envejecida','Tablas envejecidas','Maderas','old_wood_floor','#77624a',300,.7],
  ['hormigon-liso','Hormigón liso gris','Cementos','concrete_floor_03','#9e9e9e',250,.45],
  ['baldosa-gris','Baldosa gris de gran formato','Cerámicas y gres','large_grey_tiles','#a19e99',300,.63],
@@ -924,14 +961,26 @@ const SURFACE_SCANS=[
  ['terracota','Baldosa de terracota','Cerámicas y gres','terracotta_floor_tiles','#a66547',208,.66],
  ['granito-baldosa','Baldosa de granito','Piedras','granite_tile','#88827a',230,.55],
  ['madera-tablero','Tablero de madera rústica','Maderas','wood_table','#745537',100,.55],
- ['roble-barnizado','Tablas de roble barnizado','Maderas','oak_wood_planks','#a47c57',120,.52],
+ ['roble-barnizado','Parquet de roble barnizado','Maderas','oak_wood_planks','#a47c57',120,.52],
+ ['parquet-roble-claro','Parquet de roble blanqueado','Maderas','oak_wood_planks','#cbb798',120,.52,'brightness(1.35) saturate(.65)'],
+ ['parquet-roble-ahumado','Parquet de roble ahumado','Maderas','oak_wood_planks','#674e38',120,.52,'brightness(.67) saturate(.8)'],
  ['azulejo-esmaltado','Azulejo esmaltado envejecido','Cerámicas y gres','blue_floor_tiles_01','#9d9d86',200,.65],
  ['mosaico-marmol','Mosaico de mármol','Piedras','marble_tiles','#a79c8d',200,.58],
  ['pavimento-espiga','Pavimento de hormigón en espiga','Cementos','herringbone_concrete_tile_02','#77706a',221.5,.62]
-].map(([id,name,category,asset,color,span,normal])=>[id,name,category,'scan:'+asset,color,1,0,normal,span]);
+].map(([id,name,category,asset,color,span,normal,filter])=>filter
+ ?[id,name,category,'scan:'+asset,color,1,0,normal,span,filter]
+ :[id,name,category,'scan:'+asset,color,1,0,normal,span]);
+const PARQUET_FINISHES=[
+ ['parquet-natural','Madera natural'],
+ ['parquet-roble-claro','Roble blanqueado'],
+ ['roble-barnizado','Roble barnizado'],
+ ['parquet-roble-ahumado','Roble ahumado'],
+ ['nogal-oscuro','Efecto nogal oscuro']
+];
+const isParquet=id=>PARQUET_FINISHES.some(([finish])=>finish===id);
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
 const availableCustomMaterials=()=> (S.pbr||[]).filter(d=>String(d[1]).trim().toLowerCase()!=='mármol negro (copia)');
-const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),surfaceMaterials=()=>SURFACE_SCANS.concat(availableCustomMaterials()),
+const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),surfaceMaterials=()=>SURFACE_SCANS.concat([pbrDef('nogal-oscuro')],availableCustomMaterials()),
  pbrDef=id=>PL().find(d=>d[0]==id);
 function scanAsset(d){
  const legacy={'scan:smooth_concrete_floor':'concrete_floor_03','scan:terrazzo_tiles':'ambient-terrazzo001'};
@@ -939,7 +988,7 @@ function scanAsset(d){
 }
 const scanURL=(asset,map)=>'/materiales/'+asset+'-'+map+'.webp';
 function scanTextures(d,asset){
- const key=d.slice(3,8).join('|');
+ const key=d.slice(3,8).concat(d[9]||'').join('|');
  if(PCH[key])return PCH[key];
  const create=(role,fill)=>{
   const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
@@ -948,7 +997,10 @@ function scanTextures(d,asset){
   if(role==='color')texture.encoding=T.sRGBEncoding;
   const loaded=new Promise(resolve=>{
    const image=new Image();
-   image.onload=()=>{ctx.drawImage(image,0,0,512,512);texture.needsUpdate=true;resolve(true)};
+   image.onload=()=>{
+    if(role==='color'&&d[9])ctx.filter=d[9];
+    ctx.drawImage(image,0,0,512,512);ctx.filter='none';texture.needsUpdate=true;resolve(true);
+   };
    image.onerror=()=>resolve(false);
    image.src=scanURL(asset,role);
   });
@@ -981,10 +1033,11 @@ function pbrTex(d){const asset=scanAsset(d);if(asset)return scanTextures(d,asset
 function wuv(m,U){m.userData.U=U;m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vOP;varying vec3 vON;uniform float uW;').replace('#include <begin_vertex>','#include <begin_vertex>\nvOP=uW>.5?(modelMatrix*vec4(position,1.)).xyz:position;vON=uW>.5?normalize(mat3(modelMatrix)*normal):normal;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vOP;varying vec3 vON;uniform vec2 uT;uniform vec2 uO;uniform float uSw;uniform float uR;vec2 wUv;').replace('#include <uv_pars_fragment>','#include <uv_pars_fragment>\n#define vUv wUv').replace('void main() {','void main() {\nvec3 an=abs(vON);vec2 q=an.x>an.y&&an.x>an.z?vOP.zy:(an.y>an.z?vOP.xz:vOP.xy);if(uSw>.5)q=q.yx;float cr=cos(uR),sr=sin(uR);q=vec2(cr*q.x-sr*q.y,sr*q.x+cr*q.y);wUv=(q+uO)/uT;')}}
-function pbrMat(id,o){o=o||{};const d=pbrDef(id);if(!d)return null;const key=id+'|'+d.slice(3,9).join('|')+'|'+(o.sw?1:0)+(o.w?'w':'')+'|'+(o.rot||0);if(MCH[key])return MCH[key];const t=pbrTex(d),m=new T.MeshStandardMaterial({color:'#ffffff',map:t.a,roughnessMap:t.r,normalMap:t.n,roughness:scanAsset(d)?d[5]:1,metalness:d[6]});m.normalScale.set(d[7],d[7]);
+function pbrMat(id,o){o=o||{};const d=pbrDef(id);if(!d)return null;const key=id+'|'+d.slice(3,10).join('|')+'|'+(o.sw?1:0)+(o.w?'w':'')+'|'+(o.rot||0);if(MCH[key])return MCH[key];const t=pbrTex(d),m=new T.MeshStandardMaterial({color:'#ffffff',map:t.a,roughnessMap:t.r,normalMap:t.n,roughness:scanAsset(d)?d[5]:1,metalness:d[6]});m.normalScale.set(d[7],d[7]);
  wuv(m,{uT:{value:new T.Vector2(d[8]||60,d[8]||60)},uSw:{value:o.sw?1:0},uR:{value:(o.rot||0)*D},uO:{value:new T.Vector2(0,0)},uW:{value:o.w?1:0}});return MCH[key]=m}
 const pb=(c,k)=>{const id=c.pbr&&c.pbr[k];return id?pbrMat(id,{sw:k=='cf'&&c.pvt!='horizontal',w:k=='cn'}):null};
 SURFACE_SCANS.forEach(d=>MATS.push('pbr:'+d[0]));
+MATS.push('pbr:nogal-oscuro');
 const surfaceLabels=()=>Object.fromEntries(surfaceMaterials().map(d=>['pbr:'+d[0],d[1]]));
 function surfaceOptions(current){
  const values=surfaceMaterials().map(d=>'pbr:'+d[0]).concat(S.cm.map((_,i)=>'img'+i));
