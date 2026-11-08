@@ -12,6 +12,16 @@ Reconstrucción métrica asistida en el navegador. Acceso desde **Archivo → Es
 
 La altura inicial de 250 cm y el grosor de pared de 10 cm son supuestos. El perímetro obtenido por proyección, los anchos de hueco y las posiciones de objetos son estimaciones. Una muestra de color refleja la iluminación de la captura; la sugerencia PBR por color tiene confianza baja y se aplica solo si se elige. Los huecos y muebles pendientes quedan fuera de la importación.
 
+## Proponer el perímetro desde el vídeo o las fotos
+
+**Analizar vídeo o fotos** busca en cada toma una región inferior de color continuo, comprueba sus cuatro bordes y descarta las regiones que tocan el borde de la imagen, son ambiguas o no forman un cuadrilátero suficientemente completo. Si otra vista distinta contiene los mismos puntos, la propuesta se etiqueta con confianza media; una propuesta de una sola vista tiene confianza baja. La forma azul debe coincidir con el suelo de pared a pared, no con una alfombra, una encimera u otra superficie similar.
+
+El usuario mide la arista roja. En una perspectiva oblicua suficientemente estable, el análisis usa las dos direcciones ortogonales proyectadas para estimar la relación ancho/fondo; de lo contrario solicita también el fondo. Si la escala resulta estimada, el formulario y el plano lo indican. Solo al confirmar se crea un borrador; la importación en Disenito sigue siendo un paso separado.
+
+El análisis automático de esta etapa cubre **contornos rectangulares visibles y cerrados**. Un tramo oculto, una estancia irregular, un suelo que continúa fuera de la foto o un encuadre estrecho pueden requerir una captura distinta o el trazado asistido. Los huecos y el mobiliario se siguen confirmando manualmente. La estimación de proporción presupone perspectiva rectilínea, píxeles cuadrados y centro óptico cerca del centro de la imagen. El recorte y los grandes angulares pueden sesgarla.
+
+Referencias: [detección de líneas y bordes](https://docs.opencv.org/4.x/d9/db0/tutorial_hough_lines.html) y [metrología desde una vista](https://www.microsoft.com/en-us/research/publication/single-view-metrology/).
+
 ## Auditoría e integración
 
 - `index.html` sigue siendo el editor. Su modelo guarda paredes en `S.w`, huecos vinculados a paredes en `S.o` y muebles independientes en `S.i`. El escáner crea estos registros con identificadores nuevos y usa `detectRooms`, `roomsUpdate` y el guardado normal. El importador convierte el perímetro interior en ejes de pared para que el grosor no reste medidas al interior.
@@ -35,7 +45,7 @@ La altura inicial de 250 cm y el grosor de pared de 10 cm son supuestos. El per�
 ## Validación y pendientes
 
 ```
-node --test tests/scan-core.test.mjs
+node --test tests/scan-core.test.mjs tests/scan-auto.test.mjs
 ```
 
 Las pruebas reproducibles cubren calibración en perspectiva, huecos, colisiones de huecos, anotaciones de mobiliario, geometría irregular, capturas ambiguas y correspondencia de imágenes sintéticas. No son un banco de imágenes de viviendas reales.

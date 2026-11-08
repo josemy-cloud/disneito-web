@@ -1,4 +1,4 @@
-import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate} from './scan-core.mjs';
+import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect} from './scan-core.mjs';
 
 const FRAME_LIMIT=16;
 const VIDEO_LIMIT=200*1024*1024;
@@ -55,7 +55,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     <progress id="scanProgress" hidden></progress><button id="scanCancel" type="button" hidden>Cancelar lectura</button>
     <div id="scanWorkspace" class="scan-columns" hidden>
       <section>
-        <h3>1. Capturas y escala</h3><div id="scanFrames"></div>
+        <h3>1. Capturas y escala</h3><div class="scan-actions" id="scanAuto"></div><div id="scanFrames"></div>
         <p>Marca en orden cuatro esquinas de un rectángulo horizontal que puedas medir. La primera arista es el ancho. En otra vista usa el mismo rectángulo y el mismo orden.</p>
         <div class="scan-fields" id="scanScale"></div>
         <canvas class="scan-image" id="scanImage" aria-label="Vista seleccionada para marcar puntos"></canvas>
@@ -78,7 +78,7 @@ export function openRoomScanner({catalog,materials,onImport}){
   const report=error=>{if(error?.name!=='AbortError'&&!closed)notice(error?.message||String(error))};
   const image=$('scanImage'),live=$('scanLive'),plan=$('scanPlan');
   const frames=[],draft={points:[],geometryMeasured:false,height:250,heightMeasured:false,openings:[],items:[],wallColor:'#f1ede4',floorColor:null,floorMaterial:''};
-  let index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
+  let proposals=[],proposalIndex=0,index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
   const pending=new Map();
   function stopCamera(){
     cameraEpoch++;
@@ -118,14 +118,18 @@ export function openRoomScanner({catalog,materials,onImport}){
       worker.postMessage({id,...data});
     });
   }
-  function analyse(canvas){
+  function imagePixels(canvas,maxSize){
     const sample=document.createElement('canvas');
-    const scale=144/Math.max(canvas.width,canvas.height);
+    const scale=Math.min(1,maxSize/Math.max(canvas.width,canvas.height));
     sample.width=Math.max(8,Math.round(canvas.width*scale));sample.height=Math.max(8,Math.round(canvas.height*scale));
     const ctx=sample.getContext('2d',{willReadFrequently:true});
     ctx.drawImage(canvas,0,0,sample.width,sample.height);
     const {data:pixels,width,height}=ctx.getImageData(0,0,sample.width,sample.height);
-    return analyseInWorker({pixels,width,height},()=>analyseFrame(pixels,width,height));
+    return {pixels,width,height};
+  }
+  function analyse(canvas){
+    const data=imagePixels(canvas,144);
+    return analyseInWorker(data,()=>analyseFrame(data.pixels,data.width,data.height));
   }
   const quality=f=>[
     f.stats.brightness<43?'poca luz':'',
@@ -240,6 +244,7 @@ export function openRoomScanner({catalog,materials,onImport}){
   const scale=$('scanScale');
   const width=field(scale,'Ancho medido (cm)',number('',20,5000));
   const depth=field(scale,'Fondo medido (cm)',number('',20,5000));
+  const updateDepthLabel=()=>{depth.parentNode.firstChild.textContent=depth.dataset.estimated==='true'?'Fondo estimado (cm)':'Fondo medido (cm)'};
   const transform=()=>{
     if(!width.value||!depth.value)throw Error('Escribe el ancho y el fondo medidos del rectángulo.');
     if(frames[index]?.suggested)throw Error('Comprueba los cuatro puntos sugeridos antes de usar la referencia.');
@@ -254,6 +259,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       draft.points=[];draft.geometryMeasured=false;draft.openings=[];draft.items=[];openingFirst=null;renderReview();
     }
     input.dataset.previous=input.value;
+    if(input===depth){delete depth.dataset.estimated;updateDepthLabel()}
   }
   width.onchange=()=>rescale(width);depth.onchange=()=>rescale(depth);
   function renderFrames(){
@@ -270,6 +276,15 @@ export function openRoomScanner({catalog,materials,onImport}){
     const f=frames[index];if(!f)return;
     image.width=f.canvas.width;image.height=f.canvas.height;
     const ctx=image.getContext('2d');ctx.drawImage(f.canvas,0,0);
+    const proposal=proposals[proposalIndex];
+    if(proposal?.frame===f){
+      const p=proposal.points.map(([x,y])=>[x*image.width,y*image.height]);
+      ctx.lineWidth=Math.max(3,image.width/190);ctx.fillStyle='#257bdb38';ctx.strokeStyle='#50a5ff';
+      ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='#ee513a';ctx.lineWidth*=1.5;
+      ctx.beginPath();ctx.moveTo(...p[0]);ctx.lineTo(...p[1]);ctx.stroke();
+    }
     const marker=f.suggested?'#9d6100':'#176cc1';
     ctx.fillStyle=marker;ctx.strokeStyle='white';ctx.lineWidth=2;ctx.font='bold 14px system-ui';
     f.ref.forEach(([x,y],i)=>{
@@ -278,6 +293,76 @@ export function openRoomScanner({catalog,materials,onImport}){
     });
   }
   function selectMode(next,message){mark=next;openingFirst=null;notice(message)}
+  const auto=$('scanAuto');
+  function showProposal(){
+    const p=proposals[proposalIndex];
+    useProposal.hidden=!p;nextProposal.hidden=proposals.length<2;
+    if(!p)return;
+    index=frames.indexOf(p.frame);renderFrames();drawImage();
+    notice('Propuesta '+(proposalIndex+1)+' de '+proposals.length+' · confianza '+(p.matched?'media (otra vista coincide)':'baja (contorno de color y bordes)')+
+      '. Comprueba que el azul sigue el suelo de pared a pared. Mide la arista roja.'+
+      (p.aspect?' El fondo se puede estimar.':' Introduce también el fondo medido.'));
+  }
+  button(auto,'Analizar vídeo o fotos',()=>withJob(async signal=>{
+    proposals=[];proposalIndex=0;useProposal.hidden=nextProposal.hidden=true;drawImage();
+    const available=frames.filter(f=>f.stats.brightness>=43&&f.stats.clipped<.36&&f.stats.sharpness>=2.5);
+    if(!available.length)throw Error('Las vistas tienen poca luz, desenfoque o zonas sin detalle. Añade una toma amplia y estable.');
+    const progress=$('scanProgress');progress.max=available.length;progress.value=0;progress.hidden=false;
+    notice('Buscando bordes de suelo en las vistas disponibles…');
+    const results=[];
+    for(const frame of available){
+      if(signal.aborted)return;
+      const data=imagePixels(frame.canvas,192);
+      const result=await analyseInWorker({...data,floor:true},()=>proposeFloor(data));
+      if(signal.aborted||closed)return;
+      if(result)results.push({...result,frame,aspect:estimateRoomAspect(result.points,data.width,data.height),matched:false});
+      progress.value++;
+    }
+    if(!results.length)throw Error('No se ve un contorno completo y fiable del suelo. Añade una toma más amplia o marca las esquinas visibles.');
+    notice('Comparando las propuestas con otras vistas…');
+    progress.removeAttribute('value');
+    results.sort((a,b)=>b.score-a.score);
+    for(const candidate of results.slice(0,3)){
+      const others=results.filter(q=>q!==candidate&&frameDifference(candidate.frame.stats.descriptor,q.frame.stats.descriptor)>5).slice(0,3);
+      for(const target of others){
+        const data={source:candidate.frame.stats,target:target.frame.stats,points:candidate.points};
+        const matched=await analyseInWorker(data,()=>suggestReference(data.source,data.target,data.points));
+        if(signal.aborted||closed)return;
+        if(matched&&matched.every((p,i)=>Math.hypot(p[0]-target.points[i][0],p[1]-target.points[i][1])<.045)){
+          candidate.matched=true;break;
+        }
+      }
+    }
+    proposals=results.sort((a,b)=>Number(b.matched)-Number(a.matched)||b.score-a.score).slice(0,4);
+    showProposal();
+  }));
+  const useProposal=button(auto,'Usar contorno propuesto',()=>{
+    const p=proposals[proposalIndex];
+    if(!p||job)return;
+    try{
+      const w=width.valueAsNumber;
+      if(!(w>=20&&w<=5000))throw Error('Escribe en «Ancho» la medida real de la arista roja.');
+      const estimated=!depth.value||depth.dataset.estimated==='true';
+      const d=estimated&&p.aspect?round(w/p.aspect):depth.valueAsNumber;
+      if(estimated&&!p.aspect)throw Error('Esta perspectiva necesita dos medidas. Escribe el fondo real antes de usar la propuesta.');
+      if(!(d>=20&&d<=5000))throw Error('El fondo calculado queda fuera de rango. Escribe el fondo real.');
+      calibrate(p.points,w,d);
+      if((draft.points.length||draft.openings.length||draft.items.length)&&!confirm('Esto sustituye el perímetro y borra los elementos marcados. ¿Continuar?'))return;
+      index=frames.indexOf(p.frame);p.frame.ref=p.points;p.frame.suggested=false;
+      depth.value=d;depth.dataset.previous=d;width.dataset.previous=w;
+      if(estimated)depth.dataset.estimated='true';else delete depth.dataset.estimated;
+      updateDepthLabel();
+      draft.points=[[0,0],[w,0],[w,d],[0,d]];
+      draft.geometryMeasured=!estimated;draft.openings=[];draft.items=[];openingFirst=null;mark='reference';
+      proposals=[];useProposal.hidden=nextProposal.hidden=true;
+      renderFrames();drawImage();renderReview();
+      notice(estimated?'Plano creado. Fondo estimado: '+d+' cm. Compruébalo antes de importar.':'Plano creado con tus dos medidas. Revisa la altura y los huecos.');
+    }catch(error){report(error)}
+  });
+  const nextProposal=button(auto,'Ver otra propuesta',()=>{
+    proposalIndex=(proposalIndex+1)%proposals.length;showProposal();
+  });
+  useProposal.hidden=nextProposal.hidden=true;
   const markButtons=$('scanMark');
   button(markButtons,'Marcar referencia',()=>selectMode('reference','Marca las cuatro esquinas de la referencia, en orden.'));
   button(markButtons,'Rehacer referencia de esta vista',()=>{
@@ -309,7 +394,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       transform();
       if((draft.points.length||draft.openings.length)&&!confirm('Esto sustituye el perímetro y sus huecos marcados. ¿Continuar?'))return;
       draft.points=[[0,0],[+width.value,0],[+width.value,+depth.value],[0,+depth.value]];
-      draft.geometryMeasured=true;draft.openings=[];openingFirst=null;renderReview();notice('Perímetro rectangular creado con las medidas aportadas. Revisa altura y huecos.');
+      draft.geometryMeasured=depth.dataset.estimated!=='true';draft.openings=[];openingFirst=null;renderReview();notice('Perímetro rectangular creado con las medidas aportadas. Revisa altura y huecos.');
     }catch(error){report(error)}
   });
   button(markButtons,'Añadir esquina de pared',()=>selectMode('vertex','Marca una esquina a ras del suelo. Añade las esquinas en orden, aunque cambies de vista.'));
@@ -317,6 +402,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     if(job)return;
     const frame=frames.splice(index,1)[0];
     if(frame){frame.canvas.width=0;frame.canvas.height=0}
+    proposals=[];useProposal.hidden=nextProposal.hidden=true;
     index=Math.max(0,Math.min(index,frames.length-1));openingFirst=null;
     renderFrames();drawImage();$('scanWorkspace').hidden=frames.length===0;
     notice('Vista descartada. Las anotaciones ya proyectadas se conservan.');
@@ -512,4 +598,5 @@ export function openRoomScanner({catalog,materials,onImport}){
   };
   renderReview();d.showModal();
 }
+
 

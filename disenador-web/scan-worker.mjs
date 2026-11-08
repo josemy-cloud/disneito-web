@@ -1,8 +1,9 @@
-import {analyseFrame,suggestReference} from './scan-core.mjs';
+import {analyseFrame,suggestReference,proposeFloor} from './scan-core.mjs';
 
 self.onmessage=({data})=>{
-  const {id,pixels,width,height,source,target,points}=data;
-  const result=source?suggestReference(source,target,points):analyseFrame(pixels,width,height);
+  const {id,pixels,width,height,source,target,points,floor}=data;
+  const result=floor?proposeFloor(data):source?suggestReference(source,target,points):analyseFrame(pixels,width,height);
   self.postMessage({id,result});
 };
+
 

@@ -160,3 +160,162 @@ export function suggestReference(source,target,points) {
   return matches.every(Boolean)?matches:null;
 }
 
+
+// Conservative floor proposal for wide images with a visible closed floor.
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const area=pts=>Math.abs(pts.reduce((n,p,i)=>n+cross([0,0],p,pts[(i+1)%pts.length]),0))/2;
+
+function hull(points){
+  const sorted=points.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const half=list=>{
+    const chain=[];
+    for(const p of list){
+      while(chain.length>1&&cross(chain.at(-2),chain.at(-1),p)<=0)chain.pop();
+      chain.push(p);
+    }
+    return chain.slice(0,-1);
+  };
+  return half(sorted).concat(half(sorted.reverse()));
+}
+
+function floorColour(pixels,i){
+  const j=i*4,r=pixels[j],g=pixels[j+1],b=pixels[j+2];
+  return [(r+2*g+b)/4,r-g,b-g];
+}
+function colourDifference(a,b){
+  return Math.hypot((a[0]-b[0])*.62,a[1]-b[1],a[2]-b[2]);
+}
+function seedColour(pixels,w,h,x,y){
+  const values=[[],[],[]];
+  for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+    if(x+dx<0||x+dx>=w||y+dy<0||y+dy>=h)continue;
+    floorColour(pixels,(y+dy)*w+x+dx).forEach((v,i)=>values[i].push(v));
+  }
+  return values.map(arr=>arr.sort((a,b)=>a-b)[arr.length>>1]);
+}
+
+function component(pixels,w,h,x,y,threshold){
+  const seed=seedColour(pixels,w,h,x,y),mask=new Uint8Array(w*h);
+  const queue=new Int32Array(w*h),start=y*w+x;
+  if(seed[0]<42||seed[0]>235||colourDifference(seed,floorColour(pixels,start))>threshold)return null;
+  queue[0]=start;mask[start]=1;
+  let count=1;
+  const compatible=i=>colourDifference(seed,floorColour(pixels,i))<=threshold;
+  const add=(i,beyond)=>{
+    if(mask[i])return;
+    // Bridge a one-pixel joint only when the same floor colour continues on the other side.
+    if(!compatible(i)&&(beyond===-1||!compatible(beyond)))return;
+    mask[i]=1;queue[count++]=i;
+  };
+  for(let n=0;n<count;n++){
+    const i=queue[n],col=i%w;
+    if(col>0)add(i-1,col>1?i-2:-1);
+    if(col<w-1)add(i+1,col<w-2?i+2:-1);
+    if(i>=w)add(i-w,i>=2*w?i-2*w:-1);
+    if(i<w*(h-1))add(i+w,i<w*(h-2)?i+2*w:-1);
+  }
+  return {mask,queue,count};
+}
+
+function orderCorners(q){
+  // Start with the lower edge, left to right, so its length can be measured.
+  let side=0;
+  for(let i=1;i<4;i++){
+    if(q[i][1]+q[(i+1)%4][1]>q[side][1]+q[(side+1)%4][1])side=i;
+  }
+  const ordered=[...q.slice(side),...q.slice(0,side)];
+  return ordered[0][0]<=ordered[1][0]?ordered:[ordered[1],ordered[0],ordered[3],ordered[2]];
+}
+
+function boundaryScore(mask,pixels,w,h,quad){
+  const centre=quad.reduce(([x,y],p)=>[x+p[0]/4,y+p[1]/4],[0,0]);
+  const at=(x,y)=>Math.round(y)*w+Math.round(x);
+  let minimum=1,total=0;
+  for(let i=0;i<4;i++){
+    const [x,y]=quad[i],[x2,y2]=quad[(i+1)%4],l=dist([x,y],[x2,y2]);
+    let nx=-(y2-y)/l,ny=(x2-x)/l;
+    if((centre[0]-(x+x2)/2)*nx+(centre[1]-(y+y2)/2)*ny<0){nx=-nx;ny=-ny}
+    let support=0;
+    for(let k=1;k<=12;k++){
+      const px=x+(x2-x)*k/13,py=y+(y2-y)*k/13;
+      const inner=at(px+nx*2,py+ny*2),outer=at(px-nx*3,py-ny*3);
+      if(mask[inner]===1&&mask[outer]!==1&&colourDifference(floorColour(pixels,inner),floorColour(pixels,outer))>10)support++;
+    }
+    minimum=Math.min(minimum,support/12);total+=support/12;
+  }
+  return minimum>=.66?total/4:0;
+}
+
+function quadFromRegion(region,pixels,w,h){
+  const {mask,queue,count}=region,total=w*h;
+  if(count<total*.12||count>total*.70)return null;
+  const boundary=[];
+  for(let n=0;n<count;n++){
+    const i=queue[n],x=i%w,y=Math.floor(i/w);
+    if(x<5||x>=w-5||y<5||y>=h-5)return null;
+    if(mask[i-1]!==1||mask[i+1]!==1||mask[i-w]!==1||mask[i+w]!==1)boundary.push([x,y]);
+  }
+  const contour=hull(boundary),quad=contour.slice();
+  while(quad.length>4){
+    let weakest=0,loss=Infinity;
+    for(let i=0;i<quad.length;i++){
+      const score=Math.abs(cross(quad[(i+quad.length-1)%quad.length],quad[i],quad[(i+1)%quad.length]));
+      if(score<loss){loss=score;weakest=i}
+    }
+    quad.splice(weakest,1);
+  }
+  if(quad.length!==4||area(quad)/area(contour)<.93||count/area(contour)<.86)return null;
+  const ordered=orderCorners(quad);
+  const near=(ordered[0][1]+ordered[1][1])/2,far=(ordered[2][1]+ordered[3][1])/2;
+  if(near<h*.70||far>h*.67||near-far<h*.18||ordered.some((p,i)=>dist(p,ordered[(i+1)%4])<Math.min(w,h)*.12))return null;
+  const support=boundaryScore(mask,pixels,w,h,ordered);
+  if(!support)return null;
+  return {points:ordered.map(([x,y])=>[x/w,y/h]),score:support*.8+Math.min(1,count/(total*.32))*.2};
+}
+
+export function proposeFloor({pixels,width:w,height:h}){
+  if(w<60||h<60||pixels.length!==w*h*4)return null;
+  const proposals=[];
+  for(const fractionY of [.64,.75,.85])for(const fractionX of [.35,.5,.65]){
+    const x=Math.round(w*fractionX),y=Math.round(h*fractionY);
+    for(const threshold of [12,23]){
+      const region=component(pixels,w,h,x,y,threshold);
+      if(!region)continue;
+      const proposal=quadFromRegion(region,pixels,w,h);
+      if(proposal)proposals.push(proposal);
+    }
+  }
+  proposals.sort((a,b)=>b.score-a.score);
+  const best=proposals[0];
+  if(!best)return null;
+  const rival=proposals.find(q=>q.score>=best.score-.11&&
+    q.points.some((p,i)=>dist(p,best.points[i])>.09));
+  return rival?null:best;
+}
+
+function aspectFromProjection(q,w,h){
+  const [[x0,y0],[x1,y1],[x2,y2],[x3,y3]]=q;
+  const dx1=x1-x2,dx2=x3-x2,dy1=y1-y2,dy2=y3-y2,det=dx1*dy2-dx2*dy1;
+  if(Math.abs(det)<1)return null;
+  const sx=x0-x1+x2-x3,sy=y0-y1+y2-y3;
+  const g=(sx*dy2-dx2*sy)/det,k=(dx1*sy-sx*dy1)/det;
+  if(Math.abs(g)<.08||Math.abs(k)<.08||1+g<.15||1+k<.15||1+g+k<.15)return null;
+  const ax=(1+g)*x1-x0-g*w/2,ay=(1+g)*y1-y0-g*h/2;
+  const bx=(1+k)*x3-x0-k*w/2,by=(1+k)*y3-y0-k*h/2;
+  const focal=Math.sqrt(-(ax*bx+ay*by)/(g*k));
+  const longest=Math.max(w,h);
+  if(!(focal>longest*.40&&focal<longest*2.1))return null;
+  const ratio=Math.hypot(ax/focal,ay/focal,g)/Math.hypot(bx/focal,by/focal,k);
+  return ratio>=.25&&ratio<=4?ratio:null;
+}
+
+export function estimateRoomAspect(points,w,h){
+  const q=points.map(([x,y])=>[x*w,y*h]),base=aspectFromProjection(q,w,h);
+  if(!base)return null;
+  for(let i=0;i<4;i++)for(let axis=0;axis<2;axis++)for(const delta of [-1.5,1.5]){
+    const perturbed=q.map(p=>p.slice());perturbed[i][axis]+=delta;
+    const ratio=aspectFromProjection(perturbed,w,h);
+    if(!ratio||Math.abs(ratio/base-1)>.14)return null;
+  }
+  return base;
+}
