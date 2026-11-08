@@ -5197,11 +5197,21 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
    for(let j=-8;j<=8;j++)B(glass,w*.011,capH*.036,.25,j*w*.044,-capH*.235,1.66,stl);
    for(let j=-2;j<=2;j++)B(glass,w*.013,.58,.28,j*w*.041,-capH*.354,1.81,lcd);
   }else if(pyramid){
-   const skirt=Math.min(4,capH*.19);
-   const hood=new T.Mesh(new T.CylinderGeometry(.52,Math.SQRT2,capH-skirt,4,1,false),m);
-   hood.rotation.y=Math.PI/4;hood.scale.set(w*.485,1,capD/2);hood.position.set(0,(capH+skirt)/2,capZ);a.add(hood);
-   B(a,w*.97,skirt+.12,capD,0,skirt/2,capZ,m);
-   for(let j=-2;j<=2;j++)B(a,w*.012,Math.min(1,skirt*.45),.42,j*w*.04,skirt*.57,capZ+capD/2+.19,kn);
+   const skirt=Math.min(4,capH*.19),lipX=w*.055,lipZ=capD*.13;
+   const canopy=new T.CylinderGeometry(.52,Math.SQRT2,capH-skirt,4,1,false);
+   canopy.rotateY(Math.PI/4);
+   const hood=new T.Mesh(canopy,m);hood.scale.set(w*.485,1,capD/2);hood.position.set(0,(capH+skirt)/2,capZ);a.add(hood);
+   const panelH=skirt*.32;
+   B(a,w*.97,skirt-panelH+.05,capD,0,(skirt+panelH)/2,capZ,m);
+   for(const side of [-1,1]){
+    B(a,lipX,panelH,capD,side*(w*.485-lipX/2),panelH/2,capZ,m);
+    B(a,w*.97-2*lipX,panelH,lipZ,0,panelH/2,capZ+side*(capD-lipZ)/2,m);
+   }
+   const fascia=capZ+capD/2;
+   for(let j=-2;j<=2;j++)B(a,w*.012,skirt*.22,.18,j*w*.04,skirt*.65,fascia-.09,pn);
+   fittings.position.y=panelH+Math.min(.5,skirt*.14);
+   fittings.position.z=capZ*.08;
+   fittings.scale.set(.94,Math.min(1,skirt*.25),.92);
   }else{
    B(a,w*.97,capH,capD,0,capH/2,capZ,m);
    for(let j=-2;j<=2;j++)B(a,w*.012,Math.min(1,capH*.4),.4,j*w*.04,capH*.53,capZ+capD/2+.18,kn);
@@ -5212,9 +5222,14 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
    for(const sign of [-1,1])B(a,panel,height,d,sign*(w-panel)/2,capH+height/2,0,caseMat);
    B(a,w-2*panel,panel,d,0,h-panel/2,0,caseMat);
    B(a,w-2*panel,height-panel,panel,0,capH+(height-panel)/2,back+panel/2,caseMat);
-   if(door>0){
-    B(a,w-2*panel-.3,door,panel,0,capH+panel+door/2,d/2-panel/2,SP.puerta?mp:caseMat);
-    B(a,w*.24,Math.min(.7,panel*.42),.8,0,capH+panel+.6,d/2+.31,hd);
+   const leafW=w-2*panel-.3;
+   if(door>0&&leafW>0){
+    const side=it.fl?-1:1;
+    const pivot=pv(-side*leafW/2,capH+panel+door/2,k0,{t:'d',sg:-side,angle:105,hoodDoor:true});
+    pivot.name='Puerta del armario de la campana';
+    B(pivot,leafW,door,panel,side*leafW/2,0,-panel/2,SP.puerta?mp:caseMat);
+    B(pivot,w*.24,Math.min(.7,panel*.42),.8,side*leafW/2,-door/2+Math.min(1.2,door*.18),.31,hd);
+    stepMV(pivot.userData.mv);
    }
   }else{
    const ductW=w*(pyramid?.35:.34),ductD=capD*(pyramid?.34:angled?.52:.64),ductZ=angled?back+capD*.28:pyramid?capZ:capZ-capD*.15;
@@ -5227,7 +5242,7 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
    B(fittings,filterW,.5,filterD,x,.05,capZ,stl);
    B(fittings,filterW*.91,.35,filterD*.9,x,-.21,capZ,rub);
    for(let j=-5;j<=5;j++)B(fittings,filterW*.04,.24,filterD*.84,x+j*filterW*.08,-.39,capZ,stl);
-   const r=Math.min(1.8,capD*.08),led=new T.Mesh(new T.CylinderGeometry(r,r,.45,20),lit);
+   const r=Math.min(1.8,capD*.08,w*.043),led=new T.Mesh(new T.CylinderGeometry(r,r,.45,20),lit);
    led.position.set(side*w*.402,0,capZ+capD*.19);fittings.add(led);
   }
   return;
@@ -6026,6 +6041,7 @@ function applyItemPartColors(g,it,primary){
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}applyItemPartColors(g,it,mt)}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
+ if(motions.every(m=>m.hoodDoor))return open?'Cerrar puerta del armario':'Abrir puerta del armario';
  if(motions.some(m=>m.umbrella))return open?'Abrir sombrilla':'Cerrar sombrilla';
  if(motions.some(m=>m.lounger))return open?'Bajar respaldo':'Elevar respaldo';
  if(motions.some(m=>m.canopy))return open?'Extender toldo':'Recoger toldo';
