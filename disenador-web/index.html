@@ -38,7 +38,7 @@ body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
 #pvp{display:block;box-sizing:border-box;width:100%;height:calc(100dvh - clamp(170px,32dvh,300px) - 105px);min-height:90px;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
 #pvp select,#pvp input,#pvp button{max-width:100%;box-sizing:border-box}
 @media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}#pvp{height:calc(100dvh - clamp(150px,27dvh,230px) - 90px)}}
-</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=3">
+</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button></div></span>
@@ -455,20 +455,21 @@ function libUI(q=''){
   if(o.c==='Importados'||o.c==='Mi biblioteca')return room.key==='salón';
   return room.cats.includes(o.c);
  };
- const head=document.createElement('div');head.style.cssText='position:sticky;top:-8px;background:inherit;padding:2px 0 8px;z-index:2';
- const title=document.createElement('h4');title.textContent='Mobiliario y objetos';title.style.margin='4px 0 8px';head.append(title);
- const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar en todo el catálogo…';search.value=query;search.style.cssText='width:100%;box-sizing:border-box;margin-bottom:7px';head.append(search);
- const crumb=document.createElement('div');crumb.style.cssText='font-size:11px;color:#aab4c4;margin:2px 0 7px';head.append(crumb);
- const actions=document.createElement('div');actions.style.cssText='display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px';
- const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble personalizado';custom.style.cssText='flex:1;background:#2f6fd1;text-align:center';custom.onclick=createCustomFurniture;actions.append(custom);
- if(CATALOG_MASTER){const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);}head.append(actions);L.append(head);
+ const head=document.createElement('div');head.className='library-header';
+ const title=document.createElement('h4');title.textContent='Mobiliario y objetos';head.append(title);
+ const search=document.createElement('input');search.id='q';search.type='search';search.placeholder='Buscar objetos…';search.setAttribute('aria-label','Buscar en todo el catálogo');search.value=query;head.append(search);
+ const crumb=document.createElement('div');crumb.className='library-crumb';head.append(crumb);
+ const actions=document.createElement('div');actions.className='library-actions';
+ const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble';custom.title='Crear mueble personalizado';custom.onclick=createCustomFurniture;actions.append(custom);
+ if(CATALOG_MASTER){const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.onclick=()=>$('#fmod').click();actions.append(imp);}head.append(actions);L.append(head);
  const content=document.createElement('div');L.append(content);
  const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
+  const grid=document.createElement('div');grid.className='material-grid';content.append(grid);
   const swatch=(m,name,preview)=>{
    const d=document.createElement('button');d.type='button';d.className='sw surface-swatch'+(armed?.m===m?' on':'');
    d.setAttribute('aria-pressed',String(armed?.m===m));d.title=name;
    const caption=document.createElement('span');caption.textContent=name;
-   d.append(preview,caption);d.onclick=()=>armMaterial({m});content.append(d);
+   d.append(preview,caption);d.onclick=()=>armMaterial({m});grid.append(d);
   };
   const photo=src=>{const image=document.createElement('img');image.className='surface-preview';image.alt='';image.src=src;return image};
   for(const def of surfaceMaterials()){
@@ -489,11 +490,11 @@ function libUI(q=''){
   }
   if(!catF&&!roomF&&!qv){
    const label=document.createElement('div');label.textContent='Estancias';label.style.cssText='font-size:12px;color:#b8c2d2;margin:4px 0 8px;font-weight:600';content.append(label);
-   const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px';content.append(grid);
-   const catalogCard=document.createElement('button');catalogCard.type='button';catalogCard.style.cssText='padding:5px;background:#202d40;border:1px solid #3d7be0;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff;grid-column:1 / -1;display:flex;align-items:center;gap:10px';
-   const catalogIcon=document.createElement('div');catalogIcon.textContent='📚';catalogIcon.style.cssText='width:48px;height:48px;display:grid;place-items:center;background:#171f2b;border-radius:5px;font-size:25px;flex:none';catalogCard.append(catalogIcon);
+   const grid=document.createElement('div');grid.className='room-card-grid';content.append(grid);
+   const catalogCard=document.createElement('button');catalogCard.type='button';catalogCard.className='catalog-entry';catalogCard.style.cssText='padding:5px;background:#202d40;border:1px solid #3d7be0;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff;grid-column:1 / -1;display:flex;align-items:center;gap:10px';
+   const catalogIcon=document.createElement('div');catalogIcon.className='catalog-entry-icon';catalogIcon.textContent='📚';catalogIcon.style.cssText='width:48px;height:48px;display:grid;place-items:center;background:#171f2b;border-radius:5px;font-size:25px;flex:none';catalogCard.append(catalogIcon);
    const catalogInfo=document.createElement('div');const catalogName=document.createElement('div');catalogName.textContent='Catálogos y fabricantes';catalogName.style.cssText='font-size:12px;font-weight:600';catalogInfo.append(catalogName);const catalogDesc=document.createElement('small');catalogDesc.textContent='Productos reales, marcas y modelos 3D';catalogDesc.style.cssText='font-size:10px;color:#aab4c4';catalogInfo.append(catalogDesc);catalogCard.append(catalogInfo);catalogCard.onclick=async()=>{await catLoad();catUI()};grid.append(catalogCard);
-   rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>!x.o.libraryHidden&&belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
+   rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>!x.o.libraryHidden&&belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.className='room-card';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
     if(chosen){const im=document.createElement('img');im.src=ROOM_PHOTOS[room.key]||ROOM_PHOTOS.exterior;im.alt='Fotografía real de '+room.n;im.loading='lazy';im.decoding='async';im.referrerPolicy='no-referrer';im.style.cssText='width:100%;height:112px;object-fit:cover;object-position:center;background:#171a20;border-radius:4px;display:block';im.onerror=()=>{im.removeAttribute('src');im.alt='Fotografía de portada no disponible';im.style.background='linear-gradient(135deg,#303945,#596575)'};card.append(im)}
     else{const blank=document.createElement('div');blank.textContent='＋';blank.style.cssText='height:82px;display:grid;place-items:center;background:#171a20;border-radius:4px;font-size:30px;color:#8fb4ff';card.append(blank)}
     const name=document.createElement('div');name.textContent=room.n;name.style.cssText='font-size:12px;font-weight:600;margin-top:5px';card.append(name);
@@ -4743,6 +4744,7 @@ function setMobilePanel(panelId){
   }
 }
 const useCompact=()=>compact.matches&&!document.body.classList.contains('ui-legacy');
+mobileMenu.textContent='☰ Menú';
 mobileMenu.onclick=()=>setMobilePanel(mobileActions.classList.contains('adaptive-open')?null:'compactActions');
 for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Propiedades']]){
   const button=$('#'+buttonId),panel=$('#'+panelId);
@@ -4757,7 +4759,7 @@ for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Pro
     }
   };
   const labelPanel=()=>{
-    button.textContent=useCompact()?label:buttonId==='tl'?'◧ Izq.':'Der. ◨';
+    button.textContent=useCompact()?(buttonId==='tl'?'▦ ':'☷ ')+label:buttonId==='tl'?'◧ Izq.':'Der. ◨';
     button.setAttribute('aria-expanded',String(useCompact()?panel.classList.contains('adaptive-open'):panel.style.display!=='none'));
   };
   compact.addEventListener('change',labelPanel);
