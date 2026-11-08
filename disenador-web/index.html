@@ -256,10 +256,10 @@ if(draftAccount)try{
    localStorage.setItem('auto:owner',draftAccount);
  }
 }catch{}
-function commit(){roomsUpdate();H.push(JSON.stringify(S));F=[];try{localStorage.setItem(draftKey,H[H.length-1])}catch(e){}setCloudSaveState('pending','Cambios guardados localmente; sincronización pendiente.');psaveSoon();refresh()}
+function commit(){roomsUpdate();commitQ();refresh()}
 function loadS(s){if(drag?.group||drag?.marquee)drag=null;S=migrate(JSON.parse(s));roomsUpdate();sel=null;refresh()}
-function undo(){if(H.length>1){F.push(H.pop());loadS(H[H.length-1])}}
-function redo(){if(F.length){const s=F.pop();H.push(s);loadS(s)}}
+function undo(){if(H.length>1){F.push(H.pop());loadS(H[H.length-1]);persistEdit(JSON.stringify(S))}}
+function redo(){if(F.length){const s=F.pop();H.push(s);loadS(s);persistEdit(JSON.stringify(S))}}
 const nid=()=>S.id++,get=()=>sel&&S[sel.k]?.find(e=>e.id==sel.id);
 const len=w=>Math.hypot(w.x2-w.x1,w.y2-w.y1);
 /* ===== Biblioteca inicial (modelos paramétricos propios) ===== */
@@ -881,7 +881,7 @@ function props(){P.innerHTML='';const e=get();
     if(e.t==='mod'&&e.cfg?.lay==='esquina riñón')e.cfg.kor=e.cfg.kor==='der'?'izq':'der';
     else e.fl=!e.fl;
    });
-   appendMotionButton(P,e,motions,()=>{commitQ();psaveSoon()},true);
+   appendMotionButton(P,e,motions,commitQ,true);
   }
   if(hasItemLight(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
   partColorUI(e);if(e.cfg)cfgUI(e);
@@ -5018,12 +5018,12 @@ $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR'
 function vw(t){walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
 $('#vW').onclick=()=>{if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)r3.domElement.requestPointerLock?.()};
-$('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){S=fresh();S.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';sel=null;commit()}};
+$('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
 $('#bS').onclick=()=>{try{localStorage.setItem('p:'+S.nm,JSON.stringify(S));alert('Guardado: '+S.nm)}catch(e){alert('No se pudo guardar (¿demasiadas imágenes?). Usa «Exportar proyecto».')}};
-$('#bO').onclick=()=>{const n=Object.keys(localStorage).filter(k=>k.startsWith('p:')).map(k=>k.slice(2));if(!n.length)return alert('No hay proyectos guardados.');const v=prompt('Proyectos guardados:\n'+n.join('\n')+'\n\nEscribe el nombre:',n[0]);if(v&&localStorage.getItem('p:'+v)){S=migrate(JSON.parse(localStorage.getItem('p:'+v)));sel=null;commit()}};
+$('#bO').onclick=()=>{const n=Object.keys(localStorage).filter(k=>k.startsWith('p:')).map(k=>k.slice(2));if(!n.length)return alert('No hay proyectos guardados.');const v=prompt('Proyectos guardados:\n'+n.join('\n')+'\n\nEscribe el nombre:',n[0]);if(v&&localStorage.getItem('p:'+v)){openDraft(localStorage.getItem('p:'+v))}};
 const dl=(u,n)=>{const a=document.createElement('a');a.href=u;a.download=n;a.click()};
 $('#bE').onclick=()=>dl(URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})),S.nm+'.json');
-$('#bI').onclick=()=>$('#fi').click();$('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{S=migrate(JSON.parse(t));sel=null;commit();libUI()})};
+$('#bI').onclick=()=>$('#fi').click();$('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const revision=projectTransition;f.text().then(t=>{if(revision!==projectTransition)return;openDraft(t);libUI()}).catch(e=>alert('No se pudo importar el proyecto: '+e.message))};
 $('#bP2').onclick=()=>{const w=mode;draw();c2.toBlob(b=>dl(URL.createObjectURL(b),S.nm+'-plano.png'))};
 $('#bP3').onclick=()=>{if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render(sc,cam);r3.domElement.toBlob(b=>{dl(URL.createObjectURL(b),S.nm+'-3d-HD.png');setQ()})};
 
@@ -5223,7 +5223,7 @@ function psd(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[
 function pdist(A,B){let best={d:1e9};[[A,B],[B,A]].forEach(([X,Y],f)=>X.forEach(p=>{for(let n=0;n<4;n++){const r=psd(p,Y[n],Y[(n+1)%4]);if(r.d<best.d)best=f?{d:r.d,p:r.q,q:r.p}:r}}));return best}
 function mres(m){const A=rectOf(m.a),B=rectOf(m.b);return A&&B?pdist(A,B):null}
 function setGap(m,r,v){const A=S[m.a.k].find(e=>e.id==m.a.id),B=S[m.b.k].find(e=>e.id==m.b.id),u=[(r.q[0]-r.p[0])/(r.d||1),(r.q[1]-r.p[1])/(r.d||1)],dd=v-r.d;if(m.b.k=='i'){B.x+=u[0]*dd;B.y+=u[1]*dd}else if(m.a.k=='i'){A.x-=u[0]*dd;A.y-=u[1]*dd}}
-function commitQ(){H.push(JSON.stringify(S));F=[];try{localStorage.setItem(draftKey,H[H.length-1])}catch(e){}}
+function commitQ(){const data=JSON.stringify(S);H.push(data);F=[];persistEdit(data)}
 const vel={x:0,z:0};
 function inside(x,z){let c=0;S.w.forEach(w=>{if((w.y1>z)!=(w.y2>z)&&x<w.x1+(z-w.y1)/(w.y2-w.y1)*(w.x2-w.x1))c++});return c%2==1}
 function blocked(x,z){const R0=25;for(const w of S.w){const s=segd(w,x,z);if(s.d<w.t/2+R0){const o=S.o.find(o=>o.w==w.id&&o.ty=='d'&&Math.abs(o.p-s.p)<o.wd/2-10&&o.s<=15);if(!(o&&o.op&&o.op[0])||(openingKind(o)==='corredera'&&s.p>o.p-10))return true}}
@@ -6390,28 +6390,99 @@ function cloudBar(redraw){
  d.append(document.createTextNode('Proyectos en la nube · '+(SES?.email||'')+' '),button);
  return d;
 }
-let curProj=null,psT=0;try{curProj=localStorage.getItem('curProj')}catch(e){}
+const activeProjectKey=draftKey+':active';
+const projectDraftKey=id=>draftKey+':project:'+id;
+const pendingSaves=new Map(),runningSaves=new Map();
+let curProj=null,projectTransition=0;
+function setActiveProject(id){
+ curProj=id;
+ try{if(id)localStorage.setItem(activeProjectKey,id);else localStorage.removeItem(activeProjectKey)}catch(e){}
+ const button=$('#bPry');if(button)button.textContent='☁ Mi espacio';
+}
+function readProjectDraft(id){try{return localStorage.getItem(projectDraftKey(id))}catch(e){return null}}
+function persistEdit(data){
+ let savedLocally=false;
+ try{localStorage.setItem(curProj?projectDraftKey(curProj):draftKey,data);savedLocally=true}catch(e){}
+ if(curProj)queueSave(curProj,data);
+ else setCloudSaveState(savedLocally?'local':'error',savedLocally?'Borrador en este navegador. Crea un proyecto para sincronizarlo.':'No se pudo guardar el borrador. Exporta el proyecto para conservarlo.');
+}
+function openDraft(data){
+ const next=migrate(JSON.parse(data));
+ if(!next)throw new Error('Archivo de proyecto no válido.');
+ projectTransition++;
+ setActiveProject(null);H=[JSON.stringify(next)];F=[];
+ loadS(H[0]);persistEdit(JSON.stringify(S));
+}
 function pushVer(rec,data,why,now){const v=rec.versions=rec.versions||[],l=v[v.length-1];if(why=='auto'&&l&&now-l.t<6e5)return false;v.push({t:now,data,why});while(v.length>20)v.shift();return true}
 function setCloudSaveState(state,detail=''){
  const el=document.getElementById('saveCloudState');if(!el)return;
  const map={pending:['◷ Cambios pendientes','#d6a84f'],saving:['☁ Guardando…','#83b6ee'],synced:['☁ ✓ Sincronizado','#77d69a'],local:['▣ Guardado localmente','#aeb8c8'],offline:['☁ Sin conexión','#e5ad65'],error:['⚠ Error al guardar','#ff8e86']};
  const v=map[state]||map.pending;el.textContent=v[0];el.style.color=v[1];el.title=detail||v[0];
 }
-async function psave(why){if(!curProj)return;setCloudSaveState('saving');try{const r=await PST().get(curProj);if(!r)throw new Error('No se encuentra el proyecto activo.');const now=Date.now(),d=JSON.stringify(S);r.data=d;r.updated=now;pushVer(r,d,why||'auto',now);await PST().put(r);setCloudSaveState(SES?'synced':'local',SES?'El servidor de Supabase ha confirmado el guardado.':'Guardado en este navegador; inicia sesión para sincronizarlo.');const b=document.getElementById('bPry');if(b)b.textContent='☁ Mi espacio'}catch(e){setCloudSaveState(navigator.onLine?'error':'offline',e.message||'No se pudo guardar');console.error('Error guardando proyecto:',e)}}
-const psaveSoon=()=>{clearTimeout(psT);if(!curProj){setCloudSaveState('local','Cambios guardados automáticamente en este navegador; crea un proyecto para sincronizarlo.');return}setCloudSaveState('pending','Hay cambios pendientes de sincronización.');psT=setTimeout(()=>psave('auto'),1500)};
+function queueSave(id,data,why='auto'){
+ clearTimeout(pendingSaves.get(id)?.timer);
+ const job={data,why,timer:null};
+ pendingSaves.set(id,job);
+ if(curProj===id)setCloudSaveState('pending','Hay cambios pendientes de sincronización.');
+ if(why==='auto')job.timer=setTimeout(()=>flushSave(id),1500);
+}
+function flushSave(id){
+ const job=pendingSaves.get(id);
+ if(!job)return runningSaves.get(id);
+ clearTimeout(job.timer);
+ pendingSaves.delete(id);
+ const store=PST();
+ const isCurrent=()=>curProj===id&&runningSaves.get(id)===run&&!pendingSaves.has(id);
+ const run=Promise.resolve(runningSaves.get(id)).then(async()=>{
+  if(isCurrent())setCloudSaveState('saving');
+  try{
+   const r=await store.get(id);
+   if(!r)throw new Error('No se encuentra el proyecto activo.');
+   const now=Date.now();r.data=job.data;r.updated=now;pushVer(r,job.data,job.why,now);
+   await store.put(r);
+   try{if(readProjectDraft(id)===job.data)localStorage.removeItem(projectDraftKey(id))}catch(e){}
+   if(isCurrent())setCloudSaveState(SES?'synced':'local','El almacén ha confirmado el guardado.');
+   return true;
+  }catch(e){
+   if(isCurrent())setCloudSaveState(navigator.onLine?'error':'offline',e.message||'No se pudo guardar');
+   console.error('Error guardando proyecto:',e);
+   return false;
+  }finally{if(runningSaves.get(id)===run)runningSaves.delete(id)}
+ });
+ runningSaves.set(id,run);
+ return run;
+}
+async function psave(){
+ if(!curProj)return;
+ const id=curProj,data=JSON.stringify(S);
+ try{localStorage.setItem(projectDraftKey(id),data)}catch(e){}
+ queueSave(id,data,'manual');return flushSave(id);
+}
 const dlj=(n,t)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download=n;a.click()};
-async function newProj(name,data){const id='p'+Date.now(),now=Date.now();await PST().put({id,name,created:now,updated:now,data,versions:[{t:now,data,why:'creación'}]});setCloudSaveState(SES?'synced':'local',SES?'El servidor ha confirmado la creación del proyecto.':'Proyecto guardado en este navegador.');return id}
-async function openProj(id){const r=await PST().get(id);if(!r)return;curProj=id;try{localStorage.setItem('curProj',id)}catch(e){}H=[r.data];F=[];loadS(r.data);const b=document.getElementById('bPry');if(b)b.textContent='📁 '+r.name}
+async function newProj(name,data){const id='p'+Date.now(),now=Date.now();await PST().put({id,name,created:now,updated:now,data,versions:[{t:now,data,why:'creación'}]});return id}
+async function openProj(id){
+ const revision=++projectTransition;
+ await flushSave(id);
+ const draft=readProjectDraft(id);
+ let r;try{r=await PST().get(id)}catch(e){if(!draft)throw e}
+ if(revision!==projectTransition)return;
+ if(!r&&!draft)throw new Error('No se encuentra el proyecto.');
+ const data=readProjectDraft(id)||r?.data;
+ if(!data)throw new Error('No se pudo cargar el proyecto.');
+ setActiveProject(id);H=[data];F=[];loadS(data);
+ if(r)$('#bPry').textContent='📁 '+r.name;
+ setCloudSaveState(readProjectDraft(id)?'pending':SES?'synced':'local');
+}
 async function projLib(){let box=document.getElementById('pryBox');if(box){box.remove();return}box=document.createElement('div');box.id='pryBox';box.style.cssText='position:fixed;inset:60px 20px 20px 20px;z-index:50;background:#1a1d24;border:1px solid #556;border-radius:8px;padding:12px;overflow:auto;color:#eee;font:13px Arial';document.body.append(box);
  const btn2=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.style.margin='2px 3px';e.onclick=async()=>{try{await fn()}catch(x){alert('Error: '+(x&&x.message||x))}};return e},draw=async()=>{const L=await PST().list();box.innerHTML='<b>☁ Mi espacio</b> <small>Tus diseños guardados</small> <button id=pyx style="float:right">✕</button><br>';box.querySelector('#pyx').onclick=()=>box.remove();/* La gestión de la cuenta está en el apartado independiente «Mi cuenta». */
-  box.append(btn2('+ Guardar el diseño actual como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;curProj=await newProj(n,JSON.stringify(S));try{localStorage.setItem('curProj',curProj)}catch(e){}draw()}));
+  box.append(btn2('+ Guardar el diseño actual como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;const revision=++projectTransition,project=S,data=JSON.stringify(S);const id=await newProj(n,data);if(revision===projectTransition&&S===project){setActiveProject(id);if(JSON.stringify(S)!==data)persistEdit(JSON.stringify(S));else setCloudSaveState(SES?'synced':'local')}draw()}));
   if(curProj)box.append(btn2('💾 Guardar versión ahora',async()=>{await psave('manual');draw()}));
   const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';fi.onchange=async()=>{const j=JSON.parse(await fi.files[0].text());if(j.format!='proyecto-v1'||!j.data)throw new Error('archivo no válido');await newProj((j.name||'Importado')+' (importado)',j.data);draw()};box.append(btn2('⬆ Importar proyecto…',()=>fi.click()),fi);
   const t=document.createElement('div');t.style.marginTop='10px';L.forEach(p=>{const row=document.createElement('div');row.style.cssText='padding:6px;border-bottom:1px solid #333;'+(p.id==curProj?'background:#22304a':'');row.append(document.createTextNode(p.name+' · '+new Date(p.updated).toLocaleString()+' · '+p.nv+' versiones '));
-   row.append(btn2('Abrir',async()=>{await openProj(p.id);draw()}),btn2('Renombrar',async()=>{const n=prompt('Nuevo nombre:',p.name);if(!n)return;const r=await PST().get(p.id);r.name=n;await PST().put(r);draw()}),btn2('Duplicar',async()=>{const r=await PST().get(p.id);await newProj(r.name+' (copia)',r.data);draw()}),
+   row.append(btn2('Abrir',async()=>{await openProj(p.id);draw()}),btn2('Renombrar',async()=>{const n=prompt('Nuevo nombre:',p.name);if(!n)return;if(await flushSave(p.id)===false)throw new Error('Guarda los cambios pendientes antes de renombrar.');const r=await PST().get(p.id);r.name=n;await PST().put(r);draw()}),btn2('Duplicar',async()=>{const r=await PST().get(p.id);await newProj(r.name+' (copia)',r.data);draw()}),
    btn2('Exportar',async()=>{const r=await PST().get(p.id);dlj(r.name.replace(/[^\w-]+/g,'_')+'.proyecto.json',JSON.stringify({format:'proyecto-v1',name:r.name,data:r.data}))}),
-   btn2('Versiones',async()=>{const r=await PST().get(p.id),vb=document.createElement('div');vb.style.cssText='margin:6px 0 6px 14px;font-size:12px';(r.versions||[]).slice().reverse().forEach(v=>{const l=document.createElement('div');l.append(document.createTextNode(new Date(v.t).toLocaleString()+' · '+v.why+' '));l.append(btn2('Restaurar',async()=>{if(!confirm('Se restaurará esta versión (se guarda antes la actual como versión).'))return;const r2=await PST().get(p.id);pushVer(r2,r2.data,'antes de restaurar',Date.now()+1);r2.data=v.data;r2.updated=Date.now();await PST().put(r2);await openProj(p.id);draw()}));vb.append(l)});row.append(vb)}),
-   btn2('Eliminar',async()=>{if(!confirm('¿Eliminar "'+p.name+'" y todas sus versiones?'))return;await PST().del(p.id);if(curProj==p.id){curProj=null;try{localStorage.removeItem('curProj')}catch(e){}}draw()}));t.append(row)});box.append(t);if(!L.length)box.append(document.createTextNode(' Aún no hay proyectos.'))};draw()}
+   btn2('Versiones',async()=>{const r=await PST().get(p.id),vb=document.createElement('div');vb.style.cssText='margin:6px 0 6px 14px;font-size:12px';(r.versions||[]).slice().reverse().forEach(v=>{const l=document.createElement('div');l.append(document.createTextNode(new Date(v.t).toLocaleString()+' · '+v.why+' '));l.append(btn2('Restaurar',async()=>{if(!confirm('Se restaurará esta versión (se guarda antes la actual como versión).'))return;if(await flushSave(p.id)===false||readProjectDraft(p.id))throw new Error('Guarda los cambios pendientes antes de restaurar.');const r2=await PST().get(p.id);pushVer(r2,r2.data,'antes de restaurar',Date.now()+1);r2.data=v.data;r2.updated=Date.now();await PST().put(r2);await openProj(p.id);draw()}));vb.append(l)});row.append(vb)}),
+   btn2('Eliminar',async()=>{if(!confirm('¿Eliminar "'+p.name+'" y todas sus versiones?'))return;if(await flushSave(p.id)===false)throw new Error('No se pudieron guardar los cambios pendientes.');await PST().del(p.id);try{localStorage.removeItem(projectDraftKey(p.id))}catch(e){}if(curProj===p.id)openDraft(JSON.stringify(S));draw()}));t.append(row)});box.append(t);if(!L.length)box.append(document.createTextNode(' Aún no hay proyectos.'))};draw()}
 /* ===== VER EN REALIDAD: vista limpia, iluminación y exposición de cámara, render por acumulación y panorama 360° ===== */
 const RFD=[[[0,0,-1],[0,1,0]],[[1,0,0],[0,1,0]],[[0,0,1],[0,1,0]],[[-1,0,0],[0,1,0]],[[0,1,0],[0,0,1]],[[0,-1,0],[0,0,-1]]];
 const EQ=(lon,lat)=>{const d=[Math.cos(lat)*Math.sin(lon),Math.sin(lat),-Math.cos(lat)*Math.cos(lon)],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];let bi=0,bd=-2;RFD.forEach(([f],i)=>{const q=dot(d,f);if(q>bd){bd=q;bi=i}});const[f,u]=RFD[bi],r=cr(f,u);return[bi,dot(d,r)/bd,dot(d,u)/bd]};
@@ -7058,7 +7129,15 @@ $('#bPbr').onclick=pbrLib;$('#bPry').onclick=projLib;$('#bAcc').onclick=accountP
 /* Arranque */
 window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
 window.addEventListener('storage',e=>{if(e.key==='sbSes'&&!e.newValue&&REMEMBER_SESSION&&!localStorage.getItem('sbSes'))location.reload()});
-try{const a=localStorage.getItem(draftKey);if(a){S=JSON.parse(a);H=[a]}}catch(e){}
+try{
+ const active=localStorage.getItem(activeProjectKey),draft=active&&readProjectDraft(active);
+ const data=draft||(!active&&localStorage.getItem(draftKey));
+ if(data){S=migrate(JSON.parse(data));H=[JSON.stringify(S)]}
+ if(active){
+  if(draft){setActiveProject(active);setCloudSaveState('pending','Borrador recuperado. Guarda para sincronizarlo.')}
+  else openProj(active).catch(e=>setCloudSaveState('error',e.message));
+ }
+}catch(e){}
 try{JSON.parse(localStorage.getItem('ml')||'[]').forEach(o=>{ML.push(o);LIB.push(o)})}catch(e){}
 r3.outputEncoding=r4.outputEncoding=T.sRGBEncoding;r3.shadowMap.type=T.PCFSoftShadowMap;
 drawTools();libUI();hint();setSun();setQ();refresh();animate();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});
