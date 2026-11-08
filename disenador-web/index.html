@@ -668,6 +668,7 @@ function libUI(q=''){
   if(!matches.length){const empty=document.createElement('div');empty.textContent='Todavía no hay modelos de catálogo para esta estancia. Puedes crear un mueble a medida o importar un modelo 3D.';empty.style.cssText='font-size:12px;color:#aab4c4;padding:12px 4px';content.append(empty)}
   const renderItem=({o,ix},parent)=>{const card=document.createElement('button');card.type='button';card.className='it';card.style.cssText='display:flex;gap:8px;align-items:center;padding:6px;text-align:left;width:100%;min-width:0';
    const im=document.createElement('img');im.src=thumb(ix);im.alt='Vista previa 3D de '+o.n;im.style.cssText='width:68px;height:68px;object-fit:contain;flex:none;background:#252a33;border-radius:5px';card.append(im);
+   thumbnailRefresh.get(o)?.then(()=>{if(im.isConnected)im.src=thumb(ix)});
    const info=document.createElement('span');info.style.cssText='min-width:0;overflow-wrap:anywhere';const nm=document.createElement('strong');nm.textContent=o.n;nm.style.cssText='display:block;font-size:12px';info.append(nm);
    const sm=document.createElement('small');sm.textContent=(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+' × '+o.d+' × '+o.h+' cm';sm.style.cssText='display:block;color:#aab4c4;font-size:10px;margin-top:3px';info.append(sm);card.append(info);card.onclick=()=>openPrev(ix);parent.append(card)};
   if(matches.length){
@@ -1292,10 +1293,10 @@ new ResizeObserver(()=>{resize();draw()}).observe($('#view'));
 const M=(c,r=.55,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
 /* Cajas paramétricas con cantos suavizados: conserva las cotas exteriores y evita el aspecto de bloques CAD sin acabado. */
 const BOX_GEO_CACHE=new Map();
-function boxGeo(w,h,d){
- const bevel=Math.min(1.15,w*.035,h*.035,d*.035);
+function boxGeo(w,h,d,edgeRadius){
+ const bevel=edgeRadius==null?Math.min(1.15,w*.035,h*.035,d*.035):Math.min(edgeRadius,w/4,h/4,d/4);
  if(!Number.isFinite(bevel)||Math.min(w,h,d)<.8||bevel<.025)return new T.BoxGeometry(w,h,d);
- const key=[w,h,d].map(v=>Math.round(v*100)/100).join('|');
+ const key=[w,h,d,edgeRadius??0].map(v=>Math.round(v*100)/100).join('|');
  if(BOX_GEO_CACHE.has(key))return BOX_GEO_CACHE.get(key);
  const shape=new T.Shape(),x=w/2-bevel,y=h/2-bevel;
  shape.moveTo(-x,-y);shape.lineTo(x,-y);shape.lineTo(x,y);shape.lineTo(-x,y);shape.closePath();
@@ -1305,7 +1306,7 @@ function boxGeo(w,h,d){
  if(BOX_GEO_CACHE.size>280)BOX_GEO_CACHE.clear();
  BOX_GEO_CACHE.set(key,geo);return geo;
 }
-function B(g,w,h,d,x,y,z,mt){const m=new T.Mesh(boxGeo(w,h,d),mt);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;g.add(m);return m}
+function B(g,w,h,d,x,y,z,mt,edgeRadius){const m=new T.Mesh(boxGeo(w,h,d,edgeRadius),mt);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;g.add(m);return m}
 /*ROOMS_START*/
 /* ===== Esquema v2 · habitaciones · techos · muros ocultos ===== */
 const ROOMCATS=['Cocina','Salón','Sala de estar','Comedor','Dormitorio principal','Dormitorio individual','Baño','Aseo','Lavadero','Vestidor','Pasillo','Recibidor','Despacho','Garaje','Trastero'];
@@ -3559,36 +3560,60 @@ function buildTerraceBBQ(g,it,primary){
  stepMV(mv(lid,{it,k:0,t:'u',angle:86}));
 }
 
+let upholsteryWeave;
+function sofaWeave(){
+ if(upholsteryWeave)return upholsteryWeave;
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=64;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#777';ctx.fillRect(0,0,64,64);
+ for(let y=0;y<64;y+=4)for(let x=0;x<64;x+=4){
+  const warp=(x/4+y/4)%2===0;
+  ctx.fillStyle=warp?'#aaa':'#555';
+  ctx.fillRect(x+(warp?1:0),y+(warp?0:1),warp?2:4,warp?4:2);
+ }
+ const map=new T.CanvasTexture(canvas);
+ map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(.15,.15);map.anisotropy=4;
+ return upholsteryWeave=map;
+}
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),frame=M(it.col||'#a88f78',.85,.02),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
- const seatY=h*.285,seatH=h*.135,backY=h*.64,backH=h*.44;
+ const pilot=it.t==='sofa';
+ if(pilot){upholstery.bumpMap=sofaWeave();upholstery.bumpScale=.18}
+ const seatY=h*.285,seatH=h*(pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
-  const r=Math.min(rad,sx*.18,sz*.18),sh=new T.Shape();
+  const bevel=pilot?Math.min(3.2,sy*.24,sx*.10,sz*.10):Math.min(1.8,sy*.16),sh=new T.Shape();
+  if(pilot){sx-=2*bevel;sz-=2*bevel}
+  const r=Math.min(rad,sx*.18,sz*.18);
   sh.moveTo(-sx/2+r,-sz/2);sh.lineTo(sx/2-r,-sz/2);sh.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);
   sh.lineTo(sx/2,sz/2-r);sh.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);sh.lineTo(-sx/2+r,sz/2);
   sh.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);sh.lineTo(-sx/2,-sz/2+r);sh.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);sh.closePath();
-  const bevel=Math.min(1.8,sy*.16),geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
+  const geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:pilot?8:16});
   geo.translate(0,0,bevel);geo.rotateX(Math.PI/2);
   const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy,z);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
+  const bevel=pilot?Math.min(3.1,sz*.24,sx*.10,sy*.10):Math.min(1.6,sz*.16);
+  const depth=pilot?sz-2*bevel:sz;
+  if(pilot){sx-=2*bevel;sy-=2*bevel}
   const r=Math.min(rad,sx*.18,sy*.16),sh=new T.Shape();
   sh.moveTo(-sx/2+r,-sy/2);sh.lineTo(sx/2-r,-sy/2);sh.quadraticCurveTo(sx/2,-sy/2,sx/2,-sy/2+r);
   sh.lineTo(sx/2,sy/2-r);sh.quadraticCurveTo(sx/2,sy/2,sx/2-r,sy/2);sh.lineTo(-sx/2+r,sy/2);
   sh.quadraticCurveTo(-sx/2,sy/2,-sx/2,sy/2-r);sh.lineTo(-sx/2,-sy/2+r);sh.quadraticCurveTo(-sx/2,-sy/2,-sx/2+r,-sy/2);sh.closePath();
-  const geo=new T.ExtrudeGeometry(sh,{depth:sz,bevelEnabled:true,bevelSegments:4,bevelSize:Math.min(1.6,sz*.16),bevelThickness:Math.min(1.4,sz*.14),curveSegments:16});
-  const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-sz/2);tag(mesh,'');parent.add(mesh);return mesh;
+  const geo=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:pilot?bevel:Math.min(1.4,sz*.14),curveSegments:pilot?8:16});
+  const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-depth/2);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const seats=Math.max(2,Math.min(4,Math.round(w/72)));
  const addSeat=(x,z,sx,sz)=>{
   const bottom=h*.08;
-  tag(B(g,sx*.995,seatY-bottom,sz*.995,x,(seatY+bottom)/2,z,frame),'frame');
-  for(const side of [-1,1])for(const end of [-1,1]){
-   const foot=new T.Mesh(new T.CylinderGeometry(2,1.7,bottom,14),feet);
-   foot.position.set(x+side*sx*.36,bottom/2,z+end*sz*.34);tag(foot,'feet');g.add(foot);
+  if(!pilot){
+   tag(B(g,sx*.995,seatY-bottom,sz*.995,x,(seatY+bottom)/2,z,frame),'frame');
+   for(const side of [-1,1])for(const end of [-1,1]){
+    const foot=new T.Mesh(new T.CylinderGeometry(2,1.7,bottom,14),feet);
+    foot.position.set(x+side*sx*.36,bottom/2,z+end*sz*.34);tag(foot,'feet');g.add(foot);
+   }
   }
   tag(pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(6,sx*.12)),'seat');
   tag(tube([x-sx*.36,seatY+seatH*.51,z+sz/2],[x+sx*.36,seatY+seatH*.51,z+sz/2],.24,stitch),'piping');
@@ -3625,13 +3650,17 @@ case'sofa':{
   tag(B(g,span,seatY-h*.08,3,sideX,(seatY+h*.08)/2,join,frame),'frame');
  }else{
   const count=modular?4:seats,usableW=w*.82,gap=w*.012,cw=(usableW-gap*(count-1))/count;
-  for(let k=0;k<count;k++){const x=-usableW/2+cw/2+k*(cw+gap);addSeat(x,-d*.015,cw,d*.53);addBack(x,cw*.96,-d*.303)}
+  if(pilot)tag(B(g,w*.86,seatY-h*.08,d*.66,0,(seatY+h*.08)/2,-d*.015,frame,2.8),'frame');
+  for(let k=0;k<count;k++){
+   const x=-usableW/2+cw/2+k*(cw+gap);
+   addSeat(x,-d*.015,cw,d*(pilot?.64:.53));addBack(x,cw*.96,-d*.303);
+  }
  }
  // Laterales apoyados en el bastidor. El retorno lleva su propio respaldo.
  for(const side of corner?[-1]:[-1,1]){
   const ax=side*w*.45,armD=chaise?d*.40:corner?d*.40:d*.72;
   const armZ=chaise?-d*.116:corner?-d*.17:-d*.025;
-  tag(B(g,w*.095,h*.53,armD,ax,h*.08+h*.53/2,armZ,frame),'frame');
+  tag(B(g,w*.095,h*.53,armD,ax,h*.08+h*.53/2,armZ,frame,pilot?2.7:undefined),'frame');
   tag(pad(g,ax,h*.61,armZ,w*.095,h*.10,armD,upholstery,4),'arms');
   for(const end of [-1,1]){
    const leg=new T.Mesh(new T.CylinderGeometry(2,1.7,h*.08,16),feet);
@@ -5011,7 +5040,8 @@ const r4=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}),sc4=ne
 let PV=[],pvIt=null,pvOpen=false,pendingModel=null;
 function buildPrev(it,room){g4.clear();const sv=MV;MV=PV=[];it.op=it.op||[];const g=new T.Group();buildItemGeometry(g,it,M(it.col,.5,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));MV=sv;g4.add(g);
  if(room){const f=new T.Mesh(new T.PlaneGeometry(400,400),sm(S.fl.m,'#ccc',400,400,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r));f.rotation.x=-Math.PI/2;f.position.set(0,-.1,100);g4.add(f);const wm=sm(null,S.pt);[[150,125,-it.d/2-2,400,250,4],[-it.w/2-2,125,100,4,250,400]].forEach(([x,y,z,w,h,d])=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),wm);m.position.set(x,y,z);g4.add(m)})}}
-const TH=new WeakMap();function thumb(i){if(TH.has(LIB[i]))return TH.get(LIB[i]);const o=LIB[i],it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(LIB[i],u);return u}
+const TH=new WeakMap(),thumbnailRefresh=new WeakMap(),studioThumbBackground=new T.Color('#eef1f5');
+function thumb(i){return thumbO(LIB[i])}
 /* Portadas 3D independientes del catálogo: composición de habitación completa. No se ejecuta para Cocina. */
 const ROOM_PHOTOS={
 cocina:'https://images.pexels.com/photos/10827396/pexels-photo-10827396.jpeg?auto=compress&cs=tinysrgb&w=1200',
@@ -5072,10 +5102,11 @@ const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.
 const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lavavajillas:81,frigo:120,combi:150,vinoteca:80,puerta:15,cajon:12,hueco:0},APD={cafetera:45,horno:55,micro:38,lavadora:55,secadora:55,lavavajillas:56,frigo:55,combi:55,vinoteca:55};
 function fm(c,acab,mat){if(mat&&mat!='liso')return sm(mat,c,60,60,30,.2,'#999');const f=FIN[acab||'satinado'];return new T.MeshStandardMaterial({color:c,roughness:f[0],metalness:f[1]})}
 function topMat(c){const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='madera')return pbrMat('madera-tablero',{w:true});if(m=='mármol')return sm(m,'#fff',100,100,60,.1,'#999');if(m=='granito')return sm('piedra','#fff',100,100,40,.1,'#777');return new T.MeshStandardMaterial({color:c.cn,roughness:m=='laminado'?.6:.2})}
+const polishedBase=c=>c.k==='base'&&c.lay==='puertas'&&(!c.fr||c.fr==='lisa'||c.fr==='liso');
 function pan(p,w,h,cx,c,mf){
  const f=c.fr||'liso',z=1,edge=M('#b9b5ad',.62,.08),shadow=M('#77766f',.78,.02),limit=Math.max(2,Math.min(w,h)*.12);
  // Frente estructural con espesor real y canto ligeramente suavizado.
- B(p,Math.max(2,w-.5),Math.max(2,h-.5),PT||2,cx,0,z,mf);
+ B(p,Math.max(2,w-.5),Math.max(2,h-.5),PT||2,cx,0,z,mf,polishedBase(c)?.22:undefined);
  const rail=(ww,hh,x,y,zz=2.45,mat=mf)=>B(p,ww,hh,.9,x,y,zz,mat);
  if(f==='cristal'){
   const frame=M('#292d30',.34,.72),seal=M('#161a1d',.72,.05);
@@ -5206,7 +5237,7 @@ function ndrw(g,it,k,x0,w,y0,h,Mx,o){
  B(p,Math.max(.5,w-10),1.1,2,0,-h/2+4,-dd+1,dark);
  mv(p,{it,k,t:'s',z:it.d/2,sl:it.d*.7});
 }
-function worktop(g,it,c,y,cut){const mn=topMat(c),w=it.w+1,d=it.d+2;if(!cut){B(g,w,3,d,0,y+1.5,1,mn);return}
+function worktop(g,it,c,y,cut){const mn=topMat(c),w=it.w+1,d=it.d+2;if(!cut){B(g,w,3,d,0,y+1.5,1,mn,polishedBase(c)?.38:undefined);return}
  const cw=cut.w,cd=cut.d,fz=(d-cd)/2,sx=(w-cw)/2;B(g,w,3,fz,0,y+1.5,1+cd/2+fz/2,mn);B(g,w,3,fz,0,y+1.5,1-cd/2-fz/2,mn);B(g,sx,3,cd,-cw/2-sx/2,y+1.5,1,mn);B(g,sx,3,cd,cw/2+sx/2,y+1.5,1,mn);
  if(cut.t=='s'){const st=M('#c4c7cc',.25,.9);B(g,cw-4,1,cd-4,0,y-16,1,st);B(g,cw-4,16,1,0,y-8,1+cd/2-2,st);B(g,cw-4,16,1,0,y-8,1-cd/2+2,st);B(g,1,16,cd-4,-cw/2+2,y-8,1,st);B(g,1,16,cd-4,cw/2-2,y-8,1,st);const ft=new T.Mesh(new T.CylinderGeometry(1.2,1.2,26,10),st);ft.position.set(0,y+16,1-cd/2-6);g.add(ft);B(g,2,2,16,0,y+28,1-cd/2+2,st)}
  else{B(g,cw,.8,cd,0,y+2.6,1,M('#0b0e12',.05,.3));[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b],i)=>{const r=new T.Mesh(new T.CylinderGeometry(7+(i%2)*2,7+(i%2)*2,.3,24),M('#444',.4,.5));r.position.set(a*cw/4,y+3.1,1+b*cd/4);g.add(r)})}}
@@ -5880,7 +5911,9 @@ const HOOD_MODELS={
  campana_dec:'Piramidal',campana_int:'Integrada'
 };
 const kitchenCatalogStart=LIB.length;
-[30,40,45,50,60,80,90].forEach(w=>LIB.push(base('Bajo '+w+' puertas',w,'puertas',{nd:w>=80?2:1})));
+[30,40,45,50,60,80,90].forEach(w=>LIB.push(base('Bajo '+w+' puertas',w,'puertas',{
+ nd:w>=80?2:1,...(w===60?{cm:'madera',ct:'#303237'}:{})
+})));
 [1,2,3,4].forEach(n=>LIB.push(base('Cajonera '+n+(n===1?' cajón':' cajones'),60,'cajones',{nc:n,dh:n>2})));
 LIB.push(base('Bajo puerta + 1 cajón',60,'puertas+cajones',{nc:1,nd:1}),base('Bajo 2 puertas + 2 cajones',90,'puertas+cajones',{nc:2,nd:2}),base('Bajo fregadero 80',80,'fregadero'),base('Bajo fregadero 120',120,'fregadero',{nd:2}),base('Bajo placa 60',60,'placa'),base('Bajo placa 90',90,'placa'),base('Bajo push (sin tirador)',60,'puertas',{ti:'push'}),base('Bajo tirador integrado',60,'cajones',{ti:'integrado',nc:3}),base('Bajo frente estriado',60,'puertas',{fr:'estriada',cf:'#c8a27a'}),
  base('Esquinero 90° puerta',90,'esquina 90°',{},90),base('Esquinero 90° plegable',90,'esquina 90°',{op:'plegable'},90),base('Esquinero con cestas sincronizadas',90,'esquina riñonera',{},90),base('Esquinero en L con carrusel',100,'esquina carrusel',{cornerL:true},100));
@@ -6511,7 +6544,25 @@ function fichaToItem(p){
   w:+p.w||model.w,h:+p.h||model.h,d:+p.d||model.d,e:0,col:p.col||model.col||'#cccccc',
   pid:p.id,source:p.sourceURL||p.catalogo||model.source};
 }
-function thumbO(o){if(TH.has(o))return TH.get(o);const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));buildPrev(it);const m=Math.max(o.w,o.h,o.d);cam4.position.set(m*.9,o.h*.6+m*.3,m*1.6);cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);r4.setSize(96,96);r4.render(sc4,cam4);const u=r4.domElement.toDataURL();TH.set(o,u);return u}
+function thumbO(o){
+ if(TH.has(o))return TH.get(o);
+ const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));
+ buildPrev(it);
+ const studio=o.t==='sofa'||(o.t==='mod'&&polishedBase(o.cfg)),background=sc4.background;
+ const m=Math.max(o.w,o.h,o.d);
+ cam4.position.set(m*(studio?.67:.9),o.h*.6+m*(studio?.24:.3),m*(studio?1.42:1.6));
+ cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);
+ r4.setSize(studio?160:96,studio?160:96);
+ if(studio)sc4.background=studioThumbBackground;
+ try{
+  r4.render(sc4,cam4);
+  const u=r4.domElement.toDataURL();TH.set(o,u);
+  if(o.t==='mod'&&studio&&o.cfg.cm==='madera'&&!o.cfg.pbr?.cn&&!thumbnailRefresh.has(o)){
+   thumbnailRefresh.set(o,pbrTex(pbrDef('madera-tablero')).ready.then(loaded=>{if(loaded)TH.delete(o)}));
+  }
+  return u;
+ }finally{sc4.background=background}
+}
 async function catLoad(){
  try{FABS=JSON.parse(localStorage.getItem('fabs')||'[]')}catch(e){FABS=[]}
  await catalogLoadPermissions();
