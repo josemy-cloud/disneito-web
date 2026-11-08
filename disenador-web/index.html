@@ -10,7 +10,7 @@ button,select,input{font:inherit}button{background:#2d323c;color:#eee;border:1px
 #c2,#d3{position:absolute;inset:0;width:100%;height:100%}#d3{display:none}
 .r{display:flex;justify-content:space-between;align-items:center;margin:4px 0;gap:6px}.r input,.r select{width:92px;background:#2a2e37;color:#fff;border:1px solid #444;border-radius:4px;padding:3px}
 h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;margin:2px 0}
-.sw{display:inline-block;width:34px;height:34px;margin:2px;border:2px solid #444;border-radius:4px;cursor:pointer;font-size:9px;color:#000;overflow:hidden}.sw.on{border-color:#3d7be0}.sw.surface-swatch{width:calc(33.33% - 4px);min-width:68px;height:61px;vertical-align:top;padding:0;position:relative}.surface-swatch span{position:absolute;inset:auto 0 0;padding:2px;background:#fffc;color:#202020;text-align:center;line-height:1.2}
+.sw{display:inline-block;width:34px;height:34px;margin:2px;border:2px solid #444;border-radius:4px;cursor:pointer;font-size:9px;color:#000;overflow:hidden}.sw.on{border-color:#3d7be0}.sw.surface-swatch{width:calc(33.33% - 4px);min-width:68px;min-height:96px;height:auto;vertical-align:top;padding:0;display:inline-flex;flex-direction:column;align-items:stretch}.surface-preview{width:100%;height:57px;display:block;object-fit:cover}.surface-swatch span{min-height:29px;display:grid;place-items:center;padding:3px;color:inherit;text-align:center;line-height:1.2}
 #openingType{position:absolute;z-index:4;top:8px;left:8px;width:min(220px,calc(100% - 16px));min-height:44px}
 #view:has(#openingType:not([hidden])) #planMove{top:60px}
 #hint{position:absolute;left:8px;bottom:6px;background:#000a;padding:4px 8px;border-radius:5px;font-size:12px;pointer-events:none}
@@ -464,15 +464,19 @@ function libUI(q=''){
  if(CATALOG_MASTER){const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.style.cssText='flex:1;text-align:center';imp.onclick=()=>$('#fmod').click();actions.append(imp);}head.append(actions);L.append(head);
  const content=document.createElement('div');L.append(content);
  const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
-  surfaceMaterials().map(d=>'pbr:'+d[0]).concat(S.cm.map((_,i)=>'img'+i)).forEach(m=>{const d=document.createElement('button');d.type='button';d.className='sw surface-swatch'+(armed&&armed.m==m?' on':'');d.setAttribute('aria-pressed',String(armed?.m===m));d.textContent=m.startsWith('img')?'imagen':m;d.title=m.startsWith('pbr:')?((pbrDef(m.slice(4))||[])[1]||m):m;
-   if(m.startsWith('img')){d.style.backgroundImage='url('+S.cm[+m.slice(3)]+')';d.style.backgroundPosition='center';d.style.backgroundSize='cover'}
-   else if(m.startsWith('pbr:')){
-    const def=pbrDef(m.slice(4)),asset=def&&scanAsset(def);
-    d.textContent=def?.[1]||m;d.style.backgroundColor=def?.[4]||'#b8b8b8';
-    if(asset){d.style.backgroundImage='url('+scanURL(asset,'color')+')';d.style.backgroundSize='cover';d.style.backgroundPosition='center'}
-   }
-   else d.style.backgroundColor=MC[m]||'#888';
-   const caption=document.createElement('span');caption.textContent=d.textContent;d.replaceChildren(caption);d.onclick=()=>armMaterial({m});content.append(d)});
+  const swatch=(m,name,preview)=>{
+   const d=document.createElement('button');d.type='button';d.className='sw surface-swatch'+(armed?.m===m?' on':'');
+   d.setAttribute('aria-pressed',String(armed?.m===m));d.title=name;
+   const caption=document.createElement('span');caption.textContent=name;
+   d.append(preview,caption);d.onclick=()=>armMaterial({m});content.append(d);
+  };
+  const photo=src=>{const image=document.createElement('img');image.className='surface-preview';image.alt='';image.src=src;return image};
+  for(const def of surfaceMaterials()){
+   const asset=scanAsset(def),preview=asset?photo(scanURL(asset,'color')):pbrThumb(def).cloneNode();
+   if(!asset){preview.className='surface-preview';preview.getContext('2d').drawImage(pbrThumb(def),0,0)}
+   swatch('pbr:'+def[0],def[1],preview);
+  }
+  S.cm.forEach((src,i)=>swatch('img'+i,'Imagen '+(i+1),photo(src)));
   const ph=document.createElement('h4');ph.textContent='Pinturas';content.append(ph);PAINT.forEach(c=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>armMaterial({c});content.append(d)});
   const u=document.createElement('button');u.className='it';u.textContent='+ Añadir material desde imagen';u.onclick=()=>$('#fm').click();content.append(u)
  };
@@ -911,19 +915,27 @@ const PL0=[['roble-natural','Roble natural','Maderas','wood','#b58a58',.55,0,1.2
 const SURFACE_SCANS=[
  ['parquet-natural','Parquet de madera natural','Maderas','wood_floor','#a88560',170,.72],
  ['tabla-envejecida','Tablas envejecidas','Maderas','old_wood_floor','#77624a',300,.7],
- ['hormigon-liso','Hormigón liso','Cementos','smooth_concrete_floor','#aaa8a2',200,.45],
+ ['hormigon-liso','Hormigón liso gris','Cementos','concrete_floor_03','#9e9e9e',250,.45],
  ['baldosa-gris','Baldosa gris de gran formato','Cerámicas y gres','large_grey_tiles','#a19e99',300,.63],
  ['azulejo-blanco','Azulejo blanco alargado','Cerámicas y gres','long_white_tiles','#e0dfd9',127,.65],
  ['marmol-veteado','Losas de mármol beige','Piedras','marble_01','#ddd9d0',150,.48],
- ['terrazo-baldosa','Baldosa de terrazo','Piedras','terrazzo_tiles','#b7aca1',200,.55],
+ ['terrazo-baldosa','Terrazo blanco con árido visible','Piedras','ambient-terrazzo001','#cfcecd',100,.42],
  ['terracota','Baldosa de terracota','Cerámicas y gres','terracotta_floor_tiles','#a66547',208,.66],
  ['granito-baldosa','Baldosa de granito','Piedras','granite_tile','#88827a',230,.55],
- ['madera-tablero','Tablero de madera rústica','Maderas','wood_table','#745537',100,.55]
+ ['madera-tablero','Tablero de madera rústica','Maderas','wood_table','#745537',100,.55],
+ ['roble-barnizado','Tablas de roble barnizado','Maderas','oak_wood_planks','#a47c57',120,.52],
+ ['azulejo-esmaltado','Azulejo esmaltado envejecido','Cerámicas y gres','blue_floor_tiles_01','#9d9d86',200,.65],
+ ['mosaico-marmol','Mosaico de mármol','Piedras','marble_tiles','#a79c8d',200,.58],
+ ['pavimento-espiga','Pavimento de hormigón en espiga','Cementos','herringbone_concrete_tile_02','#77706a',221.5,.62]
 ].map(([id,name,category,asset,color,span,normal])=>[id,name,category,'scan:'+asset,color,1,0,normal,span]);
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
-const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),surfaceMaterials=()=>SURFACE_SCANS.concat(S.pbr||[]),
+const availableCustomMaterials=()=> (S.pbr||[]).filter(d=>String(d[1]).trim().toLowerCase()!=='mármol negro (copia)');
+const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),surfaceMaterials=()=>SURFACE_SCANS.concat(availableCustomMaterials()),
  pbrDef=id=>PL().find(d=>d[0]==id);
-const scanAsset=d=>typeof d[3]==='string'&&d[3].startsWith('scan:')&&SURFACE_SCANS.some(p=>p[3]===d[3])?d[3].slice(5):null;
+function scanAsset(d){
+ const legacy={'scan:smooth_concrete_floor':'concrete_floor_03','scan:terrazzo_tiles':'ambient-terrazzo001'};
+ return Object.hasOwn(legacy,d[3])?legacy[d[3]]:SURFACE_SCANS.some(p=>p[3]===d[3])?d[3].slice(5):null;
+}
 const scanURL=(asset,map)=>'/materiales/'+asset+'-'+map+'.webp';
 function scanTextures(d,asset){
  const key=d.slice(3,8).join('|');
@@ -5702,8 +5714,11 @@ function appUI(o){const AF=Object.keys(AFIN),m=o.mat=o.mat||{g:o.fin||'acero'};P
  sel2('Acabado general',AF,AFIN[m.g]?m.g:'acero',v=>{m.g=v;o.fin=v});
  COMP.forEach(([k,l])=>{const c=m[k],h=c&&c[0]=='#';sel2(l,['(por defecto)',...AF,'personalizado'],!c?'(por defecto)':h?'personalizado':c,v=>{if(v=='(por defecto)')delete m[k];else if(v=='personalizado')m[k]=h?c:'#808080';else m[k]=v});if(h)row('· color de '+l.toLowerCase()+' (RGB/HEX)',c,v=>m[k]=v,'color')})}
 /* UI: materiales PBR del mueble + biblioteca */
-function pbrUI(it){const c=it.cfg,L=PL(),nm=id=>(pbrDef(id)||[])[1]||'(color normal)';P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');c.pbr=c.pbr||{};
- [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']].concat(c.k=='base'?[['cn','Encimera']]:[]).forEach(([k,l])=>sel2(l,['(color normal)',...L.map(d=>d[1])],nm(c.pbr[k]),v=>{const d=L.find(x=>x[1]==v);if(d)c.pbr[k]=d[0];else delete c.pbr[k]}));
+function pbrUI(it){const c=it.cfg,L=SURFACE_SCANS.concat(PL0,availableCustomMaterials()),nm=id=>(pbrDef(id)||[])[1]||'(color normal)';P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');c.pbr=c.pbr||{};
+ [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']].concat(c.k=='base'?[['cn','Encimera']]:[]).forEach(([k,l])=>{
+  const current=pbrDef(c.pbr[k]),choices=current&&!L.includes(current)?[current,...L]:L;
+  sel2(l,['(color normal)',...choices.map(d=>d[1])],nm(c.pbr[k]),v=>{const d=choices.find(x=>x[1]==v);if(d)c.pbr[k]=d[0];else delete c.pbr[k]});
+ });
  sel2('Dirección de la veta (frentes)',['vertical','horizontal'],c.pvt||'vertical',v=>c.pvt=v)}
 function pbrLib(){let box=document.getElementById('pbrbox');if(box){box.remove();return}box=document.createElement('div');box.id='pbrbox';box.style.cssText='position:fixed;inset:60px 20px 20px 20px;z-index:50;background:#1a1d24;border:1px solid #556;border-radius:8px;padding:10px;overflow:auto;color:#eee;font:13px Arial';document.body.append(box);
  let cat='Todas',q='',selId=null,fav=[];try{fav=JSON.parse(localStorage.getItem('pbrFav')||'[]')}catch(e){}
@@ -5711,7 +5726,7 @@ function pbrLib(){let box=document.getElementById('pbrbox');if(box){box.remove()
   box.innerHTML='<b>🎨 Suelos y revestimientos PBR</b> <button id=px style="float:right">✕</button><br>';const sc=document.createElement('select');cats.forEach(c2=>{const o=document.createElement('option');o.textContent=c2;sc.append(o)});sc.value=cat;sc.onchange=()=>{cat=sc.value;draw()};const si=document.createElement('input');si.placeholder='Buscar…';si.value=q;si.onchange=()=>{q=si.value.toLowerCase();draw()};box.append(sc,' ',si);box.querySelector('#px').onclick=()=>box.remove();
   const jb=[],g=document.createElement('div');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:8px 0';const rn=()=>{for(let q=0;q<5&&jb.length;q++)jb.shift()();if(jb.length)setTimeout(rn,0)};setTimeout(rn,0);f.forEach(d=>{const cv=document.createElement('canvas');cv.width=cv.height=96;jb.push(()=>{const paint=()=>cv.getContext('2d').drawImage(pbrThumb(d),0,0,96,96);paint();if(scanAsset(d))pbrTex(d).ready.then(paint)});const k=document.createElement('div');k.style.cssText='background:#252a33;padding:4px;border-radius:6px;cursor:pointer;border:2px solid '+(d[0]==selId?'#6af':'transparent');k.append(cv);k.append(document.createTextNode((fav.includes(d[0])?'★ ':'')+d[1]));k.onclick=()=>{selId=d[0];draw()};g.append(k)});box.append(g);
   const d=pbrDef(selId);if(d){const cu=(S.pbr||[]).includes(d),row2=(l,v,cb,t2)=>{const e=document.createElement('label');e.style.display='block';e.textContent=l+' ';const i=document.createElement('input');i.type=t2||'number';i.step='any';i.value=v;i.disabled=!cu;i.onchange=()=>{cb(t2=='color'?i.value:+i.value);S.pbr=S.pbr;Object.keys(MCH).forEach(k=>{if(k.startsWith(d[0]+'|'))delete MCH[k]});commit();draw()};e.append(i);box.append(e)};
-   box.insertAdjacentHTML('beforeend','<h4>'+htmlText(d[1])+' · '+htmlText(d[2])+(cu?' (personalizado)':' (incluido: duplica para editar)')+'</h4><small>'+(scanAsset(d)?'Textura escaneada · Color, rugosidad y normal · Poly Haven (CC0).':'Material personalizado con mapas procedurales.')+'</small>');
+   box.insertAdjacentHTML('beforeend','<h4>'+htmlText(d[1])+' · '+htmlText(d[2])+(cu?' (personalizado)':' (incluido: duplica para editar)')+'</h4><small>'+(scanAsset(d)?'Textura escaneada · Color, rugosidad y normal · '+(scanAsset(d)==='ambient-terrazzo001'?'ambientCG':'Poly Haven')+' (CC0).':'Material personalizado con mapas procedurales.')+'</small>');
    if(!scanAsset(d))row2('Color base',d[4],v=>d[4]=v,'color');row2('Rugosidad 0-1',d[5],v=>d[5]=Math.max(0,Math.min(1,v)));row2('Metal 0-1',d[6],v=>d[6]=Math.max(0,Math.min(1,v)));row2('Relieve',d[7],v=>d[7]=Math.max(0,v));row2('Tamaño de la muestra (cm reales)',d[8],v=>d[8]=Math.max(5,v));
    const b=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.onclick=fn;e.style.margin='6px 4px 0 0';box.append(e)};b(fav.includes(d[0])?'☆ Quitar favorito':'★ Favorito',()=>{fav=fav.includes(d[0])?fav.filter(x=>x!=d[0]):[...fav,d[0]];sf();draw()});
    b('Usar en suelo o pared',()=>{box.remove();armMaterial({m:'pbr:'+d[0]})});
