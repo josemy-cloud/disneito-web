@@ -225,7 +225,10 @@ LIB.push(
 {t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"mirror",n:"Espejo cuerpo entero",w:55,h:175,d:5,e:0,col:"#a88f78",s:"moderno",variant:2},
 {t:'roomObject',roomType:"dormitorio",c:"Dormitorio",shape:"desk",n:"Tocador",w:110,h:135,d:45,e:0,col:"#b6a28d",s:"nórdico",variant:0},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"bath",n:"Bañera exenta",w:170,h:58,d:78,e:0,col:"#8c9aa5",s:"industrial",variant:1},
-{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Ducha con mampara",w:120,h:205,d:90,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Ducha de esquina · lateral izquierdo",w:120,h:205,d:90,e:0,col:"#9d8264",s:"contemporáneo",variant:2,showerLayout:"left"},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Ducha de nicho · una puerta",w:85,h:205,d:90,e:0,col:"#eeeae4",s:"contemporáneo",showerLayout:"niche"},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Ducha de esquina · lateral derecho",w:120,h:205,d:90,e:0,col:"#eeeae4",s:"contemporáneo",showerLayout:"right"},
+{t:'roomObject',roomType:"baño",c:"Baño",shape:"shower",n:"Ducha con mampara en U",w:120,h:205,d:90,e:0,col:"#eeeae4",s:"contemporáneo",showerLayout:"u"},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"vanity",n:"Mueble lavabo doble",w:140,h:58,d:50,e:0,col:"#d2c8b8",s:"rústico",variant:0},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"basin",n:"Lavabo sobre encimera",w:48,h:18,d:48,e:0,col:"#a88f78",s:"moderno",variant:1},
 {t:'roomObject',roomType:"baño",c:"Baño",shape:"bidet",n:"Bidé cerámico",w:38,h:40,d:58,e:0,col:"#b6a28d",s:"nórdico",variant:2},
@@ -588,6 +591,15 @@ const isTerraceItem=it=>it.t==='roomObject'&&it.roomType==='terraza';
 const isGardenItem=it=>it.t==='roomObject'&&it.roomType==='jardin';
 const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it)||isOfficeItem(it)||isLaundryItem(it)||isGarageItem(it)||isStorageItem(it)||isTerraceItem(it)||isGardenItem(it);
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
+const isLitMirror=it=>it.shape==='mirror'&&(it.roomType==='baño'||it.c==='Baño'||/iluminado/i.test(it.n||''));
+const hasApplianceLight=type=>!!type&&(type.startsWith('campana_')||['horno','hornoc','micro','frigo','combi','vinoteca'].includes(type));
+function hasItemLight(it){
+ if(isLamp(it)||isLitMirror(it))return true;
+ const c=it.cfg;
+ return it.t==='app'?hasApplianceLight(c?.ap):it.t==='mod'&&!!c&&(
+  (c.k==='alto'&&!!c.led)||(c.lay==='torre'&&c.slots?.some(slot=>hasApplianceLight(slot.k)))||
+  (c.lay==='libre'&&c.el?.some(part=>part.k==='app'&&hasApplianceLight(part.ap))));
+}
 const isDiningPendant=it=>it.roomType==='comedor'&&isLamp(it)&&/suspend|colgante/i.test(it.n||'');
 const BEDROOM_COLOR_PARTS={
  dresser:[...ITEM_COLOR_PARTS.dresser,['drawerInterior','Interior de cajones'],['hardware','Guías y soportes']],
@@ -688,7 +700,7 @@ function props(){P.innerHTML='';const e=get();
    });
    appendMotionButton(P,e,motions,()=>{commitQ();psaveSoon()},true);
   }
-  if(isLamp(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
+  if(hasItemLight(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
   partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{clip=JSON.stringify(e)});if(clip)btn('Pegar',()=>{const c=JSON.parse(clip);c.id=nid();c.x+=30;c.y+=30;S.i.push(c);sel={k:'i',id:c.id}});btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
 /* ===== 2D ===== */
@@ -1922,6 +1934,14 @@ function buildBedroomLamp(g,it,primary){
  const globe=new T.Mesh(new T.SphereGeometry(Math.min(3,r*.18),24,16),bulb);globe.position.y=low+shadeH*.468;g.add(globe);
  applyLampLight(g,it,globe,shade);
  for(const side of [-1,1])bedroomTube(g,[0,low+shadeH*.66,0],[side*r*.67,low+shadeH*.66,0],.24,bulb);
+}
+function fixtureMaterial(it,color,intensity){
+ return new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:it.lightOn?intensity:0,roughness:.35});
+}
+function addFixtureLight(g,it,color,intensity,distance,x,y,z){
+ if(!it.lightOn)return;
+ const light=new T.PointLight(color,intensity,distance,1);
+ light.position.set(x,y,z);g.add(light);
 }
 function applyLampLight(g,it,bulb,shade){
  if(!it.lightOn)return;
@@ -3780,15 +3800,16 @@ case'mirror':{
   casework.position.z=-d/2;g.add(casework);
   const face=new T.Mesh(new T.ShapeGeometry(rounded(Math.min(w,h)*.057),24),reflect);
   face.position.z=d*.35;g.add(face);
-  const light=partFinish(new T.MeshStandardMaterial({color:'#fff3d8',emissive:'#fff3d8',emissiveIntensity:.85,roughness:.35}),'light');
+  const light=partFinish(fixtureMaterial(it,'#fff3d8',2.2),'light');
   const points=rounded(Math.min(w,h)*.035).getPoints(40).map(p=>new T.Vector3(p.x,p.y,d*.35));
   points.pop();
   const band=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points,true),120,Math.min(.5,d*.12),8,true),light);
   g.add(band);
+  for(const side of [-1,1])addFixtureLight(g,it,'#fff3d8',.55,115,side*w*.37,h*.52,d*.35+3);
   break;
  }
 
- const name=(it.n||'').toLowerCase(),frame=M('#a9a39a',.48,.42),back=M('#252b2e',.6,.2),led=M('#fff0cb',.22,.08);
+ const name=(it.n||'').toLowerCase(),frame=M('#a9a39a',.48,.42),back=M('#252b2e',.6,.2),led=fixtureMaterial(it,'#fff0cb',2);
  if(/redond/.test(name)){
   const radius=Math.min(w,h)*.46,outer=new T.Mesh(new T.CylinderGeometry(radius,radius,3,96),back);
   outer.rotation.x=Math.PI/2;outer.position.z=0;g.add(outer);
@@ -3802,7 +3823,7 @@ case'mirror':{
   shape.moveTo(-rw/2+r,0);shape.lineTo(rw/2-r,0);shape.quadraticCurveTo(rw/2,0,rw/2,r);shape.lineTo(rw/2,rh-r);shape.quadraticCurveTo(rw/2,rh,rw/2-r,rh);shape.lineTo(-rw/2+r,rh);shape.quadraticCurveTo(-rw/2,rh,-rw/2,rh-r);shape.lineTo(-rw/2,r);shape.quadraticCurveTo(-rw/2,0,-rw/2+r,0);
   const geo=new T.ExtrudeGeometry(shape,{depth:1.8,bevelEnabled:true,bevelSegments:3,bevelSize:.7,bevelThickness:.5,curveSegments:12}),rim=new T.Mesh(geo,frame);rim.position.z=2;g.add(rim);
   box(0,rh/2,3,rw*.91,rh*.94,.8,glass);
-  if(/iluminado/.test(name)){for(const x of [-1,1])box(x*rw*.475,rh/2,3.8,1.2,rh*.84,1.2,led);box(0,rh*.965,3.8,rw*.84,1.2,1.2,led);box(0,rh*.035,3.8,rw*.84,1.2,1.2,led)}
+  if(/iluminado/.test(name)){for(const x of [-1,1])box(x*rw*.475,rh/2,3.8,1.2,rh*.84,1.2,led);box(0,rh*.965,3.8,rw*.84,1.2,1.2,led);box(0,rh*.035,3.8,rw*.84,1.2,1.2,led);addFixtureLight(g,it,'#fff0cb',.65,115,0,rh/2,7)}
  }
  break;
 }
@@ -3846,7 +3867,7 @@ case'bath':{
 }
 case'shower':{
  if(isGardenItem(it)){buildGardenShower(g,it,mt);break;}
- const enclosure=/mampara|ducha con/i.test(it.n||''),tray=partFinish(ceramicMaterial(it.col||'#eeeae4'),'tray');
+ const layout=it.showerLayout||(/mampara|ducha con/i.test(it.n||'')?'left':null),enclosure=!!layout,tray=partFinish(ceramicMaterial(it.col||'#eeeae4'),'tray');
  const metal=partFinish(M('#aeb5b8',.28,.82),'profiles'),rx=w/2,rz=d/2;
  const trayH=Math.max(3,Math.min(6,enclosure?h*.025:h));
  const drainRadius=Math.min(3.3,rx*.12,rz*.12);
@@ -3856,23 +3877,24 @@ case'shower':{
  if(!enclosure)break;
  const glass=partFinish(new T.MeshPhysicalMaterial({color:'#d7e9ed',roughness:.08,transparent:true,opacity:.26,transmission:.14,depthWrite:false}),'glass');
  const left=-rx+2,right=rx-2,rear=-rz+2,front=rz-2,glassH=h-trayH-2,y=trayH+glassH/2;
- const fixedW=w*.43,hingeX=left+fixedW,leafW=right-hingeX-1.55;
+ const fixedW=layout==='niche'?0:(right-left)*.43,hingeX=left+fixedW,leafW=right-hingeX-2.2;
  const panel=(W,H,D,x,y,z)=>{const m=B(g,W,H,D,x,y,z,glass);m.castShadow=false;return m};
- panel(1,glassH,front-rear,left,y,(rear+front)/2).name='Vidrio lateral fijo';
- panel(fixedW,glassH,1,left+fixedW/2,y,front).name='Vidrio frontal fijo';
- for(const x of [left,hingeX,right])B(g,1.5,glassH,1.8,x,y,front,metal);
- B(g,1.5,glassH,2,left,y,rear,metal);
- B(g,1.5,1.4,front-rear,left,trayH+.7,(rear+front)/2,metal);
- B(g,fixedW,1.4,2,left+fixedW/2,trayH+.7,front,metal);
- B(g,1.5,1.2,front-rear,left,h-2.6,(rear+front)/2,metal);
- const door=new T.Group();door.name='Puerta de la mampara';door.position.set(hingeX+.55,trayH,front);g.add(door);
+ for(const x of layout==='u'?[left,right]:layout==='left'?[left]:layout==='right'?[right]:[]){
+  panel(1,glassH,front-rear,x,y,(rear+front)/2).name='Vidrio lateral fijo';
+  B(g,1.5,glassH,2,x,y,rear,metal);
+  for(const yy of [trayH+.7,h-2.6])B(g,1.5,1.4,front-rear,x,yy,(rear+front)/2,metal);
+ }
+ if(fixedW>0){
+  panel(fixedW,glassH,1,left+fixedW/2,y,front).name='Vidrio frontal fijo';
+  B(g,fixedW,1.4,2,left+fixedW/2,trayH+.7,front,metal);
+ }
+ for(const x of new Set([left,hingeX,right]))B(g,1.5,glassH,1.8,x,y,front,metal);
+ const door=new T.Group();door.name='Puerta de la mampara';door.position.set(hingeX+1,trayH,front);g.add(door);
  const pane=B(door,leafW,glassH-1.1,1,leafW/2,(glassH+1.1)/2,0,glass);pane.castShadow=false;
  B(door,leafW,1.2,1.8,leafW/2,1,0,metal);
- for(const k of [.22,.8]){
-  B(door,3,5,2.6,1.05,glassH*k,.35,metal).name='Bisagra de mampara';
- }
+ for(const k of [.22,.8])B(door,3,5,2.6,1.05,glassH*k,.35,metal).name='Bisagra de mampara';
  barPull(door,leafW-5,glassH*.49,.5,20,metal,true,'profiles');
- it.op=it.op||[];mv(door,{it,k:0,t:'d',sg:-1});
+ it.op=it.op||[];stepMV(mv(door,{it,k:0,t:'d',sg:-1,angle:90}));
  // A rear mounting panel physically supports the shower fittings.
  B(g,w*.23,glassH,.9,w*.23,y,rear,tray).name='Panel técnico';
  const mixer=partFinish(metal.clone(),'tap'),spray=partFinish(metal.clone(),'showerHead');
@@ -4714,7 +4736,7 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
  }
  [['Anchura','w'],['Altura','h'],['Fondo','d']].forEach(([l,f])=>{const i=document.createElement('input');i.type='number';i.value=pvIt[f];i.onchange=()=>{pvIt[f]=Math.max(2,+i.value);buildPrev(pvIt,1);fitCam();pvUI()};P2.append(l+' ',i,' ')});
  appendMotionButton(P2,pvIt,PV);
- if(isLamp(pvIt))appendLightButton(P2,pvIt,()=>buildPrev(pvIt,1));
+ if(hasItemLight(pvIt))appendLightButton(P2,pvIt,()=>buildPrev(pvIt,1));
  if(hasTaggedFinishes(pvIt))partColorUI(pvIt,P2,()=>buildPrev(pvIt,1));
  if(!pvIt.cfg&&pvIt.t!='model'){const c=document.createElement('input');c.type='color';c.value=pvIt.col;c.oninput=()=>{pvIt.col=c.value;buildPrev(pvIt,1)};P2.append(' Color ',c)}P2.append(document.createElement('br'));
  const pending=pvIt.t=='model'&&pendingModel&&pendingModel.entry.mid==pvIt.mid;
@@ -4736,7 +4758,7 @@ $('#pvx').onclick=()=>{if(pendingModel){const id=pendingModel.data.id;for(let i=
 function mv(o,p){const m=Object.assign({o,v:p.it.op[p.k]?1:0,x0:o.position.x,y0:o.position.y,z0:o.position.z},p);o.userData.mv=m;MV.push(m);return m}
 function toggleMotion(m){if(m.toggle)m.toggle();else m.it.op[m.k]=!m.it.op[m.k]}
 function stepMV(m){const t=m.it.op[m.k]&&!(m.exclusive&&m.k===1&&m.it.op[0])?1:0;m.v+=(t-m.v)*(m.ease||.14);const a=(m.angle||m.it.ang||100)*D,o=m.o,v=m.v;switch(m.t){case'd':o.rotation.y=m.sg*a*v;break;case's':o.position.z=m.z+v*m.sl;break;case'u':o.rotation.x=-a*v;break;case'h':o.rotation.x=a*v;break;case'e':o.position.y=m.y0+v*m.dy;break;case'f':o.rotation.y=m.sg*a*.55*v;m.c.rotation.y=-m.sg*a*1.1*v;break;case'x':o.position.x=m.x0+v*(m.dx||0);o.position.z=m.z0+v*(m.dz||0);o.rotation.y=v*(m.ry||0)}m.update?.()}
-const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardMaterial({color:'#bfe3f5',transparent:true,opacity:.3,roughness:.05}),LEDM=new T.MeshStandardMaterial({color:'#fff',emissive:'#fff',emissiveIntensity:1});
+const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardMaterial({color:'#bfe3f5',transparent:true,opacity:.3,roughness:.05});
 const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.35,.1],'cristal negro':['#0b0e12',.05,.35],'negro mate':['#1a1a1c',.75,.1],'negro brillante':['#0c0c0e',.08,.2],'acero antihuellas':['#b9bcc1',.45,.85],'blanco mate':['#eeeeec',.8,.05],'blanco brillante':['#fafafa',.1,.05],gris:['#8d9096',.45,.3],grafito:['#3b3e44',.4,.5],'cristal blanco':['#f1f3f5',.05,.2],'cristal oscuro':['#10131a',.05,.4],'gris metal':['#999999',.3,.9],aluminio:['#d0d3d8',.4,.95],dorado:['#c9a24a',.3,1],cobre:['#b87333',.35,1],bronce:['#6b5a3e',.35,1]},finM=f=>{const a=AFIN[f]||AFIN.acero;return M(a[0],a[1],a[2])};
 const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lavavajillas:81,frigo:120,combi:150,vinoteca:80,puerta:15,cajon:12,hueco:0},APD={cafetera:45,horno:55,micro:38,lavadora:55,secadora:55,lavavajillas:56,frigo:55,combi:55,vinoteca:55};
 function fm(c,acab,mat){if(mat&&mat!='liso')return sm(mat,c,60,60,30,.2,'#999');const f=FIN[acab||'satinado'];return new T.MeshStandardMaterial({color:c,roughness:f[0],metalness:f[1]})}
@@ -5165,7 +5187,11 @@ BUILD.mod=function(g,it){it.op=it.op||[];const c=it.cfg,{w,h,d}=it,K=c.k,hasTop=
  if((K=='alto'||K=='col')&&hasTop)tagp(B(g,w,t,d,0,h-t/2,0,mc),'tapa superior');
  if(K=='base'&&hasTop)worktop(g,it,c,h-3,L=='fregadero'?{w:Math.min(iw-14,76),d:Math.min(d-14,46),t:'s'}:L=='placa'?{w:Math.min(iw-6,58),d:Math.min(d-8,50),t:'p'}:null);
  g.userData.kitchenConstruction={schemaVersion:2,category:K,layout:L,panelThicknessCm:t,components:['18mm-carcass','captured-back','edge-banding','shelf-supports','hinged-fronts','drawer-runners','adjustable-feet','plinth-frame',...(K=='alto'?['wall-hangers']:[])],status:'integrated-pending-browser-visual-and-interaction-validation'};
- if(c.led&&K=='alto')B(g,iw-8,1,2,0,.6,d/2-6,LEDM);if(LAY[L])LAY[L](g,it,c,Mx,y0,H,iw)};
+ if(c.led&&K=='alto'){
+  const z=d/2-Math.min(6,d*.25);
+  B(g,iw*.85,.8,2,0,.25,z,fixtureMaterial(it,'#fff3d8',2));
+  addFixtureLight(g,it,'#fff3d8',.7,115,0,-2,z);
+ }if(LAY[L])LAY[L](g,it,c,Mx,y0,H,iw)};
 /* Electrodomésticos independientes */
 function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0,y0,zf-d/2);g.add(a);const SP=typeof fin=='object'&&fin?fin:{g:fin},pm=(c,def)=>{const f=SP[c]||def||SP.g||'acero';return f[0]=='#'?M(f,.4,.1):finM(f)},m=pm('carc'),mp=pm('puerta'),mf=pm('marco'),dk=pm('cristal','cristal oscuro'),pn=pm('panel','cristal oscuro'),hd=pm('tirador','gris metal'),kn=pm('mandos','gris metal');
  const laundry=LAUNDRY_FRONT_LOADERS[kd];
@@ -5176,7 +5202,7 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
   buildLaundryWasher(a,{n:laundry.n,w,h,d},primary,{owner:it,index:k0,finishes});return;
  }
  const frm=(p,ww,hh,cx,y,z,mt)=>[[0,hh/2+.4,ww+1.6,.8],[0,-hh/2-.4,ww+1.6,.8],[-ww/2-.4,0,.8,hh],[ww/2+.4,0,.8,hh]].forEach(([x,yy,bw,bh])=>B(p,bw,bh,.4,cx+x,y+yy,z,mt)),pv=(x,y,k,o)=>{const q=new T.Group();q.position.set(x,y,d/2);a.add(q);mv(q,Object.assign({it,k},o));return q};
- const rub=M('#151515',.9,0),stl=M('#c9ccd0',.35,.85),enam=M('#26272a',.6,.2),wht=M('#e9e9e6',.45,0),gls=new T.MeshStandardMaterial({color:'#9fb3c0',roughness:.05,metalness:.1,transparent:true,opacity:.35}),lcd=new T.MeshStandardMaterial({color:'#0c1013',emissive:'#4fd0ff',emissiveIntensity:.7,roughness:.3}),lit=new T.MeshStandardMaterial({color:'#ffffff',emissive:'#fff6dd',emissiveIntensity:.8}),zc=-.5;
+ const rub=M('#151515',.9,0),stl=M('#c9ccd0',.35,.85),enam=M('#26272a',.6,.2),wht=M('#e9e9e6',.45,0),gls=new T.MeshStandardMaterial({color:'#9fb3c0',roughness:.05,metalness:.1,transparent:true,opacity:.35}),lcd=new T.MeshStandardMaterial({color:'#0c1013',emissive:'#4fd0ff',emissiveIntensity:.7,roughness:.3}),lit=fixtureMaterial(it,'#fff6dd',1.8),zc=-.5;
  const shell=(cx,cy,cw,ch,im)=>{const D=d-1,x0=cx-cw/2,x1=cx+cw/2,y0=cy-ch/2,y1=cy+ch/2;B(a,x0+w/2,h,D,(x0-w/2)/2,h/2,zc,m);B(a,w/2-x1,h,D,(x1+w/2)/2,h/2,zc,m);B(a,cw,y0,D,cx,y0/2,zc,m);B(a,cw,h-y1,D,cx,(y1+h)/2,zc,m);B(a,cw,ch,2,cx,cy,-d/2+1,im)};
  const rack=(x,y,z,ww,dd,mt)=>{B(a,ww,.5,.5,x,y,z-dd/2,mt);B(a,ww,.5,.5,x,y,z+dd/2,mt);B(a,.5,.5,dd,x-ww/2,y,z,mt);B(a,.5,.5,dd,x+ww/2,y,z,mt);for(let q=1;q<6;q++)B(a,.35,.35,dd,x-ww/2+ww*q/6,y,z,mt)};
  const knob=(x,y,r)=>{const k=new T.Mesh(new T.CylinderGeometry(r,r,1.6,16),kn);k.rotation.x=Math.PI/2;k.position.set(x,y,d/2+1.1);a.add(k)};
@@ -5254,6 +5280,7 @@ function appl(g,kd,w,h,d,fin,it,k0,y0,zf){const a=new T.Group();a.position.set(0
    const r=Math.min(1.8,capD*.08,w*.043),led=new T.Mesh(new T.CylinderGeometry(r,r,.45,20),lit);
    led.position.set(side*w*.402,0,capZ+capD*.19);fittings.add(led);
   }
+  addFixtureLight(a,it,'#fff6dd',.85,130,0,-4,capZ);
   return;
  }
  if(kd=='placa'){
