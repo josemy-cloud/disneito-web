@@ -13,7 +13,6 @@ h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;
 .sw{display:inline-block;width:34px;height:34px;margin:2px;border:2px solid #444;border-radius:4px;cursor:pointer;font-size:9px;color:#000;overflow:hidden}.sw.on{border-color:#3d7be0}.sw.surface-swatch{width:calc(33.33% - 4px);min-width:68px;min-height:96px;height:auto;vertical-align:top;padding:0;display:inline-flex;flex-direction:column;align-items:stretch}.surface-preview{width:100%;height:57px;display:block;object-fit:cover}.surface-swatch span{min-height:29px;display:grid;place-items:center;padding:3px;color:inherit;text-align:center;line-height:1.2}
 #openingType{position:absolute;z-index:4;top:8px;left:8px;width:min(220px,calc(100% - 16px));min-height:44px}
 #view:has(#openingType:not([hidden])) #planMove{top:60px}
-#hint{position:absolute;left:8px;bottom:6px;background:#000a;padding:4px 8px;border-radius:5px;font-size:12px;pointer-events:none}
 #pv{display:none;position:fixed;left:250px;top:64px;width:540px;background:#20242c;border:1px solid #555;border-radius:8px;box-shadow:0 10px 40px #000a;z-index:9;padding:8px}
 #pv input[type=number]{width:62px;background:#2a2e37;color:#fff;border:1px solid #444;border-radius:4px;padding:3px}#pvp{margin:6px 0;line-height:2;max-height:52vh;overflow:auto}
 #cat{display:none;position:fixed;inset:44px 60px 40px 60px;overflow:auto;background:#1b1e25;border:1px solid #555;border-radius:10px;box-shadow:0 10px 50px #000c;z-index:8;padding:12px}#sb{padding:4px 10px;background:#14161b;font-size:12px;border-top:1px solid #333}#cat table{border-collapse:collapse;width:100%}#cat td,#cat th{padding:3px;border-bottom:1px solid #333;font-size:12px}#cat input,#cat select,#cat textarea{background:#2a2e37;color:#fff;border:1px solid #444;border-radius:4px;padding:3px}
@@ -29,6 +28,14 @@ body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
 #tools,.side{height:auto;min-height:0;max-height:none;align-self:stretch;overscroll-behavior:contain;overflow-y:auto;overflow-x:hidden}
 #view{height:auto;max-height:none;min-width:0;min-height:0;flex:1 1 0;position:relative;overflow:hidden}
 #sb{display:block;flex:0 0 auto;min-height:0;max-height:12dvh;overflow:auto}
+#sb{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:10px;row-gap:1px}
+#editorStatus{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#editorHint{min-width:0;white-space:normal;overflow-wrap:anywhere}
+#editorHint:empty{display:none}
+@media(max-width:680px),(max-width:900px) and (max-height:500px){
+ body.adaptive:not(.ui-legacy) #sb:has(#editorHint:not(:empty)){overflow:auto}
+ #editorHint{flex:0 0 100%}
+}
 @media(max-height:650px){#top{max-height:22dvh}#sb{font-size:11px;padding-top:2px;padding-bottom:2px}}
 @media(max-width:760px){#top{max-height:28dvh}#main{height:auto;min-height:0}}
 /* Previsualizador 3D: el editor completo cabe en pantalla y su ficha PBR tiene scroll propio */
@@ -75,7 +82,6 @@ body.adaptive:not(.ui-legacy) #compactActions #bFotoIA:hover{
 body.adaptive:not(.ui-legacy) #top .view-mode:not(.on):hover{
  background:#e4effc!important;color:#185da8!important
 }
-body.adaptive:not(.ui-legacy) #hint{background:#202b3ee8!important}
 body.adaptive:not(.ui-legacy) #view #planMove:not([hidden]){
  background:#185da8!important
 }
@@ -108,7 +114,6 @@ body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid small{color:#5b66
 body.desktop-workspace:not(.ui-legacy) #viewActions{
  position:absolute;right:8px;bottom:8px;z-index:5;display:flex;align-items:end;gap:6px
 }
-body.desktop-workspace:not(.ui-legacy) #hint{max-width:calc(100% - 225px)}
 #cameraDock{position:relative}
 #cameraDock summary{
  cursor:pointer;padding:6px 8px;background:white;color:#263432;
@@ -141,13 +146,13 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 </div>
 <div id="main"><div id="tools"></div>
 <div class="side" id="lib"></div>
-<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="hint"></div><div id="viewActions"><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
+<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="viewActions"><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
 </div></div>
 <div class="side" id="pr"></div></div>
-<div id="sb"></div>
+<div id="sb"><span id="editorStatus"></span><span id="editorHint"></span></div>
 <div id="cat"></div>
 <div id="pv"><b>Previsualización 3D</b> <button id="pvx" style="float:right">✕</button><div id="pvc"></div><div id="pvp"></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/build/index.module.js","three-mesh-bvh/":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/","three-gpu-pathtracer":"https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.23/src/index.js"}}</script>
@@ -493,7 +498,7 @@ function applyArmedFloor(floor){
  finishMaterialPlacement();
 }
 function finishMaterialPlacement(){armed=null;commit();libUI();hint()}
-function hint(){$('#hint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?'Material activo para un solo clic. Toca un suelo o una pared. Esc para cancelar.':({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
+function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?'Material activo para un solo clic. Toca un suelo o una pared. Esc para cancelar.':({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
 function createCustomFurniture(){
  const data={'Cocina modular':{key:'cocina',items:[['Mueble bajo a medida',60,87,60,true],['Mueble alto a medida',60,70,35,false],['Columna a medida',60,210,60,false]]},'Baño':{key:'baño',items:[['Mueble de lavabo',120,55,48,true],['Columna de baño',40,180,35,false],['Mueble auxiliar',60,80,35,false]]},'Dormitorio':{key:'dormitorio',items:[['Armario a medida',180,220,60,false],['Cómoda',100,90,45,true],['Mesita de noche',50,55,40,true]]},'Vestidor':{key:'vestidor',items:[['Módulo de vestidor',100,220,60,false],['Módulo zapatero',80,100,40,false],['Módulo de cajones',80,90,55,false]]},'Salón':{key:'salón',items:[['Mueble de televisión',180,50,42,true],['Aparador',140,85,45,true],['Librería',100,210,35,false],['Vitrina',80,190,40,false]]},'Recibidor':{key:'recibidor',items:[['Consola',100,85,35,true],['Zapatero',100,110,30,false],['Banco con almacenamiento',100,48,40,true]]},'Despacho':{key:'despacho',items:[
   ['Escritorio recto a medida',140,75,70,true,'desk','custom-despacho-escritorio'],
@@ -939,10 +944,10 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
   if(!best)return;
   const variant=openingChoice[type],{wd,h,s}=OPENINGS[type][variant];
   const length=len(best.w),wallHeight=+best.w.h;
-  if(length<wd||wallHeight<h+s){$('#hint').textContent='Este hueco no cabe en la pared elegida.';return}
+  if(length<wd||wallHeight<h+s){$('#editorHint').textContent='Este hueco no cabe en la pared elegida.';return}
   const p=Math.max(wd/2,Math.min(length-wd/2,sn(best.p)));
   if(S.o.some(o=>o.w==best.w.id&&Math.abs(o.p-p)<(+o.wd+wd)/2)){
-   $('#hint').textContent='Ya hay una puerta o ventana en ese tramo.';return;
+   $('#editorHint').textContent='Ya hay una puerta o ventana en ese tramo.';return;
   }
   const o={id:nid(),w:best.w.id,p,ty:type,variant,wd,h,s};
   S.o.push(o);sel={k:'o',id:o.id};commit();hint();
@@ -950,7 +955,7 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  }
  if(tool=='place'&&place){ghostCalc(wx,wy);if(ghost.ok){const o=JSON.parse(JSON.stringify(ghost));o.id=nid();delete o.ok;o.r=Math.round(o.r*100)/100;o.op=[];S.i.push(o);if(o.rel){const p=S.i.find(x=>x.id==o.rel.parentId);if(p)updateSupportTop(p)}sel={k:'i',id:o.id};ghost=null;tool='sel';drawTools();hint();commit()}return}
  // seleccionar
- if(tool=='measure'){S.ms=S.ms||[];for(const m of S.ms){if(m.visible===false)continue;const r=mres(m);if(r&&Math.abs(wx-(r.p[0]+r.q[0])/2)<30/k&&Math.abs(wy-(r.p[1]+r.q[1])/2)<10/k){const v=prompt('Separación exacta (cm):',R(r.d));if(v!==null&&v!==''){setGap(m,r,+v);commit()}return}}const pk=pick(wx,wy);if(!pk){sel=null;selPart=null;refresh();return}if(!measA){measA=pk;$('#hint').textContent='Ahora elige el segundo objeto'}else{S.ms.push({a:measA,b:pk});measA=null;commit()}return}
+ if(tool=='measure'){S.ms=S.ms||[];for(const m of S.ms){if(m.visible===false)continue;const r=mres(m);if(r&&Math.abs(wx-(r.p[0]+r.q[0])/2)<30/k&&Math.abs(wy-(r.p[1]+r.q[1])/2)<10/k){const v=prompt('Separación exacta (cm):',R(r.d));if(v!==null&&v!==''){setGap(m,r,+v);commit()}return}}const pk=pick(wx,wy);if(!pk){sel=null;selPart=null;refresh();return}if(!measA){measA=pk;$('#editorHint').textContent='Ahora elige el segundo objeto'}else{S.ms.push({a:measA,b:pk});measA=null;commit()}return}
  if(tool=='sel'){for(let mi=0;mi<(S.ms||[]).length;mi++){const m=S.ms[mi],mr=mres(m);if(S.showMeasures!==false&&m.visible!==false&&mr&&Math.abs(wx-(mr.p[0]+mr.q[0])/2)<30/k&&Math.abs(wy-(mr.p[1]+mr.q[1])/2)<10/k){sel={k:'ms',id:mi};refresh();return}}for(const w of S.w){const L=len(w),nx=(w.y2-w.y1)/L,ny=-(w.x2-w.x1)/L,of=w.t/2+22,cx=(w.x1+w.x2)/2+nx*of,cy=(w.y1+w.y2)/2+ny*of;if(Math.abs(wx-cx)<45/k&&Math.abs(wy-cy)<10/k){const v=prompt('Longitud de la pared (cm):',R(L));if(v&&+v>0){setLen(w,+v);sel={k:'w',id:w.id};commit()}return}}}
  let hit=null;for(const i of S.i.slice().reverse()){if(i.hid)continue;const dx=wx-i.x,dy=wy-i.y,c=Math.cos(-i.r*D),s=Math.sin(-i.r*D),lx=dx*c-dy*s,ly=dx*s+dy*c;if(insideFurniturePlan(i,lx,ly)){hit={k:'i',id:i.id,o:i};break}}
  if(!hit)for(const w of S.w){const s=segd(w,wx,wy);if(s.d<Math.max(w.t,14)/2+3){const o=S.o.find(o=>o.w==w.id&&Math.abs(o.p-s.p)<o.wd/2);hit=o?{k:'o',id:o.id}:{k:'w',id:w.id,o:w};break}}
@@ -4957,13 +4962,13 @@ function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place)
   const ceiling=Math.max(150,+room?.ceil?.h||+S.w[0]?.h||250);
   g.e=place.e||Math.max(0,ceiling-g.h);
   g.ok=fits(g);
-  $('#hint').textContent=g.ok?'✔ Colocar lámpara a la altura del techo':'✖ No cabe: colisión física con pared u objeto';
+  $('#editorHint').textContent=g.ok?'✔ Colocar lámpara a la altura del techo':'✖ No cabe: colisión física con pared u objeto';
   return;
  }
  let b=null;S.w.forEach(w=>{const s=segd(w,wx,wy);if(s.d<w.t/2+g.d/2+25&&(!b||s.d<b.s.d))b={w,s}});
  if(b){const w=b.w,L=len(w),ux=(w.x2-w.x1)/L,uy=(w.y2-w.y1)/L,px=w.x1+ux*b.s.p,py=w.y1+uy*b.s.p;let nx=uy,ny=-ux;if((wx-px)*nx+(wy-py)*ny<0){nx=-nx;ny=-ny}g.r=Math.atan2(-nx,ny)/D;const q=w.t/2+g.d/2;g.x=px+nx*q;g.y=py+ny*q}
- if(isSurfaceAccessory(g)){const p=S.i.filter(p=>!p.hid&&supportableParent(p)&&pointInItem(p,wx,wy)).sort((a,b)=>a.w*a.d-b.w*b.d)[0];if(p){g.x=sn(wx);g.y=sn(wy);attachToSurface(g,p);g.ok=fits(g);if(g.ok){$('#hint').textContent='✔ Apoyado sobre '+p.n+' · se conservará aunque sobresalga. Esc cancela';return}}}
- delete g.rel;g.e=place.e||0;g.ok=fits(g);$('#hint').textContent=g.ok?'✔ Cabe — clic para colocar (se pega a las paredes). Esc cancela':'✖ No cabe: colisión física con pared u objeto'}
+ if(isSurfaceAccessory(g)){const p=S.i.filter(p=>!p.hid&&supportableParent(p)&&pointInItem(p,wx,wy)).sort((a,b)=>a.w*a.d-b.w*b.d)[0];if(p){g.x=sn(wx);g.y=sn(wy);attachToSurface(g,p);g.ok=fits(g);if(g.ok){$('#editorHint').textContent='✔ Apoyado sobre '+p.n+' · se conservará aunque sobresalga. Esc cancela';return}}}
+ delete g.rel;g.e=place.e||0;g.ok=fits(g);$('#editorHint').textContent=g.ok?'✔ Cabe — clic para colocar (se pega a las paredes). Esc cancela':'✖ No cabe: colisión física con pared u objeto'}
 function pick(wx,wy){for(const i of S.i.slice().reverse()){if(i.hid)continue;const dx=wx-i.x,dy=wy-i.y,c=Math.cos(-i.r*D),s=Math.sin(-i.r*D);if(insideFurniturePlan(i,dx*c-dy*s,dx*s+dy*c))return{k:'i',id:i.id}}for(const w of S.w)if(segd(w,wx,wy).d<Math.max(w.t,14)/2+3)return{k:'w',id:w.id};return null}
 function rectOf(r){const e=S[r.k].find(x=>x.id==r.id);if(!e)return null;return r.k=='i'?cors(e):cors(wrect(e))}
 function psd(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy||1))),x=a[0]+dx*t,y=a[1]+dy*t;return{d:Math.hypot(p[0]-x,p[1]-y),p,q:[x,y]}}
@@ -5123,7 +5128,7 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
   const no=document.createElement('button');no.textContent='Descartar modelo';no.onclick=()=>{const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;pvOpen=false;$('#pv').style.display='none';libUI();refresh();hint('Modelo descartado; no se ha guardado')};P2.append(no,' ');
  }else{
   if(pvIt.c=='Mi biblioteca'||pvIt.t=='model'){const bx=document.createElement('button');bx.textContent='Quitar de mi biblioteca';bx.onclick=async()=>{const i=LIB.findIndex(o=>o.n==pvIt.n&&o.c==pvIt.c);if(i>=0)LIB.splice(i,1);if(pvIt.t=='model'){await idbDel(pvIt.mid);delete MODS[pvIt.mid]}else{const j=ML.findIndex(o=>o.n==pvIt.n);if(j>=0)ML.splice(j,1);saveML()}pvOpen=false;$('#pv').style.display='none';libUI();refresh()};P2.append(bx,' ')}
-  const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#hint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};P2.append(b2,' ');
+  const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#editorHint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};P2.append(b2,' ');
  }
  P2.append(document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · '+(pvIt.lic?'Licencia '+pvIt.lic+' · ':'')+(pvIt.source?'Origen '+pvIt.source+' · ':'')+'arrastra para girar, rueda para zoom');if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}function pvLoop(){if(!pvOpen)return;requestAnimationFrame(pvLoop);PV.forEach(m=>stepMV(m));oc4.update();r4.render(sc4,cam4)}
 let pvKitchenPresets=null,pvKitchenVariant=0;
@@ -6586,7 +6591,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#sb');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':'NAVEGACIÓN · la cámara')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: EDICIÓN':'Modo: navegación';b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':'NAVEGACIÓN · la cámara')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: EDICIÓN':'Modo: navegación';b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
@@ -6713,7 +6718,7 @@ const ob=el('textarea',{value:p.obs||'',rows:3,cols:80,placeholder:'Observacione
  
  bt('Previsualizar modelo 3D',()=>{let o;if(p.modelType)o={t:p.modelType,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat,roomType:'baño',w:+p.w,h:+p.h,d:+p.d,e:0,col:p.col||'#f4f3ef'};else if(p.mid){const m=LIB.find(x=>x.t==='model'&&x.mid===p.mid);if(m)o={...m,pid:p.id,n:p.nombre,brand:p.fab,ref:p.ref,c:p.cat}}else o=fichaToItem(p);if(!o)return alert('Esta ficha todavía no tiene un modelo 3D asociado.');openPrevObj(o)});
  if(CATALOG_MASTER&&(p.modelType||p.mid)&&p.visual_review!=='approved')bt('Aprobar e incorporar a biblioteca',async()=>{if(!confirm('¿Has comprobado la previsualización desde varios ángulos y confirmas que la geometría, proporciones y materiales son aceptables?'))return;try{await catalogPost('/api/catalogo/aprobar',{productId:p.id,status:'approved'});await catLoad();libUI();fichaUI(PRODS.find(x=>x.id===p.id)||p)}catch(e){alert(e.message)}});
- if(p.modelType&&p.visual_review==='approved'){f.append(el('div','','<small style="color:#7be08b">Modelo aprobado para la biblioteca.</small>'));bt('＋ Añadir al plano',()=>{const o=fichaToItem(p);if(!o)return alert('No se ha podido preparar este modelo para el plano.');place=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#hint').textContent='Mueve el cursor por el plano y haz clic para colocar. Pulsa Esc para cancelar.'})}
+ if(p.modelType&&p.visual_review==='approved'){f.append(el('div','','<small style="color:#7be08b">Modelo aprobado para la biblioteca.</small>'));bt('＋ Añadir al plano',()=>{const o=fichaToItem(p);if(!o)return alert('No se ha podido preparar este modelo para el plano.');place=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#editorHint').textContent='Mueve el cursor por el plano y haz clic para colocar. Pulsa Esc para cancelar.'})}
  if(p.docId&&p.pagina)bt('Ver página del PDF',async()=>{area.textContent='Cargando…';try{const pdf=await pdfOpen(await getDoc(p.docId)),c=await pdfCanvas(pdf,p.pagina,1.4);c.style.cssText='max-width:100%;background:#fff';area.innerHTML='';area.append(c)}catch(e){area.textContent=e.message}});
  bt('Adjuntar foto / plano…',()=>{const i=el('input',{type:'file',accept:'image/*,.pdf'});i.onchange=async()=>{p.fotos=p.fotos||[];p.fotos.push({nombre:i.files[0].name,id:await saveDoc(i.files[0])});await saveProd(p);fichaUI(p)};i.click()});
  if(CATALOG_MASTER)bt('Guardar',async()=>{if(!(p.w>0&&p.h>0&&p.d>0))return alert('Introduce anchura, altura y profundidad.');try{await saveProd(p);await catalogSaveProduct(p);await catLoad();libUI();catUI()}catch(e){alert(e.message)}});
