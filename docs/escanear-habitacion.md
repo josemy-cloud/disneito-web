@@ -28,6 +28,12 @@ Si el análisis no encuentra el suelo completo en las capturas, intenta localiza
 
 Introduce el ancho interior real de la pared del fondo y el fondo real de la habitación. **Crear borrador desde el techo** dibuja un rectángulo provisional con esos datos. Los demás tramos se muestran discontinuos en la revisión. Puedes corregir el plano antes de importarlo. La línea del techo no se reutiliza como calibración del suelo y no localiza muebles, huecos ni retranqueos ocultos. Se guarda el método de reconstrucción en los metadatos de la estancia.
 
+## Borrador rápido sin medidas
+
+La primera foto de una sesión intenta abrir la vista rápida automáticamente. Si hay una guía de techo o suelo, muestra el contorno rectangular aproximado y permite crear la habitación en un paso. **Ajustar plano** abre la revisión avanzada y conserva el borrador. En vídeo y cámara está disponible **Borrador rápido sin medidas** sobre la vista seleccionada.
+
+La altura inicial de 250 cm es una referencia convencional, no una medición. El ancho usa la longitud proyectada de la pared y el encuadre, con límites para evitar valores extremos. Cuando el suelo permite estimar su proporción, se usa para el fondo; si queda oculto, el fondo se etiqueta como supuesto. La foto nunca proporciona por sí sola una escala métrica. Una vista sin guía útil no crea una habitación.
+
 ## Auditoría e integración
 
 - `index.html` sigue siendo el editor. Su modelo guarda paredes en `S.w`, huecos vinculados a paredes en `S.o` y muebles independientes en `S.i`. El escáner crea estos registros con identificadores nuevos y usa `detectRooms`, `roomsUpdate` y el guardado normal. El importador convierte el perímetro interior en ejes de pared para que el grosor no reste medidas al interior.

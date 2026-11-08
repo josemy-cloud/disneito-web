@@ -6549,7 +6549,7 @@ function importScannedRoom(data,project,sources){
  const wallIds=new Set(walls.map(w=>w.id));
  const room=S.rooms.find(r=>r.walls.length===wallIds.size&&r.walls.every(id=>wallIds.has(id)));
  if(room){
-  room.scan={method:data.method==='ceiling-guide'?'ceiling-guide':'planar-reference',perimeter:data.geometryMeasured?'user-measured':'estimated',height:data.heightMeasured?'measured':'estimated'};
+  room.scan={method:['ceiling-guide','photo-estimate'].includes(data.method)?data.method:'planar-reference',perimeter:data.geometryMeasured?'user-measured':'estimated',height:data.heightMeasured?'measured':'estimated'};
   if(data.floorMaterial)room.floor={...S.fl,pat:null,m:data.floorMaterial==='observed'?null:data.floorMaterial,
    ...(data.floorMaterial==='observed'?{observedColor:data.floorColor}:{})};
  }

@@ -1,4 +1,4 @@
-import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect,proposeCeiling} from './scan-core.mjs';
+import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect,proposeCeiling,estimatePhotoRoom} from './scan-core.mjs';
 
 const FRAME_LIMIT=16;
 const VIDEO_LIMIT=200*1024*1024;
@@ -44,7 +44,7 @@ export function openRoomScanner({catalog,materials,onImport}){
   d.id='scanRoom';d.setAttribute('aria-labelledby','scanTitle');
   d.innerHTML=`
     <header><h2 id="scanTitle">Escanear habitación</h2><button id="scanClose" type="button">Cerrar y descartar</button></header>
-    <p>Reconstrucción asistida. Las capturas se procesan aquí y se descartan al cerrar. Marca una referencia medida en el suelo para corregir la perspectiva.</p>
+    <p>Carga una foto para obtener un plano aproximado. Las capturas se procesan en tu dispositivo y se descartan al cerrar.</p>
     <div class="scan-actions"><button id="scanCamera" type="button">Cámara en directo</button><button id="scanPhotos" type="button">Importar fotografías</button><button id="scanVideo" type="button">Importar vídeo</button></div>
     <label id="scanDrop">También puedes arrastrar fotografías o un vídeo aquí.</label>
     <input id="scanPhotoFiles" type="file" accept="image/*" multiple hidden>
@@ -53,6 +53,16 @@ export function openRoomScanner({catalog,materials,onImport}){
     <div class="scan-actions" id="scanLiveActions" hidden><button id="scanCapture" type="button">Capturar vista</button><button id="scanStop" type="button">Pausar cámara</button></div>
     <p id="scanNotice" role="status">Añade una vista donde se vean cuatro esquinas del mismo rectángulo en el suelo.</p>
     <progress id="scanProgress" hidden></progress><button id="scanCancel" type="button" hidden>Cancelar lectura</button>
+    <section id="scanQuick" hidden>
+      <h3>Tu plano aproximado</h3>
+      <div class="scan-quick-grid">
+        <canvas id="scanQuickImage" class="scan-quick-image" aria-label="Foto con las líneas encontradas"></canvas>
+        <div><canvas id="scanQuickPlan" class="scan-plan" width="320" height="180" role="img" aria-label="Plano rectangular aproximado"></canvas>
+          <p id="scanQuickSummary"></p>
+          <div class="scan-actions"><button id="scanQuickImport" class="scan-primary" type="button">Crear habitación aproximada</button><button id="scanQuickReview" type="button">Ajustar plano</button></div>
+        </div>
+      </div>
+    </section>
     <div id="scanWorkspace" class="scan-columns" hidden>
       <section>
         <h3>1. Capturas y escala</h3><div class="scan-actions" id="scanAuto"></div><div id="scanFrames"></div>
@@ -77,8 +87,8 @@ export function openRoomScanner({catalog,materials,onImport}){
   const $=s=>d.querySelector('#'+s),notice=message=>{$('scanNotice').textContent=message};
   const report=error=>{if(error?.name!=='AbortError'&&!closed)notice(error?.message||String(error))};
   const image=$('scanImage'),live=$('scanLive'),plan=$('scanPlan');
-  const frames=[],draft={points:[],geometryMeasured:false,ceilingDraft:false,height:250,heightMeasured:false,openings:[],items:[],wallColor:'#f1ede4',floorColor:null,floorMaterial:''};
-  let proposals=[],proposalIndex=0,ceilingGuide=null,ceilingPoint=null,index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
+  const frames=[],draft={points:[],geometryMeasured:false,ceilingDraft:false,photoDraft:false,height:250,heightMeasured:false,openings:[],items:[],wallColor:'#f1ede4',floorColor:null,floorMaterial:''};
+  let photoEstimate=null,quickFrame=null,proposals=[],proposalIndex=0,ceilingGuide=null,ceilingPoint=null,index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
   const pending=new Map();
   function stopCamera(){
     cameraEpoch++;
@@ -95,7 +105,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     if(closed)return;
     closed=true;job?.abort();stopCamera();clearWorker();
     for(const f of frames){f.canvas.width=0;f.canvas.height=0}
-    image.width=0;image.height=0;d.remove();
+    image.width=0;image.height=0;$('scanQuickImage').width=0;d.remove();
   }
   function closeScanner(){d.close();discard()}
   d.addEventListener('close',discard);
@@ -154,14 +164,14 @@ export function openRoomScanner({catalog,materials,onImport}){
   async function withJob(run){
     if(job||closed)return;
     const ctl=new AbortController();job=ctl;
-    for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport'])$(id).disabled=true;
+    for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport','scanQuickImport','scanQuickReview'])$(id).disabled=true;
     $('scanCancel').hidden=false;
     try{await run(ctl.signal)}
     catch(error){report(error)}
     finally{
       job=null;
       if(!closed){
-        for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport'])$(id).disabled=false;
+        for(const id of ['scanCamera','scanPhotos','scanVideo','scanCapture','scanImport','scanQuickImport','scanQuickReview'])$(id).disabled=false;
         $('scanCancel').hidden=true;$('scanProgress').hidden=true;
       }
     }
@@ -169,6 +179,7 @@ export function openRoomScanner({catalog,materials,onImport}){
   $('scanCancel').onclick=()=>{job?.abort();notice('Lectura cancelada. Se conservan las vistas ya preparadas.')};
   $('scanCamera').onclick=async()=>{
     if(stream){stopCamera();return}
+    showQuick(false);
     if(!navigator.mediaDevices?.getUserMedia){notice('Cámara web no disponible. Importa fotos o vídeo.');return}
     const epoch=++cameraEpoch;
     $('scanCamera').disabled=true;
@@ -225,9 +236,13 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(!signal.aborted)notice((frames.length-before)+' vistas de vídeo conservadas. Las tomas visualmente parecidas se omitieron. Calibra cada vista que vayas a usar.');
     }finally{v.removeAttribute('src');v.load();URL.revokeObjectURL(url)}
   }
-  const ingest=(files,kind)=>withJob(signal=>{
-    stopCamera();
-    return kind==='video'?video(files[0],signal):photos(files,signal);
+  const ingest=(files,kind)=>withJob(async signal=>{
+    stopCamera();showQuick(false);
+    const previous=frames.length;
+    if(kind==='video'){await video(files[0],signal);return}
+    await photos(files,signal);
+    if(signal.aborted||closed||frames.length===previous||draft.points.length)return;
+    await estimateFromPhoto(signal,frames[previous]);
   });
   $('scanPhotos').onclick=()=>$('scanPhotoFiles').click();
   $('scanVideo').onclick=()=>$('scanVideoFile').click();
@@ -244,7 +259,10 @@ export function openRoomScanner({catalog,materials,onImport}){
   const scale=$('scanScale');
   const width=field(scale,'Ancho medido (cm)',number('',20,5000));
   const depth=field(scale,'Fondo medido (cm)',number('',20,5000));
-  const updateDepthLabel=()=>{depth.parentNode.firstChild.textContent=depth.dataset.estimated==='true'?'Fondo estimado (cm)':'Fondo medido (cm)'};
+  const updateDepthLabel=()=>{
+    width.parentNode.firstChild.textContent=width.dataset.estimated==='true'?'Ancho estimado (cm)':'Ancho medido (cm)';
+    depth.parentNode.firstChild.textContent=depth.dataset.estimated==='true'?'Fondo estimado (cm)':'Fondo medido (cm)';
+  };
   const transform=()=>{
     if(!width.value||!depth.value)throw Error('Escribe el ancho y el fondo medidos del rectángulo.');
     if(frames[index]?.suggested)throw Error('Comprueba los cuatro puntos sugeridos antes de usar la referencia.');
@@ -252,14 +270,23 @@ export function openRoomScanner({catalog,materials,onImport}){
   };
   // Si cambia la escala después de anotar, se descartan las anotaciones dependientes con confirmación.
   function rescale(input){
+    if(draft.photoDraft&&!draft.openings.length&&!draft.items.length){
+      const w=width.valueAsNumber,dep=depth.valueAsNumber;
+      if(!(w>=20&&w<=5000&&dep>=20&&dep<=5000)){
+        input.value=input.dataset.previous;notice('Escribe una dimensión entre 20 y 5000 cm.');return;
+      }
+      draft.points=[[0,0],[w,0],[w,dep],[0,dep]];
+      input.dataset.previous=input.value;delete input.dataset.estimated;updateDepthLabel();
+      renderReview();return;
+    }
     if(draft.points.length||draft.items.length||draft.openings.length){
       if(!confirm('Cambiar la escala borra los puntos y elementos marcados. ¿Quieres continuar?')){
         input.value=input.dataset.previous||'';return;
       }
-      draft.points=[];draft.geometryMeasured=false;draft.ceilingDraft=false;draft.openings=[];draft.items=[];openingFirst=null;renderReview();
+      draft.points=[];draft.geometryMeasured=false;draft.ceilingDraft=false;draft.photoDraft=false;draft.openings=[];draft.items=[];openingFirst=null;renderReview();
     }
     input.dataset.previous=input.value;
-    if(input===depth){delete depth.dataset.estimated;updateDepthLabel()}
+    delete input.dataset.estimated;updateDepthLabel();
   }
   width.onchange=()=>rescale(width);depth.onchange=()=>rescale(depth);
   function renderFrames(){
@@ -370,7 +397,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(estimated)depth.dataset.estimated='true';else delete depth.dataset.estimated;
       updateDepthLabel();
       draft.points=[[0,0],[w,0],[w,d],[0,d]];
-      draft.geometryMeasured=!estimated;draft.ceilingDraft=false;draft.openings=[];draft.items=[];openingFirst=null;mark='reference';
+      draft.geometryMeasured=!estimated&&width.dataset.estimated!=='true';draft.ceilingDraft=false;draft.photoDraft=false;draft.openings=[];draft.items=[];openingFirst=null;mark='reference';
       proposals=[];useProposal.hidden=nextProposal.hidden=true;
       renderFrames();drawImage();renderReview();
       notice(estimated?'Plano creado. Fondo estimado: '+d+' cm. Compruébalo antes de importar.':'Plano creado con tus dos medidas. Revisa la altura y los huecos.');
@@ -414,7 +441,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       if((draft.points.length||draft.items.length||draft.openings.length)&&
          !confirm('Esto sustituye el perímetro y los elementos marcados por un borrador rectangular. ¿Continuar?'))return;
       draft.points=[[0,0],[w,0],[w,d],[0,d]];
-      draft.geometryMeasured=false;draft.ceilingDraft=true;draft.openings=[];draft.items=[];
+      draft.geometryMeasured=false;draft.ceilingDraft=true;draft.photoDraft=false;draft.openings=[];draft.items=[];
       width.dataset.previous=w;depth.dataset.previous=d;
       for(const frame of frames){frame.ref=[];frame.suggested=false}
       index=frames.indexOf(ceilingGuide.frame);mark='reference';openingFirst=null;ceilingPoint=null;
@@ -422,6 +449,68 @@ export function openRoomScanner({catalog,materials,onImport}){
       notice('Borrador rectangular creado con tus medidas. Los laterales y el cierre que no se ven quedan para revisión. La línea del techo no calibra el suelo.');
     }catch(error){report(error)}
   });
+  function showQuick(open){
+    $('scanQuick').hidden=!open;
+    d.classList.toggle('scan-quick-active',open);
+  }
+  async function estimateFromPhoto(signal,frame=frames[index]){
+    if(!frame)return;
+    showQuick(false);photoEstimate=null;quickFrame=null;
+    notice('Buscando el suelo y las líneas del techo…');
+    const data=imagePixels(frame.canvas,256);
+    const ceiling=await analyseInWorker({...data,ceiling:true},()=>proposeCeiling(data));
+    if(signal.aborted||closed)return;
+    const floorData=imagePixels(frame.canvas,192);
+    const floor=await analyseInWorker({...floorData,floor:true},()=>proposeFloor(floorData));
+    if(signal.aborted||closed)return;
+    const aspect=floor&&estimateRoomAspect(floor.points,floorData.width,floorData.height);
+    photoEstimate=estimatePhotoRoom({ceiling,floor,aspect,width:data.width,height:data.height});
+    if(!photoEstimate){notice('La foto no muestra líneas claras de pared, techo o suelo. Prueba con una vista más amplia.');return}
+    quickFrame=frame;index=frames.indexOf(frame);
+    ceilingGuide=ceiling?{frame,...ceiling}:null;ceilingPoint=null;
+    proposals=floor?[{...floor,frame}]:[];proposalIndex=0;
+    useProposal.hidden=nextProposal.hidden=true;
+    renderFrames();drawImage();
+    const photo=$('scanQuickImage');
+    photo.width=image.width;photo.height=image.height;
+    photo.getContext('2d').drawImage(image,0,0);
+    const p=$('scanQuickPlan'),ctx=p.getContext('2d'),{width:w,depth:dep,height:h,depthInferred}=photoEstimate;
+    ctx.clearRect(0,0,p.width,p.height);
+    const k=Math.min(248/w,120/dep),rw=w*k,rd=dep*k,x=(p.width-rw)/2,y=(p.height-rd)/2;
+    ctx.fillStyle='#dbe8f8';ctx.fillRect(x,y,rw,rd);
+    ctx.strokeStyle='#185da8';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(x,y,rw,rd);ctx.setLineDash([]);
+    $('scanQuickSummary').textContent='Ancho orientativo '+w+' cm · fondo '+(depthInferred?'estimado ':'supuesto ')+dep+' cm · altura de referencia '+h+' cm. Forma rectangular provisional.';
+    showQuick(true);
+    notice('Plano aproximado listo. Puedes crearlo directamente o ajustar la propuesta.');
+  }
+  function preparePhotoDraft(){
+    if(!photoEstimate||!frames.includes(quickFrame))throw Error('Vuelve a analizar la foto.');
+    const {width:w,depth:dep,height:h}=photoEstimate;
+    draft.points=[[0,0],[w,0],[w,dep],[0,dep]];
+    draft.geometryMeasured=false;draft.ceilingDraft=false;draft.photoDraft=true;
+    draft.height=h;draft.heightMeasured=false;height.value=h;measured.checked=false;
+    draft.openings=[];draft.items=[];openingFirst=null;
+    width.value=w;depth.value=dep;width.dataset.previous=w;depth.dataset.previous=dep;
+    width.dataset.estimated=depth.dataset.estimated='true';updateDepthLabel();
+    for(const frame of frames){frame.ref=[];frame.suggested=false}
+    index=frames.indexOf(quickFrame);renderFrames();drawImage();renderReview();
+  }
+  $('scanQuickImport').onclick=()=>{
+    if(job)return;
+    try{preparePhotoDraft();importDraft()}catch(error){report(error)}
+  };
+  $('scanQuickReview').onclick=()=>{
+    if(job)return;
+    try{
+      preparePhotoDraft();showQuick(false);
+      notice('Puedes corregir el borrador antes de importar. Las medidas proceden de una estimación de la foto.');
+    }catch(error){report(error)}
+  };
+  button(auto,'Borrador rápido sin medidas',()=>withJob(async signal=>{
+    if((draft.points.length||draft.items.length||draft.openings.length)&&
+       !confirm('El borrador rápido sustituirá el plano y los elementos marcados si lo aceptas. ¿Continuar?'))return;
+    await estimateFromPhoto(signal);
+  }));
   const markButtons=$('scanMark');
   button(markButtons,'Marcar referencia',()=>selectMode('reference','Marca las cuatro esquinas de la referencia, en orden.'));
   button(markButtons,'Rehacer referencia de esta vista',()=>{
@@ -453,7 +542,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       transform();
       if((draft.points.length||draft.openings.length)&&!confirm('Esto sustituye el perímetro y sus huecos marcados. ¿Continuar?'))return;
       draft.points=[[0,0],[+width.value,0],[+width.value,+depth.value],[0,+depth.value]];
-      draft.geometryMeasured=depth.dataset.estimated!=='true';draft.ceilingDraft=false;draft.openings=[];openingFirst=null;renderReview();notice('Perímetro rectangular creado con las medidas aportadas. Revisa altura y huecos.');
+      draft.geometryMeasured=depth.dataset.estimated!=='true'&&width.dataset.estimated!=='true';draft.ceilingDraft=false;draft.photoDraft=false;draft.openings=[];openingFirst=null;renderReview();notice('Perímetro rectangular creado con las medidas aportadas. Revisa altura y huecos.');
     }catch(error){report(error)}
   });
   button(markButtons,'Añadir esquina de pared',()=>selectMode('vertex','Marca una esquina a ras del suelo. Añade las esquinas en orden, aunque cambies de vista.'));
@@ -553,7 +642,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(mark==='vertex'){
         if(draft.points.length>=32)throw Error('El perímetro admite hasta 32 esquinas.');
         if(draft.openings.length)throw Error('Quita los huecos antes de cambiar el número de paredes.');
-        draft.geometryMeasured=false;draft.ceilingDraft=false;draft.points.push(metric);notice('Esquina '+draft.points.length+' añadida con posición estimada.');
+        draft.geometryMeasured=false;draft.ceilingDraft=false;draft.photoDraft=false;draft.points.push(metric);notice('Esquina '+draft.points.length+' añadida con posición estimada.');
       }else if(mark==='item'){
         const model=catalog.find(m=>String(m.id)===models.value);
         if(!model)throw Error('Elige un modelo de la biblioteca.');
@@ -632,7 +721,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     ctx.clearRect(0,0,plan.width,plan.height);
     const points=draft.points.filter(p=>p.every(Number.isFinite));
     $('scanSummary').textContent=points.length<3?'Perímetro incompleto. Marca esquinas visibles o usa la referencia rectangular.':
-      points.length+' esquinas · '+(polygonArea(points)/10000).toFixed(2)+' m² · perímetro '+(draft.ceilingDraft?'rectangular provisional · líneas discontinuas por revisar':draft.geometryMeasured?'según medidas aportadas':'estimado')+' · altura '+(draft.heightMeasured?'medida':'estimada')+'.';
+      points.length+' esquinas · '+(polygonArea(points)/10000).toFixed(2)+' m² · perímetro '+((draft.ceilingDraft||draft.photoDraft)?'rectangular provisional · líneas discontinuas por revisar':draft.geometryMeasured?'según medidas aportadas':'estimado')+' · altura '+(draft.heightMeasured?'medida':'estimada')+'.';
     if(!points.length)return;
     const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys);
     const k=Math.min((plan.width-48)/Math.max(20,Math.max(...xs)-x0),(plan.height-48)/Math.max(20,Math.max(...ys)-y0));
@@ -640,7 +729,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     ctx.strokeStyle='#203b62';ctx.fillStyle='#dbe8f8';ctx.lineWidth=4;
     ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(...xy(...p)):ctx.moveTo(...xy(...p)));
     if(points.length>2){ctx.closePath();ctx.fill()}
-    if(draft.ceilingDraft&&points.length===4){
+    if((draft.ceilingDraft||draft.photoDraft)&&points.length===4){
       ctx.setLineDash([8,6]);ctx.stroke();ctx.setLineDash([]);
       ctx.beginPath();ctx.moveTo(...xy(...points[0]));ctx.lineTo(...xy(...points[1]));ctx.stroke();
     }else ctx.stroke();
@@ -660,18 +749,19 @@ export function openRoomScanner({catalog,materials,onImport}){
       ctx.fillRect(-i.w*k/2,-i.d*k/2,i.w*k,i.d*k);ctx.restore();
     }
   }
-  $('scanImport').onclick=()=>{
-    try{
-      if(!frames.length)throw Error('Añade al menos una captura.');
-      if(draft.floorMaterial==='observed'&&!draft.floorColor)throw Error('Muestrea un color de suelo o elige un material.');
-      const result=validate(draft);
-      onImport({...result,method:draft.ceilingDraft?'ceiling-guide':'planar-reference',geometryMeasured:draft.geometryMeasured,height:draft.height,heightMeasured:draft.heightMeasured,wallColor:draft.wallColor,
-        floorColor:draft.floorColor,floorMaterial:draft.floorMaterial});
-      closeScanner();
-    }catch(error){report(error)}
-  };
+  function importDraft(){
+    if(!frames.length)throw Error('Añade al menos una captura.');
+    if(draft.floorMaterial==='observed'&&!draft.floorColor)throw Error('Muestrea un color de suelo o elige un material.');
+    const result=validate(draft);
+    const method=draft.photoDraft?'photo-estimate':draft.ceilingDraft?'ceiling-guide':'planar-reference';
+    onImport({...result,method,geometryMeasured:draft.geometryMeasured,height:draft.height,heightMeasured:draft.heightMeasured,
+      wallColor:draft.wallColor,floorColor:draft.floorColor,floorMaterial:draft.floorMaterial});
+    closeScanner();
+  }
+  $('scanImport').onclick=()=>{try{importDraft()}catch(error){report(error)}};
   renderReview();d.showModal();
 }
+
 
 
 

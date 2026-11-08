@@ -25,3 +25,9 @@
  #scanRoom :is(input:not([type=checkbox]),select){font-size:16px!important}
 }
 
+
+#scanRoom.scan-quick-active #scanWorkspace{display:none}
+#scanRoom .scan-quick-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+#scanRoom .scan-quick-image{display:block;width:100%;height:auto;max-height:36dvh;object-fit:contain;background:#eaf0f7;border-radius:8px}
+@media(max-width:680px){#scanRoom .scan-quick-grid{grid-template-columns:minmax(0,1fr)}#scanRoom .scan-quick-image{max-height:26dvh}}
+

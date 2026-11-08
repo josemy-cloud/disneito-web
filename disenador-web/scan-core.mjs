@@ -376,3 +376,21 @@ export function proposeCeiling({pixels,width:w,height:h}){
   return {back,sides};
 }
 
+
+/** First-pass dimensions. A photo can give ratios; metric scale needs a prior. */
+export function estimatePhotoRoom({ceiling,floor,aspect,width,height}){
+  if(!ceiling?.back&&!floor?.points)return null;
+  const wallHeight=250;
+  const centimetres=(value,min,max)=>Math.max(min,Math.min(max,Math.round(value/10)*10));
+  let roomWidth=340;
+  if(ceiling?.back){
+    const [a,b]=ceiling.back;
+    const visibleSpan=(.94-(a[1]+b[1])/2)*height;
+    if(visibleSpan>height*.35)
+      roomWidth=centimetres(Math.hypot((b[0]-a[0])*width,(b[1]-a[1])*height)/visibleSpan*wallHeight,240,650);
+  }
+  const useAspect=Number.isFinite(aspect)&&aspect>=.4&&aspect<=2.5;
+  const depth=centimetres(useAspect?roomWidth/aspect:roomWidth*1.1,220,850);
+  return {width:roomWidth,depth,height:wallHeight,depthInferred:useAspect};
+}
+
