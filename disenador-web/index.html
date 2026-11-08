@@ -4820,7 +4820,7 @@ function hdl(p,c,w,h,cx,vert,mh,hideMounts=false){
  });
 }
 function fdoor(g,it,k,x0,w,y0,h,fl,Mx){const c=it.cfg,op=c.op||'lateral',mf=Mx.mf,mh=Mx.mh,p=new T.Group(),s=fl?-1:1,sw=it.d/2;g.add(p);p.userData.part={t:'puerta',i:k};if(selPart&&selPart.id==it.id&&selPart.t=='puerta'&&selPart.i==k)HL.push(p);
- if(op=='lateral'){p.position.set(fl?x0+w:x0,y0+h/2,sw);pan(p,w,h,s*w/2,c,mf);hdl(p,c,w,h,s*(w-5),true,mh);
+ if(op=='lateral'){p.position.set(fl?x0+w:x0,y0+h/2,sw);pan(p,w,h,s*w/2,c,mf);hdl(p,c,w,h,s*(c.cornerL?w*.36:w-5),true,mh);
   // Bisagras de cazoleta: copas, brazos y placas montadas en el canto interior de la hoja.
   const hingeMetal=M('#aeb6bb',.34,.82),hingeDark=M('#626c72',.42,.72);
   [-1,1].forEach(end=>{const hy=end*(h/2-Math.min(8,h*.12));
@@ -5072,15 +5072,24 @@ function buildLCarousel(g,it,c,Mx,y0,H,hasTop){
   }
  }
  const doorHeight=H-3,leaf={...it,d:0,cfg:{...c,op:'lateral'}};
+ const hingeInset=5.6,cornerGap=3.8,frontW=w-arm,frontD=d-arm;
+ if(Math.min(frontW,frontD)<=hingeInset+cornerGap+8)return;
+ B(g,hingeInset-.3,doorHeight,t,halfW-(hingeInset-.3)/2,y0+H/2,z,Mx.mf);
+ B(g,t,doorHeight,hingeInset-.3,x,y0+H/2,halfD-(hingeInset-.3)/2,Mx.mf);
  const a=new T.Group(),b=new T.Group();
  a.position.z=z;b.position.set(x,0,halfD);b.rotation.y=Math.PI/2;g.add(a,b);
- const doors=[fdoor(a,leaf,0,x+.35,w-arm-.7,y0+1.5,doorHeight,true,Mx),fdoor(b,leaf,0,.35,d-arm-.7,y0+1.5,doorHeight,false,Mx)];
+ const doors=[
+  fdoor(a,leaf,0,x+cornerGap,frontW-hingeInset-cornerGap,y0+1.5,doorHeight,true,Mx),
+  fdoor(b,leaf,0,hingeInset,frontD-hingeInset-cornerGap,y0+1.5,doorHeight,false,Mx)
+ ];
+ const smooth=(v,start,end)=>{const t=cornerPhase(v,start,end);return t*t*(3-2*t)};
  doors.forEach((door,i)=>{
-  const motion=door.userData.mv;motion.ease=.08;
-  motion.update=()=>{door.rotation.y=motion.sg*104*D*cornerPhase(motion.v,i*.31,(i+1)*.31)};
+  const phase=frontW>=frontD?i:1-i;
+  const motion=door.userData.mv;motion.ease=.065;
+  motion.update=()=>{door.rotation.y=motion.sg*88*D*smooth(motion.v,phase*.29,(phase+1)*.29)};
   motion.update();
  });
- const r=Math.min(arm,w-arm,d-arm)-3;
+ const r=Math.min(arm-3,frontW-hingeInset-3,frontD-hingeInset-3);
  if(r<3)return;
  const carousel=new T.Group();carousel.position.set(x,0,z);g.add(carousel);
  B(g,2.5,H-3,2.5,x,y0+H/2,z,trayM);
@@ -5092,8 +5101,8 @@ function buildLCarousel(g,it,c,Mx,y0,H,hasTop){
   const rail=new T.Mesh(new T.TorusGeometry(r-.6,.55,8,44,Math.PI*1.5),rim);rail.rotation.x=-Math.PI/2;rail.position.y=y+3;carousel.add(rail);
   for(let i=0;i<=9;i++){const a=i*Math.PI/6;B(carousel,.65,2,.65,Math.cos(a)*(r-.6),y+2.2,-Math.sin(a)*(r-.6),rim)}
  }
- const motion=mv(carousel,{it,k:0,t:'e',dy:0,ease:.08});
- motion.update=()=>{const t=cornerPhase(motion.v,.65,1);carousel.rotation.y=t*t*(3-2*t)*Math.PI*.58};
+ const motion=mv(carousel,{it,k:0,t:'e',dy:0,ease:.065});
+ motion.update=()=>{carousel.rotation.y=smooth(motion.v,.61,1)*Math.PI*.58};
  motion.update();
 }
 function buildKitchenPlinth(g,it,height){
