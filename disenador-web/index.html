@@ -248,6 +248,7 @@ LIB.push(
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"shelf",n:"Estantería despacho",w:90,h:200,d:35,e:0,col:"#9d8264",s:"contemporáneo",variant:0},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"dresser",n:"Cajonera móvil",w:42,h:58,d:52,e:0,col:"#d2c8b8",s:"rústico",variant:1},
 {t:'roomObject',roomType:"despacho",c:"Despacho",shape:"computer",n:"Monitor y teclado",w:65,h:48,d:22,e:0,col:"#a88f78",s:"moderno",variant:2},
+{t:'roomObject',roomType:"despacho",c:"Despacho",shape:"computer",n:"Portátil",w:35,h:21,d:24,e:0,col:"#7b8286",s:"moderno",variant:0,role:"surface-accessory"},
 {t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Lavadora frontal",w:60,h:85,d:62,e:0,col:"#b6a28d",s:"nórdico",variant:0},
 {t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"washer",n:"Secadora frontal",w:60,h:85,d:62,e:0,col:"#8c9aa5",s:"industrial",variant:1},
 {t:'roomObject',roomType:"lavadero",c:"Lavadero",shape:"sink",n:"Lavadero con pila",w:80,h:90,d:60,e:0,col:"#9d8264",s:"contemporáneo",variant:2},
@@ -581,7 +582,9 @@ const isBedroomItem=it=>it.roomType==='dormitorio'||it.c==='Dormitorio'||it.t===
 const isVestidorItem=it=>it.roomType==='vestidor'||it.c==='Vestidor';
 const isLivingItem=it=>['salón','comedor','Salón','Comedor'].includes(it.roomType||it.c)||['sofa','mesa','tv','lampara'].includes(it.t);
 const isHallItem=it=>it.t==='roomObject'&&(it.roomType==='recibidor'||it.c==='Recibidor');
-const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it);
+const isOfficeItem=it=>it.t==='roomObject'&&(it.roomType==='despacho'||it.c==='Despacho');
+const isOfficeCornerDesk=it=>isOfficeItem(it)&&it.shape==='desk'&&/en l|ala lateral/i.test(it.n||'');
+const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it)||isHallItem(it)||isOfficeItem(it);
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
 const isDiningPendant=it=>it.roomType==='comedor'&&isLamp(it)&&/suspend|colgante/i.test(it.n||'');
 const BEDROOM_COLOR_PARTS={
@@ -600,11 +603,16 @@ const HALL_COLOR_PARTS={
  bench:[...ITEM_COLOR_PARTS.bench,['shelves','Balda zapatera']],
  cabinet:[...ITEM_COLOR_PARTS.cabinet.filter(([key])=>key!=='shelves'),['shelves','Bandejas zapateras']]
 };
+const OFFICE_COLOR_PARTS={
+ desk:[...ITEM_COLOR_PARTS.desk,['carcass','Casco de la cajonera'],['hardware','Guías y fijaciones']],
+ dresser:[...ITEM_COLOR_PARTS.dresser,['drawerInterior','Interior de cajones'],['hardware','Guías y fijaciones'],['wheels','Ruedas']],
+ shelf:[...LIVING_COLOR_PARTS.shelf]
+};
 function itemColorParts(it){
  const shape=it.shape||(it.t==='cama'?'bed':it.t==='armario'&&isBedroomItem(it)?'wardrobe':it.t==='mesa'?'table':it.t==='lampara'?'lamp':it.t);
  return ((isBedroomItem(it)||isVestidorItem(it))&&BEDROOM_COLOR_PARTS[shape])||
   (isBathroomItem(it)&&BATH_COLOR_PARTS[it.t==='lavabo'?'vanity':shape])||
-  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
+  (isLivingItem(it)&&LIVING_COLOR_PARTS[shape])||(isHallItem(it)&&HALL_COLOR_PARTS[shape])||(isOfficeItem(it)&&OFFICE_COLOR_PARTS[shape])||ITEM_COLOR_PARTS[shape]||ITEM_COLOR_PARTS[it.t]||[['body','Cuerpo principal'],['details','Detalles y accesorios']];
 }
 function partColorUI(e,panel=P,save=commit){
  const defaults=modelPartDefaults.get(e);
@@ -2208,6 +2216,168 @@ function buildHallCoat(g,it,primary){
  }
 }
 
+function buildOfficeDrawers(g,it,{x=0,z=0,w,h,d,base,top,primary,mobile=false}){
+ const t=Math.min(1.8,w*.06,h*.065,d*.075),frontZ=z+d/2-t,backZ=z-d/2+t,depth=frontZ-backZ;
+ const body=partFinish(primary.clone(),'carcass'),finish=partFinish(primary.clone(),mobile?'fronts':'drawerFronts');
+ const inside=partFinish(M('#c2b8a8',.72),'drawerInterior'),metal=partFinish(M('#6d7678',.33,.63),'hardware');
+ const lower=base+t,upper=h-t,span=w-2*t;
+ for(const side of [-1,1])B(g,t,upper-base,d-t,x+side*(w-t)/2,(upper+base)/2,z-t/2,body);
+ B(g,span,t,d-t,x,base+t/2,z-t/2,body);
+ B(g,span,upper-lower,t,x,(upper+lower)/2,backZ-t/2,body);
+ B(g,w,t,d,x,h-t/2,z,top);
+ it.op=it.op||[];
+ for(let k=0;k<3;k++){
+  const slot=(upper-lower)/3,y=lower+k*slot;
+  furnitureDrawer(g,it,k,{x,width:span,depth,frontZ,bottom:y,top:y+slot,ceiling:y+slot-.9,front:finish,inside,metal});
+ }
+ if(mobile){
+  const wheel=partFinish(M('#35383b',.65,.22),'wheels'),r=base*.34,wide=r*1.36;
+  for(const side of [-1,1])for(const end of [-1,1]){
+   const xx=x+side*w*.34,zz=z+end*d*.36;
+   B(g,wide,base-r*2,wide,xx,(base+r*2)/2,zz,metal);
+   B(g,wide*1.45,r*.65,wide,xx,r*1.65,zz,metal);
+   for(const dir of [-1,1]){
+    const tire=new T.Mesh(new T.CylinderGeometry(r,r,wide*.48,24),wheel);
+    tire.rotation.z=Math.PI/2;tire.position.set(xx+dir*wide*.42,r,zz);g.add(tire);
+   }
+  }
+ }else B(g,w*.9,base,d*.83,x,base/2,z,body);
+}
+
+function buildOfficeDesk(g,it,primary){
+ const {w,h,d}=it,corner=isOfficeCornerDesk(it),adjustable=/regulable/i.test(it.n||'');
+ const top=partFinish(primary.clone(),'top'),metal=partFinish(M('#42494c',.4,.64),'frame');
+ const hardware=partFinish(M('#899094',.34,.66),'hardware');
+ const t=Math.min(3.4,h*.1),under=h-t;
+ const rail=Math.min(3.4,w*.055,d*.09),back=-d/2,front=corner?d*.03:d/2,edge=w*.16;
+ if(corner){
+  const outline=new T.Shape(),left=-w/2,right=w/2;
+  outline.moveTo(left,back);outline.lineTo(right,back);outline.lineTo(right,d/2);
+  outline.lineTo(edge,d/2);outline.lineTo(edge,front);outline.lineTo(left,front);outline.closePath();
+  const geo=new T.ExtrudeGeometry(outline,{depth:t,bevelEnabled:false});
+  geo.rotateX(Math.PI/2);
+  const board=new T.Mesh(geo,top);board.position.y=h;g.add(board);
+ }else B(g,w,t,d,0,h-t/2,0,top);
+ const x=w*.43,zBack=back+d*.12,zFront=d*.37,y=under-rail/2;
+ if(adjustable){
+  const footH=h*.06,outerH=under*.62,innerW=rail*1.35,outerW=rail*1.85;
+  for(const side of [-1,1]){
+   const xx=side*w*.33;
+   B(g,outerW,footH,d*.90,xx,footH/2,0,metal);
+   B(g,outerW,outerH,outerW,xx,footH+outerH/2,0,metal);
+   B(g,innerW,under-outerH,innerW,xx,(under+outerH)/2,0,hardware);
+   B(g,outerW*1.7,rail*.65,d*.3,xx,under-rail*.325,0,metal);
+  }
+  B(g,w*.66,rail,rail,0,y,0,metal);
+  B(g,9,1.6,4,w*.36,under-.8,d*.43,hardware);
+  return;
+ }
+ const leg=(xx,z)=>B(g,rail,under,rail,xx,under/2,z,metal);
+ B(g,w*.86,rail,rail,0,y,zBack,metal);
+ for(const z of [zBack,zFront])leg(x,z);
+ B(g,rail,rail,zFront-zBack,x,y,(zFront+zBack)/2,metal);
+ if(corner){
+  const innerX=edge+rail/2;
+  leg(innerX,zFront);
+  B(g,x-innerX,rail,rail,(x+innerX)/2,y,zFront,metal);
+ }
+ const bayW=Math.min(w*.31,49),bayD=Math.min(d*(corner?.42:.67),49);
+ const bayZ=corner?front-bayD/2-1:0;
+ buildOfficeDrawers(g,it,{x:-w*.30,z:bayZ,w:bayW,h:under,d:bayD,base:Math.min(6,h*.1),top:metal,primary});
+}
+
+function buildOfficeCaster(g,x,z,r,wheel,metal){
+ for(const side of [-1,1]){
+  const tire=new T.Mesh(new T.CylinderGeometry(r,r,r*.66,22),wheel);
+  tire.rotation.z=Math.PI/2;tire.position.set(x+side*r*.55,r,z);g.add(tire);
+ }
+ B(g,r*.48,r*1.1,r*.72,x,r*1.55,z,metal);
+}
+
+function buildOfficeChair(g,it,primary){
+ const {w,h,d}=it,executive=/ejecutiva/i.test(it.n||''),compact=/compacta/i.test(it.n||'');
+ const seat=partFinish(primary.clone(),'seat'),back=partFinish((executive||compact?primary:M('#465057',.75)).clone(),'back');
+ const arms=partFinish(M('#343a3d',.58,.23),'arms'),base=partFinish(M('#444b4d',.46,.58),'base');
+ const wheel=partFinish(M('#24282a',.68,.1),'wheels'),metal=partFinish(M('#939a9b',.32,.7),'mechanism');
+ const y=h*.39,sw=w*.68,sd=d*.57,seatT=h*.075,zBack=-sd*.47,backH=(h-y-seatT*.48-1)/(executive?1.018:.906),backW=sw*(executive?.95:.85);
+ bedCushion(g,0,y,0,sw,seatT,sd,seat,6);
+ B(g,sw*.68,3,sd*.65,0,y-1.5,0,base);
+ const radius=Math.min(w,d)*.057,hubY=radius*2.85;
+ const gas=new T.Mesh(new T.CylinderGeometry(radius*.66,radius*.92,y-hubY,24),metal);
+ gas.position.y=(y+hubY)/2;g.add(gas);
+ const hub=new T.Mesh(new T.CylinderGeometry(radius*1.38,radius*1.55,4,24),base);hub.position.y=hubY;g.add(hub);
+ for(let k=0;k<5;k++){
+  const a=k*Math.PI*2/5,x=Math.sin(a)*w*.39,z=Math.cos(a)*d*.39;
+  bedroomTube(g,[0,hubY,0],[x,radius*2.1,z],radius*.62,base);
+  buildOfficeCaster(g,x,z,radius,wheel,base);
+ }
+ const lean=new T.Group();lean.position.set(0,y+seatT*.48,zBack);lean.rotation.x=-.17;g.add(lean);
+ const curve=new T.Shape(),half=backW/2;
+ curve.moveTo(-half*.82,0);curve.quadraticCurveTo(-half,0,-half,backH*.19);
+ curve.lineTo(-half*.86,backH*.82);curve.quadraticCurveTo(0,backH,half*.86,backH*.82);
+ curve.lineTo(half,backH*.19);curve.quadraticCurveTo(half,0,half*.82,0);curve.closePath();
+ const thick=executive?5.5:3.4,geo=new T.ExtrudeGeometry(curve,{depth:thick,bevelEnabled:true,bevelSize:1.2,bevelThickness:.8,bevelSegments:3,curveSegments:14});
+ geo.translate(0,0,-thick*.5);
+ lean.add(new T.Mesh(geo,back));
+ for(const side of [-1,1]){
+  bedroomTube(g,[side*sw*.28,y-1,-sd*.46],[side*backW*.34,y+backH*.36,zBack-backH*.064-2.5],1.9,base);
+  if(!compact){
+   const x=side*sw*.56,z=sd*.05,padY=y+seatT+h*.135;
+   B(g,Math.abs(x)+3.2,2.4,3.2,x/2,y-1.4,z,arms);
+   bedroomTube(g,[x,y-1.4,z],[x,padY-1.1,z],1.65,arms);
+   B(g,sw*.17,3,sd*.64,x,padY,z,arms);
+  }
+ }
+ if(executive)B(lean,backW*.58,backH*.20,thick*1.4,0,backH*.91,0,back);
+}
+
+function buildOfficeKeyboard(g,{x=0,y=0,z=0,w,d,keys}){
+ const gap=Math.min(.21,w*.006),kw=(w-13*gap)/14,kd=(d-4*gap)/5;
+ for(let row=0;row<5;row++){
+  for(let col=0;col<14;col++){
+   if(row===4&&col>=4&&col<9)continue;
+   const span=row===4&&col===9?6:1;
+   const left=col-span+1;
+   B(g,span*(kw+gap)-gap,.35,kd,x-w/2+left*(kw+gap)+(span*(kw+gap)-gap)/2,y,z-d/2+row*(kd+gap)+kd/2,keys);
+  }
+ }
+}
+
+function buildOfficeComputer(g,it,primary){
+ const {w,h,d}=it,laptop=/portátil|portatil|laptop/i.test(it.n||'');
+ const casing=partFinish(M('#384044',.43,.46),'casing'),screen=partFinish(M('#17232a',.19,.38),'screen');
+ const bezel=partFinish(M('#24282b',.46,.32),'bezel'),keyboard=partFinish(primary.clone(),'keyboard');
+ const keys=partFinish(M('#272d30',.58,.22),'keys'),stand=partFinish(M('#656f73',.39,.62),'stand');
+ if(laptop){
+  const t=Math.min(1.4,h*.08),pivotZ=-d*.34,length=Math.min(h*.94,d*.79),screenW=w*.91;
+  B(g,w,t,d,0,t/2,0,casing);
+  B(g,w*.96,.28,d*.94,0,t+.14,0,keyboard);
+  buildOfficeKeyboard(g,{y:t+.48,z:-d*.14,w:w*.81,d:d*.35,keys});
+  B(g,w*.34,.30,d*.23,0,t+.29,d*.25,casing);
+  const lid=new T.Group();lid.name='Tapa del portátil';lid.position.set(0,t+1.18,pivotZ);g.add(lid);
+  B(lid,screenW,.9,length,0,.15,length/2,bezel);
+  B(lid,screenW*.92,.24,length*.88,0,-.36,length/2,screen);
+  for(const side of [-1,1])B(g,w*.18,1,1.2,side*w*.29,t+.40,pivotZ,stand);
+  it.op=it.op||[];
+  mv(lid,{it,k:0,t:'u',angle:102});
+  return;
+ }
+ const monitorW=w*.89,monitorH=h*.67,z=-d*.33,y=h-monitorH/2,baseH=Math.min(1.7,h*.07);
+ B(g,monitorW,monitorH,2.1,0,y,z,casing);
+ B(g,monitorW*.995,monitorH*.99,.55,0,y,z+1.1,bezel);
+ B(g,monitorW*.945,monitorH*.918,.32,0,y+.16,z+1.42,screen);
+ const neck=h-monitorH+monitorH*.24;
+ B(g,Math.min(4.4,w*.08),neck-baseH,3.2,0,(neck+baseH)/2,z-1.15,stand);
+ B(g,w*.45,baseH,d*.43,0,baseH/2,-d*.277,stand);
+ B(g,monitorW*.19,4,1.4,0,neck,z-1.65,stand);
+ const kw=w*.73,kd=d*.43,kx=-w*.07,kz=d*.24;
+ B(g,kw,1.5,kd,kx,.75,kz,keyboard);
+ buildOfficeKeyboard(g,{x:kx,y:1.66,z:kz,w:kw*.94,d:kd*.84,keys});
+ const mouse=partFinish(M('#3a4144',.6,.22),'mouse'),ball=new T.Mesh(new T.SphereGeometry(1,24,14),mouse);
+ ball.scale.set(w*.05,1.48,d*.148);ball.position.set(w*.374,1.48,kz);g.add(ball);
+ B(g,.5,.42,1,w*.374,2.9,kz+.82,mouse);
+}
+
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
@@ -2458,6 +2628,7 @@ case'table':{
 }
 case'bed':{buildBedroomBed(g,it,mt);break;}
 case'dresser':{
+ if(isOfficeItem(it)){buildOfficeDrawers(g,it,{w,h,d,base:Math.min(8,h*.17),top:partFinish(mt.clone(),'top'),primary:mt,mobile:true});break;}
  if(isBedroomItem(it)||isVestidorItem(it)){buildBedroomDresser(g,it,mt);break;}
  const name=(it.n||'').toLowerCase(),body=M(it.col||'#b7a58e',.62,.06),inside=M('#c9c2b8',.82,.02),metal=M('#aeb5b8',.3,.82),dark=M('#343a3e',.52,.28);
  const mobile=/móvil|movil/.test(name),count=/6 cajones/.test(name)?6:/2 cajones/.test(name)?2:3,th=2.2,dep=d*.88,frontZ=dep/2+1.5;
@@ -2541,7 +2712,7 @@ case'wardrobe':{
 }
 case'shelf':{
  if(isVestidorItem(it)){buildDressingShoeRack(g,it,mt);break;}
- const living=isLivingItem(it),name=(it.n||'').toLowerCase(),library=/librería/.test(name),side=M(library?'#b39c7d':'#343b40',library?.72:.38,library?.035:.72),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
+ const living=isLivingItem(it)||isOfficeItem(it),name=(it.n||'').toLowerCase(),library=/librer[ií]a/.test(name),side=M(library?'#b39c7d':'#343b40',library?.72:.38,library?.035:.72),back=M('#c2b7a8',.82,.02),pin=M('#8e969b',.3,.82),bookSpines=[M('#536c72',.78,.02),M('#8b6251',.78,.02),M('#b2a17d',.82,.02),M('#46545d',.8,.02),M('#687b62',.82,.02)];
  const shelfMat=living?partFinish(mt.clone(),'shelves'):mt,pages=M('#e5dfd2',.9,.01);
  if(living){partFinish(side,library?'sides':'frame');partFinish(back,'back');partFinish(pin,'hardware');partFinish(pages,'pages');bookSpines.forEach(m=>partFinish(m,'books'))}
  for(const x of [-1,1]){if(library)box(x*(w/2-1.5),h/2,0,3,h,d,side);else{tube([x*(w/2-2),3,-d*.42],[x*(w/2-2),h-3,-d*.42],2.2,side);tube([x*(w/2-2),3,d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);tube([x*(w/2-2),h-3,-d*.42],[x*(w/2-2),h-3,d*.42],2.2,side);if(living)for(const z of [-1,1])box(x*(w/2-2),1.55,z*d*.42,4,3.1,4,side)}}
@@ -2565,6 +2736,7 @@ case'shelf':{
  break;
 }
 case'desk':{
+ if(isOfficeItem(it)){buildOfficeDesk(g,it,mt);break;}
  if(isBedroomItem(it)){buildBedroomDesk(g,it,mt);break;}
  const name=(it.n||'').toLowerCase(),isL=/en l|ala lateral/.test(name),isSit=/regulable/.test(name),isVanity=/tocador/.test(name),isYouth=/juvenil/.test(name);
  const wood=mt,edge=M('#b8a995',.62,.08),inside=M('#c9c3b8',.78,.025),steel=M('#343b40',.34,.78),steelHi=M('#89949b',.28,.86),rubber=M('#20262a',.82,.02),drawerFront=mt;
@@ -2673,6 +2845,7 @@ case'desk':{
  break;
 }
 case'officechair':{
+ if(isOfficeItem(it)){buildOfficeChair(g,it,mt);break;}
  const name=(it.n||'').toLowerCase(),executive=/ejecutiva/.test(name),compact=/compacta/.test(name),meshMat=M('#343d43',.58,.18),uphol=M(it.col||'#454d55',.82,.02),seam=M('#aeb5bb',.62,.08),steelHi=M('#89949b',.28,.86),baseMat=M('#252b30',.32,.72),rub=M('#171b1f',.72,.04);
  const seatW=w*.72,seatD=d*.55,seatY=h*.39;
  const seat=new T.Shape();seat.moveTo(-seatW*.42,-seatD*.5);seat.quadraticCurveTo(-seatW*.5,-seatD*.5,-seatW*.5,-seatD*.28);seat.lineTo(-seatW*.5,seatD*.22);seat.quadraticCurveTo(-seatW*.48,seatD*.5,-seatW*.25,seatD*.5);seat.lineTo(seatW*.25,seatD*.5);seat.quadraticCurveTo(seatW*.5,seatD*.5,seatW*.5,seatD*.22);seat.lineTo(seatW*.5,-seatD*.28);seat.quadraticCurveTo(seatW*.5,-seatD*.5,seatW*.35,-seatD*.5);seat.closePath();
@@ -3077,6 +3250,7 @@ case'coat':{
 
 
 case'computer':{
+ if(isOfficeItem(it)){buildOfficeComputer(g,it,mt);break;}
  const itemName=(it.n||'').toLowerCase();
  if(/portátil|portatil|laptop/.test(itemName)){
   const shell=M('#343a40',.32,.72),baseInner=M('#aeb5ba',.42,.62),keyCap=M('#929ba2',.5,.25),screenFrame=M('#171c21',.24,.4),display=new T.MeshStandardMaterial({color:'#172c3b',roughness:.16,metalness:.18,emissive:'#102535',emissiveIntensity:.22}),track=M('#858e95',.42,.55);
@@ -3430,15 +3604,15 @@ const cors=i=>{const c=Math.cos(i.r*D),s=Math.sin(i.r*D);return[[-1,-1],[1,-1],[
 const sat=(A,B)=>{for(const P of[A,B])for(let n=0;n<4;n++){const p=P[n],q=P[(n+1)%4],ax=q[1]-p[1],ay=p[0]-q[0];let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;A.forEach(v=>{const d=v[0]*ax+v[1]*ay;a0=Math.min(a0,d);a1=Math.max(a1,d)});B.forEach(v=>{const d=v[0]*ax+v[1]*ay;b0=Math.min(b0,d);b1=Math.max(b1,d)});if(a1<=b0+.01||b1<=a0+.01)return false}return true};
 const wrect=w=>({x:(w.x1+w.x2)/2,y:(w.y1+w.y2)/2,w:len(w),d:w.t,r:Math.atan2(w.y2-w.y1,w.x2-w.x1)/D});
 function isSurfaceAccessory(it){return !!(it&&(it.role=='surface-accessory'||['fregadero','griferia','planta','lampara'].includes(it.t)))}
-function pointInItem(it,x,y){const dx=x-it.x,dy=y-it.y,c=Math.cos(-(it.r||0)*D),s=Math.sin(-(it.r||0)*D),lx=dx*c-dy*s,ly=dx*s+dy*c;return Math.abs(lx)<=it.w/2&&Math.abs(ly)<=it.d/2}
+function pointInItem(it,x,y){const dx=x-it.x,dy=y-it.y,c=Math.cos(-(it.r||0)*D),s=Math.sin(-(it.r||0)*D),lx=dx*c-dy*s,ly=dx*s+dy*c;return Math.abs(lx)<=it.w/2&&Math.abs(ly)<=it.d/2&&(!isOfficeCornerDesk(it)||lx>=it.w*.16||ly<=it.d*.03)}
 function supportableParent(it){return !!(it&&it.id!=null&&!['sofa','cama','inodoro','alfombra','planta','lampara','model'].includes(it.t))}
-function supportHeight(parent){return (+parent.e||0)+(+parent.h||0)+1.8}
+function supportHeight(parent){return (+parent.e||0)+(+parent.h||0)+(isOfficeItem(parent)&&parent.shape==='desk'&&!parent.supportTop?0:1.8)}
 function attachToSurface(child,parent){if(!child||!parent||parent.id==null||child.id==parent.id)return false;const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a),dx=child.x-parent.x,dy=child.y-parent.y;child.rel={type:'surface',parentId:parent.id,dx:dx*c+dy*s,dy:-dx*s+dy*c,dr:(child.r||0)-(parent.r||0),dz:0};child.e=supportHeight(parent);updateSupportTop(parent);return true}
 function detachChild(child){if(!child||!child.rel)return;const p=S.i.find(x=>x.id==child.rel.parentId);delete child.rel;if(p)updateSupportTop(p)}
 function detachChildren(parent){S.i.forEach(child=>{if(child.rel&&child.rel.parentId==parent.id){delete child.rel;child.relWarning='Ha perdido su superficie de apoyo; se ha conservado como objeto independiente.'}});if(parent)delete parent.supportTop}
 function syncSupportedChildren(parent){if(!parent||parent.id==null)return;S.i.forEach(child=>{const r=child.rel;if(!r||r.parentId!=parent.id)return;const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a);child.x=parent.x+r.dx*c-r.dy*s;child.y=parent.y+r.dx*s+r.dy*c;child.r=(parent.r||0)+(r.dr||0);child.e=supportHeight(parent)+(r.dz||0)});updateSupportTop(parent)}
 function updateChildOffset(child){if(!child||!child.rel)return;const p=S.i.find(x=>x.id==child.rel.parentId);if(!p)return;const a=(p.r||0)*D,c=Math.cos(a),s=Math.sin(a),dx=child.x-p.x,dy=child.y-p.y;child.rel.dx=dx*c+dy*s;child.rel.dy=-dx*s+dy*c;child.rel.dr=(child.r||0)-(p.r||0);updateSupportTop(p)}
-function updateSupportTop(parent){if(!parent||parent.id==null)return;const children=S.i.filter(x=>x.rel&&x.rel.parentId==parent.id);if(!children.length){delete parent.supportTop;return}const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a);let x0=-parent.w/2,x1=parent.w/2,z0=-parent.d/2,z1=parent.d/2;children.filter(ch=>ch.t=='fregadero').forEach(ch=>{const dx=ch.x-parent.x,dy=ch.y-parent.y,lx=dx*c+dy*s,ly=-dx*s+dy*c,ang=((ch.r||0)-(parent.r||0))*D,hw=Math.abs(Math.cos(ang))*ch.w/2+Math.abs(Math.sin(ang))*ch.d/2,hd=Math.abs(Math.sin(ang))*ch.w/2+Math.abs(Math.cos(ang))*ch.d/2;x0=Math.min(x0,lx-hw-2);x1=Math.max(x1,lx+hw+2);z0=Math.min(z0,ly-hd-2);z1=Math.max(z1,ly+hd+2)});parent.supportTop={x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0,d:z1-z0}}
+function updateSupportTop(parent){if(!parent||parent.id==null)return;const children=S.i.filter(x=>x.rel&&x.rel.parentId==parent.id);if(!children.length||(isOfficeItem(parent)&&parent.shape==='desk'&&!children.some(x=>x.t==='fregadero'))){delete parent.supportTop;return}const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a);let x0=-parent.w/2,x1=parent.w/2,z0=-parent.d/2,z1=parent.d/2;children.filter(ch=>ch.t=='fregadero').forEach(ch=>{const dx=ch.x-parent.x,dy=ch.y-parent.y,lx=dx*c+dy*s,ly=-dx*s+dy*c,ang=((ch.r||0)-(parent.r||0))*D,hw=Math.abs(Math.cos(ang))*ch.w/2+Math.abs(Math.sin(ang))*ch.d/2,hd=Math.abs(Math.sin(ang))*ch.w/2+Math.abs(Math.cos(ang))*ch.d/2;x0=Math.min(x0,lx-hw-2);x1=Math.max(x1,lx+hw+2);z0=Math.min(z0,ly-hd-2);z1=Math.max(z1,ly+hd+2)});parent.supportTop={x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0,d:z1-z0}}
 function fits(g){
  const w=+g.w,h=+g.h,d=+g.d,e=+(g.e||0);
  if(![w,h,d,e,g.x,g.y,g.r||0].every(Number.isFinite)||w<=0||h<=0||d<=0||e<0)return false;
@@ -4704,6 +4878,7 @@ function applyItemPartColors(g,it,primary){
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}applyItemPartColors(g,it,mt)}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
+ if(it.shape==='computer'&&motions.length&&motions.every(m=>m.t==='u'))return open?'Cerrar portátil':'Abrir portátil';
  if(motions.length&&motions.every(m=>m.storage))return open?'Cerrar arcón':'Abrir arcón';
  if(motions.length&&motions.every(m=>m.extension))return open?'Recoger mesa':'Extender mesa';
  if((it.shape==='bed'||it.t==='cama')&&motions.every(m=>m.t==='u'))return open?'Bajar somier':'Levantar somier';
