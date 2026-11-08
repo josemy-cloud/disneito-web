@@ -1548,7 +1548,7 @@ function setSun(){
  const a=$('#sa').value*D,e=$('#se').value*D,distance=Math.max(2500,shadowExtent*2);
  sun.position.set(Math.cos(a)*Math.cos(e),Math.sin(e),Math.sin(a)*Math.cos(e)).multiplyScalar(distance).add(sunTarget);
  sun.target.position.copy(sunTarget);
- sun.intensity=.57+Math.sin(e)*.40;
+ sun.intensity=RVo||$('#sq').value!=='m'?.57+Math.sin(e)*.40:0;
  fill.position.set(sunC.x-900,1100,sunC.z+650);
  rim.position.set(sunC.x+700,850,sunC.z-900);
  const camera=sun.shadow.camera;
@@ -1564,14 +1564,13 @@ function setSunShadowSize(size){
 }
 function setQ(){
  const q=$('#sq').value,realistic=q==='q',materials=q==='m';
- const shadows=realistic||(materials&&!compact.matches&&!matchMedia('(pointer:coarse)').matches);
- r3.shadowMap.enabled=shadows;sun.castShadow=shadows;
- setSunShadowSize(realistic?2048:1024);
+ r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
+ if(realistic)setSunShadowSize(2048);
  r3.toneMappingExposure=realistic?1.04:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
- hemi.intensity=realistic?.49:materials?.54:.55;
- fill.intensity=realistic?.16:materials?.19:.20;
- rim.intensity=realistic?.07:materials?.08:.12;
+ hemi.intensity=realistic?.49:materials?.95:.55;
+ fill.intensity=realistic?.16:materials?0:.20;
+ rim.intensity=realistic?.07:materials?0:.12;
  resize();build3d();
 }
 function previewPixelRatio(w,h){
