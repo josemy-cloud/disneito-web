@@ -38,6 +38,45 @@ body{display:flex !important;flex-direction:column;height:100vh;height:100dvh}
 #pvp{display:block;box-sizing:border-box;width:100%;height:calc(100dvh - clamp(170px,32dvh,300px) - 105px);min-height:90px;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
 #pvp select,#pvp input,#pvp button{max-width:100%;box-sizing:border-box}
 @media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}#pvp{height:calc(100dvh - clamp(150px,27dvh,230px) - 90px)}}
+
+/* Escritorio: controles de vista y catálogo junto al plano. */
+body.desktop-workspace:not(.ui-legacy) #top{
+ background:#202b3e!important;border-color:#344459;color:#f2f6fc
+}
+body.desktop-workspace:not(.ui-legacy) #top #pn{color:#fff!important}
+body.desktop-workspace:not(.ui-legacy) #top .view-modes{background:#e9eef5}
+body.desktop-workspace:not(.ui-legacy) #top .view-mode.on,
+body.desktop-workspace:not(.ui-legacy) #tools button.on{
+ background:#176cc1!important;color:#fff!important;border-color:#6db2fb!important
+}
+body.desktop-workspace:not(.ui-legacy) #tools{background:#202b3e!important;border-color:#344459}
+body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:6px 0
+}
+body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid .it{
+ display:flex;flex-direction:column;align-items:stretch!important;justify-content:start;
+ gap:4px!important;margin:0!important;padding:5px!important
+}
+body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid img{
+ width:100%!important;height:72px!important;background:#e8edf4!important
+}
+body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid small{color:#5b6675!important}
+#viewActions{display:none}
+body.desktop-workspace:not(.ui-legacy) #viewActions{
+ position:absolute;right:8px;bottom:8px;z-index:5;display:flex;align-items:end;gap:6px
+}
+body.desktop-workspace:not(.ui-legacy) #hint{max-width:calc(100% - 225px)}
+#cameraDock{position:relative}
+#cameraDock summary{
+ cursor:pointer;padding:6px 8px;background:white;color:#263432;
+ border:1px solid #d9d8d0;border-radius:8px;font-weight:600
+}
+#cameraDock #v3{
+ position:absolute;right:0;bottom:calc(100% + 6px);width:min(255px,35vw);padding:8px;
+ border:1px solid #d9d8d0;border-radius:8px;background:#fbfaf7;color:#263432;
+ box-shadow:0 8px 24px #1e2a3b30;line-height:2
+}
+#cameraDock #v3 button{margin:2px}
 </style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
@@ -59,7 +98,7 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 </div>
 <div id="main"><div id="tools"></div>
 <div class="side" id="lib"></div>
-<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="hint"></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
+<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="hint"></div><div id="viewActions"><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
@@ -588,7 +627,11 @@ function libUI(q=''){
    const im=document.createElement('img');im.src=thumb(ix);im.alt='Vista previa 3D de '+o.n;im.style.cssText='width:68px;height:68px;object-fit:contain;flex:none;background:#252a33;border-radius:5px';card.append(im);
    const info=document.createElement('span');info.style.cssText='min-width:0;overflow-wrap:anywhere';const nm=document.createElement('strong');nm.textContent=o.n;nm.style.cssText='display:block;font-size:12px';info.append(nm);
    const sm=document.createElement('small');sm.textContent=(o.brand?o.brand+' · ':'')+(o.ref?'Ref. '+o.ref+' · ':'')+o.w+' × '+o.d+' × '+o.h+' cm';sm.style.cssText='display:block;color:#aab4c4;font-size:10px;margin-top:3px';info.append(sm);card.append(info);card.onclick=()=>openPrev(ix);parent.append(card)};
-  matches.forEach(x=>renderItem(x,content));materials()
+  if(matches.length){
+   const items=document.createElement('div');items.className='library-item-grid';
+   content.append(items);matches.forEach(x=>renderItem(x,items));
+  }
+  materials()
  };
  search.oninput=()=>render();render()
 }
@@ -4505,7 +4548,7 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);setSun();
- const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;root.add(gnd);
+ const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
  S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(sel&&sel.k=='i'&&sel.id==it.id){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)})}
 const walkOverlay=$('#walkTouch');
 function animate(){requestAnimationFrame(animate);walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return;
@@ -4827,12 +4870,15 @@ mobileActions.setAttribute('aria-label','Acciones del proyecto');
 const mobileDock=[mobileMenu,$('#tl'),$('#tr'),mobileTop.querySelector('.view-modes')];
 const topNodes=[...mobileTop.childNodes];
 function arrangeMobileTop(){
+  const desktop=!useCompact()&&!document.body.classList.contains('ui-legacy');
+  document.body.classList.toggle('desktop-workspace',desktop);
   if(useCompact()){
     for(const node of topNodes)if(!mobileDock.includes(node))mobileActions.append(node);
     mobileWorkspace.append(mobileActions);
   }else{
     mobileActions.remove();
     mobileTop.append(...topNodes);
+    if(desktop)$('#cameraDock').append($('#v3'));
   }
 }
 function setMobilePanel(panelId){
@@ -5990,7 +6036,38 @@ let RE=null,rcv=null;const rp=document.createElement('div');rp.style.cssText='po
  function exit(){if(!RVo)return;RVo=false;cancel=true;try{RE&&RE.dispose()}catch(e){}setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#ffffff');removeEventListener('keydown',kd);ov.remove();rr.dispose();sc.environment=null;sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);sun.shadow.mapSize.set(2048,2048);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
-function modeUI(){const q=$('#sq').value,m3=mode=='3d';[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
+function modeUI(){const q=$('#sq').value,m3=mode=='3d';
+ const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
+function frameProject(){
+ if(!S.w.length&&!S.i.some(it=>!it.hid))return;
+ if(mode==='2d'||dualView){
+  const plan=new T.Box2();
+  const add=(x,y,pad)=>{plan.expandByPoint(new T.Vector2(x-pad,y-pad));plan.expandByPoint(new T.Vector2(x+pad,y+pad))};
+  S.w.forEach(w=>{add(w.x1,w.y1,w.t/2+24);add(w.x2,w.y2,w.t/2+24)});
+  S.i.filter(it=>!it.hid).forEach(it=>add(it.x,it.y,Math.hypot(it.w,it.d)/2));
+  const size=plan.getSize(new T.Vector2()),center=plan.getCenter(new T.Vector2());
+  k=Math.max(.15,Math.min(4,Math.max(1,c2.clientWidth-96)/Math.max(1,size.x),Math.max(1,c2.clientHeight-82)/Math.max(1,size.y)));
+  ox=c2.clientWidth/2-center.x*k;oy=c2.clientHeight/2-center.y*k;
+  draw();
+ }
+ if(mode!=='3d')return;
+ exitWalk();resize();oc.autoRotate=false;
+ const box=new T.Box3();
+ root.children.forEach(o=>{if(o.visible&&!o.userData.editorGround&&!o.userData.editorOverlay)box.expandByObject(o)});
+ if(box.isEmpty())return;
+ const center=box.getCenter(new T.Vector3()),direction=cam.position.clone().sub(oc.target).normalize();
+ if(!direction.lengthSq())direction.set(1,1,1).normalize();
+ const right=new T.Vector3().crossVectors(cam.up,direction).normalize();
+ const up=new T.Vector3().crossVectors(direction,right);
+ const slope=Math.tan(T.MathUtils.degToRad(cam.getEffectiveFOV()/2))*.86;
+ let distance=oc.minDistance;
+ for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
+  const p=new T.Vector3(x,y,z).sub(center);
+  distance=Math.max(distance,p.dot(direction)+Math.max(Math.abs(p.dot(right))/(slope*cam.aspect),Math.abs(p.dot(up))/slope,cam.near));
+ }
+ oc.target.copy(center);cam.position.copy(center).addScaledVector(direction,distance);oc.update();
+}
+$('#fitProject').onclick=frameProject;
 $('#mv2').onclick=()=>setMode('2d');$('#mvDual').onclick=()=>setMode(dualView?'2d':'dual');[['mvf','f'],['mvm','m'],['mvq','q']].forEach(([id,v])=>$('#'+id).onclick=()=>{$('#sq').value=v;setMode('3d');setQ();modeUI()});
 $('#ckc').onchange=()=>{showCeil=$('#ckc').checked;build3d()};$('#ckMeasures').onchange=()=>{S.showMeasures=$('#ckMeasures').checked;commit()};
 const NMK={puerta:'Puerta',cajon:'Cajón',hueco:'Zona / hueco',estante:'Estante',app:'Hueco electrodoméstico',barra:'Barra de colgar',separador:'Separador',encimera:'Encimera',espejo:'Espejo',lavabo:'Lavabo'};let elSel=0;
