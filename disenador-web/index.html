@@ -519,7 +519,7 @@ function sel2(l,opts,v,cb){const K=CB;const d=document.createElement('label');d.
 function btn(l,cb){const K=CB;const b=document.createElement('button');b.textContent=l;b.style.margin='3px 3px 0 0';b.onclick=()=>{cb();K()};P.append(b)}
 /* Componentes cromáticos específicos por familia. Las claves se guardan por objeto. */
 const ITEM_COLOR_PARTS={
- sofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['arms','Brazos tapizados'],['frame','Estructura y bastidor'],['feet','Patas'],['piping','Ribetes y costuras']],
+ sofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['arms','Brazos tapizados'],['frame','Estructura y bastidor'],['feet','Patas'],['piping','Ribetes y costuras'],['storage','Interior del arcón'],['hardware','Bisagras y pistones']],
  outdoorsofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['rope','Trenzado y cuerda'],['frame','Estructura'],['feet','Patas']],
  seat:[['seat','Asiento'],['back','Respaldo'],['arms','Brazos'],['frame','Estructura'],['feet','Patas']],
  chair:[['seat','Asiento'],['back','Respaldo'],['arms','Reposabrazos'],['frame','Estructura'],['feet','Patas']],
@@ -582,6 +582,7 @@ const isVestidorItem=it=>it.roomType==='vestidor'||it.c==='Vestidor';
 const isLivingItem=it=>['salón','comedor','Salón','Comedor'].includes(it.roomType||it.c)||['sofa','mesa','tv','lampara'].includes(it.t);
 const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorItem(it)||isLivingItem(it);
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
+const isDiningPendant=it=>it.roomType==='comedor'&&isLamp(it)&&/suspend|colgante/i.test(it.n||'');
 const BEDROOM_COLOR_PARTS={
  dresser:[...ITEM_COLOR_PARTS.dresser,['drawerInterior','Interior de cajones'],['hardware','Guías y soportes']],
  wardrobe:[...ITEM_COLOR_PARTS.wardrobe,['drawerInterior','Interior de cajones']],
@@ -1999,6 +2000,53 @@ function buildLivingWall(g,it,primary){
  buildLivingCabinet(cabinet,dims,primary,'wall');
 }
 
+function buildChaiseStorage(g,it,{x,rear,front,width,baseY,seatY,seatH,frame,feet}){
+ const length=front-rear,z=(rear+front)/2,wall=Math.min(2.2,width*.10,length*.08),height=seatY-baseY;
+ const lidT=Math.min(1.7,it.h*.04);
+ const inside=partFinish(M('#a29a8d',.76),'storage'),metal=partFinish(M('#818584',.34,.63),'hardware');
+ const pivot=new T.Group();pivot.name='Tapa del arcón';
+ pivot.position.set(x,seatY+seatH,rear);g.add(pivot);
+ B(g,width,wall,length,x,baseY+wall/2,z,inside);
+ for(const side of [-1,1]){
+  const xx=x+side*(width-wall)/2;
+  B(g,wall,height,length,xx,baseY+height/2,z,frame);
+  B(g,width-2*wall,height,wall,x,baseY+height/2,z+side*(length-wall)/2,frame);
+  for(const zz of [rear+length*.17,front-length*.17])B(g,4,baseY,4,x+side*width*.34,baseY/2,zz,feet);
+  const hingeX=side*width*.31;
+  B(g,4,1.2,wall, x+hingeX,seatY-.6,rear+wall/2,metal);
+  B(pivot,4,.9,3,hingeX,-seatH+.45,2.1,metal);
+ }
+ B(pivot,width,lidT,length,0,-seatH+lidT/2,length/2,frame);
+ const up=new T.Vector3(0,1,0),end=new T.Vector3(),direction=new T.Vector3();
+ const struts=[-1,1].map(side=>{
+  const sx=side*(width/2-wall-1.4);
+  const anchor=new T.Vector3(x+sx,baseY+height*.33,rear+length*.16);
+  const tip=new T.Vector3(sx,-seatH,length*.55);
+  const cylinder=(r)=>{
+   const mesh=new T.Mesh(new T.CylinderGeometry(r,r,1,12),metal);g.add(mesh);return mesh;
+  };
+  return {anchor,tip,body:cylinder(.8),rod:cylinder(.39)};
+ });
+ const update=()=>{
+  pivot.updateMatrix();
+  for(const {anchor,tip,body,rod} of struts){
+   end.copy(tip).applyMatrix4(pivot.matrix);
+   direction.subVectors(end,anchor);
+   const length=direction.length();
+   direction.multiplyScalar(1/length);
+   const bodyLength=Math.min(length*.85,18),overlap=Math.min(1.4,bodyLength*.25);
+   body.quaternion.setFromUnitVectors(up,direction);
+   body.position.copy(anchor).addScaledVector(direction,bodyLength/2);body.scale.y=bodyLength;
+   rod.quaternion.copy(body.quaternion);
+   rod.position.copy(anchor).addScaledVector(direction,(bodyLength-overlap+length)/2);
+   rod.scale.y=length-bodyLength+overlap;
+  }
+ };
+ it.op=it.op||[];
+ stepMV(mv(pivot,{it,k:0,t:'u',angle:43,storage:true,update}));
+ return pivot;
+}
+
 function buildDiningExtension(g,it,wood,edge,steel){
  const {w,h,d}=it,leafW=w*.22,sideW=(w-leafW)/2,t=Math.min(4,h*.056);
  const topY=h-t/2,travel=leafW/2+.28,closedX=sideW/2+.14;
@@ -2007,15 +2055,21 @@ function buildDiningExtension(g,it,wood,edge,steel){
  it.op=it.op||[];
  const motion=mv(leaf,{it,k:0,t:'e',dy:0,extension:true});
  const halves=[],legs=partFinish(steel.clone(),'legs');
+ const railY=h-2*t-4.5,slideLength=w*.22,railZ=d*.29;
+ const inner=partFinish(M('#86898b',.42,.65),'hardware');
  for(const side of [-1,1]){
   const half=new T.Group();g.add(half);halves.push(half);
   B(half,sideW,t,d,0,topY,0,wood).userData.mv=motion;
   for(const z of [-1,1]){
    B(half,sideW*.86,4,3,0,topY-t/2-2,z*d*.42,edge);
-   const legX=side*sideW*.34,legZ=z*d*.42;
-   B(half,5.2,h-t,5.2,legX,(h-t)/2,legZ,legs);
-   if(side===1)B(g,w*.60,2.6,2.4,0,h-2*t-3.2,z*d*.32,steel);
+   B(half,5.2,h-t,5.2,side*sideW*.34,(h-t)/2,z*d*.42,legs);
+   B(half,slideLength,2.6,2.3,-side*(sideW-slideLength)/2,railY,z*railZ,steel);
+   B(half,3.2,h-t-railY,3.2,-side*(sideW*.5-4),(h-t+railY)/2,z*railZ,steel);
+   if(side===1)B(g,leafW+slideLength*.68,1.6,1.8,0,railY,z*(railZ+1.45),inner);
   }
+ }
+ for(const z of [-1,1]){
+  B(leaf,leafW*.7,1.4,2,0,-t/2-.7,z*railZ,inner);
  }
  motion.update=()=>{
   const spread=Math.min(1,motion.v/.65),raise=Math.max(0,(motion.v-.65)/.35);
@@ -2040,7 +2094,7 @@ function buildLivingRoundMirror(g,it,primary){
 function buildLivingLamp(g,it,primary){
  const {w,h,d}=it,r=Math.min(w,d)/2,name=it.n||'';
  if(/sobremesa/i.test(name)){buildBedroomLamp(g,it,primary);return}
- const hanging=/suspend|colgante/i.test(name);
+ const hanging=isDiningPendant(it);
  const shade=partFinish(primary.clone(),'shade'),body=partFinish(M('#504840',.38,.65),'body');
  const base=partFinish(M('#383735',.48,.37),'base'),hardware=partFinish(M('#f4ead5',.34,.02),'hardware');
  const shellH=Math.min(h*.43,r*1.05),bottom=hanging?0:h-shellH-4;
@@ -2069,7 +2123,7 @@ case'sofa':{
   sh.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);sh.lineTo(-sx/2,-sz/2+r);sh.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);sh.closePath();
   const bevel=Math.min(1.8,sy*.16),geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
   geo.translate(0,0,bevel);geo.rotateX(Math.PI/2);
-  const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy/2,z);tag(mesh,'');parent.add(mesh);return mesh;
+  const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy,z);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   const r=Math.min(rad,sx*.18,sy*.16),sh=new T.Shape();
@@ -2096,22 +2150,30 @@ case'sofa':{
  };
  if(chaise){
   const zFront=d*.48,zRear=-d*.35,zShort=d*.135;
-  addSeat(-w*.264,(zFront+zRear)/2,w*.312,zFront-zRear);
+  const x=-w*.264,width=w*.312,rear=zShort+Math.min(2.1,d*.02),length=zFront-rear;
+  addSeat(x,(zRear+zShort)/2,width,zShort-zRear);
+  const lid=buildChaiseStorage(g,it,{x,rear,front:zFront,width,baseY:h*.08,seatY,seatH,frame,feet});
+  const lidT=Math.min(1.7,h*.04);
+  tag(pad(lid,0,-seatH+lidT,length/2,width,seatH-lidT,length*.96,upholstery,5),'seat');
   for(const x of [w*.015,w*.275])addSeat(x,(zShort+zRear)/2,w*.235,zShort-zRear);
   for(const [x,width] of [[-w*.264,w*.30],[w*.015,w*.23],[w*.275,w*.23]])addBack(x,width,-d*.393);
  }else if(corner){
   const rear=-d*.38,join=d*.025,front=d*.48;
-  for(const x of [-w*.27,0]){
-   addSeat(x,(join+rear)/2,w*.265,join-rear);
-   addBack(x,w*.255,-d*.409);
+  const left=-w*.403,right=w*.402,gap=Math.min(.72,w*.004),span=(right-left-2*gap)/3;
+  for(let k=0;k<3;k++){
+   const x=left+span/2+k*(span+gap);
+   addSeat(x,(join+rear)/2,span,join-rear);
+   addBack(x,span,-d*.409);
   }
-  addSeat(w*.267,(join+rear)/2,w*.265,join-rear);
-  addBack(w*.267,w*.255,-d*.409);
-  const z=(join+front)/2;
-  addSeat(w*.267,z,w*.265,front-join-.5);
-  tag(B(g,w*.045,h*.76,front-join,w*.446,h*.46,z,frame),'frame');
-  const sideBack=verticalPad(g,w*.413,backY,z,front-join,backH,w*.073,upholstery,5);
+  const sideX=right-span/2,z=(join+front)/2;
+  addSeat(sideX,z,span,front-join-gap);
+  // El respaldo y su bastidor recorren el lateral hasta unirse al tramo largo.
+  const sideRear=-d*.397,sideFront=front,sideZ=(sideRear+sideFront)/2,sideD=sideFront-sideRear;
+  tag(B(g,w*.045,h*.76,sideD,w*.457,h*.46,sideZ,frame),'frame');
+  const sideBack=verticalPad(g,w*.425,backY,sideZ,sideD,backH,w*.063,upholstery,4);
   sideBack.rotation.y=Math.PI/2;tag(sideBack,'back');
+  // El puente interior da apoyo a los dos cojines en la junta del giro.
+  tag(B(g,span,seatY-h*.08,3,sideX,(seatY+h*.08)/2,join,frame),'frame');
  }else{
   const count=modular?4:seats,usableW=w*.82,gap=w*.012,cw=(usableW-gap*(count-1))/count;
   for(let k=0;k<count;k++){const x=-usableW/2+cw/2+k*(cw+gap);addSeat(x,-d*.015,cw,d*.53);addBack(x,cw*.96,-d*.303)}
@@ -2128,7 +2190,7 @@ case'sofa':{
   }
  }
  if(outdoor){for(let k=0;k<6;k++)tag(B(g,w*.84,1.2,1.1,0,h*.16,-d*.34+k*d*.12,frame),'frame')}
- g.userData.upholsteryConstruction={schemaVersion:3,seatCount:chaise?3:corner?3:seats,layout:corner?'true-L-sectional':chaise?'L-chaise-extension':modular?'modular':'straight',cushionGeometry:'separate-rounded-extruded-panels',overlapStrategy:'disjoint-seat-zones-with-gaps',status:'reconstructed-pending-browser-visual-validation'};
+ g.userData.upholsteryConstruction={schemaVersion:3,seatCount:chaise?3:corner?4:seats,layout:corner?'true-L-sectional':chaise?'L-chaise-extension':modular?'modular':'straight',cushionGeometry:'separate-rounded-extruded-panels',overlapStrategy:'disjoint-seat-zones-with-gaps',status:'reconstructed-pending-browser-visual-validation'};
  break;
 }
 case'outdoorsofa':{
@@ -2192,7 +2254,19 @@ case'seat':{
  break;
 }
 case'bench':{
- if(isVestidorItem(it)||isLivingItem(it)){buildDressingBench(g,it,mt);break;}
+ if(isVestidorItem(it)){buildDressingBench(g,it,mt);break;}
+ if(it.roomType==='comedor'){
+  const seat=partFinish(mt.clone(),'seat'),frame=partFinish(M('#675745',.54,.08),'frame'),feet=partFinish(frame.clone(),'feet');
+  const topT=Math.min(4,h*.095),under=h-topT,post=Math.min(5,d*.14);
+  B(g,w,topT,d,0,h-topT/2,0,seat);
+  for(const x of [-1,1]){
+   const xx=x*w*.39;
+   for(const z of [-1,1])B(g,post,under,post,xx,under/2,z*d*.34,feet);
+   B(g,post,4,d*.68,xx,under-2,0,frame);
+  }
+  for(const z of [-1,1])B(g,w*.78,5,post,0,under-2.5,z*d*.34,frame);
+  break;
+ }
  const wood=M(it.col||'#a88f78',.55,.12),metal=M('#434b50',.38,.7),uphol=M('#c7b9a8',.9,.01);
  B(g,w*.96,h*.16,d*.82,0,h*.68,0,wood);B(g,w*.9,h*.035,d*.76,0,h*.78,0,uphol);
  for(const x of [-1,1])for(const z of [-1,1]){tube([x*w*.4,h*.62,z*d*.32],[x*w*.42,3,z*d*.34],2.6,metal)}
@@ -2210,13 +2284,23 @@ case'chair':{
   const rearLeg=tube([x*seatW*.39,seatY-h*.02,-seatD*.39],[x*seatW*.39,.08,-seatD*.42],Math.max(2,w*.018),wood);rearLeg.userData.partColorRole='feet';
   tube([x*seatW*.4,seatY*.72,-seatD*.39],[x*seatW*.4,seatY*.72,seatD*.39],2,wood);
  }
- // Respaldo curvado, montantes laterales y travesaño superior.
- const backShape=new T.Shape();backShape.moveTo(-seatW*.46,0);backShape.quadraticCurveTo(-seatW*.5,0,-seatW*.5,h*.07);backShape.lineTo(-seatW*.43,h*.438);backShape.quadraticCurveTo(0,h*.46,seatW*.43,h*.438);backShape.lineTo(seatW*.5,h*.07);backShape.quadraticCurveTo(seatW*.5,0,seatW*.46,0);backShape.closePath();
- const backGeo=new T.ExtrudeGeometry(backShape,{depth:3.4,bevelEnabled:true,bevelSegments:4,bevelSize:1.2,bevelThickness:1,curveSegments:16});const back=new T.Mesh(backGeo,padded?uphol:wood);back.position.set(0,seatY+h*.055,-seatD*.50);back.userData.partColorRole='back';g.add(back);
- for(const x of [-1,1])tube([x*seatW*.39,seatY,-seatD*.41],[x*seatW*.39,seatY+h*.20,-seatD*.48],2.1,wood);
- const backRail=tube([-seatW*.42,seatY+h*.15,-seatD*.47],[seatW*.42,seatY+h*.15,-seatD*.47],2.4,wood);backRail.userData.part={t:'frame'};
+ // Montantes unidos al asiento y respaldo inclinado hacia atrás.
+ const backZ=-seatD*.43,backFinish=partFinish((padded?uphol:wood).clone(),'back');
+ for(const x of [-1,1])tube([x*seatW*.42,seatY,backZ],[x*seatW*.39,h-3,backZ-h*.072],2.1,wood);
+ if(padded){
+  const shape=new T.Shape(),half=seatW*.44,bottom=h*.065,top=h*.43;
+  shape.moveTo(-half+3,bottom);shape.quadraticCurveTo(-half,bottom,-half,bottom+4);
+  shape.lineTo(-half,top-5);shape.quadraticCurveTo(-half,top,-half+5,top);
+  shape.quadraticCurveTo(0,top+2,half-5,top);shape.quadraticCurveTo(half,top,half,top-5);
+  shape.lineTo(half,bottom+4);shape.quadraticCurveTo(half,bottom,half-3,bottom);shape.closePath();
+  const geo=new T.ExtrudeGeometry(shape,{depth:3.4,bevelEnabled:true,bevelSegments:4,bevelSize:1.2,bevelThickness:1,curveSegments:16});
+  const back=new T.Mesh(geo,backFinish);back.rotation.x=-.14;back.position.set(0,seatY,backZ);g.add(back);
+ }else{
+  for(const y of [h*.66,h*.78,h*.90])B(g,seatW*.80,4.6,2.8,0,y,backZ-(y-seatY)*.14,backFinish);
+  B(g,seatW*.91,3.1,3.7,0,h-1.55,backZ-(h-seatY)*.14,backFinish);
+ }
  if(arms){for(const x of [-1,1]){const frontPost=tube([x*seatW*.43,seatY,seatD*.34],[x*seatW*.43,seatY+h*.3,seatD*.34],2.1,wood);frontPost.userData.partColorRole='arms';const armPost=tube([x*seatW*.43,seatY,-seatD*.34],[x*seatW*.43,seatY+h*.3,-seatD*.34],2.8,wood);armPost.userData.partColorRole='arms';const armRail=tube([x*seatW*.43,seatY+h*.3,-seatD*.34],[x*seatW*.43,seatY+h*.3,seatD*.34],2.8,wood);armRail.userData.partColorRole='arms';const armPad=B(g,5,3,seatD*.7,x*seatW*.43,seatY+h*.3,0,wood);armPad.userData.partColorRole='arms'}}
- g.userData.diningChairConstruction={schemaVersion:2,upholstered:padded,armrests:arms,backrest:'curved-panel',legs:'four-connected',status:'integrated-pending-visual-validation'};
+ g.userData.diningChairConstruction={schemaVersion:2,upholstered:padded,armrests:arms,backrest:padded?'inclined-panel':'slatted',legs:'four-connected',status:'integrated-pending-visual-validation'};
  break;
 }
 case'panel':{
@@ -2244,7 +2328,8 @@ case'table':{
   const apron=new T.Mesh(new T.CylinderGeometry(rx*.84,rx*.84,topT*.7,80),edge);apron.scale.z=rz/rx;apron.position.y=topY-topT*.85;g.add(apron);
   const base=partFinish(steel.clone(),'base'),footH=topT*1.8,stemH=h-topT*1.31-footH;
   const col=new T.Mesh(new T.CylinderGeometry(Math.min(w,d)*.075,Math.min(w,d)*.11,stemH,40),base);col.position.y=footH+stemH/2;g.add(col);
-  const foot=new T.Mesh(new T.CylinderGeometry(rx*.28,rx*.32,footH,72),base);foot.scale.z=rz/rx;foot.position.y=footH/2;g.add(foot);
+  const ratio=it.roomType==='comedor'?.47:.32;
+  const foot=new T.Mesh(new T.CylinderGeometry(rx*(ratio-.045),rx*ratio,footH,72),base);foot.scale.z=rz/rx;foot.position.y=footH/2;g.add(foot);
  }else{
   if(extensible){
    // Dos hojas principales y tablero central de extensión alineados a ras.
@@ -3258,7 +3343,16 @@ function fits(g){
  if(S.i.some(o=>{if(o.hid||o.id===g.id)return false;if(g.rel&&g.rel.parentId==o.id||o.rel&&o.rel.parentId==g.id)return false;const ge=e,oe=+o.e||0;return ge<oe+(+o.h||0)-.01&&oe<ge+h-.01&&sat(A,cors(o))}))return false;
  return !S.w.some(wall=>e<(+wall.h||250)&&e+h>0&&sat(A,cors(wrect(wall))))
 }
-function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place);g.x=sn(wx);g.y=sn(wy);g.r=place.r||0;delete g.rel;let b=null;S.w.forEach(w=>{const s=segd(w,wx,wy);if(s.d<w.t/2+g.d/2+25&&(!b||s.d<b.s.d))b={w,s}});
+function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place);g.x=sn(wx);g.y=sn(wy);g.r=place.r||0;delete g.rel;
+ if(isDiningPendant(g)){
+  const room=(S.rooms||[]).find(r=>r.poly&&inPoly(g.x,g.y,r.poly));
+  const ceiling=Math.max(150,+room?.ceil?.h||+S.w[0]?.h||250);
+  g.e=place.e||Math.max(0,ceiling-g.h);
+  g.ok=fits(g);
+  $('#hint').textContent=g.ok?'✔ Colocar lámpara a la altura del techo':'✖ No cabe: colisión física con pared u objeto';
+  return;
+ }
+ let b=null;S.w.forEach(w=>{const s=segd(w,wx,wy);if(s.d<w.t/2+g.d/2+25&&(!b||s.d<b.s.d))b={w,s}});
  if(b){const w=b.w,L=len(w),ux=(w.x2-w.x1)/L,uy=(w.y2-w.y1)/L,px=w.x1+ux*b.s.p,py=w.y1+uy*b.s.p;let nx=uy,ny=-ux;if((wx-px)*nx+(wy-py)*ny<0){nx=-nx;ny=-ny}g.r=Math.atan2(-nx,ny)/D;const q=w.t/2+g.d/2;g.x=px+nx*q;g.y=py+ny*q}
  if(isSurfaceAccessory(g)){const p=S.i.filter(p=>!p.hid&&supportableParent(p)&&pointInItem(p,wx,wy)).sort((a,b)=>a.w*a.d-b.w*b.d)[0];if(p){g.x=sn(wx);g.y=sn(wy);attachToSurface(g,p);g.ok=fits(g);if(g.ok){$('#hint').textContent='✔ Apoyado sobre '+p.n+' · se conservará aunque sobresalga. Esc cancela';return}}}
  delete g.rel;g.e=place.e||0;g.ok=fits(g);$('#hint').textContent=g.ok?'✔ Cabe — clic para colocar (se pega a las paredes). Esc cancela':'✖ No cabe: colisión física con pared u objeto'}
@@ -4507,6 +4601,7 @@ function applyItemPartColors(g,it,primary){
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}applyItemPartColors(g,it,mt)}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
+ if(motions.length&&motions.every(m=>m.storage))return open?'Cerrar arcón':'Abrir arcón';
  if(motions.length&&motions.every(m=>m.extension))return open?'Recoger mesa':'Extender mesa';
  if((it.shape==='bed'||it.t==='cama')&&motions.every(m=>m.t==='u'))return open?'Bajar somier':'Levantar somier';
  return open?'Cerrar':'Abrir';
