@@ -2288,7 +2288,7 @@ case'chair':{
  const backZ=-seatD*.43,backFinish=partFinish((padded?uphol:wood).clone(),'back');
  for(const x of [-1,1])tube([x*seatW*.42,seatY,backZ],[x*seatW*.39,h-3,backZ-h*.072],2.1,wood);
  if(padded){
-  const shape=new T.Shape(),half=seatW*.44,bottom=h*.065,top=h*.43;
+  const shape=new T.Shape(),half=seatW*.44,bottom=h*.065,top=h*.51;
   shape.moveTo(-half+3,bottom);shape.quadraticCurveTo(-half,bottom,-half,bottom+4);
   shape.lineTo(-half,top-5);shape.quadraticCurveTo(-half,top,-half+5,top);
   shape.quadraticCurveTo(0,top+2,half-5,top);shape.quadraticCurveTo(half,top,half,top-5);
