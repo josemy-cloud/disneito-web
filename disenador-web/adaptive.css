@@ -123,18 +123,19 @@ body.adaptive:not(.ui-legacy) #lib .surface-swatch[aria-pressed="true"]::after {
   body.adaptive:not(.ui-legacy) #main {position:relative}
   body.adaptive:not(.ui-legacy) #main.panel-open {--sidebar-width:0px}
   body.adaptive:not(.ui-legacy) #main :is(#compactActions,#lib,#pr) {
-    position:absolute;grid-area:auto;inset:0 auto 58px 0;z-index:5;
-    width:min(calc(100% - 24px),340px)!important;
-    border:1px solid var(--ui-line);border-radius:0 0 12px 0;
+    position:absolute;grid-area:auto;inset:4px auto auto 4px;z-index:5;
+    width:min(74%,280px)!important;max-height:calc((100% - 62px) * .60);
+    border:1px solid var(--ui-line);border-radius:12px;
     box-shadow:0 8px 24px #173e3933;
   }
   body.adaptive:not(.ui-legacy) #main #pr {
-    right:0;left:auto;border-radius:0 0 0 12px;
+    right:4px;left:auto;
   }
   body.adaptive:not(.ui-legacy) #pr .r {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   body.adaptive:not(.ui-legacy) #pr .r > span {overflow-wrap:anywhere}
-  body.adaptive:not(.ui-legacy) #lib .room-card-grid {grid-template-columns:repeat(3,minmax(0,1fr))}
-  body.adaptive:not(.ui-legacy) #lib .material-grid {grid-template-columns:repeat(3,minmax(0,1fr))}
+  body.adaptive:not(.ui-legacy) #lib .library-header {position:static}
+  body.adaptive:not(.ui-legacy) #lib .room-card-grid {grid-template-columns:repeat(auto-fill,minmax(74px,1fr))}
+  body.adaptive:not(.ui-legacy) #lib .room-card img {height:42px!important}
   body.adaptive:not(.ui-legacy) #sb {padding:2px 6px!important;font-size:10px}
 }
 @media (pointer:coarse),(any-pointer:coarse){
@@ -150,5 +151,4 @@ body.adaptive:not(.ui-legacy) :is(#top,#lib,#pr,#compactActions) :focus-visible 
 @media (max-width:360px){
   body.adaptive:not(.ui-legacy) #top > :is(#compactMenu,#tl,#tr) {font-size:11px;padding-inline:2px!important}
   body.adaptive:not(.ui-legacy) #top .view-mode span {font-size:9px}
-  body.adaptive:not(.ui-legacy) #lib .room-card-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
 }
