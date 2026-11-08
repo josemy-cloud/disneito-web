@@ -22,6 +22,12 @@ El análisis automático de esta etapa cubre **contornos rectangulares visibles 
 
 Referencias: [detección de líneas y bordes](https://docs.opencv.org/4.x/d9/db0/tutorial_hough_lines.html) y [metrología desde una vista](https://www.microsoft.com/en-us/research/publication/single-view-metrology/).
 
+## Cuando el suelo queda oculto
+
+Si el análisis no encuentra el suelo completo en las capturas, intenta localizar la unión con el techo en la vista seleccionada. También puedes pulsar **Desde techo y paredes** directamente. La posible pared del fondo se muestra en rojo y las posibles uniones laterales, en azul discontinuo. Son candidatos por contraste y continuidad de borde, con confianza baja. Usa **Corregir pared del fondo** para marcar sus dos extremos superiores si la detección incluye una moldura o un tramo vecino.
+
+Introduce el ancho interior real de la pared del fondo y el fondo real de la habitación. **Crear borrador desde el techo** dibuja un rectángulo provisional con esos datos. Los demás tramos se muestran discontinuos en la revisión. Puedes corregir el plano antes de importarlo. La línea del techo no se reutiliza como calibración del suelo y no localiza muebles, huecos ni retranqueos ocultos. Se guarda el método de reconstrucción en los metadatos de la estancia.
+
 ## Auditoría e integración
 
 - `index.html` sigue siendo el editor. Su modelo guarda paredes en `S.w`, huecos vinculados a paredes en `S.o` y muebles independientes en `S.i`. El escáner crea estos registros con identificadores nuevos y usa `detectRooms`, `roomsUpdate` y el guardado normal. El importador convierte el perímetro interior en ejes de pared para que el grosor no reste medidas al interior.

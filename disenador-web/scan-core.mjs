@@ -319,3 +319,60 @@ export function estimateRoomAspect(points,w,h){
   }
   return base;
 }
+
+/** Locate visible ceiling/wall edge segments. These are guides, not room dimensions. */
+export function proposeCeiling({pixels,width:w,height:h}){
+  if(w<70||h<55||pixels.length!==w*h*4)return null;
+  const gray=new Float32Array(w*h);
+  for(let i=0;i<gray.length;i++)gray[i]=.2126*pixels[4*i]+.7152*pixels[4*i+1]+.0722*pixels[4*i+2];
+  const edge=(x,y,slope)=>{
+    if(y<5||y>=h-5)return 0;
+    let a=0,b=0;
+    for(let i=-1;i<=1;i++){
+      const row=Math.round(y+i*slope);
+      if(row<3||row>=h-3||x+i<0||x+i>=w)return 0;
+      a+=gray[(row-2)*w+x+i];b+=gray[(row+2)*w+x+i];
+    }
+    return Math.abs(a-b)/3;
+  };
+  function search({start,end,slopeMin,slopeMax,slopeStep,anchor,top,bottom,minSpan}){
+    let best=null;
+    const maxGap=Math.max(3,Math.round(w*.035));
+    for(let slope=slopeMin;slope<=slopeMax+.0001;slope+=slopeStep)for(let y0=top;y0<=bottom;y0++){
+      let left=-1,last=-1,sum=0,count=0;
+      const check=()=>{
+        const span=last-left+1;
+        if(left<0||span<minSpan||count/span<.61)return;
+        const score=sum*(count/span);
+        if(!best||score>best.score)best={score,slope,y0,left,right:last,anchor};
+      };
+      for(let x=start;x<=end;x++){
+        const contrast=edge(x,y0+(x-anchor)*slope,slope);
+        if(contrast>=7){
+          if(left<0)left=x;
+          last=x;sum+=Math.min(contrast,23);count++;
+        }else if(last>=0&&x-last>maxGap){check();left=last=-1;sum=count=0}
+      }
+      check();
+    }
+    if(!best)return null;
+    const {left,right,slope,y0}=best;
+    return [left,right].map(x=>[x/w,(y0+(x-anchor)*slope)/h]);
+  }
+  const back=search({start:Math.round(w*.15),end:Math.round(w*.85),slopeMin:-.16,slopeMax:.16,slopeStep:.015,
+    anchor:w/2,top:Math.round(h*.045),bottom:Math.round(h*.38),minSpan:w*.31});
+  if(!back)return null;
+  const sides=[];
+  for(const direction of [-1,1]){
+    const [x,y]=back[direction<0?0:1],anchor=Math.round(x*w);
+    const side=search({
+      start:direction<0?4:anchor,end:direction<0?anchor:w-5,
+      slopeMin:direction<0?.36:-2.5,slopeMax:direction<0?2.5:-.36,slopeStep:.06,
+      anchor,top:Math.max(4,Math.round((y-.08)*h)),bottom:Math.min(h-5,Math.round((y+.09)*h)),
+      minSpan:w*.06
+    });
+    if(side)sides.push(side);
+  }
+  return {back,sides};
+}
+

@@ -1,4 +1,4 @@
-import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect} from './scan-core.mjs';
+import {analyseFrame,calibrate,frameDifference,polygonArea,projectOnWall,suggestReference,validate,proposeFloor,estimateRoomAspect,proposeCeiling} from './scan-core.mjs';
 
 const FRAME_LIMIT=16;
 const VIDEO_LIMIT=200*1024*1024;
@@ -77,8 +77,8 @@ export function openRoomScanner({catalog,materials,onImport}){
   const $=s=>d.querySelector('#'+s),notice=message=>{$('scanNotice').textContent=message};
   const report=error=>{if(error?.name!=='AbortError'&&!closed)notice(error?.message||String(error))};
   const image=$('scanImage'),live=$('scanLive'),plan=$('scanPlan');
-  const frames=[],draft={points:[],geometryMeasured:false,height:250,heightMeasured:false,openings:[],items:[],wallColor:'#f1ede4',floorColor:null,floorMaterial:''};
-  let proposals=[],proposalIndex=0,index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
+  const frames=[],draft={points:[],geometryMeasured:false,ceilingDraft:false,height:250,heightMeasured:false,openings:[],items:[],wallColor:'#f1ede4',floorColor:null,floorMaterial:''};
+  let proposals=[],proposalIndex=0,ceilingGuide=null,ceilingPoint=null,index=0,mark='reference',openingFirst=null,sampleItem=null,stream=null,cameraEpoch=0,job=null,closed=false,worker=null,analysisId=0;
   const pending=new Map();
   function stopCamera(){
     cameraEpoch++;
@@ -256,7 +256,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(!confirm('Cambiar la escala borra los puntos y elementos marcados. ¿Quieres continuar?')){
         input.value=input.dataset.previous||'';return;
       }
-      draft.points=[];draft.geometryMeasured=false;draft.openings=[];draft.items=[];openingFirst=null;renderReview();
+      draft.points=[];draft.geometryMeasured=false;draft.ceilingDraft=false;draft.openings=[];draft.items=[];openingFirst=null;renderReview();
     }
     input.dataset.previous=input.value;
     if(input===depth){delete depth.dataset.estimated;updateDepthLabel()}
@@ -277,6 +277,19 @@ export function openRoomScanner({catalog,materials,onImport}){
     image.width=f.canvas.width;image.height=f.canvas.height;
     const ctx=image.getContext('2d');ctx.drawImage(f.canvas,0,0);
     const proposal=proposals[proposalIndex];
+    if(ceilingGuide?.frame===f){
+      const segment=(points,color,dashed)=>{
+        const [a,b]=points.map(([x,y])=>[x*image.width,y*image.height]);
+        ctx.strokeStyle=color;ctx.lineWidth=Math.max(3,image.width/210);
+        ctx.setLineDash(dashed?[9,6]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+      };
+      for(const side of ceilingGuide.sides)segment(side,'#4fa5ff',true);
+      if(ceilingGuide.back)segment(ceilingGuide.back,'#ee513a',false);
+      ctx.setLineDash([]);
+      if(ceilingPoint){
+        ctx.fillStyle='#ee513a';ctx.beginPath();ctx.arc(ceilingPoint[0]*image.width,ceilingPoint[1]*image.height,6,0,2*Math.PI);ctx.fill();
+      }
+    }
     if(proposal?.frame===f){
       const p=proposal.points.map(([x,y])=>[x*image.width,y*image.height]);
       ctx.lineWidth=Math.max(3,image.width/190);ctx.fillStyle='#257bdb38';ctx.strokeStyle='#50a5ff';
@@ -318,7 +331,11 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(result)results.push({...result,frame,aspect:estimateRoomAspect(result.points,data.width,data.height),matched:false});
       progress.value++;
     }
-    if(!results.length)throw Error('No se ve un contorno completo y fiable del suelo. Añade una toma más amplia o marca las esquinas visibles.');
+    if(!results.length){
+      const guide=await findCeilingGuide(signal);
+      if(guide||signal.aborted)return;
+      throw Error('No se ve el suelo completo ni una línea fiable de techo. Puedes marcar la pared del fondo o añadir otra toma.');
+    }
     notice('Comparando las propuestas con otras vistas…');
     progress.removeAttribute('value');
     results.sort((a,b)=>b.score-a.score);
@@ -353,7 +370,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(estimated)depth.dataset.estimated='true';else delete depth.dataset.estimated;
       updateDepthLabel();
       draft.points=[[0,0],[w,0],[w,d],[0,d]];
-      draft.geometryMeasured=!estimated;draft.openings=[];draft.items=[];openingFirst=null;mark='reference';
+      draft.geometryMeasured=!estimated;draft.ceilingDraft=false;draft.openings=[];draft.items=[];openingFirst=null;mark='reference';
       proposals=[];useProposal.hidden=nextProposal.hidden=true;
       renderFrames();drawImage();renderReview();
       notice(estimated?'Plano creado. Fondo estimado: '+d+' cm. Compruébalo antes de importar.':'Plano creado con tus dos medidas. Revisa la altura y los huecos.');
@@ -363,6 +380,48 @@ export function openRoomScanner({catalog,materials,onImport}){
     proposalIndex=(proposalIndex+1)%proposals.length;showProposal();
   });
   useProposal.hidden=nextProposal.hidden=true;
+  async function findCeilingGuide(signal){
+    const frame=frames[index];
+    if(!frame)return false;
+    ceilingGuide=null;ceilingPoint=null;drawImage();
+    const data=imagePixels(frame.canvas,256);
+    notice('Buscando la unión del techo con las paredes…');
+    const found=await analyseInWorker({...data,ceiling:true},()=>proposeCeiling(data));
+    if(signal.aborted||closed)return false;
+    if(!found){notice('No hay una línea de techo clara. Pulsa «Corregir pared del fondo» y marca sus dos extremos superiores.');return false}
+    proposals=[];useProposal.hidden=nextProposal.hidden=true;
+    ceilingGuide={frame,...found};ceilingPoint=null;
+    index=frames.indexOf(frame);mark='reference';renderFrames();drawImage();
+    notice('Guía de confianza baja. Rojo: posible pared del fondo. Azul: posibles laterales. Corrige el tramo rojo si hace falta, escribe el ancho y el fondo medidos y crea el borrador.');
+    return true;
+  }
+  button(auto,'Desde techo y paredes',()=>withJob(findCeilingGuide));
+  button(auto,'Corregir pared del fondo',()=>{
+    if(job||!frames[index])return;
+    const frame=frames[index];
+    if(ceilingGuide?.frame!==frame)ceilingGuide={frame,back:null,sides:[]};
+    ceilingPoint=null;proposals=[];useProposal.hidden=nextProposal.hidden=true;
+    selectMode('ceiling-back','Marca los dos extremos donde la pared del fondo se une al techo.');
+    drawImage();
+  });
+  button(auto,'Crear borrador desde el techo',()=>{
+    if(job)return;
+    try{
+      if(!ceilingGuide?.back)throw Error('Busca o marca primero la línea superior de la pared del fondo.');
+      const w=width.valueAsNumber,d=depth.valueAsNumber;
+      if(!(w>=20&&w<=5000&&d>=20&&d<=5000)||depth.dataset.estimated==='true')
+        throw Error('Introduce el ancho real de la pared del fondo y el fondo real de la habitación.');
+      if((draft.points.length||draft.items.length||draft.openings.length)&&
+         !confirm('Esto sustituye el perímetro y los elementos marcados por un borrador rectangular. ¿Continuar?'))return;
+      draft.points=[[0,0],[w,0],[w,d],[0,d]];
+      draft.geometryMeasured=false;draft.ceilingDraft=true;draft.openings=[];draft.items=[];
+      width.dataset.previous=w;depth.dataset.previous=d;
+      for(const frame of frames){frame.ref=[];frame.suggested=false}
+      index=frames.indexOf(ceilingGuide.frame);mark='reference';openingFirst=null;ceilingPoint=null;
+      renderFrames();drawImage();renderReview();
+      notice('Borrador rectangular creado con tus medidas. Los laterales y el cierre que no se ven quedan para revisión. La línea del techo no calibra el suelo.');
+    }catch(error){report(error)}
+  });
   const markButtons=$('scanMark');
   button(markButtons,'Marcar referencia',()=>selectMode('reference','Marca las cuatro esquinas de la referencia, en orden.'));
   button(markButtons,'Rehacer referencia de esta vista',()=>{
@@ -394,7 +453,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       transform();
       if((draft.points.length||draft.openings.length)&&!confirm('Esto sustituye el perímetro y sus huecos marcados. ¿Continuar?'))return;
       draft.points=[[0,0],[+width.value,0],[+width.value,+depth.value],[0,+depth.value]];
-      draft.geometryMeasured=depth.dataset.estimated!=='true';draft.openings=[];openingFirst=null;renderReview();notice('Perímetro rectangular creado con las medidas aportadas. Revisa altura y huecos.');
+      draft.geometryMeasured=depth.dataset.estimated!=='true';draft.ceilingDraft=false;draft.openings=[];openingFirst=null;renderReview();notice('Perímetro rectangular creado con las medidas aportadas. Revisa altura y huecos.');
     }catch(error){report(error)}
   });
   button(markButtons,'Añadir esquina de pared',()=>selectMode('vertex','Marca una esquina a ras del suelo. Añade las esquinas en orden, aunque cambies de vista.'));
@@ -403,6 +462,7 @@ export function openRoomScanner({catalog,materials,onImport}){
     const frame=frames.splice(index,1)[0];
     if(frame){frame.canvas.width=0;frame.canvas.height=0}
     proposals=[];useProposal.hidden=nextProposal.hidden=true;
+    if(ceilingGuide?.frame===frame){ceilingGuide=null;ceilingPoint=null}
     index=Math.max(0,Math.min(index,frames.length-1));openingFirst=null;
     renderFrames();drawImage();$('scanWorkspace').hidden=frames.length===0;
     notice('Vista descartada. Las anotaciones ya proyectadas se conservan.');
@@ -460,6 +520,16 @@ export function openRoomScanner({catalog,materials,onImport}){
     const f=frames[index];if(!f)return;
     const b=image.getBoundingClientRect(),point=[(e.clientX-b.left)/b.width,(e.clientY-b.top)/b.height];
     try{
+      if(mark==='ceiling-back'){
+        if(point[1]>.58)throw Error('Marca el borde superior de la pared, junto al techo.');
+        if(ceilingGuide?.frame!==f){ceilingGuide={frame:f,back:null,sides:[]};ceilingPoint=null}
+        if(!ceilingPoint){ceilingPoint=point;drawImage();notice('Marca el otro extremo superior de la pared del fondo.');return}
+        if(Math.abs(ceilingPoint[0]-point[0])<.15||Math.abs(ceilingPoint[1]-point[1])>.25)
+          throw Error('Los puntos no definen un tramo claro de pared. Marca el extremo contrario.');
+        ceilingGuide.back=[ceilingPoint,point].sort((a,b)=>a[0]-b[0]);ceilingPoint=null;
+        mark='reference';drawImage();notice('Pared del fondo marcada. Introduce las dos medidas y crea el borrador desde el techo.');
+        return;
+      }
       if(mark==='reference'){
         if(f.ref.length===4)throw Error('Esta vista ya tiene cuatro puntos. Elige una herramienta o rehace la referencia.');
         f.ref.push(point);drawImage();renderFrames();
@@ -483,7 +553,7 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(mark==='vertex'){
         if(draft.points.length>=32)throw Error('El perímetro admite hasta 32 esquinas.');
         if(draft.openings.length)throw Error('Quita los huecos antes de cambiar el número de paredes.');
-        draft.geometryMeasured=false;draft.points.push(metric);notice('Esquina '+draft.points.length+' añadida con posición estimada.');
+        draft.geometryMeasured=false;draft.ceilingDraft=false;draft.points.push(metric);notice('Esquina '+draft.points.length+' añadida con posición estimada.');
       }else if(mark==='item'){
         const model=catalog.find(m=>String(m.id)===models.value);
         if(!model)throw Error('Elige un modelo de la biblioteca.');
@@ -562,14 +632,18 @@ export function openRoomScanner({catalog,materials,onImport}){
     ctx.clearRect(0,0,plan.width,plan.height);
     const points=draft.points.filter(p=>p.every(Number.isFinite));
     $('scanSummary').textContent=points.length<3?'Perímetro incompleto. Marca esquinas visibles o usa la referencia rectangular.':
-      points.length+' esquinas · '+(polygonArea(points)/10000).toFixed(2)+' m² · perímetro '+(draft.geometryMeasured?'según medidas aportadas':'estimado')+' · altura '+(draft.heightMeasured?'medida':'estimada')+'.';
+      points.length+' esquinas · '+(polygonArea(points)/10000).toFixed(2)+' m² · perímetro '+(draft.ceilingDraft?'rectangular provisional · líneas discontinuas por revisar':draft.geometryMeasured?'según medidas aportadas':'estimado')+' · altura '+(draft.heightMeasured?'medida':'estimada')+'.';
     if(!points.length)return;
     const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys);
     const k=Math.min((plan.width-48)/Math.max(20,Math.max(...xs)-x0),(plan.height-48)/Math.max(20,Math.max(...ys)-y0));
     const xy=(x,y)=>[24+(x-x0)*k,24+(y-y0)*k];
     ctx.strokeStyle='#203b62';ctx.fillStyle='#dbe8f8';ctx.lineWidth=4;
     ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(...xy(...p)):ctx.moveTo(...xy(...p)));
-    if(points.length>2){ctx.closePath();ctx.fill()}ctx.stroke();
+    if(points.length>2){ctx.closePath();ctx.fill()}
+    if(draft.ceilingDraft&&points.length===4){
+      ctx.setLineDash([8,6]);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.moveTo(...xy(...points[0]));ctx.lineTo(...xy(...points[1]));ctx.stroke();
+    }else ctx.stroke();
     ctx.font='13px system-ui';
     points.forEach((p,i)=>{const q=xy(...p);ctx.fillStyle='#185da8';ctx.fillRect(q[0]-4,q[1]-4,8,8);ctx.fillText(i+1,q[0]+7,q[1]+13)});
     for(const o of draft.openings){
@@ -591,12 +665,13 @@ export function openRoomScanner({catalog,materials,onImport}){
       if(!frames.length)throw Error('Añade al menos una captura.');
       if(draft.floorMaterial==='observed'&&!draft.floorColor)throw Error('Muestrea un color de suelo o elige un material.');
       const result=validate(draft);
-      onImport({...result,geometryMeasured:draft.geometryMeasured,height:draft.height,heightMeasured:draft.heightMeasured,wallColor:draft.wallColor,
+      onImport({...result,method:draft.ceilingDraft?'ceiling-guide':'planar-reference',geometryMeasured:draft.geometryMeasured,height:draft.height,heightMeasured:draft.heightMeasured,wallColor:draft.wallColor,
         floorColor:draft.floorColor,floorMaterial:draft.floorMaterial});
       closeScanner();
     }catch(error){report(error)}
   };
   renderReview();d.showModal();
 }
+
 
 
