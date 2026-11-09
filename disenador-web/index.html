@@ -1672,7 +1672,7 @@ sc.background=new T.Color('#e8e7e2');sc.add(root);cam.position.set(500,500,700);
 if(r3){
  r3.outputEncoding=T.sRGBEncoding;r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=.92;r3.shadowMap.type=T.PCFShadowMap;
  r3.domElement.style.display='block';r3.domElement.style.outline='none';d3.append(r3.domElement);
- oc.target.set(150,50,150);oc.enableDamping=true;oc.dampingFactor=.075;oc.minDistance=90;oc.maxDistance=6500;oc.maxPolarAngle=Math.PI*.49;
+ oc.target.set(150,50,150);oc.enableDamping=true;oc.dampingFactor=.075;oc.minDistance=90;oc.maxDistance=6500;oc.maxPolarAngle=Math.PI/2;
 }
 const hemi=new T.HemisphereLight('#fafcff','#8b8276',.54),sun=new T.DirectionalLight('#fff5e8',.78),fill=new T.DirectionalLight('#e5efff',.16),rim=new T.DirectionalLight('#fffaf0',.09);sc.add(hemi,sun,sun.target,fill,rim);
 fill.position.set(-900,1100,650);rim.position.set(700,850,-900);
@@ -5295,7 +5295,14 @@ function animate(){requestAnimationFrame(animate);
  MV.forEach(m=>stepMV(m));
  if(walk){const sp=+$('#sp').value*(walkK.shift?2.2:1),y=cam.rotation.y;let fx=walkX*Math.cos(y)+walkY*Math.sin(y),fz=-walkX*Math.sin(y)+walkY*Math.cos(y);if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
   vel.x+=(fx*sp-vel.x)*.15;vel.z+=(fz*sp-vel.z)*.15;if(!blocked(cam.position.x+vel.x,cam.position.z))cam.position.x+=vel.x;else vel.x=0;if(!blocked(cam.position.x,cam.position.z+vel.z))cam.position.z+=vel.z;else vel.z=0;cam.position.y=165}
- else oc.update();r3.render(sc,cam)}
+ else{
+  // Permite mirar hacia arriba sin orbitar por debajo del suelo.
+  const radius=Math.max(oc.minDistance,cam.position.distanceTo(oc.target));
+  oc.maxPolarAngle=Math.acos(T.MathUtils.clamp((8-oc.target.y)/radius,-.98,.98));
+  oc.update();
+  if(cam.position.y<8){cam.position.y=8;cam.lookAt(oc.target)}
+ }
+ r3.render(sc,cam)}
 let pd=null;
 const viewPointers=new Set();
 r3?.domElement.addEventListener('pointerdown',e=>{
@@ -5312,7 +5319,7 @@ if(!touch&&!e.buttons&&!document.pointerLockElement)return;
 const dx=touch?e.clientX-pd[0]:e.movementX,dy=touch?e.clientY-pd[1]:e.movementY;
 if(touch) pd=[e.clientX,e.clientY,e.pointerId];
 cam.rotation.y-=dx*.004;
-cam.rotation.x=Math.max(-1,Math.min(1,cam.rotation.x-dy*.003));});
+cam.rotation.x=T.MathUtils.clamp(cam.rotation.x-dy*.003,-Math.PI*.495,Math.PI*.495);});
 r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId);const start=pd;pd=null;if((walk&&e.pointerType!=='mouse')||!start||start[2]!==e.pointerId||Math.hypot(e.clientX-start[0],e.clientY-start[1])>(e.pointerType==='mouse'?4:9))return;const rc=new T.Raycaster(),r=r3.domElement.getBoundingClientRect();rc.setFromCamera(document.pointerLockElement?new T.Vector2(0,0):new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
  const pkb=o=>{for(let q=o;q;q=q.parent){if(q.visible===false||(q.userData&&q.userData.noPick))return false}if(o.material&&!Array.isArray(o.material)&&o.material.visible===false)return false;if(o.userData&&o.userData.ceil&&!showCeil)return false;return true};
  const h=rc.intersectObjects(root.children,true).find(h=>pkb(h.object)&&(h.object.type=='Mesh'&&h.object.geometry.type!='PlaneGeometry'||h.object.userData.fl));if(!h){if(sel||selPart){sel=null;selPart=null;refresh()}return}let mv=null,it=null,wl=null,fl=0,rm=null,opening=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.opening!=null)opening=u.opening;if(u.fl)fl=1;if(u.room)rm=u.room}
@@ -5402,7 +5409,7 @@ $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
 function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;navigationHeld.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
-function vw(t){if(!r3)return;walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);oc.update()}
+function vw(t){if(!r3)return;walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
 $('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)r3.domElement.requestPointerLock?.()};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
