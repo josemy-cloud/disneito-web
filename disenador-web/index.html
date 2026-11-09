@@ -886,6 +886,30 @@ function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,
 const SOFA_FABRICS={lino:'Lino fino',boucle:'Bouclé texturizado',liso:'Tela lisa'};
 const hasSofaFabric=it=>it.t==='sofa'&&(it.n||'').toLowerCase()==='sofá 3 plazas';
 const sofaFabric=it=>Object.hasOwn(SOFA_FABRICS,it.upholstery)?it.upholstery:'lino';
+async function importSofaTexture(file,item){
+ const project=S;
+ const url=URL.createObjectURL(file);
+ try{
+  if(file.size>10*1024*1024)throw new Error('Elige una imagen de hasta 10 MB.');
+  const image=new Image();image.src=url;await image.decode();
+  if(S!==project||!S.i.includes(item))return;
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+  canvas.getContext('2d',{alpha:false}).drawImage(image,0,0,512,512);
+  item.upholsteryImage=canvas.toDataURL('image/jpeg',.88);
+  commit();
+ }catch(error){alert('No se pudo cargar la textura. '+error.message)}
+ finally{URL.revokeObjectURL(url)}
+}
+const sofaImageMaps=new Map();
+function sofaImageMap(data){
+ if(!sofaImageMaps.has(data)){
+  const map=new T.TextureLoader().load(data);
+  map.wrapS=map.wrapT=T.RepeatWrapping;map.encoding=T.sRGBEncoding;map.anisotropy=8;
+  if(sofaImageMaps.size>=12)sofaImageMaps.delete(sofaImageMaps.keys().next().value);
+  sofaImageMaps.set(data,map);
+ }
+ return sofaImageMaps.get(data);
+}
 function props(){P.innerHTML='';const e=get();
  if(sel?.k==='group'){
   P.innerHTML='<h4>Selección múltiple</h4><small>'+sel.ids.size+' elementos seleccionados. Arrastra para moverlos o usa Ctrl+C y Ctrl+V.</small>';
@@ -926,7 +950,14 @@ function props(){P.innerHTML='';const e=get();
    appendMotionButton(P,e,motions,commitQ,true);
   }
   if(hasItemLight(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
-  if(hasSofaFabric(e))sel2('Tapicería',Object.keys(SOFA_FABRICS),sofaFabric(e),v=>e.upholstery=v,SOFA_FABRICS);
+  if(hasSofaFabric(e)){
+   const labels={...SOFA_FABRICS,...(e.upholsteryImage?{custom:'Imagen personalizada'}:{})};
+   sel2('Tapicería',Object.keys(labels),e.upholsteryImage?'custom':sofaFabric(e),v=>{if(v!=='custom'){delete e.upholsteryImage;e.upholstery=v}},labels);
+   const input=document.createElement('input');
+   input.type='file';input.accept='image/png,image/jpeg,image/webp';
+   input.onchange=()=>{const file=input.files[0];if(file)importSofaTexture(file,e)};
+   btn(e.upholsteryImage?'Cambiar imagen de tapicería…':'Subir textura de tapicería…',()=>input.click(),false);
+  }
   partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
 /* ===== 2D ===== */
@@ -4031,7 +4062,12 @@ case'sofa':{
  const pilot=it.t==='sofa';
  const softThreeSeater=hasSofaFabric(it);
  const fabric=softThreeSeater?sofaFabric(it):null;
- if(pilot&&fabric!=='liso'){
+ const customImage=softThreeSeater&&/^data:image\/jpeg;base64,/.test(it.upholsteryImage||'');
+ if(customImage){
+  const map=sofaImageMap(it.upholsteryImage);
+  for(const mat of [upholstery,frame]){mat.map=map;mat.color.set('#fff')}
+  wuv(frame,{uT:{value:new T.Vector2(42,42)},uSw:{value:0},uR:{value:0},uO:{value:new T.Vector2(0,0)},uW:{value:0}});
+ }else if(pilot&&fabric!=='liso'){
   const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil',fabric==='boucle'?'sofa-boucle':fabric==='lino'?'sofa-linen-fine':'sofa-linen','#eeeeee',.88,0,.17,42]);
   Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
   upholstery.normalScale.setScalar(fabric==='boucle'?.24:softThreeSeater?.075:.17);
@@ -4086,7 +4122,6 @@ case'sofa':{
  const addBack=(x,sx,z=-d*.325)=>{
   const supportH=h*(pilot?.72:.77);
   if(softThreeSeater){
-   tag(B(g,sx*.97,h*.63,d*.07,x,h*.405,z-d*.055,frame,3),'frame');
    const cushion=tag(verticalPad(g,x,h*.655,z,sx,h*.46,d*.17,upholstery),'back');
    cushion.rotation.x=-.10;
    return;
@@ -4123,9 +4158,11 @@ case'sofa':{
  }else{
   const count=modular?4:seats,usableW=w*.82,gap=w*(softThreeSeater?.006:.012),cw=(usableW-gap*(count-1))/count;
   if(pilot)tag(B(g,w*.86,seatY-h*.08,d*.66,0,(seatY+h*.08)/2,-d*.015,frame,2.8),'frame');
+  if(softThreeSeater)tag(B(g,usableW,h*.78,d*.10,0,h*.47,-d*.405,frame,Math.min(2,d*.02)),'frame');
   for(let k=0;k<count;k++){
    const x=-usableW/2+cw/2+k*(cw+gap);
-   addSeat(x,-d*.015,cw,d*(pilot?.64:.53));addBack(x,cw*.96,-d*.303);
+   addSeat(x,-d*.015,cw,d*(pilot?.64:.53));
+   addBack(x,softThreeSeater?cw+gap+w*.002:cw*.96,-d*.303);
   }
  }
  // Laterales apoyados en el bastidor. El retorno lleva su propio respaldo.
