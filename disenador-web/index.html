@@ -3994,16 +3994,17 @@ case'sofa':{
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),frame=M(it.col||'#a88f78',.85,.02),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const pilot=it.t==='sofa';
+ const softThreeSeater=name==='sofá 3 plazas';
  if(pilot){
   const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil','sofa-linen','#eeeeee',.88,0,.17,42]);
   Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-  upholstery.normalScale.set(.17,.17);
+  upholstery.normalScale.setScalar(softThreeSeater?.075:.17);
   Object.assign(frame,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-  frame.normalScale.set(.11,.11);
+  frame.normalScale.setScalar(softThreeSeater?.055:.11);
   wuv(frame,{uT:{value:new T.Vector2(42,42)},uSw:{value:0},uR:{value:0},uO:{value:new T.Vector2(0,0)},uW:{value:0}});
   stitch.color.copy(upholstery.color).multiplyScalar(.84);
  }
- const seatY=h*.285,seatH=h*(pilot?.16:.135),backY=h*.64,backH=h*.44;
+ const seatY=h*.285,seatH=h*(softThreeSeater?.19:pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   if(pilot){
    const mesh=new T.Mesh(upholsteredCushionGeometry(sx,sy,sz,'y'),mat);
@@ -4048,6 +4049,12 @@ case'sofa':{
  };
  const addBack=(x,sx,z=-d*.325)=>{
   const supportH=h*(pilot?.72:.77);
+  if(softThreeSeater){
+   tag(B(g,sx*.97,h*.63,d*.07,x,h*.405,z-d*.055,frame,3),'frame');
+   const cushion=tag(verticalPad(g,x,h*.655,z,sx,h*.46,d*.17,upholstery),'back');
+   cushion.rotation.x=-.10;
+   return;
+  }
   tag(B(g,sx*(pilot?.98:1),supportH,d*.053,x,h*.08+supportH/2,z-d*.044,frame),'frame');
   tag(verticalPad(g,x,backY,z,sx,backH,d*.105,upholstery,5),'back');
  };
@@ -4078,7 +4085,7 @@ case'sofa':{
   // El puente interior da apoyo a los dos cojines en la junta del giro.
   tag(B(g,span,seatY-h*.08,3,sideX,(seatY+h*.08)/2,join,frame),'frame');
  }else{
-  const count=modular?4:seats,usableW=w*.82,gap=w*.012,cw=(usableW-gap*(count-1))/count;
+  const count=modular?4:seats,usableW=w*.82,gap=w*(softThreeSeater?.006:.012),cw=(usableW-gap*(count-1))/count;
   if(pilot)tag(B(g,w*.86,seatY-h*.08,d*.66,0,(seatY+h*.08)/2,-d*.015,frame,2.8),'frame');
   for(let k=0;k<count;k++){
    const x=-usableW/2+cw/2+k*(cw+gap);
@@ -4087,10 +4094,15 @@ case'sofa':{
  }
  // Laterales apoyados en el bastidor. El retorno lleva su propio respaldo.
  for(const side of corner?[-1]:[-1,1]){
-  const ax=side*w*.45,armD=chaise?d*.40:corner?d*.40:d*.72;
+  const ax=side*w*(softThreeSeater?.446:.45),armD=chaise?d*.40:corner?d*.40:d*.72;
   const armZ=chaise?-d*.116:corner?-d*.17:-d*.025;
-  tag(B(g,w*.095,h*.53,armD,ax,h*.08+h*.53/2,armZ,frame,pilot?2.7:undefined),'frame');
-  tag(pad(g,ax,h*.61,armZ,w*.095,h*.10,armD,upholstery,4),'arms');
+  if(softThreeSeater){
+   tag(B(g,w*.106,h*.57,armD,ax,h*.365,armZ,frame,Math.min(7,w*.029)),'frame');
+   tag(pad(g,ax,h*.60,armZ,w*.107,h*.12,armD*.97,upholstery,4),'arms');
+  }else{
+   tag(B(g,w*.095,h*.53,armD,ax,h*.08+h*.53/2,armZ,frame,pilot?2.7:undefined),'frame');
+   tag(pad(g,ax,h*.61,armZ,w*.095,h*.10,armD,upholstery,4),'arms');
+  }
   for(const end of [-1,1]){
    const leg=new T.Mesh(new T.CylinderGeometry(2,1.7,h*.08,16),feet);
    leg.position.set(ax,h*.04,armZ+end*armD*.35);tag(leg,'feet');g.add(leg);
