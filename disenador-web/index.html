@@ -1993,6 +1993,7 @@ function drw(g,it,k,x0,w,y0,h,mt,hm){
  const mv={o:p,it,k,v:it.op[k]?1:0,t:'s',z:it.d/2,sl:it.d*.7};p.userData.mv=mv;MV.push(mv)
 }
 function doors(g,it,mt,hm,y0,h,k0){const w=it.w-4;if(it.w>80){door(g,it,k0,-w/2,w/2,y0,h,mt,hm,false);door(g,it,k0+1,0,w/2,y0,h,mt,hm,true)}else door(g,it,k0,-w/2,w,y0,h,mt,hm,it.fl)}
+const fixtureIsOn=it=>it.t==='ceilingSpot'?it.lightOn!==false:!!it.lightOn;
 const spotPower=it=>Number.isFinite(it.lightPower)?Math.max(10,Math.min(100,it.lightPower)):75;
 const BUILD={
 ceilingSpot(g,it,mt){
@@ -2000,9 +2001,9 @@ ceilingSpot(g,it,mt){
  const mount=new T.Mesh(new T.CylinderGeometry(radius,radius,it.h*.8,32),mt);
  mount.position.y=it.h*.6;g.add(mount);
  const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15*power));
- lens.position.y=it.h*.1;g.add(lens);
- if(!it.lightOn)return;
- const light=new T.SpotLight(warm,2.4*power,620,it.wideBeam?.68:.42,.7,1);
+ lens.position.y=it.h*.1;lens.material.toneMapped=!fixtureIsOn(it);g.add(lens);
+ if(!fixtureIsOn(it))return;
+ const light=new T.SpotLight(warm,5.5*power,750,it.wideBeam?.68:.42,.65,1);
  light.position.y=-.25;light.target.position.y=-200;
  g.add(light,light.target);
 },
@@ -2700,7 +2701,7 @@ function buildBedroomLamp(g,it,primary){
  for(const side of [-1,1])bedroomTube(g,[0,low+shadeH*.66,0],[side*r*.67,low+shadeH*.66,0],.24,bulb);
 }
 function fixtureMaterial(it,color,intensity){
- return new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:it.lightOn?intensity:0,roughness:.35});
+ return new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:fixtureIsOn(it)?intensity:0,roughness:.35});
 }
 function addFixtureLight(g,it,color,intensity,distance,x,y,z){
  if(!it.lightOn)return;
@@ -7223,13 +7224,16 @@ let RE=null,rcv=null,renderRun=0;
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
 function modeUI(){const q=$('#sq').value,m3=mode=='3d';
  const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
-function frameProject(){
+function frameProject(item=null){
  if(!S.w.length&&!S.i.some(it=>!it.hid))return;
  if(mode==='2d'||dualView){
   const plan=new T.Box2();
   const add=(x,y,pad)=>{plan.expandByPoint(new T.Vector2(x-pad,y-pad));plan.expandByPoint(new T.Vector2(x+pad,y+pad))};
-  S.w.forEach(w=>{add(w.x1,w.y1,w.t/2+24);add(w.x2,w.y2,w.t/2+24)});
-  S.i.filter(it=>!it.hid).forEach(it=>add(it.x,it.y,Math.hypot(it.w,it.d)/2));
+  if(item)cors(item).forEach(([x,y])=>add(x,y,12));
+  else{
+   S.w.forEach(w=>{add(w.x1,w.y1,w.t/2+24);add(w.x2,w.y2,w.t/2+24)});
+   S.i.filter(it=>!it.hid).forEach(it=>add(it.x,it.y,Math.hypot(it.w,it.d)/2));
+  }
   const size=plan.getSize(new T.Vector2()),center=plan.getCenter(new T.Vector2());
   k=Math.max(.15,Math.min(4,Math.max(1,c2.clientWidth-96)/Math.max(1,size.x),Math.max(1,c2.clientHeight-82)/Math.max(1,size.y)));
   ox=c2.clientWidth/2-center.x*k;oy=c2.clientHeight/2-center.y*k;
@@ -7237,9 +7241,19 @@ function frameProject(){
  }
  if(mode!=='3d')return;
  exitWalk();resize();oc.autoRotate=false;
- const box=projectBounds3D();
+ const model=item&&root.children.find(o=>o.userData.id===item.id);
+ const box=model?new T.Box3().setFromObject(model):projectBounds3D();
  if(box.isEmpty())return;
  const center=box.getCenter(new T.Vector3()),direction=cam.position.clone().sub(oc.target).normalize();
+ if(model&&item.t==='ceilingSpot'){
+  const room=S.rooms.find(r=>r.poly&&inPoly(item.x,item.y,r.poly));
+  const x=(room?.cx??sunC.x)-center.x,z=(room?.cy??sunC.z)-center.z;
+  const horizontal=Math.hypot(x,z);
+  if(horizontal>1)direction.set(x/horizontal*.38,-1,z/horizontal*.38).normalize();
+  else direction.set(.25,-1,.25).normalize();
+ }
+ oc.minDistance=model?24:90;
+ if(model&&item.t==='ceilingSpot')oc.maxPolarAngle=Math.PI-.01;
  if(!direction.lengthSq())direction.set(1,1,1).normalize();
  const right=new T.Vector3().crossVectors(cam.up,direction).normalize();
  const up=new T.Vector3().crossVectors(direction,right);
@@ -7251,7 +7265,7 @@ function frameProject(){
  }
  oc.target.copy(center);cam.position.copy(center).addScaledVector(direction,distance);oc.update();
 }
-$('#fitProject').onclick=frameProject;
+$('#fitProject').onclick=()=>{const item=sel?.k==='i'?get():null;frameProject(item&&!item.hid?item:null)};
 function importScannedRoom(data,project,sources){
  if(S!==project)throw Error('El proyecto ha cambiado. Abre Escanear habitación desde el proyecto actual.');
  const interior=data.edges.map(([a])=>a),t=10;
@@ -7622,9 +7636,9 @@ function appendMotionButton(panel,it,motions,save,show3D=false){
 }
 function appendLightButton(panel,it,save){
  const button=document.createElement('button');button.type='button';
- const update=()=>{button.textContent=it.lightOn?'Apagar luz':'Encender luz';button.setAttribute('aria-pressed',String(!!it.lightOn))};
+ const update=()=>{button.textContent=fixtureIsOn(it)?'Apagar luz':'Encender luz';button.setAttribute('aria-pressed',String(fixtureIsOn(it)))};
  update();
- button.onclick=()=>{it.lightOn=!it.lightOn;update();save()};
+ button.onclick=()=>{it.lightOn=!fixtureIsOn(it);update();save()};
  panel.append(button,' ');
  if(it.t==='ceilingSpot'){
   const label=document.createElement('label');label.className='r';
