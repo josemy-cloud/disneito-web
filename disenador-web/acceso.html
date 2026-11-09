@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accede a Disenito</title>
   <style>
-    :root {color-scheme:light;--ink:#172c28;--muted:#52645e;--accent:#236050;--line:#d7e0d9}
+    :root {color-scheme:light;--ink:#202d40;--muted:#4d6078;--accent:#2f6fd1;--line:#c9d7e9}
     * {box-sizing:border-box}
-    body {margin:0;background:#edf1eb;color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
+    body {margin:0;background:#eaf0f8;color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
     .access {min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:clamp(16px,5vw,64px)}
-    .access-shell {display:grid;grid-template-columns:1.03fr 1fr;width:min(100%,1000px);border-radius:26px;overflow:hidden;background:#fffdfa;box-shadow:0 22px 65px #18362a20;border:1px solid #dce4db}
-    .access-brand {display:flex;flex-direction:column;justify-content:center;gap:20px;padding:clamp(26px,5vw,56px);background:radial-gradient(ellipse at 90% 20%,#306656,#193e35 75%);color:#f5f8ed}
+    .access-shell {display:grid;grid-template-columns:1.03fr 1fr;width:min(100%,1000px);border-radius:26px;overflow:hidden;background:#fbfdff;box-shadow:0 22px 65px #202d4026;border:1px solid #d6e2f0}
+    .access-brand {display:flex;flex-direction:column;justify-content:center;gap:20px;padding:clamp(26px,5vw,56px);background:radial-gradient(ellipse at 90% 20%,#285494,#202d40 75%);color:#f4f8ff}
     .brand-name {display:flex;align-items:center;gap:10px;font-size:21px;font-weight:750;letter-spacing:-.04em}
-    .brand-name svg {width:30px;height:30px;color:#d1e7b7}
+    .brand-name svg {width:30px;height:30px;color:#c1dcff}
     .access-brand h1 {margin:0;font-size:clamp(30px,4.1vw,52px);line-height:1.06;letter-spacing:-.055em;font-weight:730;max-width:12ch}
-    .access-brand p {margin:0;color:#d7e9db;max-width:31ch}
+    .access-brand p {margin:0;color:#d6e6fb;max-width:31ch}
     .access-plan {width:100%;height:auto;display:block}
     .access-form {min-width:0;display:grid;align-content:center;padding:clamp(26px,5vw,58px)}
     #accountBox {position:static!important;inset:auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;color:var(--ink)!important;font:inherit!important}
@@ -28,9 +28,9 @@
     #accountBox input[type="checkbox"] {accent-color:var(--accent);flex:none}
     #accountBox small {color:var(--muted)!important}
     #accountBox button {min-height:44px;margin:4px 6px 0 0!important;padding:9px 12px!important;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--accent);font:600 .875rem/1.25 system-ui,sans-serif;cursor:pointer}
-    #accountBox button:hover {background:#edf5ef}
+    #accountBox button:hover {background:#eaf2ff}
     #accountBox button[type="submit"] {width:100%;margin:4px 0 10px!important;border-color:var(--accent);background:var(--accent);color:#fff}
-    #accountBox button[type="submit"]:hover {background:#1b5042}
+    #accountBox button[type="submit"]:hover {background:#245bb0}
     #accountBox button:disabled {opacity:.65;cursor:wait}
     #accountBox :focus-visible,#accessFallback a:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
     #accessFallback a {color:var(--accent)}
@@ -57,20 +57,20 @@
         <h1>Diseña el espacio que imaginas</h1>
         <p>Dibuja tu plano, prueba materiales y recorre tu diseño en 3D.</p>
         <svg class="access-plan" viewBox="0 0 360 226" fill="none" aria-hidden="true">
-          <defs><pattern id="plan-grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0V15" stroke="#a6c7af" stroke-opacity=".2"/></pattern></defs>
-          <rect x="1" y="1" width="358" height="224" rx="14" fill="#173c32" stroke="#739787"/>
+          <defs><pattern id="plan-grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0V15" stroke="#a5c5ee" stroke-opacity=".2"/></pattern></defs>
+          <rect x="1" y="1" width="358" height="224" rx="14" fill="#1d3456" stroke="#6485b2"/>
           <rect x="12" y="12" width="336" height="202" rx="8" fill="url(#plan-grid)"/>
-          <path d="M62 48h233v132H62z" fill="#6e9c78" fill-opacity=".2" stroke="#d9edc2" stroke-width="3"/>
-          <path d="M205 48v56m0 30v46m0-46a30 30 0 0 0 30-30h-30" stroke="#d9edc2" stroke-width="2"/>
-          <path d="M62 91v42m233-35v43" stroke="#173c32" stroke-width="5"/>
-          <path d="M62 91v42m233-35v43" stroke="#cde9d5" stroke-width="1"/>
-          <rect x="83" y="67" width="82" height="27" rx="6" fill="#a8ca9a" fill-opacity=".24" stroke="#a8ca9a"/>
-          <path d="M89 72v17m69-17v17m-69-4h69" stroke="#a8ca9a"/>
-          <rect x="101" y="110" width="47" height="23" rx="6" stroke="#a8ca9a"/>
-          <rect x="223" y="62" width="54" height="34" rx="4" fill="#b4d6aa" fill-opacity=".2" stroke="#a8ca9a"/>
-          <path d="M229 73h42m-22-11v11m-159 91h77m0-10v10" stroke="#a8ca9a"/>
-          <path d="M62 34h233M62 30v8m233-8v8M48 48v132m-4-132h8m-8 132h8" stroke="#a9c9ad" stroke-opacity=".7"/>
-          <circle cx="273" cy="158" r="9" stroke="#a8ca9a"/><path d="m267 164 12-12m-12 0 12 12" stroke="#a8ca9a"/>
+          <path d="M62 48h233v132H62z" fill="#719bce" fill-opacity=".2" stroke="#d8eaff" stroke-width="3"/>
+          <path d="M205 48v56m0 30v46m0-46a30 30 0 0 0 30-30h-30" stroke="#d8eaff" stroke-width="2"/>
+          <path d="M62 91v42m233-35v43" stroke="#1d3456" stroke-width="5"/>
+          <path d="M62 91v42m233-35v43" stroke="#c7e0ff" stroke-width="1"/>
+          <rect x="83" y="67" width="82" height="27" rx="6" fill="#9dbfec" fill-opacity=".24" stroke="#9dbfec"/>
+          <path d="M89 72v17m69-17v17m-69-4h69" stroke="#9dbfec"/>
+          <rect x="101" y="110" width="47" height="23" rx="6" stroke="#9dbfec"/>
+          <rect x="223" y="62" width="54" height="34" rx="4" fill="#b4d4fa" fill-opacity=".2" stroke="#9dbfec"/>
+          <path d="M229 73h42m-22-11v11m-159 91h77m0-10v10" stroke="#9dbfec"/>
+          <path d="M62 34h233M62 30v8m233-8v8M48 48v132m-4-132h8m-8 132h8" stroke="#a8c6e9" stroke-opacity=".7"/>
+          <circle cx="273" cy="158" r="9" stroke="#9dbfec"/><path d="m267 164 12-12m-12 0 12 12" stroke="#9dbfec"/>
         </svg>
       </div>
       <section class="access-form" id="accessForm">
