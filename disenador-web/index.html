@@ -3938,7 +3938,7 @@ function buildTerraceBBQ(g,it,primary){
 }
 
 function upholsteredCushionGeometry(width,height,depth,axis){
- const segments=axis==='y'?[12,6,12]:[12,12,6];
+ const segments=axis==='y'?[20,6,16]:[20,16,6];
  const geometry=new T.BoxGeometry(width,height,depth,...segments);
  const position=geometry.getAttribute('position'),normal=geometry.getAttribute('normal'),uv=geometry.getAttribute('uv');
  const hx=width/2,hy=height/2,hz=depth/2,r=Math.min(hx,hy,hz)*.78;
@@ -3951,9 +3951,15 @@ function upholsteredCushionGeometry(width,height,depth,axis){
   const nx=dx/length,ny=dy/length,nz=dz/length;
   const px=bx+nx*r,py=by+ny*r,pz=bz+nz*r;
   const vertical=axis==='z',u=px/hx,v=vertical?py/hy:pz/hz;
-  const edge=1-(1-u*u)*(1-v*v),compression=1-.17*edge;
+  const edge=1-(1-u*u)*(1-v*v);
+  // Pliegues cortos junto al borde, con caída progresiva hacia el centro.
+  const wave=Math.sin(13*u+2*v),band=v**6*(1-v*v),mask=u*u*(1-u*u);
+  const wrinkle=.085*wave*band*mask;
+  const compression=1-.17*edge+wrinkle;
   position.setXYZ(i,px,vertical?py:py*compression,vertical?pz*compression:pz);
-  const gx=.34*u*(1-v*v)/hx,gv=.34*v*(1-u*u)/(vertical?hy:hz);
+  const slope=Math.cos(13*u+2*v);
+  const gx=(.34*u*(1-v*v)-.085*band*(13*slope*mask+wave*(2*u-4*u**3)))/hx;
+  const gv=(.34*v*(1-u*u)-.085*mask*(2*slope*band+wave*(6*v**5-8*v**7)))/(vertical?hy:hz);
   const face=vertical?nz:ny,offset=(vertical?pz:py)*face/compression;
   const sx=nx+offset*gx,sy=vertical?ny+offset*gv:ny/compression,sz=vertical?nz/compression:nz+offset*gv;
   const uvWidth=normal.getX(i)!==0?depth:width,uvHeight=normal.getY(i)!==0?depth:height;
@@ -3961,6 +3967,25 @@ function upholsteredCushionGeometry(width,height,depth,axis){
   uv.setXY(i,uv.getX(i)*uvWidth/42,uv.getY(i)*uvHeight/42);
  }
  return geometry;
+}
+function upholsteredCushionSeam(width,height,depth,axis,material){
+ const vertical=axis==='z',halfW=width/2,halfV=(vertical?height:depth)/2;
+ const radius=Math.min(width,height,depth)*.39;
+ const cord=Math.min(.09,radius*.14),points=[];
+ for(let corner=0;corner<4;corner++){
+  const start=corner*Math.PI/2;
+  const x=Math.sign(Math.cos(start+Math.PI/4))*(halfW-radius);
+  const v=Math.sign(Math.sin(start+Math.PI/4))*(halfV-radius);
+  for(let i=0;i<=4;i++){
+   const angle=start+i*Math.PI/8;
+   const px=x+Math.cos(angle)*(radius-cord*.55),pv=v+Math.sin(angle)*(radius-cord*.55);
+   points.push(vertical?new T.Vector3(px,pv,0):new T.Vector3(px,0,pv));
+  }
+ }
+ // La polilínea mantiene la costura pegada a los tramos rectos.
+ const path=new T.CurvePath();
+ points.forEach((point,i)=>path.add(new T.LineCurve3(point,points[(i+1)%points.length])));
+ return new T.Mesh(new T.TubeGeometry(path,96,cord,5,true),material);
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
@@ -3972,12 +3997,17 @@ case'sofa':{
   const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil','sofa-linen','#eeeeee',.88,0,.17,42]);
   Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
   upholstery.normalScale.set(.17,.17);
+  Object.assign(frame,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
+  frame.normalScale.set(.11,.11);
+  wuv(frame,{uT:{value:new T.Vector2(42,42)},uSw:{value:0},uR:{value:0},uO:{value:new T.Vector2(0,0)},uW:{value:0}});
+  stitch.color.copy(upholstery.color).multiplyScalar(.84);
  }
  const seatY=h*.285,seatH=h*(pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   if(pilot){
    const mesh=new T.Mesh(upholsteredCushionGeometry(sx,sy,sz,'y'),mat);
-   mesh.position.set(x,y+sy/2-.15,z);parent.add(mesh);return mesh;
+   mesh.position.set(x,y+sy/2-.15,z);
+   mesh.add(upholsteredCushionSeam(sx,sy,sz,'y',stitch));parent.add(mesh);return mesh;
   }
   const bevel=Math.min(1.8,sy*.16),sh=new T.Shape();
   const r=Math.min(rad,sx*.18,sz*.18);
@@ -3991,7 +4021,8 @@ case'sofa':{
  const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   if(pilot){
    const mesh=new T.Mesh(upholsteredCushionGeometry(sx,sy,sz,'z'),mat);
-   mesh.position.set(x,y,z);parent.add(mesh);return mesh;
+   mesh.position.set(x,y,z);
+   mesh.add(upholsteredCushionSeam(sx,sy,sz,'z',stitch));parent.add(mesh);return mesh;
   }
   const bevel=Math.min(1.6,sz*.16),depth=sz;
   const r=Math.min(rad,sx*.18,sy*.16),sh=new T.Shape();
@@ -7265,6 +7296,7 @@ function applyItemPartColors(g,it,primary){
    const id=src.id+':'+hex;
    if(!recolored.has(id)){
     const mat=src.clone();mat.color.set(hex);
+    if(it.t==='sofa'&&src.userData.U)wuv(mat,src.userData.U);
     if(key==='light'&&mat.emissive)mat.emissive.set(hex);
     recolored.set(id,mat);
    }
