@@ -125,7 +125,7 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=4" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=5" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
@@ -145,12 +145,9 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
 <div id="main">
-<button id="nuhioNavTab" type="button" aria-controls="nuhioNav" aria-expanded="false" aria-label="Abrir navegación de NuHio" title="Abrir navegación de NuHio"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 33V16L20 4l15 12v17M5 36h30M12 29V17l16 12V17" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<button id="nuhioNavTab" type="button" aria-controls="nuhioNav" aria-expanded="false" aria-label="Abrir navegación de NuHio" title="Abrir navegación de NuHio"></button>
 <aside id="nuhioNav" aria-label="Navegación del estudio">
-  <div class="nuhio-brand">
-    <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 33V16L20 4l15 12v17M5 36h30M12 29V17l16 12V17" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <div><strong>NuHio<span>.</span></strong><small>Tu futuro hogar comienza aquí</small></div>
-  </div>
+  <img class="nuhio-brand" src="/nuhio-logo.webp" width="582" height="162" alt="NuHio. Tu futuro hogar comienza aquí">
   <button id="nuhioPin" type="button" aria-pressed="true" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m16 3 5 5-3 1-3 3v4l-1 1-7-7 1-1h4l3-3 1-3ZM10.5 13.5 4 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
@@ -5053,7 +5050,8 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
  if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
 /* ===== Control general ===== */
 function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
-const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';$('#view').append(dualSplitter);
+const editorView=$('#view');
+const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';editorView.append(dualSplitter);
 dualSplitter.tabIndex=0;
 dualSplitter.setAttribute('role','separator');
 dualSplitter.setAttribute('aria-label','Tamaño del plano 2D');
@@ -5061,19 +5059,35 @@ dualSplitter.setAttribute('aria-valuemin','25');dualSplitter.setAttribute('aria-
 function setDualRatio(ratio){
  dualRatio=Math.max(.25,Math.min(.72,ratio));
  const percent=Math.round(dualRatio*100);
- $('#view').style.setProperty('--dual-ratio',percent+'%');
+ editorView.style.setProperty('--dual-ratio',(dualRatio*100)+'%');
  dualSplitter.setAttribute('aria-valuenow',String(percent));
  resize();draw();
 }
-let dualSplitDrag=false;
-dualSplitter.addEventListener('pointerdown',e=>{if(!dualView)return;dualSplitDrag=true;dualSplitter.setPointerCapture(e.pointerId);e.preventDefault()});
-dualSplitter.addEventListener('pointermove',e=>{
- if(!dualSplitDrag)return;
- const r=$('#view').getBoundingClientRect(),horizontal=document.body.classList.contains('desktop-workspace');
- setDualRatio(horizontal?(e.clientX-r.left)/r.width:(e.clientY-r.top)/r.height);
+let dualSplitPointer=null,dualSplitOffset=0;
+function dualSplitPosition(e){
+ const bounds=editorView.getBoundingClientRect();
+ const horizontal=document.body.classList.contains('desktop-workspace');
+ return horizontal?e.clientX-bounds.left-editorView.clientLeft:e.clientY-bounds.top-editorView.clientTop;
+}
+function dualSplitSize(){
+ return document.body.classList.contains('desktop-workspace')?editorView.clientWidth:editorView.clientHeight;
+}
+dualSplitter.addEventListener('pointerdown',e=>{
+ if(!dualView||e.button!==0||dualSplitPointer!==null)return;
+ dualSplitter.setPointerCapture(e.pointerId);
+ dualSplitPointer=e.pointerId;
+ dualSplitOffset=dualSplitPosition(e)-dualSplitSize()*dualRatio;
+ dualSplitter.focus({preventScroll:true});
+ e.preventDefault();
 });
-dualSplitter.addEventListener('pointerup',()=>dualSplitDrag=false);
-dualSplitter.addEventListener('pointercancel',()=>dualSplitDrag=false);
+dualSplitter.addEventListener('pointermove',e=>{
+ if(e.pointerId!==dualSplitPointer||!dualView)return;
+ const size=dualSplitSize();
+ if(size)setDualRatio((dualSplitPosition(e)-dualSplitOffset)/size);
+});
+dualSplitter.addEventListener('lostpointercapture',e=>{
+ if(e.pointerId===dualSplitPointer)dualSplitPointer=null;
+});
 dualSplitter.addEventListener('keydown',e=>{
  const horizontal=document.body.classList.contains('desktop-workspace');
  if(e.key===(horizontal?'ArrowLeft':'ArrowUp'))setDualRatio(dualRatio-.04);
@@ -5379,14 +5393,22 @@ function closeNuhioNav(){
  if(nuhioNav.contains(document.activeElement))navTab.focus({preventScroll:true});
  updateNuhioNav();
 }
-nuhioNav.addEventListener('pointerleave',e=>{
- if(e.pointerType==='mouse'&&e.relatedTarget!==navTab)closeNuhioNav();
+function isNuhioNavTarget(target){
+ return nuhioNav.contains(target)||navTab.contains(target);
+}
+document.addEventListener('pointermove',e=>{
+ if(e.pointerType==='mouse'&&!navPinned&&nuhioNav.classList.contains('nuhio-nav-open')&&
+    !isNuhioNavTarget(document.elementFromPoint(e.clientX,e.clientY)))closeNuhioNav();
+},{passive:true});
+document.documentElement.addEventListener('pointerleave',e=>{
+ if(e.pointerType==='mouse')closeNuhioNav();
 });
+window.addEventListener('blur',closeNuhioNav);
 nuhioNav.addEventListener('focusout',e=>{
  if(!navPinned&&!nuhioNav.contains(e.relatedTarget)&&e.relatedTarget!==navTab)updateNuhioNav();
 });
 nuhioExport.addEventListener('click',e=>{if(e.target.closest('button'))nuhioExport.open=false});
-document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false;if(!nuhioNav.contains(e.target)&&!navTab.contains(e.target))closeNuhioNav()});
+document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false;if(!isNuhioNavTarget(e.target))closeNuhioNav()});
 document.addEventListener('keydown',e=>{
  if(e.key!=='Escape')return;
  if(nuhioExport.open){nuhioExport.open=false;nuhioExport.querySelector('summary').focus()}

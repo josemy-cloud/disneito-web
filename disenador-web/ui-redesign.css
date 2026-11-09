@@ -308,15 +308,17 @@ body:not(.ui-legacy) #view.view-dual::after{
 body:not(.ui-legacy) #view.view-dual::before{content:"PLANO 2D · EDICIÓN TÉCNICA";top:10px}
 body:not(.ui-legacy) #view.view-dual::after{content:"MODELO 3D · VISTA EN TIEMPO REAL";top:calc(var(--dual-ratio) + 10px)}
 body:not(.ui-legacy) #view.view-dual #dualSplitter{
-  position:absolute;z-index:10;left:0;right:0;top:calc(var(--dual-ratio) - 4px);
-  height:8px;cursor:row-resize;touch-action:none;
-  background:linear-gradient(to bottom,transparent 0 3px,#8b9b90 3px 5px,transparent 5px);
+  position:absolute;z-index:12;left:0;right:0;top:var(--dual-ratio);
+  display:block;height:18px;transform:translateY(-50%);
+  cursor:row-resize;touch-action:none;pointer-events:auto;
+  background:linear-gradient(to bottom,transparent calc(50% - 1px),#7095bf calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px));
 }
 body:not(.ui-legacy) #view.view-dual #dualSplitter::after{
-  content:"";position:absolute;left:calc(50% - 22px);top:1px;width:44px;height:6px;
+  content:"";position:absolute;left:50%;top:50%;width:38px;height:8px;transform:translate(-50%,-50%);pointer-events:none;
   border-radius:8px;background:#f8faf6;border:1px solid #91a197;
   box-shadow:0 1px 4px rgba(0,0,0,.15);
 }
+#dualSplitter:focus-visible::after,#dualSplitter:hover::after {outline:2px solid #145bb7}
 body:not(.ui-legacy) #top .view-mode#mvDual{min-width:78px}
 body:not(.ui-legacy) #top .view-mode#mvDual svg{width:21px;height:21px}
 @media(max-width:900px){
@@ -356,21 +358,21 @@ body.adaptive:not(.ui-legacy) {
     border:1px solid #d4e0f1;background:#f5f9ff!important;border-radius:13px;overflow:auto hidden;
   }
   body.adaptive.desktop-workspace:not(.ui-legacy) #tools button {
-    display:inline-flex;flex:0 0 auto;flex-direction:row;align-items:center;justify-content:center;gap:6px;
-    min-width:0;min-height:38px;width:auto!important;padding:6px 10px!important;
+    display:inline-flex;flex:0 0 auto;flex-direction:row!important;align-items:center;justify-content:center;gap:5px!important;
+    min-width:0;min-height:34px!important;width:auto!important;padding:4px 7px!important;
     color:#203956!important;white-space:nowrap!important;
   }
   body.adaptive.desktop-workspace:not(.ui-legacy) #tools button.on {color:#fff!important;background:#145bb7!important}
-  body.desktop-workspace:not(.ui-legacy) #tools button svg {width:19px;height:19px}
+  body.desktop-workspace:not(.ui-legacy) #tools button svg {width:17px;height:17px}
+  body.desktop-workspace:not(.ui-legacy) #tools button span {font-size:11px;white-space:nowrap;overflow-wrap:normal}
+  @media (pointer:coarse) {
+    body.adaptive.desktop-workspace:not(.ui-legacy) #tools button {min-height:44px!important}
+  }
   body.desktop-workspace:not(.ui-legacy) #nuhioNav {
     display:flex;flex-direction:column;gap:20px;grid-area:1 / 1 / -1 / 2;min-width:0;overflow:auto;
     background:linear-gradient(165deg,#102a49,#07192f);color:#edf5ff;padding:22px 13px;
   }
-  .nuhio-brand {display:flex;align-items:center;gap:8px;min-width:0;padding:2px 3px}
-  .nuhio-brand svg {width:39px;flex:0 0 39px;color:#79bbff}
-  .nuhio-brand strong {display:block;font-size:26px;letter-spacing:-.055em;line-height:1}
-  .nuhio-brand strong span {color:#79bbff}
-  .nuhio-brand small {display:block;margin-top:6px;font-size:10px;color:#b9d4f2}
+  .nuhio-brand {display:block;width:100%;height:auto;padding:5px;border-radius:8px;background:#fff}
   #nuhioNav nav,#nuhioRecent {display:grid;gap:5px}
   #nuhioNav section {border-top:1px solid #6687b055;padding-top:13px}
   #nuhioNav h2 {margin:0 5px 9px;font-size:13px}
@@ -415,11 +417,12 @@ body.adaptive:not(.ui-legacy) {
   body.desktop-workspace:not(.ui-legacy) #view.view-dual::before,
   body.desktop-workspace:not(.ui-legacy) #view.view-dual::after {display:none}
   body.desktop-workspace:not(.ui-legacy) #view.view-dual #dualSplitter {
-    inset:0 auto 0 calc(var(--dual-ratio) - 4px);width:8px;height:auto;cursor:col-resize;
-    background:linear-gradient(to right,transparent 0 3px,#7e9dbf 3px 5px,transparent 5px);
+    inset:0 auto 0 var(--dual-ratio);width:18px;height:auto;transform:translateX(-50%);
+    cursor:col-resize;
+    background:linear-gradient(to right,transparent 8px,#7095bf 8px 10px,transparent 10px);
   }
   body.desktop-workspace:not(.ui-legacy) #view.view-dual #dualSplitter::after {
-    inset:calc(50% - 18px) auto auto 1px;width:6px;height:36px;background:#eef5ff;border-color:#8da8ca;
+    width:9px;height:38px;background:#eef5ff;border-color:#8da8ca;
   }
   body.desktop-workspace:not(.ui-legacy) #view.view-dual .nuhio-view-label {
     display:block;position:absolute;top:10px;z-index:8;padding:4px 8px!important;font-size:11px;
@@ -434,12 +437,12 @@ body.adaptive:not(.ui-legacy) {
 }
 
 /* Desktop actions share the drawing row, with a single render/export menu. */
-#nuhioNavTab,#nuhioToolRow {display:none}
+#nuhioNavTab,#nuhioToolRow,#dualSplitter {display:none}
 @media (min-width:1051px) {
   body.desktop-workspace:not(.ui-legacy) #top :is(#bPry,#bN,.dd:has(#bX)) {display:none}
   body.desktop-workspace:not(.ui-legacy) #nuhioToolRow {
     display:flex;align-items:center;gap:8px;grid-area:2 / 2 / 3 / -1;min-width:0;
-    padding:5px 8px;border:1px solid #d4e0f1;background:#f5f9ff;border-radius:13px;
+    padding:4px 8px;border:1px solid #d4e0f1;background:#f5f9ff;border-radius:13px;
   }
   body.adaptive.desktop-workspace:not(.ui-legacy) #nuhioToolRow #tools {
     flex:1 1 auto;padding:0!important;border:0;border-radius:0;background:transparent!important;
@@ -474,13 +477,16 @@ body.adaptive:not(.ui-legacy) {
 @media (min-width:1051px) {
   body.desktop-workspace:not(.ui-legacy) #nuhioPin {
     position:absolute;top:8px;right:8px;display:grid;place-items:center;
-    min-height:28px;width:28px;padding:3px!important;color:#a9c7ec!important;
+    min-height:24px;width:24px;padding:2px!important;color:#a9c7ec!important;
   }
   body.desktop-workspace:not(.ui-legacy) #nuhioPin[aria-pressed="true"] {
     color:#d6ebff!important;background:#214c77!important;
   }
   body.desktop-workspace:not(.ui-legacy) #nuhioNav {position:relative;padding-top:35px}
   body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav {position:fixed}
-  #nuhioPin svg,#nuhioNavTab svg {display:block;width:20px;height:20px;margin:auto}
-  body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNavTab {color:#79bbff!important}
+  #nuhioPin svg {display:block;width:14px;height:14px}
+  #nuhioNavTab::before {
+    content:"";display:block;width:23px;height:23px;margin:auto;border-radius:5px;
+    background:#fff url("/nuhio-logo.webp") no-repeat 1px 2px / 76px auto;
+  }
 }
