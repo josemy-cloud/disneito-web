@@ -1488,6 +1488,13 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const cloud=(fb(u,v,5,6,26)-.5)*.12;
    t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.28)-hairline*.14;
    h=.5;r=vein*.035;
+  }else if(gen==='sofa-linen'){
+   const shade=fb(u,v,5,8,32);
+   const yarn=nz(u+(nz(u,v,13,17,33)-.5)*.012,v,103,37,34);
+   const cross=nz(u,v+(nz(u,v,17,13,35)-.5)*.012,31,97,36);
+   t=(shade-.5)*.15+(yarn-.5)*.13+(cross-.5)*.08;
+   h=.5+(yarn-.5)*.23+(cross-.5)*.14;
+   r=(shade-.5)*.06;
   }else if(gen==='rug-pile'){
    const nap=fb(u,v,5,7,27),tufts=nz(u,v,41,57,28);
    const x=u+(nz(u,v,11,13,29)-.5)*.018;
@@ -3930,20 +3937,9 @@ function buildTerraceBBQ(g,it,primary){
  stepMV(mv(lid,{it,k:0,t:'u',angle:86}));
 }
 
-let upholsteryWeave;
-function sofaWeave(){
- if(upholsteryWeave)return upholsteryWeave;
- const canvas=document.createElement('canvas');canvas.width=canvas.height=64;
- const ctx=canvas.getContext('2d');
- ctx.fillStyle='#777';ctx.fillRect(0,0,64,64);
- for(let y=0;y<64;y+=4)for(let x=0;x<64;x+=4){
-  const warp=(x/4+y/4)%2===0;
-  ctx.fillStyle=warp?'#aaa':'#555';
-  ctx.fillRect(x+(warp?1:0),y+(warp?0:1),warp?2:4,warp?4:2);
- }
- const map=new T.CanvasTexture(canvas);
- map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(.15,.15);map.anisotropy=4;
- return upholsteryWeave=map;
+function scaleUpholsteryUV(geometry){
+ const uv=geometry.getAttribute('uv');
+ for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/42,uv.getY(i)/42);
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
@@ -3951,7 +3947,11 @@ case'sofa':{
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),frame=M(it.col||'#a88f78',.85,.02),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const pilot=it.t==='sofa';
- if(pilot){upholstery.bumpMap=sofaWeave();upholstery.bumpScale=.18}
+ if(pilot){
+  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil','sofa-linen','#eeeeee',.88,0,.42,42]);
+  Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
+  upholstery.normalScale.set(.42,.42);
+ }
  const seatY=h*.285,seatH=h*(pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   const bevel=pilot?Math.min(3.2,sy*.24,sx*.10,sz*.10):Math.min(1.8,sy*.16),sh=new T.Shape();
@@ -3962,6 +3962,7 @@ case'sofa':{
   sh.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);sh.lineTo(-sx/2,-sz/2+r);sh.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);sh.closePath();
   const geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:pilot?8:16});
   geo.translate(0,0,bevel);geo.rotateX(Math.PI/2);
+  if(pilot&&mat===upholstery)scaleUpholsteryUV(geo);
   const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy,z);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
@@ -3973,6 +3974,7 @@ case'sofa':{
   sh.lineTo(sx/2,sy/2-r);sh.quadraticCurveTo(sx/2,sy/2,sx/2-r,sy/2);sh.lineTo(-sx/2+r,sy/2);
   sh.quadraticCurveTo(-sx/2,sy/2,-sx/2,sy/2-r);sh.lineTo(-sx/2,-sy/2+r);sh.quadraticCurveTo(-sx/2,-sy/2,-sx/2+r,-sy/2);sh.closePath();
   const geo=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:pilot?bevel:Math.min(1.4,sz*.14),curveSegments:pilot?8:16});
+  if(pilot&&mat===upholstery)scaleUpholsteryUV(geo);
   const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-depth/2);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const seats=Math.max(2,Math.min(4,Math.round(w/72)));
