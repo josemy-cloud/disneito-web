@@ -104,7 +104,26 @@ async function accountPanel({entry=false}={}){
   const form=document.createElement('form');
   form.noValidate=true;
   em.input.name='email';pw.input.name='password';
-  form.append(em.wrap,pw.wrap,passwordHint(pw.input,'Para crear una cuenta: '));
+  if(entry){
+   const passwordRow=document.createElement('div');
+   passwordRow.className='access-password';
+   const toggle=document.createElement('button');
+   toggle.type='button';
+   toggle.className='access-password-toggle';
+   const eye='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/>';
+   const setVisibility=visible=>{
+    pw.input.type=visible?'text':'password';
+    const label=visible?'Ocultar contraseña':'Mostrar contraseña';
+    toggle.setAttribute('aria-label',label);
+    toggle.title=label;
+    toggle.innerHTML=eye+(visible?'<path d="m3 3 18 18"/>':'')+'</svg>';
+   };
+   setVisibility(false);
+   toggle.onclick=()=>setVisibility(pw.input.type==='password');
+   passwordRow.append(pw.wrap,toggle);
+   form.append(em.wrap,passwordRow);
+  }else form.append(em.wrap,pw.wrap);
+  form.append(passwordHint(pw.input,'Para crear una cuenta: '));
   content.append(form);
   const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);form.append(rememberWrap);
   const submit=btn('Iniciar sesión',()=>{});

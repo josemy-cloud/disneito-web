@@ -34,6 +34,14 @@
     #accountBox button:hover {background:#eaf2ff}
     #accountBox button[type="submit"] {width:100%;margin:4px 0 10px!important;border-color:var(--accent);background:var(--accent);color:#fff}
     #accountBox button[type="submit"]:hover {background:#245bb0}
+    .access-password {position:relative}
+    #accountBox .access-password input {padding-right:52px!important}
+    #accountBox .access-password-toggle {
+      position:absolute;right:2px;bottom:1px;display:grid;place-items:center;
+      width:44px;min-height:44px;margin:0!important;padding:0!important;border:0;
+      color:var(--muted);
+    }
+    .access-password-toggle svg {width:21px;height:21px}
     #accountBox button:disabled {opacity:.65;cursor:wait}
     #accountBox :focus-visible,#accessFallback a:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
     #accessFallback a {color:var(--accent)}
@@ -106,7 +114,7 @@
       document.getElementById('accessFallbackStatus').textContent='El formulario está tardando en cargar. Puedes volver a intentarlo.';
     },8000);
   </script>
-  <script src="/auth.js?v=7"></script>
+  <script src="/auth.js?v=8"></script>
   <script>
     (async()=>{
       const fallback=document.getElementById('accessFallback');
