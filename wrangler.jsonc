@@ -12,6 +12,7 @@
       "!/materiales/*",
       "!/auth.js",
       "!/ui-redesign.css",
+      "!/nuhio-logo.webp",
       "!/adaptive.css"
     ],
     "html_handling": "none"
