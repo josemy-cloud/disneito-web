@@ -3,20 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Accede a Disenito</title>
+  <title>Accede a NuHio</title>
   <style>
-    :root {color-scheme:light;--ink:#202d40;--muted:#4d6078;--accent:#2f6fd1;--line:#c9d7e9}
+    :root {color-scheme:light;--ink:#102843;--muted:#496580;--accent:#145bb7;--line:#cadcf2}
     * {box-sizing:border-box}
-    body {margin:0;background:#eaf0f8;color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
-    .access {min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:clamp(16px,5vw,64px)}
-    .access-shell {display:grid;grid-template-columns:1.03fr 1fr;width:min(100%,1000px);border-radius:26px;overflow:hidden;background:#fbfdff;box-shadow:0 22px 65px #202d4026;border:1px solid #d6e2f0}
-    .access-brand {display:flex;flex-direction:column;justify-content:center;gap:20px;padding:clamp(26px,5vw,56px);background:radial-gradient(ellipse at 90% 20%,#285494,#202d40 75%);color:#f4f8ff}
-    .brand-name {display:flex;align-items:center;gap:10px;font-size:21px;font-weight:750;letter-spacing:-.04em}
-    .brand-name svg {width:30px;height:30px;color:#c1dcff}
-    .access-brand h1 {margin:0;font-size:clamp(30px,4.1vw,52px);line-height:1.06;letter-spacing:-.055em;font-weight:730;max-width:12ch}
-    .access-brand p {margin:0;color:#d6e6fb;max-width:31ch}
-    .access-plan {width:100%;height:auto;display:block}
-    .access-form {min-width:0;display:grid;align-content:center;padding:clamp(26px,5vw,58px)}
+    body {margin:0;background:#eef5ff;color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
+    .access {min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 85% 10%,#d3e6ff,transparent 60%)}
+    .access-shell {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,1fr);width:min(100%,1060px);border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 24px 70px #153b6926;border:1px solid #cbdcf1}
+    .access-brand {display:grid;align-content:center;gap:13px;padding:clamp(24px,4vw,48px);background:radial-gradient(ellipse at 85% 70%,#174a83,#0b213d 72%);color:#f6faff}
+    .brand-name {display:block;width:174px;max-width:100%;height:auto;padding:5px;border-radius:9px;background:#fff}
+    .access-brand h1 {margin:6px 0 0;font-size:clamp(29px,3.6vw,47px);line-height:1.08;letter-spacing:-.045em;font-weight:750;max-width:15ch}
+    .access-brand p {margin:0;color:#d1e6ff;font-size:.95rem;max-width:38ch}
+    .access-preview {margin:4px 0 0;border:1px solid #638eb670;border-radius:14px;background:#0c2748;overflow:hidden}
+    .access-preview figcaption {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid #638eb650;color:#d8eaff;font-size:.75rem;font-weight:650}
+    .access-preview figcaption span {color:#b8daff;background:#244b75;border-radius:5px;padding:2px 6px;white-space:nowrap}
+    .access-preview svg {width:100%;height:auto;display:block}
+    .access-form {min-width:0;display:grid;align-content:center;padding:clamp(24px,4vw,48px)}
+    .access-kicker {margin:0 0 8px;color:#145bb7;font-size:.72rem;font-weight:750;letter-spacing:.13em;text-transform:uppercase}
     #accountBox {position:static!important;inset:auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;color:var(--ink)!important;font:inherit!important}
     #accountBox > div + div {max-width:none!important;margin:14px 0 0!important}
     #accountBox h2,#accessFallback h2 {margin:0;font-size:clamp(25px,3vw,34px);line-height:1.15;letter-spacing:-.045em}
@@ -34,15 +37,17 @@
     #accountBox button:disabled {opacity:.65;cursor:wait}
     #accountBox :focus-visible,#accessFallback a:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
     #accessFallback a {color:var(--accent)}
-    @media(max-width:720px) {
-      .access-shell {grid-template-columns:1fr;max-width:460px;border-radius:20px}
-      .access-brand {padding:20px 24px;gap:0}
-      .access-brand h1,.access-brand p,.access-plan {display:none}
-      .access-form {padding:24px}
+    @media(max-width:700px) {
+      .access {padding:12px}
+      .access-shell {grid-template-columns:1fr;max-width:460px;border-radius:18px}
+      .access-brand {padding:14px 20px}
+      .access-brand h1,.access-brand p,.access-preview {display:none}
+      .brand-name {width:150px}
+      .access-form {padding:20px}
     }
     @media(max-width:360px) {
-      .access {padding:10px}
-      .access-form {padding:18px}
+      .access {padding:8px}
+      .access-form {padding:16px}
     }
   </style>
 </head>
@@ -50,32 +55,45 @@
   <main class="access">
     <div class="access-shell">
       <div class="access-brand">
-        <div class="brand-name">
-          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 15 16 5l12 10v12H4zM16 15v12M4 19h12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-          Disenito
-        </div>
-        <h1>Diseña el espacio que imaginas</h1>
-        <p>Dibuja tu plano, prueba materiales y recorre tu diseño en 3D.</p>
-        <svg class="access-plan" viewBox="0 0 360 226" fill="none" aria-hidden="true">
-          <defs><pattern id="plan-grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0V15" stroke="#a5c5ee" stroke-opacity=".2"/></pattern></defs>
-          <rect x="1" y="1" width="358" height="224" rx="14" fill="#1d3456" stroke="#6485b2"/>
-          <rect x="12" y="12" width="336" height="202" rx="8" fill="url(#plan-grid)"/>
-          <path d="M62 48h233v132H62z" fill="#719bce" fill-opacity=".2" stroke="#d8eaff" stroke-width="3"/>
-          <path d="M205 48v56m0 30v46m0-46a30 30 0 0 0 30-30h-30" stroke="#d8eaff" stroke-width="2"/>
-          <path d="M62 91v42m233-35v43" stroke="#1d3456" stroke-width="5"/>
-          <path d="M62 91v42m233-35v43" stroke="#c7e0ff" stroke-width="1"/>
-          <rect x="83" y="67" width="82" height="27" rx="6" fill="#9dbfec" fill-opacity=".24" stroke="#9dbfec"/>
-          <path d="M89 72v17m69-17v17m-69-4h69" stroke="#9dbfec"/>
-          <rect x="101" y="110" width="47" height="23" rx="6" stroke="#9dbfec"/>
-          <rect x="223" y="62" width="54" height="34" rx="4" fill="#b4d4fa" fill-opacity=".2" stroke="#9dbfec"/>
-          <path d="M229 73h42m-22-11v11m-159 91h77m0-10v10" stroke="#9dbfec"/>
-          <path d="M62 34h233M62 30v8m233-8v8M48 48v132m-4-132h8m-8 132h8" stroke="#a8c6e9" stroke-opacity=".7"/>
-          <circle cx="273" cy="158" r="9" stroke="#9dbfec"/><path d="m267 164 12-12m-12 0 12 12" stroke="#9dbfec"/>
-        </svg>
+        <img class="brand-name" src="/nuhio-logo.webp" width="582" height="162" alt="NuHio. Tu futuro hogar comienza aquí">
+        <h1>Del plano a tu próximo hogar</h1>
+        <p>Dibuja, amuebla y visualiza tus espacios en 2D y 3D.</p>
+        <figure class="access-preview">
+          <figcaption>Vista del estudio <span>Plano + 3D</span></figcaption>
+          <svg viewBox="0 0 440 202" aria-hidden="true">
+            <defs>
+              <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="#76a9e4" stroke-opacity=".2"/></pattern>
+              <linearGradient id="floor" x2="1" y2="1"><stop stop-color="#c2e1ff"/><stop offset="1" stop-color="#6ea1d9"/></linearGradient>
+            </defs>
+            <path d="M0 0h440v202H0z" fill="url(#grid)"/>
+            <path d="M218 0v202" stroke="#638eb6" stroke-opacity=".45"/>
+            <g fill="none" stroke="#b9deff" stroke-linejoin="round">
+              <path d="M38 44h148v118H38zM124 44v46m0 29v43m0-43a29 29 0 0 0 29-29h-29" stroke-width="3"/>
+              <rect x="49" y="56" width="63" height="25" rx="5" fill="#70a9e2" fill-opacity=".3"/>
+              <path d="M55 59v19m51-19v19M55 71h51"/>
+              <rect x="61" y="94" width="37" height="19" rx="5"/>
+              <rect x="141" y="55" width="33" height="28" rx="4" fill="#70a9e2" fill-opacity=".3"/>
+              <path d="M145 64h25M39 31h146m-146-4v8m146-8v8M27 44v118m-4-118h8m-8 118h8" opacity=".65"/>
+            </g>
+            <g stroke="#9bc7f0" stroke-linejoin="round">
+              <path d="m237 124 91-50 93 52-91 53z" fill="url(#floor)"/>
+              <path d="m237 124 93 55 91-53v9l-91 54-93-56z" fill="#3e6da0"/>
+              <path d="m237 124 91-50V27l-91 49z" fill="#5888be"/>
+              <path d="m328 74 93 52V79l-93-52z" fill="#8db6df"/>
+              <path d="m346 48 47 26v27l-47-26z" fill="#123a66"/>
+              <path d="m370 62v27m-24-28 47 26" fill="none"/>
+              <path d="m256 111 49-27 34 19-50 28z" fill="#e4effe"/>
+              <path d="m256 111 33 20 50-28v13l-50 29-33-19z" fill="#597fa8"/>
+              <path d="m256 111 49-27V69l-49 26z" fill="#a8d0f7"/>
+              <path d="m304 142 27-15 24 13-27 16z" fill="#f3d3a5" stroke="#d4aa78"/>
+            </g>
+          </svg>
+        </figure>
       </div>
-      <section class="access-form" id="accessForm">
+      <section class="access-form" id="accessForm" aria-label="Acceso a NuHio">
+        <p class="access-kicker">Tu estudio de diseño</p>
         <div id="accessFallback">
-          <h2>Accede a Disenito</h2>
+          <h2>Accede a NuHio</h2>
           <p id="accessFallbackStatus" role="status">Preparando el formulario de acceso…</p>
           <a href="/acceso">Volver a cargar</a>
           <noscript><p>Activa JavaScript para iniciar sesión.</p></noscript>
@@ -88,7 +106,7 @@
       document.getElementById('accessFallbackStatus').textContent='El formulario está tardando en cargar. Puedes volver a intentarlo.';
     },8000);
   </script>
-  <script src="/auth.js?v=5"></script>
+  <script src="/auth.js?v=7"></script>
   <script>
     (async()=>{
       const fallback=document.getElementById('accessFallback');

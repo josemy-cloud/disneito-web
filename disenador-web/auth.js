@@ -67,7 +67,7 @@ async function accountPanel({entry=false}={}){
   small.style.cssText='display:block;margin:-5px 0 10px;color:#b9c4d4;font-size:11px;line-height:1.35';
   input.setAttribute('aria-describedby',small.id);return small;
  };
- const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent=entry?'Accede a Disenito':'Mi cuenta';title.style.margin='0';head.append(title);if(!entry){
+ const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent=entry?'Accede a NuHio':'Mi cuenta';title.style.margin='0';head.append(title);if(!entry){
   head.removeAttribute('style');head.className='studio-panel-head';
   const intro=document.createElement('div');intro.innerHTML='<p class="studio-eyebrow">Estudio NuHio</p>';
   title.id='studioAccountTitle';intro.append(title);
@@ -99,7 +99,7 @@ async function accountPanel({entry=false}={}){
   content.append(btn('Cancelar y volver al inicio de sesión',()=>{history.replaceState(null,document.title,window.location.pathname+window.location.search);drawLogin()}));
  };
  const drawLogin=()=>{
-  content.innerHTML='<p style="color:#b9c4d4">Inicia sesión o crea una cuenta para acceder al editor de Disenito y a tus proyectos.</p>';
+  content.innerHTML='<p style="color:#b9c4d4">Inicia sesión para continuar con tus proyectos.</p>';
   const em=field('Correo electrónico','email','','username'),pw=field('Contraseña','password','','current-password');
   const form=document.createElement('form');
   form.noValidate=true;
