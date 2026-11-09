@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Diseñador de Viviendas</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>NuHio · Diseñador de viviendas</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font:13px system-ui,sans-serif;background:#1e2128;color:#e8e8e8;display:flex;flex-direction:column;height:100vh}
 #top{display:flex;gap:5px;padding:6px 8px;background:#14161b;align-items:center;flex-wrap:wrap}
@@ -125,7 +125,7 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=1" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=2" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
@@ -144,14 +144,31 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
 Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"><input type="range" id="se" min="10" max="85" value="38" style="width:70px"></span>
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
-<div id="main"><div id="tools"></div>
+<div id="main">
+<aside id="nuhioNav" aria-label="Navegación del estudio">
+  <div class="nuhio-brand">
+    <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 33V16L20 4l15 12v17M5 36h30M12 29V17l16 12V17" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><strong>NuHio<span>.</span></strong><small>Tu futuro hogar comienza aquí</small></div>
+  </div>
+  <nav aria-label="Acciones del estudio">
+    <button type="button" class="nuhio-projects" data-editor-action="bPry">Proyectos</button>
+    <button type="button" data-editor-action="bN">Nuevo proyecto</button>
+    <button type="button" data-editor-action="tl">Biblioteca</button>
+    <button type="button" data-editor-action="bPbr">Materiales PBR</button>
+    <button type="button" data-editor-action="bReal">Render</button>
+  </nav>
+  <section aria-labelledby="nuhioRecentTitle"><h2 id="nuhioRecentTitle">Mis proyectos</h2><div id="nuhioRecent" aria-live="polite"></div></section>
+</aside>
+<div id="tools" role="toolbar" aria-label="Herramientas de plano"></div>
 <div class="side" id="lib"></div>
-<div id="view"><canvas id="c2"></canvas><div id="d3"></div><div id="viewActions"><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
+<div id="view"><canvas id="c2"></canvas><div id="d3"></div>
+<button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
+<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions"><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
 </div></div>
-<div class="side" id="pr"></div></div>
+<div id="nuhioModes" aria-label="Vistas y renderizado"></div><div class="side" id="pr" aria-label="Propiedades"></div></div>
 <div id="sb"><span id="editorStatus"></span><span id="editorHint"></span></div>
 <div id="cat"></div>
 <div id="pv"><b>Previsualización 3D</b> <button id="pvx" style="float:right">✕</button><div id="pvc"></div><div id="pvp"></div></div>
@@ -5032,10 +5049,35 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
 /* ===== Control general ===== */
 function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;$('#pn').textContent=S.nm;sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
 const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';$('#view').append(dualSplitter);
+dualSplitter.tabIndex=0;
+dualSplitter.setAttribute('role','separator');
+dualSplitter.setAttribute('aria-label','Tamaño del plano 2D');
+dualSplitter.setAttribute('aria-valuemin','25');dualSplitter.setAttribute('aria-valuemax','72');
+function setDualRatio(ratio){
+ dualRatio=Math.max(.25,Math.min(.72,ratio));
+ const percent=Math.round(dualRatio*100);
+ $('#view').style.setProperty('--dual-ratio',percent+'%');
+ dualSplitter.setAttribute('aria-valuenow',String(percent));
+ resize();draw();
+}
 let dualSplitDrag=false;
 dualSplitter.addEventListener('pointerdown',e=>{if(!dualView)return;dualSplitDrag=true;dualSplitter.setPointerCapture(e.pointerId);e.preventDefault()});
-dualSplitter.addEventListener('pointermove',e=>{if(!dualSplitDrag)return;const r=$('#view').getBoundingClientRect();dualRatio=Math.max(.25,Math.min(.72,(e.clientY-r.top)/r.height));$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');resize();draw()});
-dualSplitter.addEventListener('pointerup',()=>dualSplitDrag=false);dualSplitter.addEventListener('pointercancel',()=>dualSplitDrag=false);
+dualSplitter.addEventListener('pointermove',e=>{
+ if(!dualSplitDrag)return;
+ const r=$('#view').getBoundingClientRect(),horizontal=document.body.classList.contains('desktop-workspace');
+ setDualRatio(horizontal?(e.clientX-r.left)/r.width:(e.clientY-r.top)/r.height);
+});
+dualSplitter.addEventListener('pointerup',()=>dualSplitDrag=false);
+dualSplitter.addEventListener('pointercancel',()=>dualSplitDrag=false);
+dualSplitter.addEventListener('keydown',e=>{
+ const horizontal=document.body.classList.contains('desktop-workspace');
+ if(e.key===(horizontal?'ArrowLeft':'ArrowUp'))setDualRatio(dualRatio-.04);
+ else if(e.key===(horizontal?'ArrowRight':'ArrowDown'))setDualRatio(dualRatio+.04);
+ else return;
+ e.preventDefault();
+});
+$('#nuhioFullPlan').onclick=()=>setMode('2d');
+$('#nuhioFullModel').onclick=()=>setMode('3d');
 function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){if(!r3)return;walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);oc.update()}
@@ -5300,16 +5342,27 @@ mobileActions.id='compactActions';
 mobileActions.setAttribute('aria-label','Acciones del proyecto');
 const mobileDock=[mobileMenu,$('#tl'),$('#tr'),mobileTop.querySelector('.view-modes')];
 const topNodes=[...mobileTop.childNodes];
+const nuhioDock=$('#nuhioModes'),nuhioNav=$('#nuhioNav');
+for(const button of nuhioNav.querySelectorAll('[data-editor-action]')){
+ button.onclick=()=>$('#'+button.dataset.editorAction).click();
+}
 function arrangeMobileTop(){
   const desktop=!useCompact()&&!document.body.classList.contains('ui-legacy');
   document.body.classList.toggle('desktop-workspace',desktop);
+  dualSplitter.setAttribute('aria-orientation',desktop?'vertical':'horizontal');
+  dualSplitter.setAttribute('aria-valuenow',String(Math.round(dualRatio*100)));
   if(useCompact()){
+    if(dualView)setMode('2d');
+    mobileTop.append(...mobileDock);
     for(const node of topNodes)if(!mobileDock.includes(node))mobileActions.append(node);
     mobileWorkspace.append(mobileActions);
   }else{
     mobileActions.remove();
     mobileTop.append(...topNodes);
-    if(desktop)$('#cameraDock').append($('#v3'));
+    if(desktop){
+      $('#cameraDock').append($('#v3'));
+      nuhioDock.append(mobileDock[3],$('#bReal'),$('#bFotoIA'));
+    }
   }
 }
 function setMobilePanel(panelId){
@@ -5324,7 +5377,8 @@ function setMobilePanel(panelId){
   }
 }
 const useCompact=()=>compact.matches&&!document.body.classList.contains('ui-legacy');
-mobileMenu.textContent='☰ Menú';
+mobileMenu.textContent='☰ NuHio';
+mobileMenu.setAttribute('aria-label','Menú de NuHio');
 mobileMenu.onclick=()=>setMobilePanel(mobileActions.classList.contains('adaptive-open')?null:'compactActions');
 for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Propiedades']]){
   const button=$('#'+buttonId),panel=$('#'+panelId);
@@ -5336,16 +5390,22 @@ for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Pro
     }else{
       panel.style.display=panel.style.display==='none'?'':'none';
       button.setAttribute('aria-expanded',String(panel.style.display!=='none'));
+      if(panelId==='lib')panel.classList.toggle('nuhio-library-open',panel.style.display!=='none');
     }
   };
+  if(panelId==='lib'&&!useCompact()&&!document.body.classList.contains('ui-legacy'))panel.style.display='none';
   const labelPanel=()=>{
-    button.textContent=useCompact()?(buttonId==='tl'?'▦ ':'☷ ')+label:buttonId==='tl'?'◧ Izq.':'Der. ◨';
+    button.textContent=useCompact()?(buttonId==='tl'?'▦ ':'☷ ')+label:buttonId==='tl'?'Biblioteca':'Propiedades';
     button.setAttribute('aria-expanded',String(useCompact()?panel.classList.contains('adaptive-open'):panel.style.display!=='none'));
   };
   compact.addEventListener('change',labelPanel);
   labelPanel();
 }
-compact.addEventListener('change',()=>{setMobilePanel(null);arrangeMobileTop();if(!RVo)setQ()});
+compact.addEventListener('change',()=>{
+ setMobilePanel(null);
+ $('#lib').style.display='none';$('#lib').classList.remove('nuhio-library-open');$('#tl').setAttribute('aria-expanded','false');
+ arrangeMobileTop();if(!RVo)setQ();
+});
 arrangeMobileTop();
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&useCompact())setMobilePanel(null);
@@ -5399,7 +5459,7 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
   const no=document.createElement('button');no.textContent='Descartar modelo';no.onclick=()=>{const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;pvOpen=false;$('#pv').style.display='none';libUI();refresh();hint('Modelo descartado; no se ha guardado')};P2.append(no,' ');
  }else{
   if(pvIt.c=='Mi biblioteca'||pvIt.t=='model'){const bx=document.createElement('button');bx.textContent='Quitar de mi biblioteca';bx.onclick=async()=>{const i=LIB.findIndex(o=>o.n==pvIt.n&&o.c==pvIt.c);if(i>=0)LIB.splice(i,1);if(pvIt.t=='model'){await idbDel(pvIt.mid);delete MODS[pvIt.mid]}else{const j=ML.findIndex(o=>o.n==pvIt.n);if(j>=0)ML.splice(j,1);saveML()}pvOpen=false;$('#pv').style.display='none';libUI();refresh()};P2.append(bx,' ')}
-  const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if(mode!='2d')setMode('2d');drawTools();$('#editorHint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};P2.append(b2,' ');
+  const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';pvOpen=false;$('#pv').style.display='none';$('#cat').style.display='none';if($('#lib').classList.contains('nuhio-library-open'))$('#tl').click();if(mode!='2d'&&!dualView)setMode('2d');drawTools();$('#editorHint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};P2.append(b2,' ');
  }
  P2.append(document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · '+(pvIt.lic?'Licencia '+pvIt.lic+' · ':'')+(pvIt.source?'Origen '+pvIt.source+' · ':'')+(r4?'arrastra para girar, rueda para zoom':''));if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}function pvLoop(){if(!pvOpen||!r4)return;requestAnimationFrame(pvLoop);PV.forEach(m=>stepMV(m));oc4.update();r4.render(sc4,cam4)}
 let pvKitchenPresets=null,pvKitchenVariant=0;
@@ -6481,6 +6541,23 @@ async function psave(){
  try{localStorage.setItem(projectDraftKey(id),data)}catch(e){}
  queueSave(id,data,'manual');return flushSave(id);
 }
+async function refreshNuhioProjects(list){
+ if(document.body.classList.contains('ui-legacy'))return;
+ const host=$('#nuhioRecent');
+ try{
+  const projects=(list||await PST().list()).slice(0,5);
+  host.replaceChildren();
+  for(const project of projects){
+   const button=document.createElement('button');
+   button.type='button';button.textContent=project.name;
+   button.classList.toggle('on',project.id===curProj);
+   if(project.id===curProj)button.setAttribute('aria-current','true');
+   button.onclick=async()=>{try{await openProj(project.id)}catch(error){alert(error.message)}};
+   host.append(button);
+  }
+  if(!projects.length)host.textContent='Aún no hay proyectos guardados.';
+ }catch{host.textContent='No se pudieron cargar los proyectos.'}
+}
 const dlj=(n,t)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download=n;a.click()};
 async function newProj(name,data){const id='p'+Date.now(),now=Date.now();await PST().put({id,name,created:now,updated:now,data,versions:[{t:now,data,why:'creación'}]});return id}
 async function openProj(id){
@@ -6494,10 +6571,11 @@ async function openProj(id){
  if(!data)throw new Error('No se pudo cargar el proyecto.');
  setActiveProject(id);H=[data];F=[];loadS(data);
  if(r)$('#bPry').textContent='📁 '+r.name;
+ refreshNuhioProjects();
  setCloudSaveState(readProjectDraft(id)?'pending':SES?'synced':'local');
 }
 async function projLib(){let box=document.getElementById('pryBox');if(box){box.remove();return}box=document.createElement('div');box.id='pryBox';box.style.cssText='position:fixed;inset:60px 20px 20px 20px;z-index:50;background:#1a1d24;border:1px solid #556;border-radius:8px;padding:12px;overflow:auto;color:#eee;font:13px Arial';document.body.append(box);
- const btn2=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.style.margin='2px 3px';e.onclick=async()=>{try{await fn()}catch(x){alert('Error: '+(x&&x.message||x))}};return e},draw=async()=>{const L=await PST().list();box.innerHTML='<b>☁ Mi espacio</b> <small>Tus diseños guardados</small> <button id=pyx style="float:right">✕</button><br>';box.querySelector('#pyx').onclick=()=>box.remove();/* La gestión de la cuenta está en el apartado independiente «Mi cuenta». */
+ const btn2=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.style.margin='2px 3px';e.onclick=async()=>{try{await fn()}catch(x){alert('Error: '+(x&&x.message||x))}};return e},draw=async()=>{const L=await PST().list();refreshNuhioProjects(L);box.innerHTML='<b>☁ Mi espacio</b> <small>Tus diseños guardados</small> <button id=pyx style="float:right">✕</button><br>';box.querySelector('#pyx').onclick=()=>box.remove();/* La gestión de la cuenta está en el apartado independiente «Mi cuenta». */
   box.append(btn2('+ Guardar el diseño actual como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;const revision=++projectTransition,project=S,data=JSON.stringify(S);const id=await newProj(n,data);if(revision===projectTransition&&S===project){setActiveProject(id);if(JSON.stringify(S)!==data)persistEdit(JSON.stringify(S));else setCloudSaveState(SES?'synced':'local')}draw()}));
   if(curProj)box.append(btn2('💾 Guardar versión ahora',async()=>{await psave('manual');draw()}));
   const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';fi.onchange=async()=>{const j=JSON.parse(await fi.files[0].text());if(j.format!='proyecto-v1'||!j.data)throw new Error('archivo no válido');await newProj((j.name||'Importado')+' (importado)',j.data);draw()};box.append(btn2('⬆ Importar proyecto…',()=>fi.click()),fi);
@@ -7170,7 +7248,9 @@ try{
 try{JSON.parse(localStorage.getItem('ml')||'[]').forEach(o=>{ML.push(o);LIB.push(o)})}catch(e){}
 if(r4)r4.outputEncoding=T.sRGBEncoding;
 if(!r3)$('#editorHint').textContent=WEBGL_UNAVAILABLE;
-drawTools();libUI();hint();setSun();setQ();refresh();animate();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});
+drawTools();libUI();hint();setSun();setQ();refresh();animate();
+if(r3&&document.body.classList.contains('desktop-workspace'))setMode('dual');
+refreshNuhioProjects();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});
 const recoveryOnLoad=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type')==='recovery'||new URLSearchParams(window.location.hash.replace(/^#/,'')).has('error_description');
 if(recoveryOnLoad)setTimeout(()=>accountPanel(),0);
 </script></body></html>
