@@ -1490,18 +1490,18 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    h=.5;r=vein*.035;
   }else if(gen==='sofa-linen'){
    const shade=fb(u,v,5,8,32);
-   const yarn=nz(u+(nz(u,v,13,17,33)-.5)*.012,v,103,37,34);
-   const cross=nz(u,v+(nz(u,v,17,13,35)-.5)*.012,31,97,36);
-   t=(shade-.5)*.15+(yarn-.5)*.13+(cross-.5)*.08;
-   h=.5+(yarn-.5)*.23+(cross-.5)*.14;
-   r=(shade-.5)*.06;
+   const x=u+(nz(u,v,13,17,33)-.5)*.025;
+   const yarn=nz(x+v,v,137,57,34),lint=nz(u,v,91,113,36);
+   t=(shade-.5)*.038+(yarn-.5)*.045+(lint-.5)*.02;
+   h=.5+(yarn-.5)*.11+(lint-.5)*.07;
+   r=(shade-.5)*.025;
   }else if(gen==='rug-pile'){
    const nap=fb(u,v,5,7,27),tufts=nz(u,v,41,57,28);
    const x=u+(nz(u,v,11,13,29)-.5)*.018;
    const y=v+(nz(u,v,13,11,30)-.5)*.018;
    const fibers=nz(x+y,y,112,39,31);
-   t=(nap-.5)*.29+(tufts-.5)*.19+(fibers-.5)*.12;
-   h=.5+(tufts-.5)*.24+(fibers-.5)*.34;
+   t=(nap-.5)*.22+(tufts-.5)*.10+(fibers-.5)*.065;
+   h=.5+(tufts-.5)*.16+(fibers-.5)*.23;
    r=(nap-.5)*.07;
   }else if(gen=='wood'){const w=fb(u,v,1,16,1),ring=Math.sin(2*Math.PI*(34*v+3*fb(u,v,2,3,2))),pore=nz(u,v,48,6,3);t=(ring*.5+.5)*.34-.17+(w-.5)*.35-(pore>.78?.12:0);h=.5+(ring*.5+.5)*.12-(pore>.78?.22:0);r=(ring*.5+.5)*.06}
   else if(gen=='travert'){const bd=Math.sin(2*Math.PI*(14*v+1.5*fb(u,v,2,4,16))),pit=nz(u,v,40,10,17)>.82;t=bd*.08+(fb(u,v,4,4,18)-.5)*.12-(pit?.18:0);h=.5-(pit?.25:0)+bd*.04;r=pit?.1:0}
@@ -1979,8 +1979,8 @@ lavabo(g,it,mt){buildBathVanity(g,it,mt)},
 inodoro(g,it,mt){toiletGeometry(g,it,mt)},
 planta(g,it,mt){const{w,h,d}=it,pot=M('#98745d',.78),soil=M('#42382f',1),stem=M('#557044',.95);const p=new T.Mesh(new T.CylinderGeometry(w*.27,w*.2,h*.19,32),pot);p.position.y=h*.095;g.add(p);const rim=new T.Mesh(new T.TorusGeometry(w*.255,Math.max(.8,w*.018),8,32),pot);rim.rotation.x=Math.PI/2;rim.position.y=h*.18;g.add(rim);const earth=new T.Mesh(new T.CircleGeometry(w*.23,32),soil);earth.rotation.x=-Math.PI/2;earth.position.y=h*.18;g.add(earth);for(let k=0;k<11;k++){const a=k*2.399,hh=h*(.35+(k%4)*.08),rad=w*(.08+(k%3)*.035),x=Math.cos(a)*rad,z=Math.sin(a)*rad;const cv=new T.CatmullRomCurve3([new T.Vector3(0,h*.18,0),new T.Vector3(x*.5,hh*.5,z*.5),new T.Vector3(x,hh,z)]);g.add(new T.Mesh(new T.TubeGeometry(cv,10,Math.max(.35,w*.006),5,false),stem));const leaf=new T.Mesh(new T.SphereGeometry(1,18,12),mt);leaf.scale.set(w*.085,h*.16,d*.055);leaf.position.set(x*1.6,hh+h*.06,z*1.6);leaf.rotation.z=-Math.cos(a)*.65;leaf.rotation.x=Math.sin(a)*.5;g.add(leaf)}},
 alfombra(g,it,mt){
- const pile=pbrTex(['rug-pile','Pelo de alfombra','Textil','rug-pile','#e8e8e8',.92,0,.68,78]);
- mt.map=pile.a;mt.normalMap=pile.n;mt.roughnessMap=pile.r;mt.normalScale.set(.68,.68);mt.roughness=1;
+ const pile=pbrTex(['rug-pile','Pelo de alfombra','Textil','rug-pile','#e8e8e8',.92,0,.32,78]);
+ mt.map=pile.a;mt.normalMap=pile.n;mt.roughnessMap=pile.r;mt.normalScale.set(.32,.32);mt.roughness=1;
  wuv(mt,{uT:{value:new T.Vector2(78,78)},uSw:{value:0},uR:{value:0},uO:{value:new T.Vector2(0,0)},uW:{value:0}});
  B(g,it.w,it.h,it.d,0,it.h/2,0,mt);
 },
@@ -3948,9 +3948,9 @@ case'sofa':{
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const pilot=it.t==='sofa';
  if(pilot){
-  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil','sofa-linen','#eeeeee',.88,0,.42,42]);
+  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil','sofa-linen','#eeeeee',.88,0,.17,42]);
   Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-  upholstery.normalScale.set(.42,.42);
+  upholstery.normalScale.set(.17,.17);
  }
  const seatY=h*.285,seatH=h*(pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
