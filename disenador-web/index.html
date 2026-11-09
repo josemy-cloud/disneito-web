@@ -3937,9 +3937,30 @@ function buildTerraceBBQ(g,it,primary){
  stepMV(mv(lid,{it,k:0,t:'u',angle:86}));
 }
 
-function scaleUpholsteryUV(geometry){
- const uv=geometry.getAttribute('uv');
- for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/42,uv.getY(i)/42);
+function upholsteredCushionGeometry(width,height,depth,axis){
+ const segments=axis==='y'?[12,6,12]:[12,12,6];
+ const geometry=new T.BoxGeometry(width,height,depth,...segments);
+ const position=geometry.getAttribute('position'),normal=geometry.getAttribute('normal'),uv=geometry.getAttribute('uv');
+ const hx=width/2,hy=height/2,hz=depth/2,r=Math.min(hx,hy,hz)*.78;
+ const cx=hx-r,cy=hy-r,cz=hz-r;
+ const clamp=(v,max)=>Math.max(-max,Math.min(max,v));
+ for(let i=0;i<position.count;i++){
+  const x=position.getX(i),y=position.getY(i),z=position.getZ(i);
+  const bx=clamp(x,cx),by=clamp(y,cy),bz=clamp(z,cz);
+  const dx=x-bx,dy=y-by,dz=z-bz,length=Math.hypot(dx,dy,dz);
+  const nx=dx/length,ny=dy/length,nz=dz/length;
+  const px=bx+nx*r,py=by+ny*r,pz=bz+nz*r;
+  const vertical=axis==='z',u=px/hx,v=vertical?py/hy:pz/hz;
+  const edge=1-(1-u*u)*(1-v*v),compression=1-.17*edge;
+  position.setXYZ(i,px,vertical?py:py*compression,vertical?pz*compression:pz);
+  const gx=.34*u*(1-v*v)/hx,gv=.34*v*(1-u*u)/(vertical?hy:hz);
+  const face=vertical?nz:ny,offset=(vertical?pz:py)*face/compression;
+  const sx=nx+offset*gx,sy=vertical?ny+offset*gv:ny/compression,sz=vertical?nz/compression:nz+offset*gv;
+  const uvWidth=normal.getX(i)!==0?depth:width,uvHeight=normal.getY(i)!==0?depth:height;
+  const norm=Math.hypot(sx,sy,sz);normal.setXYZ(i,sx/norm,sy/norm,sz/norm);
+  uv.setXY(i,uv.getX(i)*uvWidth/42,uv.getY(i)*uvHeight/42);
+ }
+ return geometry;
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
@@ -3954,27 +3975,30 @@ case'sofa':{
  }
  const seatY=h*.285,seatH=h*(pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
-  const bevel=pilot?Math.min(3.2,sy*.24,sx*.10,sz*.10):Math.min(1.8,sy*.16),sh=new T.Shape();
-  if(pilot){sx-=2*bevel;sz-=2*bevel}
+  if(pilot){
+   const mesh=new T.Mesh(upholsteredCushionGeometry(sx,sy,sz,'y'),mat);
+   mesh.position.set(x,y+sy/2-.15,z);parent.add(mesh);return mesh;
+  }
+  const bevel=Math.min(1.8,sy*.16),sh=new T.Shape();
   const r=Math.min(rad,sx*.18,sz*.18);
   sh.moveTo(-sx/2+r,-sz/2);sh.lineTo(sx/2-r,-sz/2);sh.quadraticCurveTo(sx/2,-sz/2,sx/2,-sz/2+r);
   sh.lineTo(sx/2,sz/2-r);sh.quadraticCurveTo(sx/2,sz/2,sx/2-r,sz/2);sh.lineTo(-sx/2+r,sz/2);
   sh.quadraticCurveTo(-sx/2,sz/2,-sx/2,sz/2-r);sh.lineTo(-sx/2,-sz/2+r);sh.quadraticCurveTo(-sx/2,-sz/2,-sx/2+r,-sz/2);sh.closePath();
-  const geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:pilot?8:16});
+  const geo=new T.ExtrudeGeometry(sh,{depth:Math.max(1,sy-bevel*2),bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
   geo.translate(0,0,bevel);geo.rotateX(Math.PI/2);
-  if(pilot&&mat===upholstery)scaleUpholsteryUV(geo);
   const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y+sy,z);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const verticalPad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
-  const bevel=pilot?Math.min(3.1,sz*.24,sx*.10,sy*.10):Math.min(1.6,sz*.16);
-  const depth=pilot?sz-2*bevel:sz;
-  if(pilot){sx-=2*bevel;sy-=2*bevel}
+  if(pilot){
+   const mesh=new T.Mesh(upholsteredCushionGeometry(sx,sy,sz,'z'),mat);
+   mesh.position.set(x,y,z);parent.add(mesh);return mesh;
+  }
+  const bevel=Math.min(1.6,sz*.16),depth=sz;
   const r=Math.min(rad,sx*.18,sy*.16),sh=new T.Shape();
   sh.moveTo(-sx/2+r,-sy/2);sh.lineTo(sx/2-r,-sy/2);sh.quadraticCurveTo(sx/2,-sy/2,sx/2,-sy/2+r);
   sh.lineTo(sx/2,sy/2-r);sh.quadraticCurveTo(sx/2,sy/2,sx/2-r,sy/2);sh.lineTo(-sx/2+r,sy/2);
   sh.quadraticCurveTo(-sx/2,sy/2,-sx/2,sy/2-r);sh.lineTo(-sx/2,-sy/2+r);sh.quadraticCurveTo(-sx/2,-sy/2,-sx/2+r,-sy/2);sh.closePath();
-  const geo=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:pilot?bevel:Math.min(1.4,sz*.14),curveSegments:pilot?8:16});
-  if(pilot&&mat===upholstery)scaleUpholsteryUV(geo);
+  const geo=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:4,bevelSize:bevel,bevelThickness:Math.min(1.4,sz*.14),curveSegments:16});
   const mesh=new T.Mesh(geo,mat);mesh.position.set(x,y,z-depth/2);tag(mesh,'');parent.add(mesh);return mesh;
  };
  const seats=Math.max(2,Math.min(4,Math.round(w/72)));
@@ -3988,10 +4012,11 @@ case'sofa':{
    }
   }
   tag(pad(g,x,seatY,z,sx,seatH,sz,upholstery,Math.min(6,sx*.12)),'seat');
-  tag(tube([x-sx*.36,seatY+seatH*.51,z+sz/2],[x+sx*.36,seatY+seatH*.51,z+sz/2],.24,stitch),'piping');
+  if(!pilot)tag(tube([x-sx*.36,seatY+seatH*.51,z+sz/2],[x+sx*.36,seatY+seatH*.51,z+sz/2],.24,stitch),'piping');
  };
  const addBack=(x,sx,z=-d*.325)=>{
-  tag(B(g,sx,h*.77,d*.053,x,h*.08+h*.77/2,z-d*.044,frame),'frame');
+  const supportH=h*(pilot?.72:.77);
+  tag(B(g,sx*(pilot?.98:1),supportH,d*.053,x,h*.08+supportH/2,z-d*.044,frame),'frame');
   tag(verticalPad(g,x,backY,z,sx,backH,d*.105,upholstery,5),'back');
  };
  if(chaise){
@@ -4040,7 +4065,7 @@ case'sofa':{
   }
  }
  if(outdoor){for(let k=0;k<6;k++)tag(B(g,w*.84,1.2,1.1,0,h*.16,-d*.34+k*d*.12,frame),'frame')}
- g.userData.upholsteryConstruction={schemaVersion:3,seatCount:chaise?3:corner?4:seats,layout:corner?'true-L-sectional':chaise?'L-chaise-extension':modular?'modular':'straight',cushionGeometry:'separate-rounded-extruded-panels',overlapStrategy:'disjoint-seat-zones-with-gaps',status:'reconstructed-pending-browser-visual-validation'};
+ g.userData.upholsteryConstruction={schemaVersion:3,seatCount:chaise?3:corner?4:seats,layout:corner?'true-L-sectional':chaise?'L-chaise-extension':modular?'modular':'straight',cushionGeometry:pilot?'rounded-volume-with-crowned-faces':'separate-rounded-extruded-panels',overlapStrategy:'disjoint-seat-zones-with-gaps',status:'reconstructed-pending-browser-visual-validation'};
  break;
 }
 case'outdoorsofa':{
