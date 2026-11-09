@@ -470,3 +470,17 @@ body.adaptive:not(.ui-legacy) {
   }
   body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav.nuhio-nav-open {display:flex}
 }
+
+@media (min-width:1051px) {
+  body.desktop-workspace:not(.ui-legacy) #nuhioPin {
+    position:absolute;top:8px;right:8px;display:grid;place-items:center;
+    min-height:28px;width:28px;padding:3px!important;color:#a9c7ec!important;
+  }
+  body.desktop-workspace:not(.ui-legacy) #nuhioPin[aria-pressed="true"] {
+    color:#d6ebff!important;background:#214c77!important;
+  }
+  body.desktop-workspace:not(.ui-legacy) #nuhioNav {position:relative;padding-top:35px}
+  body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav {position:fixed}
+  #nuhioPin svg,#nuhioNavTab svg {display:block;width:20px;height:20px;margin:auto}
+  body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNavTab {color:#79bbff!important}
+}

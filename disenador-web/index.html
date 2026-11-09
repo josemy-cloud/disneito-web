@@ -125,7 +125,7 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=3" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=4" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
@@ -145,13 +145,15 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
 <div id="main">
-<button id="nuhioNavTab" type="button" aria-controls="nuhioNav" aria-expanded="false" aria-label="Abrir navegación">☰</button>
+<button id="nuhioNavTab" type="button" aria-controls="nuhioNav" aria-expanded="false" aria-label="Abrir navegación de NuHio" title="Abrir navegación de NuHio"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 33V16L20 4l15 12v17M5 36h30M12 29V17l16 12V17" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <aside id="nuhioNav" aria-label="Navegación del estudio">
   <div class="nuhio-brand">
     <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 33V16L20 4l15 12v17M5 36h30M12 29V17l16 12V17" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div><strong>NuHio<span>.</span></strong><small>Tu futuro hogar comienza aquí</small></div>
   </div>
-  <button id="nuhioPin" type="button" aria-pressed="true">Ocultar barra lateral</button>
+  <button id="nuhioPin" type="button" aria-pressed="true" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m16 3 5 5-3 1-3 3v4l-1 1-7-7 1-1h4l3-3 1-3ZM10.5 13.5 4 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
   <nav aria-label="Acciones del estudio">
     <button type="button" class="nuhio-projects" data-editor-action="bPry">Proyectos</button>
     <button type="button" data-editor-action="bN">Nuevo proyecto</button>
@@ -5357,7 +5359,8 @@ function updateNuhioNav(open=false){
  nuhioNav.classList.toggle('nuhio-nav-open',!navPinned&&open);
  navTab.setAttribute('aria-expanded',String(navPinned||open));
  navPin.setAttribute('aria-pressed',String(navPinned));
- navPin.textContent=navPinned?'Ocultar barra lateral':'Fijar barra lateral';
+ const pinLabel=navPinned?'Ocultar barra lateral':'Fijar barra lateral';
+ navPin.setAttribute('aria-label',pinLabel);navPin.title=pinLabel;
 }
 updateNuhioNav();
 navPin.onclick=()=>{
@@ -5367,24 +5370,27 @@ navPin.onclick=()=>{
  if(!navPinned)navTab.focus();
 };
 navTab.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&!navPinned)updateNuhioNav(true)});
-navTab.onclick=()=>{
- const open=nuhioNav.classList.contains('nuhio-nav-open');
- if(open){nuhioNav.querySelector('nav button').focus();return}
+navTab.onclick=e=>{
  updateNuhioNav(true);
- nuhioNav.querySelector('nav button').focus();
+ if(e.detail===0)nuhioNav.querySelector('nav button').focus();
 };
+function closeNuhioNav(){
+ if(navPinned||!nuhioNav.classList.contains('nuhio-nav-open'))return;
+ if(nuhioNav.contains(document.activeElement))navTab.focus({preventScroll:true});
+ updateNuhioNav();
+}
 nuhioNav.addEventListener('pointerleave',e=>{
- if(e.pointerType==='mouse'&&!navPinned&&!nuhioNav.contains(document.activeElement))updateNuhioNav();
+ if(e.pointerType==='mouse'&&e.relatedTarget!==navTab)closeNuhioNav();
 });
 nuhioNav.addEventListener('focusout',e=>{
  if(!navPinned&&!nuhioNav.contains(e.relatedTarget)&&e.relatedTarget!==navTab)updateNuhioNav();
 });
 nuhioExport.addEventListener('click',e=>{if(e.target.closest('button'))nuhioExport.open=false});
-document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false});
+document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false;if(!nuhioNav.contains(e.target)&&!navTab.contains(e.target))closeNuhioNav()});
 document.addEventListener('keydown',e=>{
  if(e.key!=='Escape')return;
  if(nuhioExport.open){nuhioExport.open=false;nuhioExport.querySelector('summary').focus()}
- if(!navPinned&&nuhioNav.classList.contains('nuhio-nav-open')){updateNuhioNav();navTab.focus()}
+ closeNuhioNav();
 });
 for(const button of nuhioNav.querySelectorAll('[data-editor-action]')){
  button.onclick=()=>$('#'+button.dataset.editorAction).click();
