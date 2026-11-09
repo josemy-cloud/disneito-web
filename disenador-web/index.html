@@ -125,12 +125,12 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=7" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=8" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
-<span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
-<button id="bU" title="Deshacer (Ctrl+Z)">↶</button><button id="bR" title="Rehacer (Ctrl+Y)">↷</button>
-<button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">☁ Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><select id="bSt" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select>cm <span class="seg view-modes" role="group" aria-label="Modos de visualización">
+<span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6"/></svg><span>Archivo</span><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
+<button id="bU" aria-label="Deshacer" title="Deshacer (Ctrl+Z)"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 4 10l5 5M4 10h10a5 5 0 0 1 5 5v3"/></svg></button><button id="bR" aria-label="Rehacer" title="Rehacer (Ctrl+Y)"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 5 5-5 5m5-5H10a5 5 0 0 0-5 5v3"/></svg></button>
+<button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><label class="studio-step"><select id="bSt" aria-label="Paso de movimiento en centímetros" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select><span aria-hidden="true">cm</span></label> <span class="seg view-modes" role="group" aria-label="Modos de visualización">
 <button id="mv2" class="view-mode" title="Vista 2D · Plano técnico" aria-label="Vista 2D"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h18v15H3zM8 4.5v6h5v-6M3 15h5v4.5M13 10.5h8M13 15h8"/></svg><span>2D</span></button>
 <button id="mvf" class="view-mode" title="Vista 3D rápida · Volumen" aria-label="Vista 3D rápida"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 9 4.8v8.8l-9 4.8-9-4.8V7.6zM12 12.5l9-4.9M12 12.5v8.7M12 12.5 3 7.6"/></svg><span>3D rápida</span></button>
 <button id="mvm" class="view-mode" title="3D con materiales · Texturas y acabados" aria-label="3D con materiales"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 9 4.8v8.8l-9 4.8-9-4.8V7.6zM12 12.5l9-4.9M12 12.5v8.7M12 12.5 3 7.6M7.5 10l9 4.8"/></svg><span>Materiales</span></button>
@@ -6559,7 +6559,9 @@ let curProj=null,projectTransition=0;
 let nuhioProjectName='';
 function syncNuhioTitle(){
  const desktop=document.body.classList.contains('desktop-workspace');
- $('#pn').textContent=desktop?(curProj?(nuhioProjectName||S.nm):'Borrador local · '+S.nm):S.nm;
+ const title=$('#pn');
+ title.textContent=desktop?(curProj?(nuhioProjectName||S.nm):'Borrador local · '+S.nm):S.nm;
+ title.title=title.textContent;
 }
 function setActiveProject(id){
  curProj=id;nuhioProjectName='';syncNuhioTitle();
@@ -6583,8 +6585,8 @@ function openDraft(data){
 function pushVer(rec,data,why,now){const v=rec.versions=rec.versions||[],l=v[v.length-1];if(why=='auto'&&l&&now-l.t<6e5)return false;v.push({t:now,data,why});while(v.length>20)v.shift();return true}
 function setCloudSaveState(state,detail=''){
  const el=document.getElementById('saveCloudState');if(!el)return;
- const map={pending:['◷ Cambios pendientes','#d6a84f'],saving:['☁ Guardando…','#83b6ee'],synced:['☁ ✓ Sincronizado','#77d69a'],local:['▣ Guardado localmente','#aeb8c8'],offline:['☁ Sin conexión','#e5ad65'],error:['⚠ Error al guardar','#ff8e86']};
- const v=map[state]||map.pending;el.textContent=v[0];el.style.color=v[1];el.title=detail||v[0];
+ const map={pending:['Cambios pendientes','#d6a84f'],saving:['Guardando…','#83b6ee'],synced:['Sincronizado','#77d69a'],local:['Guardado localmente','#aeb8c8'],offline:['Sin conexión','#e5ad65'],error:['Error al guardar','#ff8e86']};
+ const v=map[state]||map.pending;el.dataset.state=state;el.textContent=v[0];el.style.color=v[1];el.title=detail||v[0];
 }
 function queueSave(id,data,why='auto'){
  clearTimeout(pendingSaves.get(id)?.timer);
@@ -7190,7 +7192,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':'NAVEGACIÓN · la cámara')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: EDICIÓN':'Modo: navegación';b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':'NAVEGACIÓN · la cámara')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: edición':'Modo: navegación';b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};

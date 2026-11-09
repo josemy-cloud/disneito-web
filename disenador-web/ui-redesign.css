@@ -574,3 +574,55 @@ body.adaptive:not(.ui-legacy) {
 @media (pointer:coarse) {
   .studio-panel :is(button,summary) {min-height:44px}
 }
+
+/* Project controls and live save status */
+.studio-top-icon {
+  display:inline-block;width:16px;height:16px;flex:none;vertical-align:middle;
+  fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;
+}
+#bF .studio-top-icon:last-child {width:12px;height:12px}
+#bF span {margin:0 5px}
+.studio-step {display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+body:not(.ui-legacy) #saveCloudState {
+  --save-accent:#617e9d;white-space:nowrap;
+}
+body:not(.ui-legacy) #saveCloudState::before {
+  content:"";display:inline-block;width:7px;height:7px;margin-right:6px;
+  border-radius:50%;background:var(--save-accent);vertical-align:1px;
+}
+body:not(.ui-legacy) #saveCloudState[data-state="synced"] {--save-accent:#279c68}
+body:not(.ui-legacy) #saveCloudState[data-state="saving"] {--save-accent:#318ae2}
+body:not(.ui-legacy) #saveCloudState:is([data-state="pending"],[data-state="offline"]) {--save-accent:#c58a27}
+body:not(.ui-legacy) #saveCloudState[data-state="error"] {--save-accent:#cf4962}
+body:not(.ui-legacy) #bMo[aria-pressed="true"] {
+  background:#e6f0ff!important;color:#104886!important;border-color:#83b6f4!important;
+}
+@media (min-width:1051px) {
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top {gap:6px!important;padding:6px 10px!important}
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #pn {
+    display:block;min-width:0;max-width:25ch;padding:4px 10px 4px 2px;
+    border-right:1px solid #52729588;color:#f5f9ff!important;font-size:14px;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top :is(#bF,#bU,#bR,#bAcc,#bMo,#bSt) {
+    min-height:34px;background:#1b395a!important;border-color:#38577a!important;
+    color:#edf5ff!important;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top :is(#bF,#bU,#bR,#bAcc,#bMo,#bSt):hover,
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #bF[aria-expanded="true"] {
+    background:#274e77!important;border-color:#6085ad!important;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top :is(#bF,#bU,#bR,#bAcc,#bMo,#bSt):focus-visible {
+    outline:2px solid #8dcaff;outline-offset:1px;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #bAcc {margin-left:6px;border-radius:999px!important}
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #saveCloudState {
+    background:transparent!important;color:#dbeaff!important;border:0;
+    margin:0 6px 0 0!important;padding:4px 9px 4px 4px!important;
+    border-right:1px solid #52729588;border-radius:0!important;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #bMo[aria-pressed="true"] {
+    background:#e6f0ff!important;color:#104886!important;border-color:#83b6f4!important;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #bSt {padding:3px 6px!important;color-scheme:dark}
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top .studio-step {color:#c5dcf7;font-size:11px}
+}
