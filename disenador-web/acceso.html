@@ -5,17 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accede a Disenito</title>
   <style>
-    body {margin:0;background:#101b1a;color:#fff;font:16px system-ui,sans-serif}
-    #accountBox {inset:clamp(8px,4vw,32px) !important;margin:auto;max-width:530px;max-height:620px}
-    button {border:1px solid #607673;border-radius:8px;background:#28413e;color:#fff;min-height:44px;cursor:pointer}
+    :root {color-scheme:light;--ink:#172c28;--muted:#52645e;--accent:#236050;--line:#d7e0d9}
+    * {box-sizing:border-box}
+    body {margin:0;background:#edf1eb;color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
+    .access {min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:clamp(16px,5vw,64px)}
+    .access-shell {display:grid;grid-template-columns:1.03fr 1fr;width:min(100%,1000px);border-radius:26px;overflow:hidden;background:#fffdfa;box-shadow:0 22px 65px #18362a20;border:1px solid #dce4db}
+    .access-brand {display:flex;flex-direction:column;justify-content:center;gap:20px;padding:clamp(26px,5vw,56px);background:radial-gradient(ellipse at 90% 20%,#306656,#193e35 75%);color:#f5f8ed}
+    .brand-name {display:flex;align-items:center;gap:10px;font-size:21px;font-weight:750;letter-spacing:-.04em}
+    .brand-name svg {width:30px;height:30px;color:#d1e7b7}
+    .access-brand h1 {margin:0;font-size:clamp(30px,4.1vw,52px);line-height:1.06;letter-spacing:-.055em;font-weight:730;max-width:12ch}
+    .access-brand p {margin:0;color:#d7e9db;max-width:31ch}
+    .access-plan {width:100%;height:auto;display:block}
+    .access-form {min-width:0;display:grid;align-content:center;padding:clamp(26px,5vw,58px)}
+    #accountBox {position:static!important;inset:auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;color:var(--ink)!important;font:inherit!important}
+    #accountBox > div + div {max-width:none!important;margin:14px 0 0!important}
+    #accountBox h2,#accessFallback h2 {margin:0;font-size:clamp(25px,3vw,34px);line-height:1.15;letter-spacing:-.045em}
+    #accountBox p,#accessFallback p {color:var(--muted)!important;font-size:.91rem;margin:0 0 16px}
+    #accountBox [role="status"]:empty {display:none}
+    #accountBox [role="status"]:not(:empty) {margin:10px 0 0;overflow-wrap:anywhere}
+    #accountBox label {color:var(--ink)!important;font-size:.875rem}
+    #accountBox input:not([type="checkbox"]) {width:100%!important;min-height:46px;border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important;color:var(--ink)!important;font:inherit!important;font-size:16px!important;padding:10px 12px!important}
+    #accountBox input[type="checkbox"] {accent-color:var(--accent);flex:none}
+    #accountBox small {color:var(--muted)!important}
+    #accountBox button {min-height:44px;margin:4px 6px 0 0!important;padding:9px 12px!important;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--accent);font:600 .875rem/1.25 system-ui,sans-serif;cursor:pointer}
+    #accountBox button:hover {background:#edf5ef}
+    #accountBox button[type="submit"] {width:100%;margin:4px 0 10px!important;border-color:var(--accent);background:var(--accent);color:#fff}
+    #accountBox button[type="submit"]:hover {background:#1b5042}
+    #accountBox button:disabled {opacity:.65;cursor:wait}
+    #accountBox :focus-visible,#accessFallback a:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
+    #accessFallback a {color:var(--accent)}
+    @media(max-width:720px) {
+      .access-shell {grid-template-columns:1fr;max-width:460px;border-radius:20px}
+      .access-brand {padding:20px 24px;gap:0}
+      .access-brand h1,.access-brand p,.access-plan {display:none}
+      .access-form {padding:24px}
+    }
+    @media(max-width:360px) {
+      .access {padding:10px}
+      .access-form {padding:18px}
+    }
   </style>
 </head>
 <body>
-  <main id="accessFallback" style="max-width:34rem;margin:3rem auto;padding:1rem">
-    <h1>Accede a Disenito</h1>
-    <p id="accessFallbackStatus" role="status">Preparando el formulario de acceso…</p>
-    <a href="/acceso" style="color:#a9ded3">Volver a cargar</a>
-    <noscript><p>Activa JavaScript para iniciar sesión.</p></noscript>
+  <main class="access">
+    <div class="access-shell">
+      <div class="access-brand">
+        <div class="brand-name">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 15 16 5l12 10v12H4zM16 15v12M4 19h12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          Disenito
+        </div>
+        <h1>Diseña el espacio que imaginas</h1>
+        <p>Dibuja tu plano, prueba materiales y recorre tu diseño en 3D.</p>
+        <svg class="access-plan" viewBox="0 0 360 226" fill="none" aria-hidden="true">
+          <defs><pattern id="plan-grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M15 0H0V15" stroke="#a6c7af" stroke-opacity=".2"/></pattern></defs>
+          <rect x="1" y="1" width="358" height="224" rx="14" fill="#173c32" stroke="#739787"/>
+          <rect x="12" y="12" width="336" height="202" rx="8" fill="url(#plan-grid)"/>
+          <path d="M62 48h233v132H62z" fill="#6e9c78" fill-opacity=".2" stroke="#d9edc2" stroke-width="3"/>
+          <path d="M205 48v56m0 30v46m0-46a30 30 0 0 0 30-30h-30" stroke="#d9edc2" stroke-width="2"/>
+          <path d="M62 91v42m233-35v43" stroke="#173c32" stroke-width="5"/>
+          <path d="M62 91v42m233-35v43" stroke="#cde9d5" stroke-width="1"/>
+          <rect x="83" y="67" width="82" height="27" rx="6" fill="#a8ca9a" fill-opacity=".24" stroke="#a8ca9a"/>
+          <path d="M89 72v17m69-17v17m-69-4h69" stroke="#a8ca9a"/>
+          <rect x="101" y="110" width="47" height="23" rx="6" stroke="#a8ca9a"/>
+          <rect x="223" y="62" width="54" height="34" rx="4" fill="#b4d6aa" fill-opacity=".2" stroke="#a8ca9a"/>
+          <path d="M229 73h42m-22-11v11m-159 91h77m0-10v10" stroke="#a8ca9a"/>
+          <path d="M62 34h233M62 30v8m233-8v8M48 48v132m-4-132h8m-8 132h8" stroke="#a9c9ad" stroke-opacity=".7"/>
+          <circle cx="273" cy="158" r="9" stroke="#a8ca9a"/><path d="m267 164 12-12m-12 0 12 12" stroke="#a8ca9a"/>
+        </svg>
+      </div>
+      <section class="access-form" id="accessForm">
+        <div id="accessFallback">
+          <h2>Accede a Disenito</h2>
+          <p id="accessFallbackStatus" role="status">Preparando el formulario de acceso…</p>
+          <a href="/acceso">Volver a cargar</a>
+          <noscript><p>Activa JavaScript para iniciar sesión.</p></noscript>
+        </div>
+      </section>
+    </div>
   </main>
   <script>
     const accessLoadTimer=setTimeout(()=>{
@@ -36,6 +102,7 @@
         clearTimeout(accessLoadTimer);
         fallback.hidden=true;
         const box=document.getElementById('accountBox');
+        document.getElementById('accessForm').append(box);
         const status=document.createElement('p');
         status.setAttribute('role','status');
         box.append(status);
