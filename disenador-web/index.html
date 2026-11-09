@@ -125,10 +125,10 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=2" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=3" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
-<span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar</button><button id="bO">Abrir</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
+<span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
 <button id="bU" title="Deshacer (Ctrl+Z)">↶</button><button id="bR" title="Rehacer (Ctrl+Y)">↷</button>
 <button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">☁ Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><select id="bSt" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select>cm <span class="seg view-modes" role="group" aria-label="Modos de visualización">
 <button id="mv2" class="view-mode" title="Vista 2D · Plano técnico" aria-label="Vista 2D"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h18v15H3zM8 4.5v6h5v-6M3 15h5v4.5M13 10.5h8M13 15h8"/></svg><span>2D</span></button>
@@ -145,21 +145,24 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
 <div id="main">
+<button id="nuhioNavTab" type="button" aria-controls="nuhioNav" aria-expanded="false" aria-label="Abrir navegación">☰</button>
 <aside id="nuhioNav" aria-label="Navegación del estudio">
   <div class="nuhio-brand">
     <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 33V16L20 4l15 12v17M5 36h30M12 29V17l16 12V17" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div><strong>NuHio<span>.</span></strong><small>Tu futuro hogar comienza aquí</small></div>
   </div>
+  <button id="nuhioPin" type="button" aria-pressed="true">Ocultar barra lateral</button>
   <nav aria-label="Acciones del estudio">
     <button type="button" class="nuhio-projects" data-editor-action="bPry">Proyectos</button>
     <button type="button" data-editor-action="bN">Nuevo proyecto</button>
-    <button type="button" data-editor-action="tl">Biblioteca</button>
-    <button type="button" data-editor-action="bPbr">Materiales PBR</button>
-    <button type="button" data-editor-action="bReal">Render</button>
   </nav>
-  <section aria-labelledby="nuhioRecentTitle"><h2 id="nuhioRecentTitle">Mis proyectos</h2><div id="nuhioRecent" aria-live="polite"></div></section>
+  <section aria-labelledby="nuhioRecentTitle"><h2 id="nuhioRecentTitle">Recientes</h2><div id="nuhioRecent" aria-live="polite"></div></section>
 </aside>
 <div id="tools" role="toolbar" aria-label="Herramientas de plano"></div>
+<div id="nuhioToolRow">
+ <div id="nuhioToolActions" aria-label="Controles de edición"></div>
+ <details id="nuhioExport"><summary>Render y exportar</summary><div id="nuhioExportActions"></div></details>
+</div>
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
@@ -5047,7 +5050,7 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
  if(mv&&!it){toggleMotion(mv);commitQ();return}
  if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
 /* ===== Control general ===== */
-function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;$('#pn').textContent=S.nm;sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
+function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
 const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';$('#view').append(dualSplitter);
 dualSplitter.tabIndex=0;
 dualSplitter.setAttribute('role','separator');
@@ -5343,6 +5346,46 @@ mobileActions.setAttribute('aria-label','Acciones del proyecto');
 const mobileDock=[mobileMenu,$('#tl'),$('#tr'),mobileTop.querySelector('.view-modes')];
 const topNodes=[...mobileTop.childNodes];
 const nuhioDock=$('#nuhioModes'),nuhioNav=$('#nuhioNav');
+const nuhioToolRow=$('#nuhioToolRow'),nuhioToolActions=$('#nuhioToolActions'),nuhioExport=$('#nuhioExport');
+const exportButtons=[$('#bP2'),$('#bP3')],imageMenu=$('#bX').nextElementSibling;
+const desktopActions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label')).concat($('#tl'),$('#bPbr'),$('#tr'));
+const navTab=$('#nuhioNavTab'),navPin=$('#nuhioPin');
+let navPinned=true;
+try{navPinned=localStorage.getItem('nuhio:sidebar')!=='auto'}catch{}
+function updateNuhioNav(open=false){
+ document.body.classList.toggle('nuhio-nav-auto',!navPinned);
+ nuhioNav.classList.toggle('nuhio-nav-open',!navPinned&&open);
+ navTab.setAttribute('aria-expanded',String(navPinned||open));
+ navPin.setAttribute('aria-pressed',String(navPinned));
+ navPin.textContent=navPinned?'Ocultar barra lateral':'Fijar barra lateral';
+}
+updateNuhioNav();
+navPin.onclick=()=>{
+ navPinned=!navPinned;
+ try{localStorage.setItem('nuhio:sidebar',navPinned?'pinned':'auto')}catch{}
+ updateNuhioNav();
+ if(!navPinned)navTab.focus();
+};
+navTab.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&!navPinned)updateNuhioNav(true)});
+navTab.onclick=()=>{
+ const open=nuhioNav.classList.contains('nuhio-nav-open');
+ if(open){nuhioNav.querySelector('nav button').focus();return}
+ updateNuhioNav(true);
+ nuhioNav.querySelector('nav button').focus();
+};
+nuhioNav.addEventListener('pointerleave',e=>{
+ if(e.pointerType==='mouse'&&!navPinned&&!nuhioNav.contains(document.activeElement))updateNuhioNav();
+});
+nuhioNav.addEventListener('focusout',e=>{
+ if(!navPinned&&!nuhioNav.contains(e.relatedTarget)&&e.relatedTarget!==navTab)updateNuhioNav();
+});
+nuhioExport.addEventListener('click',e=>{if(e.target.closest('button'))nuhioExport.open=false});
+document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false});
+document.addEventListener('keydown',e=>{
+ if(e.key!=='Escape')return;
+ if(nuhioExport.open){nuhioExport.open=false;nuhioExport.querySelector('summary').focus()}
+ if(!navPinned&&nuhioNav.classList.contains('nuhio-nav-open')){updateNuhioNav();navTab.focus()}
+});
 for(const button of nuhioNav.querySelectorAll('[data-editor-action]')){
  button.onclick=()=>$('#'+button.dataset.editorAction).click();
 }
@@ -5351,6 +5394,11 @@ function arrangeMobileTop(){
   document.body.classList.toggle('desktop-workspace',desktop);
   dualSplitter.setAttribute('aria-orientation',desktop?'vertical':'horizontal');
   dualSplitter.setAttribute('aria-valuenow',String(Math.round(dualRatio*100)));
+  if(!desktop){
+    nuhioToolRow.before($('#tools'));
+    imageMenu.append(...exportButtons);
+    nuhioExport.open=false;
+  }
   if(useCompact()){
     if(dualView)setMode('2d');
     mobileTop.append(...mobileDock);
@@ -5361,7 +5409,10 @@ function arrangeMobileTop(){
     mobileTop.append(...topNodes);
     if(desktop){
       $('#cameraDock').append($('#v3'));
-      nuhioDock.append(mobileDock[3],$('#bReal'),$('#bFotoIA'));
+      nuhioDock.append(mobileDock[3]);
+      nuhioToolRow.prepend($('#tools'));
+      nuhioToolActions.append(...desktopActions);
+      $('#nuhioExportActions').append($('#bReal'),$('#bFotoIA'),...exportButtons);
     }
   }
 }
@@ -5404,7 +5455,7 @@ for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Pro
 compact.addEventListener('change',()=>{
  setMobilePanel(null);
  $('#lib').style.display='none';$('#lib').classList.remove('nuhio-library-open');$('#tl').setAttribute('aria-expanded','false');
- arrangeMobileTop();if(!RVo)setQ();
+ arrangeMobileTop();syncNuhioTitle();if(!RVo)setQ();
 });
 arrangeMobileTop();
 document.addEventListener('keydown',e=>{
@@ -6477,8 +6528,13 @@ const activeProjectKey=draftKey+':active';
 const projectDraftKey=id=>draftKey+':project:'+id;
 const pendingSaves=new Map(),runningSaves=new Map();
 let curProj=null,projectTransition=0;
+let nuhioProjectName='';
+function syncNuhioTitle(){
+ const desktop=document.body.classList.contains('desktop-workspace');
+ $('#pn').textContent=desktop?(curProj?(nuhioProjectName||S.nm):'Borrador local · '+S.nm):S.nm;
+}
 function setActiveProject(id){
- curProj=id;
+ curProj=id;nuhioProjectName='';syncNuhioTitle();
  try{if(id)localStorage.setItem(activeProjectKey,id);else localStorage.removeItem(activeProjectKey)}catch(e){}
  const button=$('#bPry');if(button)button.textContent='☁ Mi espacio';
 }
@@ -6546,6 +6602,8 @@ async function refreshNuhioProjects(list){
  const host=$('#nuhioRecent');
  try{
   const projects=(list||await PST().list()).slice(0,5);
+  nuhioProjectName=projects.find(project=>project.id===curProj)?.name||nuhioProjectName;
+  syncNuhioTitle();
   host.replaceChildren();
   for(const project of projects){
    const button=document.createElement('button');
@@ -6570,7 +6628,7 @@ async function openProj(id){
  const data=readProjectDraft(id)||r?.data;
  if(!data)throw new Error('No se pudo cargar el proyecto.');
  setActiveProject(id);H=[data];F=[];loadS(data);
- if(r)$('#bPry').textContent='📁 '+r.name;
+ if(r){$('#bPry').textContent='📁 '+r.name;nuhioProjectName=r.name;syncNuhioTitle()}
  refreshNuhioProjects();
  setCloudSaveState(readProjectDraft(id)?'pending':SES?'synced':'local');
 }

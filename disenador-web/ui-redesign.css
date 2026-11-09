@@ -432,3 +432,41 @@ body.adaptive:not(.ui-legacy) {
   body.adaptive:not(.ui-legacy) #top .view-modes {grid-template-columns:repeat(4,minmax(0,1fr))}
   body.adaptive:not(.ui-legacy) #top #mvDual {display:none}
 }
+
+/* Desktop actions share the drawing row, with a single render/export menu. */
+#nuhioNavTab,#nuhioToolRow {display:none}
+@media (min-width:1051px) {
+  body.desktop-workspace:not(.ui-legacy) #top :is(#bPry,#bN,.dd:has(#bX)) {display:none}
+  body.desktop-workspace:not(.ui-legacy) #nuhioToolRow {
+    display:flex;align-items:center;gap:8px;grid-area:2 / 2 / 3 / -1;min-width:0;
+    padding:5px 8px;border:1px solid #d4e0f1;background:#f5f9ff;border-radius:13px;
+  }
+  body.adaptive.desktop-workspace:not(.ui-legacy) #nuhioToolRow #tools {
+    flex:1 1 auto;padding:0!important;border:0;border-radius:0;background:transparent!important;
+  }
+  #nuhioToolActions {display:flex;align-items:center;flex:0 0 auto;gap:5px;padding-left:8px;border-left:1px solid #d1def1}
+  #nuhioToolActions label {display:inline-flex;align-items:center;gap:2px;white-space:nowrap;font-size:11px}
+  #nuhioToolActions button {padding:4px 6px!important;font-size:11px;white-space:nowrap}
+  #nuhioExport {position:relative;flex:0 0 auto}
+  #nuhioExport summary {
+    cursor:pointer;padding:8px 10px;border-radius:9px;background:#145bb7;color:#fff;
+    font-size:12px;font-weight:700;white-space:nowrap;
+  }
+  #nuhioExportActions {
+    position:absolute;right:0;top:calc(100% + 6px);z-index:15;display:grid;min-width:170px;gap:4px;
+    padding:6px;border:1px solid #d1def1;background:#f5f9ff;border-radius:10px;box-shadow:0 8px 25px #10284336;
+  }
+  #nuhioExportActions button {text-align:left;white-space:nowrap}
+  body.adaptive.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) {
+    grid-template-columns:30px minmax(0,1fr) minmax(0,auto);
+  }
+  body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNavTab {
+    display:block;grid-area:1 / 1 / -1 / 2;align-self:start;min-width:30px;padding:7px 2px!important;
+    color:#fff!important;background:#102a49!important;z-index:12;
+  }
+  body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav {
+    display:none;position:fixed;inset:0 auto 0 0;z-index:13;width:clamp(200px,20vw,246px);
+    box-shadow:0 8px 35px #10284365;
+  }
+  body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav.nuhio-nav-open {display:flex}
+}
