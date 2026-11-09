@@ -1244,6 +1244,12 @@ function planPinch(touches){
     span:Math.max(1,Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY))};
 }
 function pressPlan(t){c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button:0,touch:true})}
+function canDragSelectedFurniture(t){
+  if(armed||wallVis)return false;
+  const r=c2.getBoundingClientRect();
+  const item=planFurnitureAt(...W2(t.clientX-r.left,t.clientY-r.top));
+  return !!item&&!item.lk&&planElementSelected('i',item.id);
+}
 c2.addEventListener('touchstart',e=>{
   e.preventDefault();
   if(e.touches.length===2){
@@ -1270,7 +1276,8 @@ c2.addEventListener('touchmove',e=>{
   if(e.touches.length!==1)return;
   const t=e.touches[0],dx=t.clientX-planTouch.start.clientX,dy=t.clientY-planTouch.start.clientY;
   if(planTouch.kind==='tap'&&Math.hypot(dx,dy)>8){
-    const edit=tool===planTouch.tool&&(tool==='room'||(tool==='sel'&&planMove.getAttribute('aria-pressed')==='true'));
+    const edit=tool===planTouch.tool&&(tool==='room'||(tool==='sel'&&
+      (planMove.getAttribute('aria-pressed')==='true'||canDragSelectedFurniture(planTouch.start))));
     planTouch.kind=edit?'edit':'pan';
     if(edit)pressPlan(planTouch.start);
   }
