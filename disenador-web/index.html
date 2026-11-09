@@ -5316,7 +5316,18 @@ $('#bS').onclick=()=>{try{localStorage.setItem('p:'+S.nm,JSON.stringify(S));aler
 $('#bO').onclick=()=>{const n=Object.keys(localStorage).filter(k=>k.startsWith('p:')).map(k=>k.slice(2));if(!n.length)return alert('No hay proyectos guardados.');const v=prompt('Proyectos guardados:\n'+n.join('\n')+'\n\nEscribe el nombre:',n[0]);if(v&&localStorage.getItem('p:'+v)){openDraft(localStorage.getItem('p:'+v))}};
 const dl=(u,n)=>{const a=document.createElement('a');a.href=u;a.download=n;a.click()};
 $('#bE').onclick=()=>dl(URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})),S.nm+'.json');
-$('#bI').onclick=()=>$('#fi').click();$('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const revision=projectTransition;f.text().then(t=>{if(revision!==projectTransition)return;openDraft(t);libUI()}).catch(e=>alert('No se pudo importar el proyecto: '+e.message))};
+$('#bI').onclick=()=>$('#fi').click();
+$('#fi').onchange=async e=>{
+ const input=e.target,f=input.files[0];if(!f)return;
+ input.value='';
+ const revision=projectTransition;
+ try{
+  const text=await f.text();
+  if(revision!==projectTransition)return;
+  openDraft(readProjectImport(text).data);
+  libUI();
+ }catch(error){alert('No se pudo importar el proyecto: '+error.message)}
+};
 $('#bP2').onclick=()=>{const w=mode;draw();c2.toBlob(b=>dl(URL.createObjectURL(b),S.nm+'-plano.png'))};
 $('#bP3').onclick=()=>{if(!requireSceneRenderer())return;if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render(sc,cam);r3.domElement.toBlob(b=>{dl(URL.createObjectURL(b),S.nm+'-3d-HD.png');setQ()})};
 
@@ -6801,6 +6812,21 @@ function persistEdit(data){
  if(curProj)queueSave(curProj,data);
  else setCloudSaveState(savedLocally?'local':'error',savedLocally?'Borrador en este navegador. Crea un proyecto para sincronizarlo.':'No se pudo guardar el borrador. Exporta el proyecto para conservarlo.');
 }
+function readProjectImport(text){
+ const file=JSON.parse(text);
+ const wrapped=file?.format==='proyecto-v1';
+ const project=wrapped&&typeof file.data==='string'?JSON.parse(file.data):wrapped?file.data:file;
+ const isRecord=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+ if(!isRecord(project)||!['w','o','i'].some(key=>Array.isArray(project[key]))||
+    ['w','o','i','cm','ms','rooms'].some(key=>project[key]!=null&&
+      (!Array.isArray(project[key])||!project[key].every(isRecord)))){
+  throw new Error('Archivo de proyecto no válido.');
+ }
+ const name=typeof file.name==='string'&&wrapped?file.name.trim():'';
+ const title=typeof project.nm==='string'?project.nm.trim():'';
+ project.nm=title&&title!=='undefined'?title:name||'Proyecto importado';
+ return {name:name||project.nm,data:JSON.stringify(project)};
+}
 function openDraft(data){
  const next=migrate(JSON.parse(data));
  if(!next)throw new Error('Archivo de proyecto no válido.');
@@ -6910,7 +6936,17 @@ async function projLib(){
   actions.append(btn2('+ Guardar como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;const revision=++projectTransition,project=S,data=JSON.stringify(S);const id=await newProj(n,data);if(revision===projectTransition&&S===project){setActiveProject(id);if(JSON.stringify(S)!==data)persistEdit(JSON.stringify(S));else setCloudSaveState(SES?'synced':'local')}draw()}));
   actions.firstElementChild.className='studio-primary';
   if(curProj)actions.append(btn2('Guardar versión',async()=>{await psave('manual');draw()}));
-  const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';fi.onchange=async()=>{const j=JSON.parse(await fi.files[0].text());if(j.format!='proyecto-v1'||!j.data)throw new Error('archivo no válido');await newProj((j.name||'Importado')+' (importado)',j.data);draw()};actions.append(btn2('Importar proyecto…',()=>fi.click()),fi);
+  const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';
+  fi.onchange=async()=>{
+   const f=fi.files[0];if(!f)return;
+   fi.value='';
+   try{
+    const {name,data}=readProjectImport(await f.text());
+    await newProj(name+' (importado)',data);
+    draw();
+   }catch(error){alert('No se pudo importar el proyecto: '+error.message)}
+  };
+  actions.append(btn2('Importar proyecto…',()=>fi.click()),fi);
   const list=document.createElement('div');list.className='studio-project-list';
   for(const p of L){
    const row=document.createElement('article');row.className='studio-project';
