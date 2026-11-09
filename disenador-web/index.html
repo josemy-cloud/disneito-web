@@ -1642,10 +1642,15 @@ function setSunShadowSize(size){
  shadow.mapSize.set(size,size);
  if(shadow.map){shadow.map.dispose();shadow.map=null}
 }
+let editorEnvironment;
 function setQ(){
  if(!r3)return;
  const q=$('#sq').value,realistic=q==='q',materials=q==='m';
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
+ if(realistic&&editorEnvironment===undefined){
+  try{editorEnvironment=skyEnv(r3,.28)}catch(error){editorEnvironment=null;console.warn('No se pudo preparar la luz de entorno del visor.',error)}
+ }
+ sc.environment=realistic?(editorEnvironment?.texture??null):null;
  if(realistic)setSunShadowSize(2048);
  r3.toneMappingExposure=realistic?1.00:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
@@ -6932,7 +6937,17 @@ const RFD=[[[0,0,-1],[0,1,0]],[[1,0,0],[0,1,0]],[[0,0,1],[0,1,0]],[[-1,0,0],[0,1
 const EQ=(lon,lat)=>{const d=[Math.cos(lat)*Math.sin(lon),Math.sin(lat),-Math.cos(lat)*Math.cos(lon)],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];let bi=0,bd=-2;RFD.forEach(([f],i)=>{const q=dot(d,f);if(q>bd){bd=q;bi=i}});const[f,u]=RFD[bi],r=cr(f,u);return[bi,dot(d,r)/bd,dot(d,u)/bd]};
 const RQ={rápida:[1280,720,6,1024],media:[1920,1080,24,2048],alta:[2560,1440,64,4096],máxima:[3840,2160,160,4096]};
 function rvBounds(){let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});return a[0]>1e8?[0,0,400,400]:a}
-function skyEnv(rr){const s0=new T.Scene();s0.add(new T.Mesh(new T.SphereGeometry(50,32,16),new T.ShaderMaterial({side:T.BackSide,vertexShader:'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec3 p;void main(){float h=normalize(p).y;vec3 c=mix(vec3(.75,.72,.68),vec3(.55,.72,.95),clamp(h*1.5+.2,0.,1.));if(h<0.)c=vec3(.5,.48,.44);gl_FragColor=vec4(c*1.1,1.);}'})));const pm=new T.PMREMGenerator(rr),t=pm.fromScene(s0).texture;pm.dispose();return t}
+function skyEnv(renderer,strength=1.1){
+ const sky=new T.Scene(),geometry=new T.SphereGeometry(50,32,16);
+ const material=new T.ShaderMaterial({
+  side:T.BackSide,uniforms:{strength:{value:strength}},
+  vertexShader:'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform float strength;varying vec3 p;void main(){float h=normalize(p).y;vec3 c=mix(vec3(.75,.72,.68),vec3(.55,.72,.95),clamp(h*1.5+.2,0.,1.));if(h<0.)c=vec3(.5,.48,.44);gl_FragColor=vec4(c*strength,1.);}'
+ });
+ sky.add(new T.Mesh(geometry,material));
+ const pm=new T.PMREMGenerator(renderer);
+ try{return pm.fromScene(sky)}finally{pm.dispose();geometry.dispose();material.dispose()}
+}
 /* ===== Exportador de escena para el render final (path tracing en render_final.html) ===== */
 function exportScene(root,meta){root.updateMatrixWorld(true);const texs=[],tmap=new Map(),mats=[],mmap=new Map(),meshes=[];
  const b64=a=>{const u=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
@@ -6957,7 +6972,9 @@ function realMode(){
  ov.querySelector('.nuhio-render-exit').onclick=()=>exit();
  document.body.append(ov);
  rr.outputEncoding=T.sRGBEncoding;rr.toneMapping=T.ACESFilmicToneMapping;rr.shadowMap.enabled=true;rr.shadowMap.type=T.PCFSoftShadowMap;const cv=rr.domElement;cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;cursor:grab';stage.append(cv);
- const bg0=sc.background,h0=hemi.intensity,p0=sun.position.clone();sc.environment=skyEnv(rr);sc.background=new T.Color('#bcd4ea');setSunShadowSize(2048);sun.castShadow=true;hemi.intensity=.25;const skyL=new T.DirectionalLight('#dbe8ff',0);skyL.castShadow=true;Object.assign(skyL.shadow.camera,{left:-1200,right:1200,top:1200,bottom:-1200,far:6000});skyL.shadow.mapSize.set(2048,2048);sc.add(skyL,skyL.target);skyL.target.position.copy(sunC);const sunC0=sun.color.clone(),sunI0=sun.intensity,setEnvI=v=>root.traverse(o=>{[].concat(o.material||[]).forEach(q=>{if(q.isMeshStandardMaterial)q.envMapIntensity=v})});setEnvI(.55);
+ const bg0=sc.background,h0=hemi.intensity,p0=sun.position.clone();let renderEnvironment;
+ try{renderEnvironment=skyEnv(rr)}catch(error){console.warn('No se pudo preparar la luz de entorno del render.',error)}
+ sc.environment=renderEnvironment?.texture??null;sc.background=new T.Color('#bcd4ea');setSunShadowSize(2048);sun.castShadow=true;hemi.intensity=.25;const skyL=new T.DirectionalLight('#dbe8ff',0);skyL.castShadow=true;Object.assign(skyL.shadow.camera,{left:-1200,right:1200,top:1200,bottom:-1200,far:6000});skyL.shadow.mapSize.set(2048,2048);sc.add(skyL,skyL.target);skyL.target.position.copy(sunC);const sunC0=sun.color.clone(),sunI0=sun.intensity,setEnvI=v=>root.traverse(o=>{[].concat(o.material||[]).forEach(q=>{if(q.isMeshStandardMaterial)q.envMapIntensity=v})});setEnvI(.55);
  const bb=rvBounds(),cx0=(bb[0]+bb[2])/2,cz0=(bb[1]+bb[3])/2,c2=new T.PerspectiveCamera(60,1,3,8000),st={x:cx0,z:cz0,h:150,yaw:0,pitch:-.03,mm:18,exp:.92,q:'media',sky:.68,sunI:1,k:6500,con:1,sat:1,ap:0,fd:300};let view='live',still=null,busy=false,cancel=false;
  const free=(x,z)=>{if(!blocked(x,z))return[x,z];for(let r=20;r<=120;r+=20)for(let a=0;a<6.3;a+=.5){const q=[x+Math.cos(a)*r,z+Math.sin(a)*r];if(!blocked(q[0],q[1]))return q}return[x,z]},
  place=(x,z,tx,tz)=>{[st.x,st.z]=free(x,z);st.yaw=Math.atan2(-(tx-st.x),-(tz-st.z))};
@@ -7025,7 +7042,7 @@ let RE=null,rcv=null,renderRun=0;
   if(run!==renderRun){engine.dispose();return}RE=engine;
   if(RE.warnings.length)pm.textContent=RE.warnings.join(' ')}catch(e){if(run!==renderRun)return;console.error(e);pm.textContent='No se pudo iniciar el render: '+e.message+' (F12 → Console para más detalle)';if(rcv){rcv.remove();rcv=null}view='live'}}).className='studio-primary';
  rb('⏹ Cancelar',()=>RE&&RE.cancel());rb('⏵ Seguir',()=>RE&&RE.resume());rb('🌐 360°',()=>RE&&RE.pano());rb('📷 Foto',()=>RE&&RE.photo());rb('💾 PNG',()=>RE&&RE.save('png'));rb('💾 JPG',()=>RE&&RE.save('jpg'));rb('✕ Cerrar render',closeR);
- function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();rr.dispose();sc.environment=null;sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
+ function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
 function modeUI(){const q=$('#sq').value,m3=mode=='3d';
