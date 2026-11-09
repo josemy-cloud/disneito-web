@@ -5092,7 +5092,83 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),(S.fl.pat?tileMat(S.fl,[fw/2,fd/2]):sm(S.fl.m,'#ccc',fw,fd,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r)));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
  S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
- fitSunToProject();setSun();
+ fitSunToProject();setSun();addRealisticDetails();
+}
+const realisticDetails=new T.Group();
+sc.add(realisticDetails);
+let contactGeometry,contactMaterial;
+function contactShadowMaterial(){
+ if(contactMaterial)return contactMaterial;
+ const size=64,data=new Uint8Array(size*size*4);
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const u=2*(x+.5)/size-1,v=2*(y+.5)/size-1;
+  const fade=Math.max(0,Math.min(1,(1-Math.hypot(u,v))/.57));
+  const alpha=fade*fade*(3-2*fade);
+  const offset=(y*size+x)*4;
+  data.set([255,255,255,Math.round(255*alpha)],offset);
+ }
+ const map=new T.DataTexture(data,size,size);
+ map.magFilter=map.minFilter=T.LinearFilter;map.needsUpdate=true;
+ contactGeometry=new T.PlaneGeometry(1,1);
+ contactGeometry.rotateX(-Math.PI/2);
+ return contactMaterial=new T.MeshBasicMaterial({color:'#33291e',map,transparent:true,opacity:.39,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+}
+function windowFillSpecs(walls,openings,rooms){
+ const windows=[];
+ for(const opening of openings){
+  const {ty,wd,h,s,p}=opening;
+  if(ty!=='v'&&!(ty==='d'&&['cristal','corredera'].includes(openingKind(opening))))continue;
+  if(![wd,h,s,p].every(v=>Number.isFinite(+v))||wd<=0||h<=0)continue;
+  const wall=walls.find(w=>w.id==opening.w);
+  if(!wall||wall.hid||wall.tr)continue;
+  const length=len(wall);
+  if(!length||p<0||p>length)continue;
+  const dx=(wall.x2-wall.x1)/length,dz=(wall.y2-wall.y1)/length;
+  const x=+wall.x1+dx*p,z=+wall.y1+dz*p,offset=(+wall.t||10)/2+12;
+  const inside=(sign)=>rooms.some(room=>room.poly&&inPoly(x-dz*offset*sign,z+dx*offset*sign,room.poly));
+  const left=inside(1),right=inside(-1);
+  if(left===right)continue;
+  const side=left?1:-1;
+  windows.push({x:x-dz*offset*side,z:z+dx*offset*side,y:+s+h*.57,nx:-dz*side,nz:dx*side,area:wd*h});
+ }
+ return windows.sort((a,b)=>b.area-a.area);
+}
+function addRealisticDetails(){
+ for(const object of realisticDetails.children)if(object.isLight)object.shadow?.map?.dispose();
+ realisticDetails.clear();
+ if(RVo||$('#sq').value!=='q')return;
+ const rooms=(S.rooms||[]).filter(room=>room.poly);
+ if(!rooms.length)return;
+ const coarse=matchMedia('(pointer:coarse)').matches;
+ for(const window of windowFillSpecs(S.w,S.o,rooms).slice(0,coarse?1:2)){
+  const light=new T.SpotLight('#fff1df',Math.min(.42,.16+window.area/120000),520,.86,.75,1.15);
+  light.position.set(window.x,window.y,window.z);
+  light.target.position.set(window.x+window.nx*240,40,window.z+window.nz*240);
+  light.castShadow=true;light.shadow.mapSize.set(512,512);
+  light.shadow.bias=-.00025;light.shadow.normalBias=.45;
+  light.shadow.camera.near=5;light.shadow.camera.far=520;
+  realisticDetails.add(light,light.target);
+ }
+ const rugs=S.i.filter(it=>it.t==='alfombra'&&!it.hid&&!(+it.e>2));
+ let shadows=0;
+ for(const it of S.i){
+  if(it.hid||it.rel||Math.abs(+it.e||0)>2||it.t==='alfombra'||!(it.w>0&&it.d>0))continue;
+  let width=it.w*1.22,depth=it.d*1.22;
+  let corners=cors({...it,r:it.r||0,w:width,d:depth});
+  if(!rooms.some(room=>corners.every(([x,z])=>inPoly(x,z,room.poly)))){
+   width=it.w;depth=it.d;
+   corners=cors({...it,r:it.r||0,w:width,d:depth});
+   if(!rooms.some(room=>corners.every(([x,z])=>inPoly(x,z,room.poly))))continue;
+  }
+  const rug=rugs.find(r=>corners.every(([x,z])=>pointInItem(r,x,z)));
+  const material=contactShadowMaterial();
+  const mesh=new T.Mesh(contactGeometry,material);
+  mesh.scale.set(width,1,depth);
+  mesh.rotation.y=-(it.r||0)*D;
+  mesh.position.set(it.x,rug?(+rug.e||0)+(+rug.h||0)+.12:.12,it.y);
+  realisticDetails.add(mesh);
+  if(++shadows>=(coarse?30:60))break;
+ }
 }
 const walkOverlay=$('#walkTouch');
 function moveNavigationCamera(dt){
