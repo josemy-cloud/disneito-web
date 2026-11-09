@@ -116,7 +116,20 @@ body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid img{
 body.desktop-workspace:not(.ui-legacy) #lib .library-item-grid small{color:#5b6675!important}
 #viewActions{display:none}
 body.desktop-workspace:not(.ui-legacy) #viewActions{
- position:absolute;right:8px;bottom:8px;z-index:5;display:flex;align-items:end;gap:6px
+ position:absolute;left:8px;right:8px;bottom:8px;z-index:9;
+ display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px;
+ width:fit-content;max-width:calc(100% - 16px);margin-inline:auto;padding:4px;
+ border:1px solid #b9cde7;border-radius:12px;background:#f5f9fff5;
+ box-shadow:0 4px 16px #10284326
+}
+body.desktop-workspace:not(.ui-legacy) #view:has(#walkTouch.active) #viewActions{bottom:82px}
+body.desktop-workspace:not(.ui-legacy) #viewActions :is(summary,#fitProject){
+ min-height:34px;box-sizing:border-box;padding:5px 8px;font-size:11px;white-space:nowrap
+}
+body.desktop-workspace:not(.ui-legacy) #viewActions summary{display:list-item;line-height:22px}
+@media(pointer:coarse){
+ body.desktop-workspace:not(.ui-legacy) #viewActions :is(summary,#fitProject){min-height:44px;line-height:32px}
+ body.desktop-workspace:not(.ui-legacy) #viewActions #nuhioModes button{min-height:44px}
 }
 #cameraDock{position:relative}
 #cameraDock summary{
@@ -129,11 +142,12 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
+#cameraDock #v3{max-height:48dvh;overflow:auto}
 #editorBoot{display:none}
 body.editor-booting{background:#e8eff9}
 body.editor-booting > :not(#editorBoot){visibility:hidden}
 body.editor-booting > #editorBoot{display:grid;place-content:center;justify-items:center;gap:12px;position:fixed;inset:0;background:#e8eff9;color:#132f50;text-align:center;padding:24px;z-index:1000}
-</style><link rel="stylesheet" href="ui-redesign.css?v=10" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=11" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>
 if(new URLSearchParams(location.search).get('ui')==='legacy'){
  document.body.classList.add('ui-legacy');
@@ -189,12 +203,12 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
-<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions"><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
+<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
 </div></div>
-<div id="nuhioModes" aria-label="Vistas y renderizado"></div><div class="side" id="pr" aria-label="Propiedades"></div></div>
+<div class="side" id="pr" aria-label="Propiedades"></div></div>
 <div id="sb"><span id="editorStatus"></span><span id="editorHint"></span></div>
 <div id="cat"></div>
 <dialog id="pv" aria-labelledby="pvTitle"><div class="preview-head"><b id="pvTitle">Previsualización 3D</b><button id="pvx" aria-label="Cerrar previsualización">✕</button></div><div id="pvc"></div><div id="pvp"></div></dialog>

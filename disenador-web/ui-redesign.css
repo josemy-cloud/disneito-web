@@ -339,7 +339,7 @@ body.adaptive:not(.ui-legacy) {
 @media (min-width:1051px) {
   body.adaptive.desktop-workspace:not(.ui-legacy) {
     display:grid;grid-template-columns:clamp(160px,17vw,246px) minmax(0,1fr) minmax(0,auto);
-    grid-template-rows:auto auto minmax(0,1fr) auto auto;column-gap:10px;row-gap:8px;
+    grid-template-rows:auto auto minmax(0,1fr) auto;column-gap:10px;row-gap:8px;
     height:100dvh;overflow:hidden;padding-right:10px;
     background:linear-gradient(140deg,#e5eefc,#cbdcf3)!important;
   }
@@ -387,7 +387,7 @@ body.adaptive:not(.ui-legacy) {
     grid-area:3 / 2;overflow:hidden;border:1px solid #bdcfe7;border-radius:15px;
   }
   body.desktop-workspace:not(.ui-legacy) #pr {
-    grid-area:3 / 3 / 5 / 4;width:clamp(220px,19vw,290px);
+    grid-area:3 / 3;width:clamp(220px,19vw,290px);
     min-height:0;border:1px solid #d1def1;border-radius:15px;background:#f6f9ff!important;
   }
   body.desktop-workspace:not(.ui-legacy) #pr::before {
@@ -400,15 +400,14 @@ body.adaptive:not(.ui-legacy) {
   }
   body.desktop-workspace:not(.ui-legacy) #lib.nuhio-library-open {display:block}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes {
-    display:flex;align-items:center;justify-content:safe center;gap:6px;grid-area:4 / 2;
-    min-width:0;overflow:auto hidden;border-radius:13px;border:1px solid #d1def1;background:#f5f9ff;padding:5px;
+    display:flex;min-width:0;max-width:100%;
   }
-  body.desktop-workspace:not(.ui-legacy) #nuhioModes .view-modes {display:flex;gap:3px;flex:0 0 auto;background:transparent;border:0!important}
+  body.desktop-workspace:not(.ui-legacy) #nuhioModes .view-modes {display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-width:0;overflow:visible;background:transparent;border:0!important}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes button {flex:0 0 auto;min-height:34px;padding:5px 7px!important;white-space:nowrap;font-size:11px}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes svg {width:15px;height:15px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.65}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes .view-mode span {margin-left:4px}
   body.adaptive.desktop-workspace:not(.ui-legacy) #sb {
-    grid-area:5 / 2 / 6 / -1;min-width:0;max-height:18dvh;margin-bottom:4px;border-radius:7px;
+    grid-area:4 / 2 / 5 / -1;min-width:0;max-height:18dvh;margin-bottom:4px;border-radius:7px;
     flex-wrap:wrap;align-items:baseline;padding:3px 8px!important;font-size:10px;line-height:1.3;
     white-space:normal;overflow:auto;
   }
