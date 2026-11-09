@@ -5906,7 +5906,16 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
 let pvKitchenPresets=null,pvKitchenVariant=0;
 function openPrev(i){const o=LIB[i],presets=KITCHEN_PRESETS.get(o);openPrevObj(presets?.[0]||o,presets)}
 function resizePreviewRenderer(){if(!r4)return;const host=$('#pvc');if(!host)return;const w=Math.max(160,Math.floor(host.clientWidth||520)),h=Math.max(140,Math.floor(host.clientHeight||260));r4.setSize(w,h,false);r4.domElement.style.width='100%';r4.domElement.style.height='100%';cam4.aspect=w/h;cam4.updateProjectionMatrix();oc4.update()}
-function openPrevObj(o,presets=null,variant=0){pvKitchenPresets=presets;pvKitchenVariant=variant;const was=pvOpen;pvIt=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));pvOpen=true;$('#pv').style.display='flex';if(r4){$('#pvc').append(r4.domElement);resizePreviewRenderer();buildPrev(pvIt,1);fitCam()}else $('#pvc').textContent='Vista previa 3D no disponible en este navegador.';pvUI();if(!was)pvLoop()}
+function openPrevObj(o,presets=null,variant=0){
+ const library=$('#lib');
+ if(useCompact()){
+  if(library.classList.contains('adaptive-open'))setMobilePanel(null);
+ }else if(library.style.display!=='none'){
+  library.style.display='none';
+  library.classList.remove('nuhio-library-open');
+  $('#tl').setAttribute('aria-expanded','false');
+ }
+ pvKitchenPresets=presets;pvKitchenVariant=variant;const was=pvOpen;pvIt=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));pvOpen=true;$('#pv').style.display='flex';if(r4){$('#pvc').append(r4.domElement);resizePreviewRenderer();buildPrev(pvIt,1);fitCam()}else $('#pvc').textContent='Vista previa 3D no disponible en este navegador.';pvUI();if(!was)pvLoop()}
 window.addEventListener('resize',()=>{if(pvOpen)resizePreviewRenderer()});
 $('#pvx').onclick=()=>{if(pendingModel){const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;libUI();refresh()}pvOpen=false;$('#pv').style.display='none'};
 /* ===== Configurador modular de cocina ===== */
