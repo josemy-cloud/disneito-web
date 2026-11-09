@@ -325,7 +325,9 @@ const LIB=[
 {t:'inodoro',n:'Inodoro',c:'Baño',s:'moderno',w:38,h:78,d:68,e:0,col:'#fafafa'},
 {t:'planta',n:'Planta',c:'Decoración',s:'nórdico',w:40,h:110,d:40,e:0,col:'#3f7d3a'},
 {t:'alfombra',n:'Alfombra',c:'Decoración',s:'nórdico',w:200,h:2,d:140,e:0,col:'#c9bfae'},
-{t:'lampara',n:'Lámpara de pie',c:'Decoración',s:'moderno',w:35,h:160,d:35,e:0,col:'#f3e7c3'}];
+{t:'lampara',n:'Lámpara de pie',c:'Decoración',s:'moderno',w:35,h:160,d:35,e:0,col:'#f3e7c3'},
+{t:'ceilingSpot',n:'Foco empotrado · dirigido',c:'Iluminación',s:'moderno',w:10,h:2,d:10,e:248,col:'#f4f2ed',lightOn:true},
+{t:'ceilingSpot',n:'Foco empotrado · amplio',c:'Iluminación',s:'moderno',w:14,h:2,d:14,e:248,col:'#f4f2ed',lightOn:true,wideBeam:true}];
 /* Colección ampliada de modelos paramétricos 3D. Cocina queda deliberadamente excluida. */
 LIB.push(
 {t:'roomObject',roomType:"salón",c:"Salón",shape:"sofa",n:"Sofá 2 plazas",w:175,h:82,d:90,e:0,col:"#a88f78",s:"moderno",variant:0},
@@ -570,6 +572,7 @@ function libUI(q=''){
   {n:'Vestidor',key:'vestidor',cats:['Vestidor']},
   {n:'Salón',key:'salón',cats:['Salón','Decoración']},
   {n:'Comedor',key:'comedor',cats:['Comedor']},
+  {n:'Iluminación',key:'iluminacion',cats:['Iluminación']},
   {n:'Recibidor',key:'recibidor',cats:['Recibidor']},
   {n:'Despacho',key:'despacho',cats:['Despacho']},
   {n:'Lavadero',key:'lavadero',cats:['Lavadero']},
@@ -581,6 +584,7 @@ function libUI(q=''){
  // Si el modelo ya tiene estancia asignada, esa asignación prevalece sobre su categoría.
  // Así los elementos "Exterior" no aparecen duplicados en Terraza y Jardín.
  const belongs=(o,room)=>{
+  if(isLightingFixture(o))return room.key==='iluminacion';
   if(room.key==='cocina'&&(o===LAUNDRY_FRONT_LOADERS.lavadora||o===LAUNDRY_FRONT_LOADERS.secadora))return true;
   if(o.roomType)return o.roomType===room.key;
   if(o.c==='Importados'||o.c==='Mi biblioteca')return room.key==='salón';
@@ -685,7 +689,7 @@ function libUI(q=''){
  };
  const render=()=>{
   content.innerHTML='';const qv=(search.value||'').trim().toLowerCase();
-  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>!o.libraryHidden&&((qv||(!roomF&&!catF)||roomF&&belongs(o,rooms.find(r=>r.n==roomF))||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')+' '+(KITCHEN_PRESETS.get(o)||[]).map(p=>p.n).join(' ')).toLowerCase().includes(qv))));
+  const matches=LIB.map((o,ix)=>({o,ix})).filter(({o})=>!o.libraryHidden&&((qv||(!roomF&&!catF)||roomF&&belongs(o,rooms.find(r=>r.n==roomF))||catF&&(o.c==catF||catF=='Importados'&&!!o.mid))&&(!qv||(o.n+' '+(isLightingFixture(o)?'iluminación luces ':'')+o.c+' '+o.s+' '+o.w+'x'+o.d+'x'+o.h+' '+(o.brand||'')+' '+(o.ref||'')+' '+(KITCHEN_PRESETS.get(o)||[]).map(p=>p.n).join(' ')).toLowerCase().includes(qv))));
   if(roomF==='Cocina'){
    const appliance=o=>o.t==='app'||o.c==='Electrodomésticos'||Object.values(LAUNDRY_FRONT_LOADERS).includes(o);
    matches.sort((a,b)=>Number(appliance(a.o))-Number(appliance(b.o))||a.ix-b.ix);
@@ -697,7 +701,7 @@ function libUI(q=''){
    const catalogIcon=document.createElement('div');catalogIcon.className='catalog-entry-icon';catalogIcon.textContent='📚';catalogIcon.style.cssText='width:48px;height:48px;display:grid;place-items:center;background:#171f2b;border-radius:5px;font-size:25px;flex:none';catalogCard.append(catalogIcon);
    const catalogInfo=document.createElement('div');const catalogName=document.createElement('div');catalogName.textContent='Catálogos y fabricantes';catalogName.style.cssText='font-size:12px;font-weight:600';catalogInfo.append(catalogName);const catalogDesc=document.createElement('small');catalogDesc.textContent='Productos reales, marcas y modelos 3D';catalogDesc.style.cssText='font-size:10px;color:#aab4c4';catalogInfo.append(catalogDesc);catalogCard.append(catalogInfo);catalogCard.onclick=async()=>{await catLoad();catUI()};grid.append(catalogCard);
    rooms.forEach(room=>{const candidates=LIB.map((o,ix)=>({o,ix})).filter(x=>!x.o.libraryHidden&&belongs(x.o,room));const chosen=candidates[0];const card=document.createElement('button');card.type='button';card.className='room-card';card.style.cssText='padding:5px;background:#252a33;border:1px solid #414957;border-radius:7px;text-align:left;min-width:0;cursor:pointer;color:#fff';
-    if(chosen){const im=document.createElement('img');im.src=ROOM_PHOTOS[room.key]||ROOM_PHOTOS.exterior;im.alt='Fotografía real de '+room.n;im.loading='lazy';im.decoding='async';im.referrerPolicy='no-referrer';im.style.cssText='width:100%;height:112px;object-fit:cover;object-position:center;background:#171a20;border-radius:4px;display:block';im.onerror=()=>{im.removeAttribute('src');im.alt='Fotografía de portada no disponible';im.style.background='linear-gradient(135deg,#303945,#596575)'};card.append(im)}
+    if(chosen){const im=document.createElement('img');im.src=ROOM_PHOTOS[room.key]||ROOM_PHOTOS.exterior;im.alt=room.key==='iluminacion'?'Focos de techo':'Fotografía real de '+room.n;im.loading='lazy';im.decoding='async';im.referrerPolicy='no-referrer';im.style.cssText='width:100%;height:112px;object-fit:cover;object-position:center;background:#171a20;border-radius:4px;display:block';im.onerror=()=>{im.removeAttribute('src');im.alt='Fotografía de portada no disponible';im.style.background='linear-gradient(135deg,#303945,#596575)'};card.append(im)}
     else{const blank=document.createElement('div');blank.textContent='＋';blank.style.cssText='height:82px;display:grid;place-items:center;background:#171a20;border-radius:4px;font-size:30px;color:#8fb4ff';card.append(blank)}
     const name=document.createElement('div');name.textContent=room.n;name.style.cssText='font-size:12px;font-weight:600;margin-top:5px';card.append(name);
     const count=document.createElement('small');count.textContent=LIB.filter(o=>!o.libraryHidden&&belongs(o,room)).length+' elementos disponibles';count.style.cssText='font-size:10px;color:#aab4c4';card.append(count);
@@ -811,8 +815,9 @@ const hasTaggedFinishes=it=>isBathroomItem(it)||isBedroomItem(it)||isVestidorIte
 const isLamp=it=>it.shape==='lamp'||it.t==='lampara';
 const isLitMirror=it=>it.shape==='mirror'&&(it.roomType==='baño'||it.c==='Baño'||/iluminado/i.test(it.n||''));
 const hasApplianceLight=type=>!!type&&(type.startsWith('campana_')||['horno','hornoc','micro','frigo','combi','vinoteca'].includes(type));
+const isLightingFixture=it=>it.t==='ceilingSpot'||isLamp(it)||isLitMirror(it);
 function hasItemLight(it){
- if(isLamp(it)||isLitMirror(it))return true;
+ if(isLightingFixture(it))return true;
  const c=it.cfg;
  return it.t==='app'?hasApplianceLight(c?.ap):it.t==='mod'&&!!c&&(
   (c.k==='alto'&&!!c.led)||(c.lay==='torre'&&c.slots?.some(slot=>hasApplianceLight(slot.k)))||
@@ -1978,7 +1983,19 @@ function drw(g,it,k,x0,w,y0,h,mt,hm){
  const mv={o:p,it,k,v:it.op[k]?1:0,t:'s',z:it.d/2,sl:it.d*.7};p.userData.mv=mv;MV.push(mv)
 }
 function doors(g,it,mt,hm,y0,h,k0){const w=it.w-4;if(it.w>80){door(g,it,k0,-w/2,w/2,y0,h,mt,hm,false);door(g,it,k0+1,0,w/2,y0,h,mt,hm,true)}else door(g,it,k0,-w/2,w,y0,h,mt,hm,it.fl)}
+const spotPower=it=>Number.isFinite(it.lightPower)?Math.max(10,Math.min(100,it.lightPower)):75;
 const BUILD={
+ceilingSpot(g,it,mt){
+ const radius=Math.min(it.w,it.d)/2,power=spotPower(it)/100,warm='#ffe3b5';
+ const mount=new T.Mesh(new T.CylinderGeometry(radius,radius,it.h*.8,32),mt);
+ mount.position.y=it.h*.6;g.add(mount);
+ const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15*power));
+ lens.position.y=it.h*.1;g.add(lens);
+ if(!it.lightOn)return;
+ const light=new T.SpotLight(warm,2.4*power,620,it.wideBeam?.68:.42,.7,1);
+ light.position.y=-.25;light.target.position.y=-200;
+ g.add(light,light.target);
+},
 base(g,it,mt,hm){
  carcKitchen(g,it,mt);
  // Zócalo retranqueado y patas regulables.
@@ -5604,10 +5621,10 @@ function fits(g,ignored){
  return !S.w.some(wall=>!ignored?.has(wall.id)&&e<(+wall.h||250)&&e+h>0&&plan.some(part=>sat(part,cors(wrect(wall)))))
 }
 function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place);g.x=sn(wx);g.y=sn(wy);g.r=place.r||0;delete g.rel;
- if(isDiningPendant(g)){
+ if(g.t==='ceilingSpot'||isDiningPendant(g)){
   const room=(S.rooms||[]).find(r=>r.poly&&inPoly(g.x,g.y,r.poly));
   const ceiling=Math.max(150,+room?.ceil?.h||+S.w[0]?.h||250);
-  g.e=place.e||Math.max(0,ceiling-g.h);
+  g.e=g.t==='ceilingSpot'?Math.max(0,ceiling-g.h-.1):place.e||Math.max(0,ceiling-g.h);
   g.ok=fits(g);
   $('#editorHint').textContent=g.ok?'✔ Colocar lámpara a la altura del techo':'✖ No cabe: colisión física con pared u objeto';
   return;
@@ -5813,6 +5830,7 @@ const TH=new WeakMap(),thumbnailRefresh=new WeakMap(),studioThumbBackground=new 
 function thumb(i){return thumbO(LIB[i])}
 /* Portadas 3D independientes del catálogo: composición de habitación completa. No se ejecuta para Cocina. */
 const ROOM_PHOTOS={
+iluminacion:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 180"><rect width="400" height="180" fill="#163351"/><path fill="#ffe4ab" opacity=".25" d="M112 55h40l48 102H64zm136 0h40l48 102H200z"/><path stroke="#eef4ff" stroke-width="7" stroke-linecap="round" d="M112 53h40m96 0h40"/></svg>'),
 cocina:'https://images.pexels.com/photos/10827396/pexels-photo-10827396.jpeg?auto=compress&cs=tinysrgb&w=1200',
 baño:'https://images.pexels.com/photos/37760274/pexels-photo-37760274.jpeg?auto=compress&cs=tinysrgb&w=1200',
 dormitorio:'https://images.pexels.com/photos/7546288/pexels-photo-7546288.jpeg?auto=compress&cs=tinysrgb&w=1200',
@@ -7564,6 +7582,13 @@ function appendLightButton(panel,it,save){
  update();
  button.onclick=()=>{it.lightOn=!it.lightOn;update();save()};
  panel.append(button,' ');
+ if(it.t==='ceilingSpot'){
+  const label=document.createElement('label');label.className='r';
+  const text=document.createElement('span');text.textContent='Intensidad (%)';
+  const input=document.createElement('input');input.type='range';input.min=10;input.max=100;input.step=5;input.value=spotPower(it);
+  input.onchange=()=>{it.lightPower=+input.value;save()};
+  label.append(text,input);panel.append(label);
+ }
 }
 $('#fmod').onchange=async e=>{if(!CATALOG_MASTER){alert('Solo MASTER puede importar muebles y objetos 3D.');e.target.value='';return}const files=[...e.target.files];if(files.length>1){alert('Importa un modelo cada vez para poder revisarlo visualmente antes de aceptarlo.');e.target.value='';return}const f=files[0];if(!f){return}const ext=f.name.split('.').pop().toLowerCase(),name=prompt('Nombre del producto:',f.name.replace(/\.[^.]+$/,''));if(!name){e.target.value='';return}const brand=prompt('Fabricante (opcional):','')||'',ref=prompt('Referencia comercial (opcional):','')||'',author=prompt('Autor del modelo (si procede):','')||'',source=prompt('URL de procedencia del modelo:','')||'',lic=prompt('Licencia (ej.: CC0 1.0, CC BY 4.0):','No indicada')||'No indicada',cat=prompt('Categoría (ej.: Sofás, Sillas, Sanitarios):','Importados')||'Importados',un=({m:100,cm:1,mm:.1})[prompt('Unidades del modelo: m, cm o mm (los GLB suelen ir en m):','m')]||100;const m={id:'m'+Date.now()+Math.random().toString(36).slice(2,6),name,brand,ref,author,source,lic,cat,units:un,ext,date:new Date().toISOString().slice(0,10),data:ext=='glb'?await f.arrayBuffer():await f.text()};try{const result=await addModel(m);pendingModel={data:m,entry:result.entry,quality:result.quality};openPrevObj(result.entry);hint('Revisa el modelo en 3D. Todavía no se ha guardado.')}catch(er){alert('Modelo rechazado o no se pudo leer: '+er.message)}e.target.value=''};
 /* ===== Modo edición con teclado ===== */
