@@ -5080,14 +5080,26 @@ dualSplitter.addEventListener('pointerdown',e=>{
  dualSplitter.focus({preventScroll:true});
  e.preventDefault();
 });
+function stopDualSplitDrag(){
+ const pointer=dualSplitPointer;
+ dualSplitPointer=null;
+ if(pointer!==null&&dualSplitter.hasPointerCapture(pointer))dualSplitter.releasePointerCapture(pointer);
+}
 dualSplitter.addEventListener('pointermove',e=>{
- if(e.pointerId!==dualSplitPointer||!dualView)return;
+ if(e.pointerId!==dualSplitPointer)return;
+ if(!dualView||(e.pointerType==='mouse'&&!(e.buttons&1))){
+  stopDualSplitDrag();
+  return;
+ }
  const size=dualSplitSize();
  if(size)setDualRatio((dualSplitPosition(e)-dualSplitOffset)/size);
 });
-dualSplitter.addEventListener('lostpointercapture',e=>{
- if(e.pointerId===dualSplitPointer)dualSplitPointer=null;
-});
+for(const event of ['pointerup','pointercancel','lostpointercapture']){
+ dualSplitter.addEventListener(event,e=>{
+  if(e.pointerId===dualSplitPointer)stopDualSplitDrag();
+ });
+}
+window.addEventListener('blur',stopDualSplitDrag);
 dualSplitter.addEventListener('keydown',e=>{
  const horizontal=document.body.classList.contains('desktop-workspace');
  if(e.key===(horizontal?'ArrowLeft':'ArrowUp'))setDualRatio(dualRatio-.04);
