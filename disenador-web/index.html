@@ -1584,13 +1584,14 @@ const sc=new T.Scene(),cam=new T.PerspectiveCamera(48,1,5,10000),root=new T.Grou
 const oc=r3?new T.OrbitControls(cam,r3.domElement):null;
 sc.background=new T.Color('#e8e7e2');sc.add(root);cam.position.set(500,500,700);
 if(r3){
- r3.outputEncoding=T.sRGBEncoding;r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=.92;r3.shadowMap.type=T.PCFSoftShadowMap;
+ r3.outputEncoding=T.sRGBEncoding;r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=.92;r3.shadowMap.type=T.PCFShadowMap;
  r3.domElement.style.display='block';r3.domElement.style.outline='none';d3.append(r3.domElement);
  oc.target.set(150,50,150);oc.enableDamping=true;oc.dampingFactor=.075;oc.minDistance=90;oc.maxDistance=6500;oc.maxPolarAngle=Math.PI*.49;
 }
 const hemi=new T.HemisphereLight('#fafcff','#8b8276',.54),sun=new T.DirectionalLight('#fff5e8',.78),fill=new T.DirectionalLight('#e5efff',.16),rim=new T.DirectionalLight('#fffaf0',.09);sc.add(hemi,sun,sun.target,fill,rim);
 fill.position.set(-900,1100,650);rim.position.set(700,850,-900);
 sun.shadow.bias=-.00012;sun.shadow.normalBias=.8;
+sun.shadow.radius=4; // El visor usa PCF para aplicar el radio; el render conserva PCFSoft.
 let MV=[],sunC=new T.Vector3(150,0,150);
 const sunTarget=new T.Vector3(150,0,150);
 let shadowExtent=400;
