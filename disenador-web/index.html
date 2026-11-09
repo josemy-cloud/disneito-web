@@ -125,8 +125,28 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
+#editorBoot{display:none}
+body.editor-booting{background:#e8eff9}
+body.editor-booting > :not(#editorBoot){visibility:hidden}
+body.editor-booting > #editorBoot{display:grid;place-content:center;justify-items:center;gap:12px;position:fixed;inset:0;background:#e8eff9;color:#132f50;text-align:center;padding:24px;z-index:1000}
 </style><link rel="stylesheet" href="ui-redesign.css?v=10" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
-</head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
+</head><body><script>
+if(new URLSearchParams(location.search).get('ui')==='legacy'){
+ document.body.classList.add('ui-legacy');
+}else{
+ document.body.classList.add('editor-booting');
+ document.addEventListener('DOMContentLoaded',()=>{
+  if(!document.body.classList.contains('editor-booting'))return;
+  document.getElementById('editorBootMessage').textContent='No se ha podido iniciar el editor.';
+  document.getElementById('editorBootRetry').hidden=false;
+ },{once:true});
+}
+</script>
+<div id="editorBoot">
+ <strong>NuHio</strong>
+ <span id="editorBootMessage" role="status">Cargando el editor…</span>
+ <button id="editorBootRetry" type="button" hidden onclick="location.reload()">Volver a cargar</button>
+</div>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6"/></svg><span>Archivo</span><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
 <button id="bU" aria-label="Deshacer" title="Deshacer (Ctrl+Z)"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 4 10l5 5M4 10h10a5 5 0 0 1 5 5v3"/></svg></button><button id="bR" aria-label="Rehacer" title="Rehacer (Ctrl+Y)"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 5 5-5 5m5-5H10a5 5 0 0 0-5 5v3"/></svg></button>
@@ -7695,6 +7715,7 @@ if(r4)r4.outputEncoding=T.sRGBEncoding;
 if(!r3)$('#editorHint').textContent=WEBGL_UNAVAILABLE;
 drawTools();libUI();hint();setSun();setQ();refresh();animate();
 if(r3&&document.body.classList.contains('desktop-workspace'))setMode('dual');
+document.body.classList.remove('editor-booting');
 refreshNuhioProjects();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});
 const recoveryOnLoad=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type')==='recovery'||new URLSearchParams(window.location.hash.replace(/^#/,'')).has('error_description');
 if(recoveryOnLoad)setTimeout(()=>accountPanel(),0);
