@@ -4,7 +4,19 @@ if(typeof SES==='undefined'){SES=null;REMEMBER_SESSION=true;try{const savedLocal
 }
 var sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}};
 async function sbAuth(path,body,signal=AbortSignal.timeout(10000)){const r=await fetch(SBU+'/auth/v1/'+path,{signal,method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
-async function sbRecover(email){const address=String(email||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw new Error('Introduce un correo electrónico válido.');const redirectTo=window.location.origin+'/acceso';const r=await fetch(SBU+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify({email:address})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo enviar el correo de recuperación.');return j}
+const authPasswordMinLength=8;
+function validatedAuthEmail(value){
+ const email=String(value||'').trim();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Introduce un correo electrónico válido.');
+ return email;
+}
+function validateNewPassword(password){
+ if(password.length<authPasswordMinLength)throw new Error('La contraseña debe tener al menos '+authPasswordMinLength+' caracteres.');
+}
+async function sbRecover(email){
+ const redirectTo=window.location.origin+'/acceso';
+ return sbAuth('recover?redirect_to='+encodeURIComponent(redirectTo),{email:validatedAuthEmail(email)});
+}
 var sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
 async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para continuar.');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token},signal);signal?.throwIfAborted();sesSave(sesFrom(j))}return SES.access_token}
 
@@ -51,12 +63,12 @@ async function accountPanel({entry=false}={}){
  const recoveryParams=new URLSearchParams(window.location.hash.replace(/^#/,''));
  const drawPasswordReset=(token)=>{
   content.innerHTML='<p style="color:#b9c4d4">Introduce tu nueva contraseña. El enlace de recuperación solo puede utilizarse una vez.</p>';
-  const p1=field('Nueva contraseña (mínimo 8 caracteres)','password','','new-password');
+  const p1=field('Nueva contraseña (mínimo '+authPasswordMinLength+' caracteres)','password','','new-password');
   const p2=field('Repite la nueva contraseña','password','','new-password');
   content.append(p1.wrap,p2.wrap);
   content.append(btn('Guardar nueva contraseña',async()=>{
    const password=p1.input.value;
-   if(password.length<8)throw new Error('La contraseña debe tener al menos 8 caracteres.');
+   validateNewPassword(password);
    if(password!==p2.input.value)throw new Error('Las contraseñas no coinciden.');
    const r=await fetch(SBU+'/auth/v1/user',{method:'PUT',headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password})});
    const j=await r.json().catch(()=>({}));
@@ -114,7 +126,13 @@ async function accountPanel({entry=false}={}){
    content.innerHTML='<p style="color:#b9c4d4;line-height:1.6">Si existe una cuenta asociada a ese correo, recibirás un mensaje con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.</p>';
    content.append(btn('Volver al inicio de sesión',drawLogin));
   }));
-  content.append(btn('Crear cuenta',async()=>{pw.input.autocomplete='new-password';if(!em.input.value||pw.input.value.length<6)throw new Error('Introduce un correo y una contraseña de al menos 6 caracteres.');await sbAuth('signup',{email:em.input.value,password:pw.input.value});alert('Cuenta creada. Si se solicita confirmar el correo, revisa tu bandeja de entrada. Después podrás iniciar sesión.')}))
+  content.append(btn('Crear cuenta',async()=>{
+   pw.input.autocomplete='new-password';
+   const email=validatedAuthEmail(em.input.value),password=pw.input.value;
+   validateNewPassword(password);
+   await sbAuth('signup',{email,password});
+   alert('Revisa tu correo para confirmar la cuenta. Después podrás iniciar sesión.');
+  }));
  };
  const drawProfile=async()=>{
   if(!SES){drawLogin();return}
@@ -131,7 +149,7 @@ async function accountPanel({entry=false}={}){
   const photo=document.createElement('input');photo.type='file';photo.accept='image/*';photo.style.display='none';content.append(photo);
   content.append(btn('Cambiar foto',()=>photo.click()),btn('Eliminar foto',async()=>{const m={...meta};delete m.avatar_data;delete m.avatar_url;await authFetch('PUT',{data:m});await drawProfile()}));
   photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',.78))};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await authFetch('PUT',{data:{...meta,avatar_data:data}});await drawProfile()};
-  content.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value)body.password=pass.input.value;if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
+  content.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value){validateNewPassword(pass.input.value);body.password=pass.input.value;}if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
   const note=document.createElement('p');note.style.cssText='color:#9eabbc;font-size:12px';note.textContent='La contraseña se cambia mediante Supabase Auth. El cambio de correo puede requerir confirmación. La foto se guarda en los metadatos de tu cuenta.';content.append(note);
   content.append(btn('Cerrar sesión',leaveEditor));
   const b=document.getElementById('bAcc');if(b){const label=(meta.full_name||u.email||'Mi cuenta').slice(0,18);if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label}
