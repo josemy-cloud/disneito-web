@@ -407,7 +407,15 @@ body.adaptive:not(.ui-legacy) {
   body.desktop-workspace:not(.ui-legacy) #nuhioModes button {flex:0 0 auto;min-height:34px;padding:5px 7px!important;white-space:nowrap;font-size:11px}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes svg {width:15px;height:15px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.65}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes .view-mode span {margin-left:4px}
-  body.desktop-workspace:not(.ui-legacy) #sb {grid-area:5 / 2 / 6 / -1;min-width:0;margin-bottom:6px;border-radius:9px}
+  body.desktop-workspace:not(.ui-legacy) #sb {
+    grid-area:5 / 2 / 6 / -1;min-width:0;margin-bottom:4px;border-radius:7px;
+    flex-wrap:nowrap;align-items:center;padding:3px 8px!important;font-size:11px;
+  }
+  body.desktop-workspace:not(.ui-legacy) #sb :is(#editorStatus,#editorHint) {
+    min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  body.desktop-workspace:not(.ui-legacy) #editorStatus {flex:0 1 auto;max-width:75%}
+  body.desktop-workspace:not(.ui-legacy) #editorHint {flex:1 1 0}
   body.desktop-workspace:not(.ui-legacy) #view.view-dual #c2 {
     inset:0 auto 0 0!important;width:var(--dual-ratio)!important;height:100%!important;border:0;
   }
@@ -434,6 +442,11 @@ body.adaptive:not(.ui-legacy) {
 @media (max-width:1050px) {
   body.adaptive:not(.ui-legacy) #top .view-modes {grid-template-columns:repeat(4,minmax(0,1fr))}
   body.adaptive:not(.ui-legacy) #top #mvDual {display:none}
+}
+
+@media (max-width:1050px),(pointer:coarse) {
+  body:not(.ui-legacy) #sb {display:none}
+  body.adaptive.desktop-workspace:not(.ui-legacy) {grid-template-rows:auto auto minmax(0,1fr) auto}
 }
 
 /* Desktop actions share the drawing row, with a single render/export menu. */
@@ -465,7 +478,7 @@ body.adaptive:not(.ui-legacy) {
   }
   body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNavTab {
     display:block;grid-area:1 / 1 / -1 / 2;align-self:start;min-width:30px;padding:7px 2px!important;
-    color:#fff!important;background:#102a49!important;z-index:12;
+    background:transparent!important;border-color:transparent!important;box-shadow:none!important;z-index:12;
   }
   body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav {
     display:none;position:fixed;inset:0 auto 0 0;z-index:13;width:clamp(200px,20vw,246px);
@@ -485,8 +498,9 @@ body.adaptive:not(.ui-legacy) {
   body.desktop-workspace:not(.ui-legacy) #nuhioNav {position:relative;padding-top:35px}
   body.desktop-workspace.nuhio-nav-auto:not(.ui-legacy) #nuhioNav {position:fixed}
   #nuhioPin svg {display:block;width:14px;height:14px}
+  #nuhioNavTab:focus-visible {outline:2px solid #145bb7;outline-offset:-2px}
   #nuhioNavTab::before {
-    content:"";display:block;width:23px;height:23px;margin:auto;border-radius:5px;
-    background:#fff url("/nuhio-logo.webp") no-repeat 1px 2px / 76px auto;
+    content:"";display:block;width:24px;height:24px;margin:auto;
+    background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%22310%20130%20402%20378%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22blue%22%20x2%3D%221%22%20y2%3D%22.2%22%3E%3Cstop%20stop-color%3D%22%230036bf%22%2F%3E%3Cstop%20offset%3D%22.56%22%20stop-color%3D%22%23056ce0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2300a9e6%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20fill%3D%22url%28%23blue%29%22%20d%3D%22M312%20475V274Q312%20258%20325%20249L499%20136Q515%20125%20532%20135L696%20238Q710%20247%20710%20264V470Q710%20483%20699%20491L681%20502Q670%20508%20658%20500L500%20392V502Q500%20507%20494%20507H446Q440%20507%20440%20501V339Q440%20327%20453%20318L462%20313Q473%20307%20486%20315L646%20420V278Q646%20273%20641%20270L520%20194Q516%20191%20512%20194L376%20282Q369%20287%20369%20294V498Q369%20505%20362%20504L341%20502Q312%20498%20312%20475Z%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
   }
 }
