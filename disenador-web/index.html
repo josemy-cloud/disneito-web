@@ -13,7 +13,7 @@ h4{margin:10px 0 4px;color:#8fb4ff}.it{display:block;width:100%;text-align:left;
 .sw{display:inline-block;width:34px;height:34px;margin:2px;border:2px solid #444;border-radius:4px;cursor:pointer;font-size:9px;color:#000;overflow:hidden}.sw.on{border-color:#3d7be0}.sw.surface-swatch{width:calc(33.33% - 4px);min-width:68px;min-height:96px;height:auto;vertical-align:top;padding:0;display:inline-flex;flex-direction:column;align-items:stretch}.surface-preview{width:100%;height:57px;display:block;object-fit:cover}.surface-swatch span{min-height:29px;display:grid;place-items:center;padding:3px;color:inherit;text-align:center;line-height:1.2}
 #openingType{position:absolute;z-index:4;top:8px;left:8px;width:min(220px,calc(100% - 16px));min-height:44px}
 #view:has(#openingType:not([hidden])) #planMove{top:60px}
-#pv{display:none;position:fixed;left:250px;top:64px;width:540px;background:#20242c;border:1px solid #555;border-radius:8px;box-shadow:0 10px 40px #000a;z-index:9;padding:8px}
+#pv{display:none;position:fixed;left:250px;top:64px;width:540px;background:#20242c;border:1px solid #555;border-radius:8px;box-shadow:0 10px 40px #000a;z-index:110;padding:8px;flex-direction:column}
 #pv input[type=number]{width:62px;background:#2a2e37;color:#fff;border:1px solid #444;border-radius:4px;padding:3px}#pvp{margin:6px 0;line-height:2;max-height:52vh;overflow:auto}
 #cat{display:none;position:fixed;inset:44px 60px 40px 60px;overflow:auto;background:#1b1e25;border:1px solid #555;border-radius:10px;box-shadow:0 10px 50px #000c;z-index:8;padding:12px}#sb{padding:4px 10px;background:#14161b;font-size:12px;border-top:1px solid #333}#cat table{border-collapse:collapse;width:100%}#cat td,#cat th{padding:3px;border-bottom:1px solid #333;font-size:12px}#cat input,#cat select,#cat textarea{background:#2a2e37;color:#fff;border:1px solid #444;border-radius:4px;padding:3px}
 .rc{display:inline-block;width:150px;vertical-align:top;margin:4px;padding:5px;background:#2a2e37;border-radius:6px;font-size:11px}.rc img{width:100%;height:110px;object-fit:cover;border-radius:4px;background:#111}
@@ -40,11 +40,12 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 @media(max-width:760px){#top{max-height:28dvh}#main{height:auto;min-height:0}}
 /* Previsualizador 3D: el editor completo cabe en pantalla y su ficha PBR tiene scroll propio */
 #pv{left:clamp(8px,calc((100vw - 540px)/2),250px);top:clamp(8px,6vh,64px);width:min(540px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:hidden;box-sizing:border-box}
-#pvc{width:100%;height:clamp(170px,32dvh,300px);max-height:32dvh;overflow:hidden}
+.preview-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:none}
+#pvc{flex:none;width:100%;height:clamp(170px,32dvh,300px);max-height:32dvh;overflow:hidden}
 #pvc canvas{display:block;width:100%!important;height:100%!important;max-width:100%}
-#pvp{display:block;box-sizing:border-box;width:100%;height:calc(100dvh - clamp(170px,32dvh,300px) - 105px);min-height:90px;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
+#pvp{display:block;box-sizing:border-box;width:100%;flex:1 1 auto;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
 #pvp select,#pvp input,#pvp button{max-width:100%;box-sizing:border-box}
-@media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}#pvp{height:calc(100dvh - clamp(150px,27dvh,230px) - 90px)}}
+@media(max-width:600px){#pv{left:8px;top:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#pvc{height:clamp(150px,27dvh,230px);max-height:27dvh}}
 
 /* Paleta del editor en escritorio y móvil. */
 body.adaptive:not(.ui-legacy){
@@ -193,7 +194,7 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <div id="nuhioModes" aria-label="Vistas y renderizado"></div><div class="side" id="pr" aria-label="Propiedades"></div></div>
 <div id="sb"><span id="editorStatus"></span><span id="editorHint"></span></div>
 <div id="cat"></div>
-<div id="pv"><b>Previsualización 3D</b> <button id="pvx" style="float:right">✕</button><div id="pvc"></div><div id="pvp"></div></div>
+<div id="pv"><div class="preview-head"><b>Previsualización 3D</b><button id="pvx" aria-label="Cerrar previsualización">✕</button></div><div id="pvc"></div><div id="pvp"></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/build/index.module.js","three-mesh-bvh/":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/","three-gpu-pathtracer":"https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.23/src/index.js"}}</script>
 <script type="module">
 /* Motor de render fotorrealista (path tracing en la GPU del usuario). Módulo ES cargado bajo demanda desde index.html.
@@ -1384,7 +1385,7 @@ S.o.forEach(o=>{});
 const navigationKeys=new Set(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright']);
 const navigationHeld=new Set();
 function canNavigate3D(){
- return !!r3&&mode==='3d'&&!editMode&&!walk&&!RVo&&!pvOpen&&
+ return !!r3&&mode==='3d'&&!editMode&&!RVo&&!pvOpen&&
   !document.querySelector('dialog[open]')&&$('#fotoIAModal')?.style.display!=='flex';
 }
 document.addEventListener('keydown',e=>{
@@ -1392,7 +1393,12 @@ document.addEventListener('keydown',e=>{
  if(e.target.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))return;
  if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();
  const key=e.key.toLowerCase();
- if(navigationKeys.has(key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&canNavigate3D()&&
+ if((key==='control'||key==='shift')&&!e.metaKey&&!e.altKey&&canNavigate3D()&&
+    !e.target.closest?.('.dd.open,.nuhio-render-workspace,#nuhioNav,#dualSplitter')){
+  if(!e.repeat)navigationHeld.add(key);
+  return;
+ }
+ if(!walk&&navigationKeys.has(key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&canNavigate3D()&&
     !e.target.closest?.('.dd.open,.nuhio-render-workspace,#nuhioNav,#dualSplitter')){
   e.preventDefault();
   if(!e.repeat)navigationHeld.add(key);
@@ -5270,7 +5276,16 @@ function addRealisticDetails(){
  }
 }
 const walkOverlay=$('#walkTouch');
+function cameraLift(dt){
+ return (Number(navigationHeld.has('shift'))-Number(navigationHeld.has('control')))*150*dt;
+}
 function moveNavigationCamera(dt){
+ const lift=cameraLift(dt);
+ if(lift){
+  const height=Math.max(8,cam.position.y+lift);
+  oc.target.y+=height-cam.position.y;
+  cam.position.y=height;
+ }
  const forward=Number(navigationHeld.has('w')||navigationHeld.has('arrowup'))-
   Number(navigationHeld.has('s')||navigationHeld.has('arrowdown'));
  const right=Number(navigationHeld.has('d')||navigationHeld.has('arrowright'))-
@@ -5288,13 +5303,20 @@ let lastNavigationFrame=performance.now();
 function animate(){requestAnimationFrame(animate);
  const now=performance.now(),dt=Math.min(.05,(now-lastNavigationFrame)/1000);lastNavigationFrame=now;
  if(navigationHeld.size){
-  if(canNavigate3D()&&!document.activeElement?.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))moveNavigationCamera(dt);
+  if(canNavigate3D()&&!document.activeElement?.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])')){if(!walk)moveNavigationCamera(dt);}
   else navigationHeld.clear();
  }
  walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return;
  MV.forEach(m=>stepMV(m));
- if(walk){const sp=+$('#sp').value*(walkK.shift?2.2:1),y=cam.rotation.y;let fx=walkX*Math.cos(y)+walkY*Math.sin(y),fz=-walkX*Math.sin(y)+walkY*Math.cos(y);if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
-  vel.x+=(fx*sp-vel.x)*.15;vel.z+=(fz*sp-vel.z)*.15;if(!blocked(cam.position.x+vel.x,cam.position.z))cam.position.x+=vel.x;else vel.x=0;if(!blocked(cam.position.x,cam.position.z+vel.z))cam.position.z+=vel.z;else vel.z=0;cam.position.y=165}
+ if(walk){const sp=+$('#sp').value,y=cam.rotation.y;let fx=walkX*Math.cos(y)+walkY*Math.sin(y),fz=-walkX*Math.sin(y)+walkY*Math.cos(y);if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
+  vel.x+=(fx*sp-vel.x)*.15;vel.z+=(fz*sp-vel.z)*.15;if(!blocked(cam.position.x+vel.x,cam.position.z))cam.position.x+=vel.x;else vel.x=0;if(!blocked(cam.position.x,cam.position.z+vel.z))cam.position.z+=vel.z;else vel.z=0;
+  const lift=cameraLift(dt);
+  if(lift){
+   const room=S.rooms.find(r=>r.poly&&inPoly(cam.position.x,cam.position.z,r.poly));
+   const ceiling=+(room?.ceil?.h||S.w[0]?.h||250);
+   cam.position.y=T.MathUtils.clamp(cam.position.y+lift,20,Math.max(20,ceiling-10));
+  }
+ }
  else{
   // Permite mirar hacia arriba sin orbitar por debajo del suelo.
   const radius=Math.max(oc.minDistance,cam.position.distanceTo(oc.target));
@@ -5411,7 +5433,7 @@ function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;navigationHeld.c
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){if(!r3)return;walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
-$('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)r3.domElement.requestPointerLock?.()};
+$('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)r3.domElement.requestPointerLock?.()};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
 $('#bS').onclick=()=>{try{localStorage.setItem('p:'+S.nm,JSON.stringify(S));alert('Guardado: '+S.nm)}catch(e){alert('No se pudo guardar (¿demasiadas imágenes?). Usa «Exportar proyecto».')}};
 $('#bO').onclick=()=>{const n=Object.keys(localStorage).filter(k=>k.startsWith('p:')).map(k=>k.slice(2));if(!n.length)return alert('No hay proyectos guardados.');const v=prompt('Proyectos guardados:\n'+n.join('\n')+'\n\nEscribe el nombre:',n[0]);if(v&&localStorage.getItem('p:'+v)){openDraft(localStorage.getItem('p:'+v))}};
@@ -5689,7 +5711,7 @@ $('#walkHide').onclick=()=>{
   $('#walkHide').textContent=hide?'Mostrar':'Ocultar';
   $('#walkHide').setAttribute('aria-pressed',String(hide));
 };
-function exitWalk(){if(!walk)return;walk=false;oc.enabled=true;if(document.pointerLockElement)document.exitPointerLock();vw('iso')}
+function exitWalk(){if(!walk)return;walk=false;navigationHeld.clear();oc.enabled=true;if(document.pointerLockElement)document.exitPointerLock();vw('iso')}
 document.addEventListener('pointerlockchange',()=>{if(walk&&!document.pointerLockElement)exitWalk()});
 r3?.domElement.addEventListener('click',e=>{if(walk&&!touchWalk&&!document.pointerLockElement&&e.pointerType!=='touch')r3.domElement.requestPointerLock?.()});
 r3?.domElement.addEventListener('wheel',e=>{if(walk){cam.fov=Math.max(30,Math.min(90,cam.fov+e.deltaY*.03));cam.updateProjectionMatrix()}});
@@ -5858,7 +5880,7 @@ const all=LIB.filter(o=>!o.libraryHidden&&(o.roomType===room.key||o.c===room.n))
 items.forEach((o,i)=>{const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));const obj=new T.Group();buildItemGeometry(obj,it,M(it.col||'#a88f78',.58,0),M('#999',.3,.8));const [x,z]=positions[i];obj.position.set(x,0,z);if(o.shape==='car'||o.shape==='van')obj.rotation.y=Math.PI/2;g4.add(obj)});
 cam4.aspect=260/150;cam4.position.set(920,700,1120);cam4.lookAt(0,90,0);cam4.updateProjectionMatrix();r4.setSize(260,150);r4.render(sc4,cam4);const url=r4.domElement.toDataURL('image/jpeg',.86);g4.clear();MV=savedMV;PV=savedPV;ROOM_COVERS.set(room.key,url);return url}
 function fitCam(){if(!r4)return;const it=pvIt,m=Math.max(it.w,it.h,it.d);cam4.position.set(m*.9,it.h*.6+m*.3,m*1.6);oc4.target.set(0,it.h/2,0);oc4.update()}
-function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX='hidden';P2.style.minHeight='90px';P2.style.maxHeight='none';P2.innerHTML='';
+function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX='hidden';P2.style.maxHeight='none';P2.innerHTML='';
  if(pvKitchenPresets){
   const label=document.createElement('label'),select=document.createElement('select');
   label.textContent=Object.hasOwn(HOOD_MODELS,pvIt.cfg?.ap)?'Modelo de campana ':'Variante inicial ';
@@ -5884,7 +5906,7 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
 let pvKitchenPresets=null,pvKitchenVariant=0;
 function openPrev(i){const o=LIB[i],presets=KITCHEN_PRESETS.get(o);openPrevObj(presets?.[0]||o,presets)}
 function resizePreviewRenderer(){if(!r4)return;const host=$('#pvc');if(!host)return;const w=Math.max(160,Math.floor(host.clientWidth||520)),h=Math.max(140,Math.floor(host.clientHeight||260));r4.setSize(w,h,false);r4.domElement.style.width='100%';r4.domElement.style.height='100%';cam4.aspect=w/h;cam4.updateProjectionMatrix();oc4.update()}
-function openPrevObj(o,presets=null,variant=0){pvKitchenPresets=presets;pvKitchenVariant=variant;const was=pvOpen;pvIt=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));pvOpen=true;$('#pv').style.display='block';if(r4){$('#pvc').append(r4.domElement);resizePreviewRenderer();buildPrev(pvIt,1);fitCam()}else $('#pvc').textContent='Vista previa 3D no disponible en este navegador.';pvUI();if(!was)pvLoop()}
+function openPrevObj(o,presets=null,variant=0){pvKitchenPresets=presets;pvKitchenVariant=variant;const was=pvOpen;pvIt=Object.assign({op:[],ang:100,fl:false,lk:false,hid:false,r:0},JSON.parse(JSON.stringify(o)));pvOpen=true;$('#pv').style.display='flex';if(r4){$('#pvc').append(r4.domElement);resizePreviewRenderer();buildPrev(pvIt,1);fitCam()}else $('#pvc').textContent='Vista previa 3D no disponible en este navegador.';pvUI();if(!was)pvLoop()}
 window.addEventListener('resize',()=>{if(pvOpen)resizePreviewRenderer()});
 $('#pvx').onclick=()=>{if(pendingModel){const id=pendingModel.data.id;for(let i=LIB.length-1;i>=0;i--)if(LIB[i].mid==id)LIB.splice(i,1);delete MODS[id];pendingModel=null;libUI();refresh()}pvOpen=false;$('#pv').style.display='none'};
 /* ===== Configurador modular de cocina ===== */
@@ -7604,7 +7626,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido)':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas para mover la cámara':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: edición':'Modo: navegación';b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: edición':'Modo: navegación';b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{navigationHeld.clear();editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
