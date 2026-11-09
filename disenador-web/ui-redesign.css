@@ -407,15 +407,15 @@ body.adaptive:not(.ui-legacy) {
   body.desktop-workspace:not(.ui-legacy) #nuhioModes button {flex:0 0 auto;min-height:34px;padding:5px 7px!important;white-space:nowrap;font-size:11px}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes svg {width:15px;height:15px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.65}
   body.desktop-workspace:not(.ui-legacy) #nuhioModes .view-mode span {margin-left:4px}
-  body.desktop-workspace:not(.ui-legacy) #sb {
-    grid-area:5 / 2 / 6 / -1;min-width:0;margin-bottom:4px;border-radius:7px;
-    flex-wrap:nowrap;align-items:center;padding:3px 8px!important;font-size:11px;
+  body.adaptive.desktop-workspace:not(.ui-legacy) #sb {
+    grid-area:5 / 2 / 6 / -1;min-width:0;max-height:18dvh;margin-bottom:4px;border-radius:7px;
+    flex-wrap:wrap;align-items:baseline;padding:3px 8px!important;font-size:10px;line-height:1.3;
+    white-space:normal;overflow:auto;
   }
   body.desktop-workspace:not(.ui-legacy) #sb :is(#editorStatus,#editorHint) {
-    min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    min-width:0;max-width:100%;white-space:normal;overflow:visible;overflow-wrap:anywhere;
+    flex:0 1 auto;
   }
-  body.desktop-workspace:not(.ui-legacy) #editorStatus {flex:0 1 auto;max-width:75%}
-  body.desktop-workspace:not(.ui-legacy) #editorHint {flex:1 1 0}
   body.desktop-workspace:not(.ui-legacy) #view.view-dual #c2 {
     inset:0 auto 0 0!important;width:var(--dual-ratio)!important;height:100%!important;border:0;
   }
