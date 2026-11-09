@@ -1642,19 +1642,15 @@ function setSunShadowSize(size){
  shadow.mapSize.set(size,size);
  if(shadow.map){shadow.map.dispose();shadow.map=null}
 }
-let editorEnvironment;
 function setQ(){
  if(!r3)return;
  const q=$('#sq').value,realistic=q==='q',materials=q==='m';
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
- if(realistic&&editorEnvironment===undefined){
-  try{editorEnvironment=skyEnv(r3,.28)}catch(error){editorEnvironment=null;console.warn('No se pudo preparar la luz de entorno del visor.',error)}
- }
- sc.environment=realistic?(editorEnvironment?.texture??null):null;
+ sc.environment=null;
  if(realistic)setSunShadowSize(2048);
  r3.toneMappingExposure=realistic?1.00:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
- hemi.intensity=realistic?.62:materials?.95:.55;
+ hemi.intensity=realistic?.82:materials?.95:.55;
  fill.intensity=realistic?.22:materials?0:.20;
  rim.intensity=realistic?.07:materials?0:.12;
  resize();build3d();
@@ -5139,7 +5135,6 @@ function windowFillSpecs(walls,openings,rooms){
  return windows.sort((a,b)=>b.area-a.area);
 }
 function addRealisticDetails(){
- for(const object of realisticDetails.children)if(object.isLight)object.shadow?.map?.dispose();
  realisticDetails.clear();
  if(RVo||$('#sq').value!=='q')return;
  const rooms=(S.rooms||[]).filter(room=>room.poly);
@@ -5149,9 +5144,6 @@ function addRealisticDetails(){
   const light=new T.SpotLight('#fff1df',Math.min(.42,.16+window.area/120000),520,.86,.75,1.15);
   light.position.set(window.x,window.y,window.z);
   light.target.position.set(window.x+window.nx*240,40,window.z+window.nz*240);
-  light.castShadow=true;light.shadow.mapSize.set(512,512);
-  light.shadow.bias=-.00025;light.shadow.normalBias=.45;
-  light.shadow.camera.near=5;light.shadow.camera.far=520;
   realisticDetails.add(light,light.target);
  }
  const rugs=S.i.filter(it=>it.t==='alfombra'&&!it.hid&&!(+it.e>2));
@@ -5325,6 +5317,7 @@ $('#fi').onchange=async e=>{
   const text=await f.text();
   if(revision!==projectTransition)return;
   openDraft(readProjectImport(text).data);
+  frameProject();
   libUI();
  }catch(error){alert('No se pudo importar el proyecto: '+error.message)}
 };
