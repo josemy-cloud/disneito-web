@@ -125,7 +125,7 @@ body.desktop-workspace:not(.ui-legacy) #viewActions{
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-</style><link rel="stylesheet" href="ui-redesign.css?v=6" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+</style><link rel="stylesheet" href="ui-redesign.css?v=7" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 </head><body><script>if(new URLSearchParams(location.search).get("ui")==="legacy")document.body.classList.add("ui-legacy");</script>
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar">📄 Archivo ▾</button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
@@ -245,7 +245,7 @@ async function createRender(container, j, opt, cb) {
 
 window.RENDER_ENGINE = { PRESETS, adapt, makeEnv, createRender };
 </script>
-<script src="/auth.js?v=5"></script>
+<script src="/auth.js?v=6"></script>
 <script>
 if(!SES)location.replace("/acceso"+location.search+location.hash);
 else {
@@ -1321,7 +1321,7 @@ c2.addEventListener('touchcancel',()=>{
 });
 /* Los muros/aperturas usan wd (ancho) para la apertura; normalizamos nombres */
 S.o.forEach(o=>{});
-document.addEventListener('keydown',e=>{if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();if(e.target.tagName=='INPUT'&&e.target.type!='range')return;if(['SELECT','TEXTAREA'].includes(e.target.tagName))return;if(editMode&&!walk&&sel&&sel.k=='i'){const it=get();if(it&&!it.lk){const before={x:it.x,y:it.y,e:it.e,r:it.r};if(moveStep(it,e.key,e.shiftKey,e.ctrlKey,+$('#bSt').value,camFwd())){e.preventDefault();if(it.rel)updateChildOffset(it);syncSupportedChildren(it);if(!fits(it)){Object.assign(it,before);if(it.rel)updateChildOffset(it);syncSupportedChildren(it);sbUpdate('Movimiento cancelado: colisión física con pared u objeto');refresh();return}mvDirty=true;refresh();sbUpdate();return}}}
+document.addEventListener('keydown',e=>{if(e.target.closest?.('.studio-panel'))return;if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();if(e.target.tagName=='INPUT'&&e.target.type!='range')return;if(['SELECT','TEXTAREA'].includes(e.target.tagName))return;if(editMode&&!walk&&sel&&sel.k=='i'){const it=get();if(it&&!it.lk){const before={x:it.x,y:it.y,e:it.e,r:it.r};if(moveStep(it,e.key,e.shiftKey,e.ctrlKey,+$('#bSt').value,camFwd())){e.preventDefault();if(it.rel)updateChildOffset(it);syncSupportedChildren(it);if(!fits(it)){Object.assign(it,before);if(it.rel)updateChildOffset(it);syncSupportedChildren(it);sbUpdate('Movimiento cancelado: colisión física con pared u objeto');refresh();return}mvDirty=true;refresh();sbUpdate();return}}}
  if((e.ctrlKey||e.metaKey)&&!e.altKey&&!walk&&!drag&&(mode==='2d'||dualView)&&!e.target.isContentEditable){
   const key=e.key.toLowerCase();
   if((key==='c'&&copyPlanSelection())||(key==='v'&&pastePlanSelection())){e.preventDefault();return}
@@ -6660,16 +6660,50 @@ async function openProj(id){
  refreshNuhioProjects();
  setCloudSaveState(readProjectDraft(id)?'pending':SES?'synced':'local');
 }
-async function projLib(){let box=document.getElementById('pryBox');if(box){box.remove();return}box=document.createElement('div');box.id='pryBox';box.style.cssText='position:fixed;inset:60px 20px 20px 20px;z-index:50;background:#1a1d24;border:1px solid #556;border-radius:8px;padding:12px;overflow:auto;color:#eee;font:13px Arial';document.body.append(box);
- const btn2=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.style.margin='2px 3px';e.onclick=async()=>{try{await fn()}catch(x){alert('Error: '+(x&&x.message||x))}};return e},draw=async()=>{const L=await PST().list();refreshNuhioProjects(L);box.innerHTML='<b>☁ Mi espacio</b> <small>Tus diseños guardados</small> <button id=pyx style="float:right">✕</button><br>';box.querySelector('#pyx').onclick=()=>box.remove();/* La gestión de la cuenta está en el apartado independiente «Mi cuenta». */
-  box.append(btn2('+ Guardar el diseño actual como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;const revision=++projectTransition,project=S,data=JSON.stringify(S);const id=await newProj(n,data);if(revision===projectTransition&&S===project){setActiveProject(id);if(JSON.stringify(S)!==data)persistEdit(JSON.stringify(S));else setCloudSaveState(SES?'synced':'local')}draw()}));
-  if(curProj)box.append(btn2('💾 Guardar versión ahora',async()=>{await psave('manual');draw()}));
-  const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';fi.onchange=async()=>{const j=JSON.parse(await fi.files[0].text());if(j.format!='proyecto-v1'||!j.data)throw new Error('archivo no válido');await newProj((j.name||'Importado')+' (importado)',j.data);draw()};box.append(btn2('⬆ Importar proyecto…',()=>fi.click()),fi);
-  const t=document.createElement('div');t.style.marginTop='10px';L.forEach(p=>{const row=document.createElement('div');row.style.cssText='padding:6px;border-bottom:1px solid #333;'+(p.id==curProj?'background:#22304a':'');row.append(document.createTextNode(p.name+' · '+new Date(p.updated).toLocaleString()+' · '+p.nv+' versiones '));
-   row.append(btn2('Abrir',async()=>{await openProj(p.id);draw()}),btn2('Renombrar',async()=>{const n=prompt('Nuevo nombre:',p.name);if(!n)return;if(await flushSave(p.id)===false)throw new Error('Guarda los cambios pendientes antes de renombrar.');const r=await PST().get(p.id);r.name=n;await PST().put(r);draw()}),btn2('Duplicar',async()=>{const r=await PST().get(p.id);await newProj(r.name+' (copia)',r.data);draw()}),
+async function projLib(){
+ let box=document.getElementById('pryBox');if(box){box.remove();return}
+ box=document.createElement('dialog');box.id='pryBox';box.className='studio-panel studio-projects';
+ box.setAttribute('aria-labelledby','studioProjectsTitle');
+ box.innerHTML='<header class="studio-panel-head"><div><p class="studio-eyebrow">Estudio NuHio</p><h2 id="studioProjectsTitle">Mi espacio</h2><p>Tus diseños guardados y sus versiones.</p></div><button type="button" aria-label="Cerrar Mi espacio">×</button></header><div class="studio-panel-body" aria-live="polite">Cargando proyectos…</div>';
+ const close=box.querySelector('header button'),body=box.querySelector('.studio-panel-body');
+ close.onclick=()=>box.close();box.addEventListener('close',()=>box.remove());
+ document.body.append(box);box.showModal();
+ const btn2=(label,fn)=>{
+  const button=document.createElement('button');button.type='button';button.textContent=label;
+  button.onclick=async()=>{try{await fn()}catch(error){alert('Error: '+(error?.message||error))}};
+  return button;
+ };
+ const draw=async()=>{
+  let L;try{L=await PST().list()}catch{body.textContent='No se han podido cargar tus proyectos.';return}
+  if(!box.open)return;
+  refreshNuhioProjects(L);body.replaceChildren();
+  const actions=document.createElement('div');actions.className='studio-actions';
+  body.append(actions);
+  actions.append(btn2('+ Guardar como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;const revision=++projectTransition,project=S,data=JSON.stringify(S);const id=await newProj(n,data);if(revision===projectTransition&&S===project){setActiveProject(id);if(JSON.stringify(S)!==data)persistEdit(JSON.stringify(S));else setCloudSaveState(SES?'synced':'local')}draw()}));
+  actions.firstElementChild.className='studio-primary';
+  if(curProj)actions.append(btn2('Guardar versión',async()=>{await psave('manual');draw()}));
+  const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';fi.onchange=async()=>{const j=JSON.parse(await fi.files[0].text());if(j.format!='proyecto-v1'||!j.data)throw new Error('archivo no válido');await newProj((j.name||'Importado')+' (importado)',j.data);draw()};actions.append(btn2('Importar proyecto…',()=>fi.click()),fi);
+  const list=document.createElement('div');list.className='studio-project-list';
+  for(const p of L){
+   const row=document.createElement('article');row.className='studio-project';
+   const active=p.id===curProj;row.classList.toggle('studio-project-active',active);
+   const info=document.createElement('div'),name=document.createElement('h3'),meta=document.createElement('p');
+   name.textContent=p.name;meta.textContent=new Date(p.updated).toLocaleString()+' · '+p.nv+(p.nv===1?' versión':' versiones')+(active?' · En edición':'');
+   info.append(name,meta);
+   const open=btn2('Abrir',async()=>{await openProj(p.id);box.close()});
+   const more=document.createElement('details');more.className='studio-project-more';
+   const summary=document.createElement('summary');summary.textContent='Más';summary.setAttribute('aria-label','Más opciones de '+p.name);
+   const options=document.createElement('div');options.className='studio-actions';
+   more.append(summary,options);row.append(info,open,more);
+   options.append(btn2('Renombrar',async()=>{const n=prompt('Nuevo nombre:',p.name);if(!n)return;if(await flushSave(p.id)===false)throw new Error('Guarda los cambios pendientes antes de renombrar.');const r=await PST().get(p.id);r.name=n;await PST().put(r);draw()}),btn2('Duplicar',async()=>{const r=await PST().get(p.id);await newProj(r.name+' (copia)',r.data);draw()}),
    btn2('Exportar',async()=>{const r=await PST().get(p.id);dlj(r.name.replace(/[^\w-]+/g,'_')+'.proyecto.json',JSON.stringify({format:'proyecto-v1',name:r.name,data:r.data}))}),
-   btn2('Versiones',async()=>{const r=await PST().get(p.id),vb=document.createElement('div');vb.style.cssText='margin:6px 0 6px 14px;font-size:12px';(r.versions||[]).slice().reverse().forEach(v=>{const l=document.createElement('div');l.append(document.createTextNode(new Date(v.t).toLocaleString()+' · '+v.why+' '));l.append(btn2('Restaurar',async()=>{if(!confirm('Se restaurará esta versión (se guarda antes la actual como versión).'))return;if(await flushSave(p.id)===false||readProjectDraft(p.id))throw new Error('Guarda los cambios pendientes antes de restaurar.');const r2=await PST().get(p.id);pushVer(r2,r2.data,'antes de restaurar',Date.now()+1);r2.data=v.data;r2.updated=Date.now();await PST().put(r2);await openProj(p.id);draw()}));vb.append(l)});row.append(vb)}),
-   btn2('Eliminar',async()=>{if(!confirm('¿Eliminar "'+p.name+'" y todas sus versiones?'))return;if(await flushSave(p.id)===false)throw new Error('No se pudieron guardar los cambios pendientes.');await PST().del(p.id);try{localStorage.removeItem(projectDraftKey(p.id))}catch(e){}if(curProj===p.id)openDraft(JSON.stringify(S));draw()}));t.append(row)});box.append(t);if(!L.length)box.append(document.createTextNode(' Aún no hay proyectos.'))};draw()}
+   btn2('Versiones',async()=>{const r=await PST().get(p.id);row.querySelector('.studio-versions')?.remove();const vb=document.createElement('div');vb.className='studio-versions';if(!r.versions?.length)vb.textContent='Este proyecto aún no tiene versiones guardadas.';(r.versions||[]).slice().reverse().forEach(v=>{const l=document.createElement('div');l.append(document.createTextNode(new Date(v.t).toLocaleString()+' · '+v.why+' '));l.append(btn2('Restaurar',async()=>{if(!confirm('Se restaurará esta versión (se guarda antes la actual como versión).'))return;if(await flushSave(p.id)===false||readProjectDraft(p.id))throw new Error('Guarda los cambios pendientes antes de restaurar.');const r2=await PST().get(p.id);pushVer(r2,r2.data,'antes de restaurar',Date.now()+1);r2.data=v.data;r2.updated=Date.now();await PST().put(r2);await openProj(p.id);draw()}));vb.append(l)});row.append(vb)}),
+   btn2('Eliminar',async()=>{if(!confirm('¿Eliminar "'+p.name+'" y todas sus versiones?'))return;if(await flushSave(p.id)===false)throw new Error('No se pudieron guardar los cambios pendientes.');await PST().del(p.id);try{localStorage.removeItem(projectDraftKey(p.id))}catch(e){}if(curProj===p.id)openDraft(JSON.stringify(S));draw()}));options.lastElementChild.className='studio-danger';list.append(row);
+  }
+  if(L.length)body.append(list);else{const empty=document.createElement('p');empty.className='studio-empty';empty.textContent='Aún no hay proyectos. Guarda el diseño actual o importa un proyecto para empezar.';body.append(empty)}
+ };
+ await draw();
+}
 /* ===== VER EN REALIDAD: vista limpia, iluminación y exposición de cámara, render por acumulación y panorama 360° ===== */
 const RFD=[[[0,0,-1],[0,1,0]],[[1,0,0],[0,1,0]],[[0,0,1],[0,1,0]],[[-1,0,0],[0,1,0]],[[0,1,0],[0,0,1]],[[0,-1,0],[0,0,-1]]];
 const EQ=(lon,lat)=>{const d=[Math.cos(lat)*Math.sin(lon),Math.sin(lat),-Math.cos(lat)*Math.cos(lon)],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];let bi=0,bd=-2;RFD.forEach(([f],i)=>{const q=dot(d,f);if(q>bd){bd=q;bi=i}});const[f,u]=RFD[bi],r=cr(f,u);return[bi,dot(d,r)/bd,dot(d,u)/bd]};

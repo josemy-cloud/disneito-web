@@ -56,7 +56,8 @@ async function leaveEditor(){
 }
 async function accountPanel({entry=false}={}){
  let box=document.getElementById('accountBox');if(box){box.remove();return}
- box=document.createElement('div');box.id='accountBox';box.style.cssText='position:fixed;inset:60px 20px 20px;z-index:80;background:#1a1d24;border:1px solid #556;border-radius:12px;padding:18px;overflow:auto;color:#eee;font:14px Arial;box-shadow:0 16px 50px #0009';
+ box=document.createElement(entry?'div':'dialog');box.id='accountBox';if(entry)box.style.cssText='position:fixed;inset:60px 20px 20px;z-index:80;background:#1a1d24;border:1px solid #556;border-radius:12px;padding:18px;overflow:auto;color:#eee;font:14px Arial;box-shadow:0 16px 50px #0009';
+ if(!entry){box.className='studio-panel studio-account';box.setAttribute('aria-labelledby','studioAccountTitle');box.addEventListener('close',()=>box.remove())}
  document.body.append(box);
  const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='margin:5px 5px 5px 0;padding:8px 12px';b.onclick=async()=>{try{await fn()}catch(e){alert(e.message||e)}};return b};
  const field=(label,type='text',value='',autocomplete='')=>{const wrap=document.createElement('label');wrap.style.cssText='display:block;margin:10px 0;color:#bbc4d2';wrap.textContent=label;const i=document.createElement('input');i.type=type;if(autocomplete)i.autocomplete=autocomplete;i.value=value;i.style.cssText='display:block;box-sizing:border-box;width:min(100%,420px);padding:10px;margin-top:5px;background:#252c38;color:#fff;border:1px solid #566;border-radius:6px';wrap.append(i);return {wrap,input:i}};
@@ -66,8 +67,15 @@ async function accountPanel({entry=false}={}){
   small.style.cssText='display:block;margin:-5px 0 10px;color:#b9c4d4;font-size:11px;line-height:1.35';
   input.setAttribute('aria-describedby',small.id);return small;
  };
- const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent=entry?'Accede a Disenito':'Mi cuenta';title.style.margin='0';head.append(title);if(!entry)head.append(btn('✕ Cerrar',()=>box.remove()));box.append(head);
- const content=document.createElement('div');content.style.cssText='max-width:720px;margin:18px auto';box.append(content);
+ const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent=entry?'Accede a Disenito':'Mi cuenta';title.style.margin='0';head.append(title);if(!entry){
+  head.removeAttribute('style');head.className='studio-panel-head';
+  const intro=document.createElement('div');intro.innerHTML='<p class="studio-eyebrow">Estudio NuHio</p>';
+  title.id='studioAccountTitle';intro.append(title);
+  const sub=document.createElement('p');sub.textContent='Gestiona tu perfil y el acceso a tu cuenta.';intro.append(sub);
+  const close=btn('×',()=>box.close());close.setAttribute('aria-label','Cerrar Mi cuenta');
+  head.replaceChildren(intro,close);
+ }box.append(head);
+ const content=document.createElement('div');if(entry)content.style.cssText='max-width:720px;margin:18px auto';else content.className='studio-panel-body';box.append(content);if(!entry)box.showModal();
  const authFetch=async(method,body)=>{const token=await sbTok();const r=await fetch(SBU+'/auth/v1/user',{method,headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo actualizar la cuenta ('+r.status+')');return j};
  const recoveryParams=new URLSearchParams(window.location.hash.replace(/^#/,''));
  const drawPasswordReset=(token)=>{
@@ -151,16 +159,26 @@ async function accountPanel({entry=false}={}){
   libUI();
   const meta=u.user_metadata||{},avatar=meta.avatar_data||meta.avatar_url||'';
   content.innerHTML='';
-  const profile=document.createElement('div');profile.style.cssText='display:flex;align-items:center;gap:14px;margin:12px 0 20px';
-  const img=document.createElement('img');img.alt='Foto de perfil';img.src=avatar||'';img.style.cssText='width:76px;height:76px;border-radius:50%;object-fit:cover;background:#303846;border:1px solid #64748b';if(!avatar)img.style.display='none';
-  const info=document.createElement('div');const nm=document.createElement('b');nm.textContent=meta.full_name||u.email||SES.email||'Usuario';const mail=document.createElement('div');mail.textContent=u.email||SES.email||'';mail.style.color='#aeb8c8';profile.append(img,info);info.append(nm,mail);content.append(profile);
-  const name=field('Nombre visible','text',meta.full_name||''),email=field('Correo electrónico','email',u.email||'','email'),pass=field('Nueva contraseña (déjalo vacío si no quieres cambiarla)','password','','new-password');content.append(name.wrap,email.wrap,pass.wrap,passwordHint(pass.input));
+  const profile=document.createElement('div');profile.className='studio-profile';
+  const img=document.createElement('img');img.alt='Foto de perfil';if(avatar)img.src=avatar;
+  const info=document.createElement('div');const nm=document.createElement('b');nm.textContent=meta.full_name||u.email||SES.email||'Usuario';const mail=document.createElement('div');mail.textContent=u.email||SES.email||'';mail.className='studio-muted';
+  const initials=document.createElement('span');initials.className='studio-initials';initials.setAttribute('aria-hidden','true');initials.textContent=nm.textContent.slice(0,2).toLocaleUpperCase();
+  profile.append(avatar?img:initials,info);info.append(nm,mail);content.append(profile);
+  const name=field('Nombre visible','text',meta.full_name||''),email=field('Correo electrónico','email',u.email||'','email'),pass=field('Nueva contraseña (opcional)','password','','new-password');
+  const fields=document.createElement('section');fields.className='studio-account-fields';fields.innerHTML='<h3>Datos de acceso</h3>';
+  fields.append(name.wrap,email.wrap,pass.wrap,passwordHint(pass.input));content.append(fields);
   const photo=document.createElement('input');photo.type='file';photo.accept='image/*';photo.style.display='none';content.append(photo);
-  content.append(btn('Cambiar foto',()=>photo.click()),btn('Eliminar foto',async()=>{const m={...meta};delete m.avatar_data;delete m.avatar_url;await authFetch('PUT',{data:m});await drawProfile()}));
+  const photoActions=document.createElement('div');photoActions.className='studio-actions';
+  photoActions.append(btn(avatar?'Cambiar foto':'Añadir foto',()=>photo.click()));
+  if(avatar)photoActions.append(btn('Eliminar foto',async()=>{const m={...meta};delete m.avatar_data;delete m.avatar_url;await authFetch('PUT',{data:m});await drawProfile()}));
+  info.append(photoActions);
   photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',.78))};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await authFetch('PUT',{data:{...meta,avatar_data:data}});await drawProfile()};
-  content.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value){validateNewPassword(pass.input.value);body.password=pass.input.value;}if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
-  const note=document.createElement('p');note.style.cssText='color:#9eabbc;font-size:12px';note.textContent='La contraseña se cambia mediante Supabase Auth. El cambio de correo puede requerir confirmación. La foto se guarda en los metadatos de tu cuenta.';content.append(note);
-  content.append(btn('Cerrar sesión',leaveEditor));
+  const footer=document.createElement('footer');footer.className='studio-actions studio-account-footer';
+  footer.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value){validateNewPassword(pass.input.value);body.password=pass.input.value;}if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
+  footer.firstElementChild.className='studio-primary';
+  const logout=btn('Cerrar sesión',leaveEditor);logout.className='studio-danger';footer.append(logout);
+  const note=document.createElement('p');note.className='studio-muted';note.textContent='Si cambias el correo, es posible que tengas que confirmar la nueva dirección.';fields.append(note);
+  content.append(footer);
   const b=document.getElementById('bAcc');if(b){const label=(meta.full_name||u.email||'Mi cuenta').slice(0,18);if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label}
  };
  const recoveryType=recoveryParams.get('type'),recoveryToken=recoveryParams.get('access_token'),recoveryError=recoveryParams.get('error_description')||recoveryParams.get('error');
