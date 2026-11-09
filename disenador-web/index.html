@@ -1488,6 +1488,11 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const cloud=(fb(u,v,5,6,26)-.5)*.12;
    t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.28)-hairline*.14;
    h=.5;r=vein*.035;
+  }else if(gen==='sofa-linen-fine'){
+   const shade=fb(u,v,11,11,32),fiber=nz(u,v,153,153,34),lint=nz(u,v,229,229,36);
+   t=(shade-.5)*.018+(fiber-.5)*.021+(lint-.5)*.01;
+   h=.5+(fiber-.5)*.04+(lint-.5)*.025;
+   r=(shade-.5)*.018;
   }else if(gen==='sofa-linen'){
    const shade=fb(u,v,5,8,32);
    const x=u+(nz(u,v,13,17,33)-.5)*.025;
@@ -3990,13 +3995,13 @@ function upholsteredCushionSeam(width,height,depth,axis,material){
 }
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
- const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=mesh.receiveShadow=true}return mesh};
+ const tag=(mesh,key)=>{if(mesh){mesh.userData.part={t:key};mesh.castShadow=true;mesh.receiveShadow=!softThreeSeater||key==='feet'}return mesh};
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),frame=M(it.col||'#a88f78',.85,.02),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const pilot=it.t==='sofa';
  const softThreeSeater=name==='sofá 3 plazas';
  if(pilot){
-  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil','sofa-linen','#eeeeee',.88,0,.17,42]);
+  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil',softThreeSeater?'sofa-linen-fine':'sofa-linen','#eeeeee',.88,0,.17,42]);
   Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
   upholstery.normalScale.setScalar(softThreeSeater?.075:.17);
   Object.assign(frame,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
