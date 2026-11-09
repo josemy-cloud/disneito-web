@@ -863,6 +863,9 @@ function partColorUI(e,panel=P,save=commit){
 }
 
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
+const SOFA_FABRICS={lino:'Lino fino',boucle:'Bouclé texturizado',liso:'Tela lisa'};
+const hasSofaFabric=it=>it.t==='sofa'&&(it.n||'').toLowerCase()==='sofá 3 plazas';
+const sofaFabric=it=>Object.hasOwn(SOFA_FABRICS,it.upholstery)?it.upholstery:'lino';
 function props(){P.innerHTML='';const e=get();
  if(sel?.k==='group'){
   P.innerHTML='<h4>Selección múltiple</h4><small>'+sel.ids.size+' elementos seleccionados. Arrastra para moverlos o usa Ctrl+C y Ctrl+V.</small>';
@@ -903,6 +906,7 @@ function props(){P.innerHTML='';const e=get();
    appendMotionButton(P,e,motions,commitQ,true);
   }
   if(hasItemLight(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
+  if(hasSofaFabric(e))sel2('Tapicería',Object.keys(SOFA_FABRICS),sofaFabric(e),v=>e.upholstery=v,SOFA_FABRICS);
   partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
 /* ===== 2D ===== */
@@ -1488,6 +1492,12 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const cloud=(fb(u,v,5,6,26)-.5)*.12;
    t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.28)-hairline*.14;
    h=.5;r=vein*.035;
+  }else if(gen==='sofa-boucle'){
+   const nap=fb(u,v,36,36,41),loops=nz(u,v,110,110,42),fiber=nz(u,v,213,213,43);
+   const tuft=Math.max(0,loops-.33);
+   t=(nap-.5)*.06+(tuft-.23)*.13+(fiber-.5)*.028;
+   h=.48+tuft*.29+(fiber-.5)*.07;
+   r=(nap-.5)*.035;
   }else if(gen==='sofa-linen-fine'){
    const shade=fb(u,v,11,11,32),fiber=nz(u,v,153,153,34),lint=nz(u,v,229,229,36);
    t=(shade-.5)*.018+(fiber-.5)*.021+(lint-.5)*.01;
@@ -3999,16 +4009,17 @@ case'sofa':{
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),frame=M(it.col||'#a88f78',.85,.02),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
  const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const pilot=it.t==='sofa';
- const softThreeSeater=name==='sofá 3 plazas';
- if(pilot){
-  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil',softThreeSeater?'sofa-linen-fine':'sofa-linen','#eeeeee',.88,0,.17,42]);
+ const softThreeSeater=hasSofaFabric(it);
+ const fabric=softThreeSeater?sofaFabric(it):null;
+ if(pilot&&fabric!=='liso'){
+  const linen=pbrTex(['sofa-linen','Tapicería de lino','Textil',fabric==='boucle'?'sofa-boucle':fabric==='lino'?'sofa-linen-fine':'sofa-linen','#eeeeee',.88,0,.17,42]);
   Object.assign(upholstery,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-  upholstery.normalScale.setScalar(softThreeSeater?.075:.17);
+  upholstery.normalScale.setScalar(fabric==='boucle'?.24:softThreeSeater?.075:.17);
   Object.assign(frame,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-  frame.normalScale.setScalar(softThreeSeater?.055:.11);
+  frame.normalScale.setScalar(fabric==='boucle'?.17:softThreeSeater?.055:.11);
   wuv(frame,{uT:{value:new T.Vector2(42,42)},uSw:{value:0},uR:{value:0},uO:{value:new T.Vector2(0,0)},uW:{value:0}});
-  stitch.color.copy(upholstery.color).multiplyScalar(.84);
  }
+ if(pilot)stitch.color.copy(upholstery.color).multiplyScalar(.84);
  const seatY=h*.285,seatH=h*(softThreeSeater?.19:pilot?.16:.135),backY=h*.64,backH=h*.44;
  const pad=(parent,x,y,z,sx,sy,sz,mat,rad=5)=>{
   if(pilot){
