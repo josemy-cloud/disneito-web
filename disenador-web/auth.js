@@ -5,13 +5,16 @@ if(typeof SES==='undefined'){SES=null;REMEMBER_SESSION=true;try{const savedLocal
 var sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}};
 async function sbAuth(path,body,signal=AbortSignal.timeout(10000)){const r=await fetch(SBU+'/auth/v1/'+path,{signal,method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
 const authPasswordMinLength=8;
+const authPasswordRequirements='Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo (por ejemplo, !).';
 function validatedAuthEmail(value){
  const email=String(value||'').trim();
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Introduce un correo electrónico válido.');
  return email;
 }
 function validateNewPassword(password){
- if(password.length<authPasswordMinLength)throw new Error('La contraseña debe tener al menos '+authPasswordMinLength+' caracteres.');
+ const hasSymbol=/[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/.test(password);
+ if(password.length<authPasswordMinLength||!/[A-Z]/.test(password)||!/[0-9]/.test(password)||!hasSymbol)
+  throw new Error(authPasswordRequirements);
 }
 async function sbRecover(email){
  const redirectTo=window.location.origin+'/acceso';
@@ -57,15 +60,21 @@ async function accountPanel({entry=false}={}){
  document.body.append(box);
  const btn=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='margin:5px 5px 5px 0;padding:8px 12px';b.onclick=async()=>{try{await fn()}catch(e){alert(e.message||e)}};return b};
  const field=(label,type='text',value='',autocomplete='')=>{const wrap=document.createElement('label');wrap.style.cssText='display:block;margin:10px 0;color:#bbc4d2';wrap.textContent=label;const i=document.createElement('input');i.type=type;if(autocomplete)i.autocomplete=autocomplete;i.value=value;i.style.cssText='display:block;box-sizing:border-box;width:min(100%,420px);padding:10px;margin-top:5px;background:#252c38;color:#fff;border:1px solid #566;border-radius:6px';wrap.append(i);return {wrap,input:i}};
+ const passwordHint=(input,prefix='')=>{
+  const small=document.createElement('small');small.id='authPasswordHint';
+  small.textContent=prefix+authPasswordRequirements;
+  small.style.cssText='display:block;margin:-5px 0 10px;color:#b9c4d4;font-size:11px;line-height:1.35';
+  input.setAttribute('aria-describedby',small.id);return small;
+ };
  const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px';const title=document.createElement('h2');title.textContent=entry?'Accede a Disenito':'Mi cuenta';title.style.margin='0';head.append(title);if(!entry)head.append(btn('✕ Cerrar',()=>box.remove()));box.append(head);
  const content=document.createElement('div');content.style.cssText='max-width:720px;margin:18px auto';box.append(content);
  const authFetch=async(method,body)=>{const token=await sbTok();const r=await fetch(SBU+'/auth/v1/user',{method,headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo actualizar la cuenta ('+r.status+')');return j};
  const recoveryParams=new URLSearchParams(window.location.hash.replace(/^#/,''));
  const drawPasswordReset=(token)=>{
   content.innerHTML='<p style="color:#b9c4d4">Introduce tu nueva contraseña. El enlace de recuperación solo puede utilizarse una vez.</p>';
-  const p1=field('Nueva contraseña (mínimo '+authPasswordMinLength+' caracteres)','password','','new-password');
+  const p1=field('Nueva contraseña','password','','new-password');
   const p2=field('Repite la nueva contraseña','password','','new-password');
-  content.append(p1.wrap,p2.wrap);
+  content.append(p1.wrap,passwordHint(p1.input),p2.wrap);
   content.append(btn('Guardar nueva contraseña',async()=>{
    const password=p1.input.value;
    validateNewPassword(password);
@@ -87,7 +96,7 @@ async function accountPanel({entry=false}={}){
   const form=document.createElement('form');
   form.noValidate=true;
   em.input.name='email';pw.input.name='password';
-  form.append(em.wrap,pw.wrap);
+  form.append(em.wrap,pw.wrap,passwordHint(pw.input,'Para crear una cuenta: '));
   content.append(form);
   const rememberWrap=document.createElement('label');rememberWrap.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:#cbd5e1;cursor:pointer';const remember=document.createElement('input');remember.type='checkbox';remember.checked=true;remember.style.cssText='width:16px;height:16px;accent-color:#4b91d1';const rememberText=document.createElement('span');rememberText.textContent='Recordarme en este dispositivo';rememberWrap.append(remember,rememberText);form.append(rememberWrap);
   const submit=btn('Iniciar sesión',()=>{});
@@ -145,7 +154,7 @@ async function accountPanel({entry=false}={}){
   const profile=document.createElement('div');profile.style.cssText='display:flex;align-items:center;gap:14px;margin:12px 0 20px';
   const img=document.createElement('img');img.alt='Foto de perfil';img.src=avatar||'';img.style.cssText='width:76px;height:76px;border-radius:50%;object-fit:cover;background:#303846;border:1px solid #64748b';if(!avatar)img.style.display='none';
   const info=document.createElement('div');const nm=document.createElement('b');nm.textContent=meta.full_name||u.email||SES.email||'Usuario';const mail=document.createElement('div');mail.textContent=u.email||SES.email||'';mail.style.color='#aeb8c8';profile.append(img,info);info.append(nm,mail);content.append(profile);
-  const name=field('Nombre visible','text',meta.full_name||''),email=field('Correo electrónico','email',u.email||'','email'),pass=field('Nueva contraseña (déjalo vacío si no quieres cambiarla)','password','','new-password');content.append(name.wrap,email.wrap,pass.wrap);
+  const name=field('Nombre visible','text',meta.full_name||''),email=field('Correo electrónico','email',u.email||'','email'),pass=field('Nueva contraseña (déjalo vacío si no quieres cambiarla)','password','','new-password');content.append(name.wrap,email.wrap,pass.wrap,passwordHint(pass.input));
   const photo=document.createElement('input');photo.type='file';photo.accept='image/*';photo.style.display='none';content.append(photo);
   content.append(btn('Cambiar foto',()=>photo.click()),btn('Eliminar foto',async()=>{const m={...meta};delete m.avatar_data;delete m.avatar_url;await authFetch('PUT',{data:m});await drawProfile()}));
   photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',.78))};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await authFetch('PUT',{data:{...meta,avatar_data:data}});await drawProfile()};
