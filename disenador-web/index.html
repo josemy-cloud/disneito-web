@@ -1705,7 +1705,7 @@ function roomsUpdate(){try{const found=detectRooms(S.w),old=S.rooms||[],pairs=[]
  S.rooms=res}catch(e){console.warn('roomsUpdate',e)}}
 function syncWallH(R){S.w.forEach(w=>{if((R.walls||[]).includes(w.id)){let h=0;S.rooms.forEach(r=>{if((r.walls||[]).includes(w.id))h=Math.max(h,r.ceil.h)});if(h)w.h=h}})}
 /*ROOMS_END*/
-const ceilOn=()=>showCeil||(RVo&&rvCeil!='hidden');
+const ceilOn=()=>RVo?rvCeil==='full':showCeil;
 function polyMesh(poly,y,mat,down){const pts=poly.map(p=>new T.Vector2(p[0],p[1])),tri=T.ShapeUtils.triangulateShape(pts,[]),pos=[],uv=[],idx=[],xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]),minx=Math.min(...xs),miny=Math.min(...ys),fw=Math.max(...xs)-minx||1,fd=Math.max(...ys)-miny||1;
  poly.forEach(p=>{pos.push(p[0],y,p[1]);uv.push((p[0]-minx)/fw,(p[1]-miny)/fd)});
  tri.forEach(([a,b,c])=>{const ay=(pts[b].x-pts[a].x)*(pts[c].y-pts[a].y)-(pts[b].y-pts[a].y)*(pts[c].x-pts[a].x),up=-ay>0;if(up==!down)idx.push(a,b,c);else idx.push(a,c,b)});
@@ -6856,9 +6856,18 @@ let RE=null,rcv=null,renderRun=0;
  rp.innerHTML='<h3>Ajustes del render</h3>';
  const rq=document.createElement('select');[['prev','Vista previa'],['alta','Alta calidad'],['pro','Calidad profesional']].forEach(([v,l])=>rq.add(new Option(l,v)));rq.value='alta';rq.setAttribute('aria-label','Calidad');rp.append(rq);const rz=document.createElement('select');['1280x720','1920x1080','2560x1440','3840x2160'].forEach(v=>rz.add(new Option(v)));rz.value='1920x1080';rz.setAttribute('aria-label','Resolución');rp.append(rz);rq.onchange=()=>{rz.value={prev:'1280x720',alta:'1920x1080',pro:'2560x1440'}[rq.value]};
  const lt=()=>RE&&RE.setLight(+sS.value,+sK.value),sS=rs('Sol',0,20000,5200,250,lt),sK=rs('Cielo',.1,2,.68,.05,lt),sE=rs('Exposición del render',.2,4,1.15,.05,v=>RE&&RE.setExposure(v));
- const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');zc.onchange=()=>{rvCeil=zc.value;build3d()};rp.append(zc);
+ const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');rp.append(zc);
  const pg=document.createElement('progress');pg.max=1;pg.value=0;pg.style.width='100%';const pm=document.createElement('div');pm.className='studio-muted';pm.setAttribute('role','status');actions.append(pg,pm);
  const closeR=()=>{renderRun++;if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0};
+ zc.onchange=()=>{
+  const hadRender=view==='render';
+  rvCeil=zc.value;
+  closeR();
+  unstill();
+  build3d();
+  setEnvI(.55);
+  pm.textContent=hadRender?'Techo actualizado en la vista previa. Pulsa «Generar render» para actualizar la imagen.':'Techo actualizado en la vista previa.';
+ };
  rb('▶ Generar render',async()=>{closeR();const run=renderRun;pm.textContent='Exportando la escena…';view='render';try{await Promise.all(Object.values(PCH).map(t=>t.complete).filter(Boolean));if(run!==renderRun)return;const j=exportScene(root,{cam:{x:st.x,y:st.h,z:st.z,yaw:st.yaw,pitch:st.pitch,mm:st.mm},sun:{dir:sun.position.clone().sub(sun.target.position).normalize().toArray(),color:'#'+sunC0.getHexString()},look:{exp:st.exp,k:st.k}});
   rcv=document.createElement('div');rcv.style.cssText='position:absolute;inset:0;z-index:1;background:#000;display:flex;align-items:center;justify-content:center';stage.append(rcv);const eng=window.RENDER_ENGINE;if(!eng)throw new Error('el motor de render no se cargó (recarga con Ctrl+F5)');
   const engine=await eng.createRender(rcv,j,{quality:rq.value,res:rz.value,sun:+sS.value,sky:+sK.value,exp:+sE.value},s=>{if(run!==renderRun)return;pg.value=s.target?Math.min(1,s.samples/s.target):0;pm.textContent=s.msg||({renderizando:'Renderizando',listo:'Listo',cancelado:'Cancelado',cargando:'Cargando',error:'Error'}[s.state]||s.state)+' · '+Math.floor(s.samples||0)+' / '+(s.target||0)+' muestras'});
