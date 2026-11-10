@@ -1650,6 +1650,9 @@ const PARQUET_FINISHES=[
 const isParquet=id=>PARQUET_FINISHES.some(([finish])=>finish===id);
 // Acabados de encimera propios. Los identificadores no forman parte del catálogo de suelos.
 const COUNTERTOPS=[
+ ['enc-piedra-grafito-texturada','Gris grafito texturado','Mineral','enc-stone-honed-dark','#676664',.67,0,.36,125],
+ ['enc-piedra-gris-clara-texturada','Gris claro mineral texturado','Mineral','enc-stone-honed-light','#c2c1ba',.69,0,.33,125],
+ ['enc-roble-claro-continuo','Roble claro de veta continua','Madera','enc-oak-continuous','#cdaa79',.48,0,.20,230],
  ['enc-cuarzo-marfil','Cuarzo marfil satinado','Cuarzo','enc-quartz-satin','#e5dfd3',.46,0,.11,88],
  ['enc-mineral-gris','Mineral gris mate','Mineral','scan:concrete_floor_03','#b4afaa',1,0,.10,180],
  ['enc-porcelanico-blanco','Blanco ártico','Porcelánico','grain','#f2f1ee',.32,0,.08,120],
@@ -1677,10 +1680,6 @@ const COUNTERTOPS=[
  ['enc-madera-escaneada','Madera rústica escaneada','Madera','scan:wood_table','#745537',1,0,.16,120]
 ];
 const COUNTERTOP_BY_ID=new Map(COUNTERTOPS.map(d=>[d[0],d]));
-const COUNTERTOP_SELECTION=[
- 'enc-cuarzo-marfil','enc-marmol-carrara','enc-porcelanico-arena','enc-porcelanico-basalto',
- 'enc-mineral-gris','enc-terrazo-escaneado','enc-madera-escaneada'
-].map(id=>COUNTERTOP_BY_ID.get(id));
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
 const availableCustomMaterials=()=> (S.pbr||[]).filter(d=>String(d[1]).trim().toLowerCase()!=='mármol negro (copia)');
 const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),pbrDef=id=>PL().find(d=>d[0]==id);
@@ -1795,6 +1794,29 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const growth=Math.sin(2*Math.PI*(27*v+1.6*bend));
    t=(grain-.5)*.34+growth*.055-(pore>.74?.1:0);
    h=.5+growth*.075+(pore-.5)*.12;r=(grain-.5)*.08;
+  }else if(gen==='enc-stone-honed-dark'||gen==='enc-stone-honed-light'){
+   const dark=gen==='enc-stone-honed-dark';
+   const cloud=fb(u,v,7,9,166)-.5, mottling=fb(u,v,28,25,167)-.5;
+   const mineral=nz(u,v,112,119,168)-.5, grain=nz(u,v,237,221,169)-.5;
+   const pit=Math.max(0,nz(u,v,151,137,170)-.72);
+   t=cloud*(dark?.32:.19)+mottling*(dark?.24:.15)+mineral*.13+grain*.09-pit*.34;
+   h=.5+mottling*.15+mineral*.21+grain*.23-pit*.44;
+   r=cloud*.095+mottling*.075+grain*.055+pit*.17;
+  }else if(gen==='enc-oak-continuous'){
+   // La fibra recorre U y se curva de forma suave alrededor de nudos dispersos.
+   const dx=Math.sin(Math.PI*(u-.32)),dy=Math.sin(Math.PI*(v-.62));
+   const bend=dy*Math.exp(-dx*dx*14-dy*dy*70);
+   const fiberV=v+(fb(u,v,4,6,174)-.5)*.062+bend*.25;
+   const longGrain=fb(u,fiberV,3,27,175)-.5;
+   const fiber=nz(u,fiberV,11,215,176)-.5;
+   const ring=.5+.5*Math.sin(2*Math.PI*(38*fiberV+.34*fb(u,v,6,7,177)));
+   const knotDist=Math.min(Math.hypot(dx*7,dy*31),
+    Math.hypot(Math.sin(Math.PI*(u-.74))*10,Math.sin(Math.PI*(v-.21))*41));
+   const knot=Math.exp(-knotDist*knotDist*2.7);
+   const pores=Math.max(0,nz(u,fiberV,25,168,178)-.71);
+   t=.035+longGrain*.25+fiber*.125-ring*.086-knot*.28-pores*.25;
+   h=.5+fiber*.11-ring*.035-pores*.09-knot*.05;
+   r=longGrain*.055+fiber*.039+pores*.09;
   }else if(gen==='enc-quartz-satin'){
    const clouds=fb(u,v,7,8,161)-.5,micro=nz(u,v,178,181,162)-.5;
    const mineral=Math.max(0,nz(u,v,105,112,163)-.64);
@@ -7887,14 +7909,13 @@ function countertopUI(c){
  const select=document.createElement('select'),current=COUNTERTOP_BY_ID.get(c.countertop);
  if(!current&&c.countertop!=='color')select.add(new Option('Acabado guardado',''));
  const groups=new Map();
- for(const [id,name,family] of COUNTERTOP_SELECTION){
+ for(const [id,name,family] of COUNTERTOPS){
   if(!groups.has(family)){
    const group=document.createElement('optgroup');group.label=family;
    groups.set(family,group);select.append(group);
   }
   groups.get(family).append(new Option(name,id));
  }
- if(current&&!COUNTERTOP_SELECTION.includes(current))select.add(new Option(current[1]+' · guardado',current[0]));
  select.add(new Option('Color personalizado','color'));
  select.value=current?.[0]||(c.countertop==='color'?'color':'');
  select.onchange=()=>{c.countertop=select.value;delete c.pbr?.cn;save()};
