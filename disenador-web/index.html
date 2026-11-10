@@ -263,7 +263,7 @@ async function createRender(container, j, opt, cb) {
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ctrl.state = 'error'; cb({ state: 'error', msg: 'La GPU se quedó sin memoria o se reinició. Baja la resolución o la calidad.' }); });
   const sz = () => { renderer.setSize(mode == 'pano' ? Math.min(2048, W) : W, mode == 'pano' ? Math.min(2048, W) / 2 : H, false); if (cam) { cam.filmGauge = 36; cam.aspect = W / H; cam.setFocalLength(j.cam.mm); cam.fStop = st.fs; cam.focusDistance = st.fd; cam.updateProjectionMatrix(); } };
   const env = () => { const hex = new THREE.Color(j.sun.color), K = st.k, k = K ? kc(6500).map((v, i) => v / kc(K)[i]) : [1, 1, 1], mx = Math.max(...k), sc = [hex.r * k[0] / mx, hex.g * k[1] / mx, hex.b * k[2] / mx];
-    const t = new THREE.DataTexture(makeEnv(1024, 512, j.sun.dir, st.sun, st.sky, sc), 1024, 512, THREE.RGBAFormat, THREE.FloatType); t.mapping = THREE.EquirectangularReflectionMapping; t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true;
+    const t = new THREE.DataTexture(makeEnv(1024, 512, j.sun.dir, st.sun, Math.max(.0001, st.sky), sc), 1024, 512, THREE.RGBAFormat, THREE.FloatType); t.mapping = THREE.EquirectangularReflectionMapping; t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true;
     if (scene.environment) scene.environment.dispose(); scene.environment = scene.background = t; pt.updateEnvironment(); pt.reset(); };
   cb({ state: 'cargando', samples: 0, target: st.target, msg: 'Cargando texturas y geometría…' });
   const imgs = await Promise.all(j.texs.map(u => loadImg(u, A.texMax)));
@@ -5405,12 +5405,13 @@ function animate(){requestAnimationFrame(animate);
   if(cam.position.y<8){cam.position.y=8;cam.lookAt(oc.target)}
  }
  r3.render(sc,cam)}
-let pd=null;
+let pd=null,walkPressTravel=0;
 const viewPointers=new Set();
 r3?.domElement.addEventListener('pointerdown',e=>{
   r3.domElement.focus({preventScroll:true});
   viewPointers.add(e.pointerId);
   pd=viewPointers.size===1?[e.clientX,e.clientY,e.pointerId]:null;
+  walkPressTravel=0;
   if(walk&&e.pointerType!=='mouse') r3.domElement.setPointerCapture(e.pointerId);
 });
 r3?.domElement.addEventListener('pointercancel',e=>{viewPointers.delete(e.pointerId);pd=null});
@@ -5420,11 +5421,12 @@ const touch=e.pointerType!=='mouse';
 if(touch&&pd?.[2]!==e.pointerId)return;
 if(!touch&&!e.buttons&&!document.pointerLockElement)return;
 const dx=touch?e.clientX-pd[0]:e.movementX,dy=touch?e.clientY-pd[1]:e.movementY;
+if(pd?.[2]===e.pointerId)walkPressTravel+=Math.hypot(dx,dy);
 if(touch) pd=[e.clientX,e.clientY,e.pointerId];
 cam.rotation.y-=dx*.004;
 cam.rotation.x=T.MathUtils.clamp(cam.rotation.x-dy*.003,-Math.PI*.495,Math.PI*.495);});
 r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId);const start=pd;pd=null;if(walk){
- if(e.button===0&&start&&Math.hypot(e.clientX-start[0],e.clientY-start[1])<7){
+ if(e.button===0&&start?.[2]===e.pointerId&&walkPressTravel<7&&Math.hypot(e.clientX-start[0],e.clientY-start[1])<7){
   const action=walkAction();
   if(action?.motion){toggleMotion(action.motion);commitQ();draw()}
   else if(action?.item){action.item.lightOn=!fixtureIsOn(action.item);commit()}
@@ -5519,7 +5521,7 @@ $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
 function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
-function vw(t){if(!r3)return;walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
+function vw(t){if(!r3)return;if(walk)exitWalk();oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
 $('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)requestWalkPointer();if(document.fullscreenEnabled&&!document.fullscreenElement)editorView.requestFullscreen().catch(()=>{})};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
@@ -5806,6 +5808,7 @@ function exitWalk(){
  for(const key of Object.keys(walkK))delete walkK[key];
  walkX=walkY=vel.x=vel.z=0;
  editorView.classList.remove('walk-full');
+ pd=null;viewPointers.clear();
  $('#walkAim').classList.remove('is-interactive');
  if(document.pointerLockElement===r3.domElement)document.exitPointerLock();
  if(document.fullscreenElement===editorView)document.exitFullscreen().catch(()=>{});
@@ -5823,7 +5826,13 @@ document.addEventListener('fullscreenchange',()=>{
  if(walk)resize();
 });
 $('#walkExit').onclick=exitWalk;
-document.addEventListener('pointerlockchange',()=>{if(walk&&!document.pointerLockElement)exitWalk()});
+let walkHadPointerLock=false;
+document.addEventListener('pointerlockchange',()=>{
+ const locked=document.pointerLockElement===r3?.domElement;
+ if(walkHadPointerLock&&!locked)exitWalk();
+ walkHadPointerLock=locked;
+ if(locked&&!walk)document.exitPointerLock();
+});
 r3?.domElement.addEventListener('click',e=>{if(walk&&!touchWalk&&e.pointerType!=='touch')requestWalkPointer()});
 r3?.domElement.addEventListener('wheel',e=>{if(walk){cam.fov=Math.max(30,Math.min(90,cam.fov+e.deltaY*.03));cam.updateProjectionMatrix()}});
 document.body.classList.add('adaptive');
@@ -7313,10 +7322,11 @@ let RE=null,rcv=null,renderRun=0;
  const rs=(l,mn,mx,v,step,fn)=>rangeRow(rp,l,mn,mx,v,step,fn);
  rp.innerHTML='<h3>Ajustes del render</h3>';
  const rq=document.createElement('select');[['prev','Vista previa'],['alta','Alta calidad'],['pro','Calidad profesional']].forEach(([v,l])=>rq.add(new Option(l,v)));rq.value='alta';rq.setAttribute('aria-label','Calidad');rp.append(rq);const rz=document.createElement('select');['1280x720','1920x1080','2560x1440','3840x2160'].forEach(v=>rz.add(new Option(v)));rz.value='1920x1080';rz.setAttribute('aria-label','Resolución');rp.append(rz);rq.onchange=()=>{rz.value={prev:'1280x720',alta:'1920x1080',pro:'2560x1440'}[rq.value]};
- const lt=()=>RE&&RE.setLight(+sS.value,+sK.value),sS=rs('Sol',0,20000,5200,250,lt),sK=rs('Cielo',.1,2,.68,.05,lt),sE=rs('Exposición del render',.2,4,1.15,.05,v=>RE&&RE.setExposure(v));
+ const lt=()=>RE&&RE.setLight(+sS.value,+sK.value),sS=rs('Sol',0,20000,5200,250,lt),sK=rs('Cielo',0,2,.68,.05,lt),sE=rs('Exposición del render',.2,4,1.15,.05,v=>RE&&RE.setExposure(v));
  const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');rp.append(zc);
  const pg=document.createElement('progress');pg.max=1;pg.value=0;pg.style.width='100%';const pm=document.createElement('div');pm.className='studio-muted';pm.setAttribute('role','status');actions.append(pg,pm);
- const closeR=()=>{renderRun++;if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0};
+ const renderLights=document.createElement('div');renderLights.className='studio-muted';rp.append(renderLights);
+ const closeR=()=>{renderRun++;if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0;renderLights.textContent=''};
  zc.onchange=()=>{
   const hadRender=view==='render';
   rvCeil=zc.value;
@@ -7327,6 +7337,8 @@ let RE=null,rcv=null,renderRun=0;
   pm.textContent=hadRender?'Techo actualizado en la vista previa. Pulsa «Generar render» para actualizar la imagen.':'Techo actualizado en la vista previa.';
  };
  rb('▶ Generar render',async()=>{closeR();const run=renderRun;pm.textContent='Exportando la escena…';view='render';try{await Promise.all(Object.values(PCH).map(t=>t.complete).filter(Boolean));if(run!==renderRun)return;const j=exportScene(root,{cam:{x:st.x,y:st.h,z:st.z,yaw:st.yaw,pitch:st.pitch,mm:st.mm},sun:{dir:sun.position.clone().sub(sun.target.position).normalize().toArray(),color:'#'+sunC0.getHexString()},look:{exp:st.exp,k:st.k}});
+  const lightCount=j.lights.length;
+  renderLights.textContent=lightCount===1?'1 fuente de luz encendida en el render':lightCount+' fuentes de luz encendidas en el render';
   rcv=document.createElement('div');rcv.style.cssText='position:absolute;inset:0;z-index:1;background:#000;display:flex;align-items:center;justify-content:center';stage.append(rcv);const eng=window.RENDER_ENGINE;if(!eng)throw new Error('el motor de render no se cargó (recarga con Ctrl+F5)');
   const engine=await eng.createRender(rcv,j,{quality:rq.value,res:rz.value,sun:+sS.value,sky:+sK.value,exp:+sE.value},s=>{if(run!==renderRun)return;pg.value=s.target?Math.min(1,s.samples/s.target):0;pm.textContent=s.msg||({renderizando:'Renderizando',listo:'Listo',cancelado:'Cancelado',cargando:'Cargando',error:'Error'}[s.state]||s.state)+' · '+Math.floor(s.samples||0)+' / '+(s.target||0)+' muestras'});
   if(run!==renderRun){engine.dispose();return}RE=engine;
