@@ -150,7 +150,15 @@ body #view.walk-full :is(#viewActions,.nuhio-view-label,#c2,#dualSplitter){displ
 #walkAim svg{display:none;width:26px;height:26px;filter:drop-shadow(0 1px 2px #0008)}
 #walkAim.is-interactive svg{display:block}
 #walkAim.is-interactive span{display:none}
-#view.walk-full #walkExit{display:block;position:absolute;right:12px;top:12px;z-index:12}
+#view.walk-full #walkExit{display:block;position:absolute;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:12;min-height:44px}
+#view.walk-full #walkTouch.active{left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:12}
+#view.walk-full #walkPad{position:relative;width:clamp(72px,22dvh,104px);height:auto;aspect-ratio:1;flex:none;user-select:none;-webkit-user-select:none}
+#walkPad span{position:absolute;left:50%;top:50%;width:42%;aspect-ratio:1;border-radius:50%;background:#dbeaff;border:2px solid #fff;pointer-events:none;transform:translate(calc(-50% + var(--walk-x,0px)),calc(-50% + var(--walk-y,0px)))}
+#walkInteract{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:12;min-width:96px;min-height:44px;background:#145bb7;color:#fff}
+#walkInteract[hidden]{display:none}
+#walkInteract:disabled{opacity:.55;cursor:default}
+@media(max-width:380px){#view.walk-full #walkTouch.active{display:grid;grid-template-columns:auto auto;align-items:end}#view.walk-full #walkPad{grid-row:span 2}}
+.nuhio-render-stage canvas{touch-action:none}
 #view.walk-full #walkAim{display:grid;place-items:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:11;pointer-events:none;color:white;text-shadow:0 1px 4px #000,0 0 3px #000;font:700 25px system-ui}
 #editorBoot{display:none}
 body.editor-booting{background:#e8eff9}
@@ -212,8 +220,8 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
-<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido · Esc</button><div id="walkTouch">
-<button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
+<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido</button><button id="walkInteract" type="button" hidden disabled>Interactuar</button><div id="walkTouch">
+<button id="walkPad" type="button" aria-label="Joystick de desplazamiento"><span aria-hidden="true"></span></button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
 </div></div>
@@ -5348,6 +5356,13 @@ function moveNavigationCamera(dt){
 }
 const walkRay=new T.Raycaster(),walkCenter=new T.Vector2(0,0);
 let lastWalkPick=-Infinity;
+const walkInteract=$('#walkInteract');
+function activateWalkAction(){
+ const action=walkAction();
+ if(action?.motion){toggleMotion(action.motion);commitQ();draw()}
+ else if(action?.item){action.item.lightOn=!fixtureIsOn(action.item);commit()}
+}
+walkInteract.onclick=()=>{if(walk)activateWalkAction()};
 function walkAction(){
  cam.updateMatrixWorld(true);
  walkRay.setFromCamera(walkCenter,cam);
@@ -5380,7 +5395,9 @@ function animate(){requestAnimationFrame(animate);
  MV.forEach(m=>stepMV(m));
  if(walk&&now-lastWalkPick>=100){
   lastWalkPick=now;
-  $('#walkAim').classList.toggle('is-interactive',!!walkAction());
+  const interactive=!!walkAction();
+  $('#walkAim').classList.toggle('is-interactive',interactive);
+  walkInteract.disabled=!interactive;
  }
  if(walk){const sp=+$('#sp').value,y=cam.rotation.y;let fx=walkX*Math.cos(y)+walkY*Math.sin(y),fz=-walkX*Math.sin(y)+walkY*Math.cos(y);if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
   vel.x+=(fx*sp-vel.x)*.15;vel.z+=(fz*sp-vel.z)*.15;if(!blocked(cam.position.x+vel.x,cam.position.z))cam.position.x+=vel.x;else vel.x=0;if(!blocked(cam.position.x,cam.position.z+vel.z))cam.position.z+=vel.z;else vel.z=0;
@@ -5427,9 +5444,7 @@ cam.rotation.y-=dx*.004;
 cam.rotation.x=T.MathUtils.clamp(cam.rotation.x-dy*.003,-Math.PI*.495,Math.PI*.495);});
 r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId);const start=pd;pd=null;if(walk){
  if(e.button===0&&start?.[2]===e.pointerId&&walkPressTravel<7&&Math.hypot(e.clientX-start[0],e.clientY-start[1])<7){
-  const action=walkAction();
-  if(action?.motion){toggleMotion(action.motion);commitQ();draw()}
-  else if(action?.item){action.item.lightOn=!fixtureIsOn(action.item);commit()}
+  activateWalkAction();
  }
  return;
 }if(!start||start[2]!==e.pointerId||Math.hypot(e.clientX-start[0],e.clientY-start[1])>(e.pointerType==='mouse'?4:9))return;const rc=new T.Raycaster(),r=r3.domElement.getBoundingClientRect();rc.setFromCamera(document.pointerLockElement?new T.Vector2(0,0):new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
@@ -5523,7 +5538,7 @@ function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;if(walk)exitWalk
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){if(!r3)return;if(walk)exitWalk();oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
-$('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)requestWalkPointer();if(document.fullscreenEnabled&&!document.fullscreenElement)editorView.requestFullscreen().catch(()=>{})};
+$('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');walkInteract.hidden=!touchWalk;$('#walkExit').textContent=touchWalk?'Salir':'Salir del recorrido · Esc';$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)requestWalkPointer();if(document.fullscreenEnabled&&!document.fullscreenElement)editorView.requestFullscreen().catch(()=>{})};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
 $('#bS').onclick=()=>{try{localStorage.setItem('p:'+S.nm,JSON.stringify(S));alert('Guardado: '+S.nm)}catch(e){alert('No se pudo guardar (¿demasiadas imágenes?). Usa «Exportar proyecto».')}};
 $('#bO').onclick=()=>{const n=Object.keys(localStorage).filter(k=>k.startsWith('p:')).map(k=>k.slice(2));if(!n.length)return alert('No hay proyectos guardados.');const v=prompt('Proyectos guardados:\n'+n.join('\n')+'\n\nEscribe el nombre:',n[0]);if(v&&localStorage.getItem('p:'+v)){openDraft(localStorage.getItem('p:'+v))}};
@@ -5781,8 +5796,12 @@ const walkPad=$('#walkPad');
 function updateWalkPad(e){
   const r=walkPad.getBoundingClientRect();
   const x=(e.clientX-r.left-r.width/2)/(r.width/2),y=(e.clientY-r.top-r.height/2)/(r.height/2);
-  const length=Math.max(1,Math.hypot(x,y));
-  walkX=x/length;walkY=y/length;
+  const radius=Math.hypot(x,y);
+  const strength=Math.min(1,Math.max(0,(radius-.12)/.88));
+  walkX=radius?x/radius*strength:0;
+  walkY=radius?y/radius*strength:0;
+  walkPad.style.setProperty('--walk-x',walkX*r.width*.25+'px');
+  walkPad.style.setProperty('--walk-y',walkY*r.height*.25+'px');
 }
 let padPointer=null;
 walkPad.onpointerdown=e=>{
@@ -5792,12 +5811,22 @@ walkPad.onpointerdown=e=>{
   updateWalkPad(e);
 };
 walkPad.onpointermove=e=>{if(walkPad.hasPointerCapture(e.pointerId))updateWalkPad(e)};
-walkPad.onlostpointercapture=()=>{padPointer=null;walkX=walkY=0};
-$('#walkReset').onclick=()=>$('#vW').click();
+function stopWalkPad(){
+ const pointer=padPointer;
+ padPointer=null;
+ walkX=walkY=0;
+ walkPad.style.removeProperty('--walk-x');
+ walkPad.style.removeProperty('--walk-y');
+ if(pointer!==null&&walkPad.hasPointerCapture(pointer))walkPad.releasePointerCapture(pointer);
+}
+function endWalkPad(e){if(e.pointerId===padPointer)stopWalkPad()}
+walkPad.onpointerup=walkPad.onpointercancel=walkPad.onlostpointercapture=endWalkPad;
+window.addEventListener('blur',stopWalkPad);
+$('#walkReset').onclick=()=>{stopWalkPad();$('#vW').click()};
 $('#walkHide').onclick=()=>{
   const hide=!walkPad.hidden;
   walkPad.hidden=$('#walkReset').hidden=hide;
-  walkX=walkY=0;
+  stopWalkPad();
   $('#walkHide').textContent=hide?'Mostrar':'Ocultar';
   $('#walkHide').setAttribute('aria-pressed',String(hide));
 };
@@ -5806,7 +5835,8 @@ function exitWalk(){
  walk=false;
  navigationHeld.clear();cameraModifiers.clear();
  for(const key of Object.keys(walkK))delete walkK[key];
- walkX=walkY=vel.x=vel.z=0;
+ stopWalkPad();vel.x=vel.z=0;
+ walkInteract.hidden=true;walkInteract.disabled=true;
  editorView.classList.remove('walk-full');
  pd=null;viewPointers.clear();
  $('#walkAim').classList.remove('is-interactive');
@@ -7311,17 +7341,63 @@ function realMode(){
   const im=out.getContext('2d').createImageData(Wp,Hp);for(let j=0;j<Hp;j++){const lat=Math.PI/2-(j+.5)/Hp*Math.PI;for(let i=0;i<Wp;i++){const[fi,x,y]=EQ((i+.5)/Wp*2*Math.PI-Math.PI,lat),px=Math.min(S0-1,Math.max(0,((x+1)/2*S0)|0)),py=Math.min(S0-1,Math.max(0,((1-y)/2*S0)|0)),a=(py*S0+px)*4,o=(j*Wp+i)*4,fd=faces[fi];im.data[o]=fd[a];im.data[o+1]=fd[a+1];im.data[o+2]=fd[a+2];im.data[o+3]=255}}
   out.getContext('2d').putImageData(im,0,0);busy=false;msg.textContent='';view='pano';const sc2=new T.Scene(),g=new T.SphereGeometry(500,64,32);g.scale(-1,1,1);const tx=new T.CanvasTexture(out);tx.encoding=T.sRGBEncoding;sc2.add(new T.Mesh(g,new T.MeshBasicMaterial({map:tx,toneMapped:false})));const p2=new T.PerspectiveCamera(75,1,.1,2000);let lon=0,lat=0;
   const pb=document.createElement('div');pb.style.cssText='position:absolute;top:10px;right:10px;z-index:3;background:rgba(15,18,24,.88);padding:8px;border-radius:8px';stage.append(pb);const bt=(l,fn)=>{const b=document.createElement('button');b.textContent=l;b.onclick=fn;b.style.margin='2px';pb.append(b)};bt('💾 Guardar 360°',()=>dlc(out,'panorama-360.png'));bt('↩ Volver',()=>{view='live';pb.remove();cv.onpointermove=mv0;cv.onwheel=null});
-  cv.onpointermove=e=>{if(e.buttons){lon+=e.movementX*.004;lat=Math.max(-1.5,Math.min(1.5,lat+e.movementY*.004))}};cv.onwheel=e=>{p2.fov=Math.max(30,Math.min(100,p2.fov+e.deltaY*.05))};
+  cv.onpointermove=e=>dragRenderCamera(e,(dx,dy)=>{lon+=dx*.004;lat=Math.max(-1.5,Math.min(1.5,lat+dy*.004))});cv.onwheel=e=>{p2.fov=Math.max(30,Math.min(100,p2.fov+e.deltaY*.05))};
   const L=()=>{if(!RVo||view!='pano')return;requestAnimationFrame(L);const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;rr.setSize(W,H,false);p2.aspect=W/H;p2.updateProjectionMatrix();p2.rotation.set(lat,lon,0,'YXZ');rr.render(sc2,p2)};L()}
- const mv0=e=>{if(view=='live'&&e.buttons){st.yaw+=e.movementX*.004;st.pitch=Math.max(-1.2,Math.min(1.2,st.pitch+e.movementY*.003));unstill()}};cv.onpointermove=mv0;
- const kd=e=>{if(e.key=='Escape')return exit();if(e.target?.closest?.('input,select,button,summary'))return;if(e.key=='h'||e.key=='H')bar.open=!bar.open;if(view!='live')return;const k=e.key.toLowerCase(),f=[-Math.sin(st.yaw),-Math.cos(st.yaw)],r=[Math.cos(st.yaw),-Math.sin(st.yaw)],v={w:[f[0],f[1]],s:[-f[0],-f[1]],d:[r[0],r[1]],a:[-r[0],-r[1]]}[k];if(v){const x=st.x+v[0]*15,z=st.z+v[1]*15;if(!blocked(x,z)){st.x=x;st.z=z;unstill()}}};addEventListener('keydown',kd);
+ let renderDrag=null;
+ cv.onpointerdown=e=>{
+  if(renderDrag||!e.isPrimary||e.button!==0)return;
+  renderDrag={id:e.pointerId,x:e.clientX,y:e.clientY};
+  cv.setPointerCapture(e.pointerId);
+ };
+ cv.onpointerup=cv.onpointercancel=cv.onlostpointercapture=e=>{
+  if(renderDrag?.id===e.pointerId)renderDrag=null;
+ };
+ function dragRenderCamera(e,rotate){
+  if(renderDrag?.id!==e.pointerId)return;
+  const dx=e.clientX-renderDrag.x,dy=e.clientY-renderDrag.y;
+  renderDrag.x=e.clientX;renderDrag.y=e.clientY;
+  if(dx||dy)rotate(dx,dy);
+ }
+ const mv0=e=>{if(view==='live')dragRenderCamera(e,(dx,dy)=>{
+  st.yaw+=dx*.004;st.pitch=Math.max(-1.2,Math.min(1.2,st.pitch+dy*.003));unstill();
+ })};cv.onpointermove=mv0;
+ function moveRenderCamera(key){
+  if(view!=='live')return;
+  const f=[-Math.sin(st.yaw),-Math.cos(st.yaw)],r=[Math.cos(st.yaw),-Math.sin(st.yaw)];
+  const v={w:f,s:f.map(n=>-n),d:r,a:r.map(n=>-n)}[key];
+  if(!v)return;
+  const x=st.x+v[0]*15,z=st.z+v[1]*15;
+  if(!blocked(x,z)){st.x=x;st.z=z;unstill()}
+ }
+ const touchRender=matchMedia('(pointer:coarse)').matches;
+ if(touchRender){
+  const controls=document.createElement('div');
+  controls.className='studio-actions';
+  controls.setAttribute('role','group');
+  controls.setAttribute('aria-label','Desplazar la cámara');
+  for(const [key,icon,label] of [['w','↑','Avanzar'],['a','←','Ir a la izquierda'],['s','↓','Retroceder'],['d','→','Ir a la derecha']]){
+   const button=document.createElement('button');
+   button.type='button';button.textContent=icon;button.style.minWidth=button.style.minHeight='44px';
+   button.setAttribute('aria-label',label);
+   button.onclick=()=>moveRenderCamera(key);controls.append(button);
+  }
+  bar.append(controls);
+ }
+ const kd=e=>{
+  if(e.key==='Escape')return exit();
+  if(e.target?.closest?.('input,select,button,summary'))return;
+  const key=e.key.toLowerCase();
+  if(key==='h')bar.open=!bar.open;
+  else moveRenderCamera(key);
+ };
+ addEventListener('keydown',kd);
 let RE=null,rcv=null,renderRun=0;
  const actions=document.createElement('div');actions.className='studio-actions nuhio-render-actions';settings.prepend(actions);
  const rp=document.createElement('div');rp.className='nuhio-render-card';settings.append(rp);
  const rb=(label,fn)=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=fn;actions.append(button);return button};
  const rs=(l,mn,mx,v,step,fn)=>rangeRow(rp,l,mn,mx,v,step,fn);
  rp.innerHTML='<h3>Ajustes del render</h3>';
- const rq=document.createElement('select');[['prev','Vista previa'],['alta','Alta calidad'],['pro','Calidad profesional']].forEach(([v,l])=>rq.add(new Option(l,v)));rq.value='alta';rq.setAttribute('aria-label','Calidad');rp.append(rq);const rz=document.createElement('select');['1280x720','1920x1080','2560x1440','3840x2160'].forEach(v=>rz.add(new Option(v)));rz.value='1920x1080';rz.setAttribute('aria-label','Resolución');rp.append(rz);rq.onchange=()=>{rz.value={prev:'1280x720',alta:'1920x1080',pro:'2560x1440'}[rq.value]};
+ const rq=document.createElement('select');[['prev','Vista previa'],['alta','Alta calidad'],['pro','Calidad profesional']].forEach(([v,l])=>rq.add(new Option(l,v)));rq.value=touchRender?'prev':'alta';rq.setAttribute('aria-label','Calidad');rp.append(rq);const rz=document.createElement('select');['1280x720','1920x1080','2560x1440','3840x2160'].forEach(v=>rz.add(new Option(v)));rz.value=touchRender?'1280x720':'1920x1080';rz.setAttribute('aria-label','Resolución');rp.append(rz);rq.onchange=()=>{rz.value={prev:'1280x720',alta:'1920x1080',pro:'2560x1440'}[rq.value]};
  const lt=()=>RE&&RE.setLight(+sS.value,+sK.value),sS=rs('Sol',0,20000,5200,250,lt),sK=rs('Cielo',0,2,.68,.05,lt),sE=rs('Exposición del render',.2,4,1.15,.05,v=>RE&&RE.setExposure(v));
  const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');rp.append(zc);
  const pg=document.createElement('progress');pg.max=1;pg.value=0;pg.style.width='100%';const pm=document.createElement('div');pm.className='studio-muted';pm.setAttribute('role','status');actions.append(pg,pm);
