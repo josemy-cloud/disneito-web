@@ -4274,6 +4274,45 @@ function buildUpholsteredDiningChair(g,it){
   }
  });
 }
+function buildRectangularDiningTable(g,it){
+ const {w,h,d}=it;
+ const grain=pbrTex(['mesa-roble','Roble natural','Maderas','wood','#eeeeee',.55,0,.28,60]);
+ const oak=M(it.col||'#a88f78',.54,0);
+ Object.assign(oak,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r});
+ oak.normalScale.setScalar(.12);
+ const top=partFinish(oak,'top'),frame=partFinish(oak.clone(),'apron'),legs=partFinish(oak.clone(),'legs');
+ const thickness=Math.min(h*.049,w*.12,d*.12),bevel=thickness*.20;
+ const x=w/2-bevel,z=d/2-bevel,r=Math.min(4,x*.2,z*.2);
+ const outline=new T.Shape();
+ outline.moveTo(-x+r,-z);
+ outline.lineTo(x-r,-z);outline.quadraticCurveTo(x,-z,x,-z+r);
+ outline.lineTo(x,z-r);outline.quadraticCurveTo(x,z,x-r,z);
+ outline.lineTo(-x+r,z);outline.quadraticCurveTo(-x,z,-x,z-r);
+ outline.lineTo(-x,-z+r);outline.quadraticCurveTo(-x,-z,-x+r,-z);
+ const geometry=new T.ExtrudeGeometry(outline,{depth:thickness-2*bevel,bevelEnabled:true,bevelThickness:bevel,bevelSize:bevel,bevelSegments:3,curveSegments:8});
+ const uv=geometry.attributes.uv;
+ for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/95,uv.getY(i)/58);
+ geometry.rotateX(Math.PI/2);
+ const slab=new T.Mesh(geometry,top);
+ slab.position.y=h-bevel;slab.castShadow=slab.receiveShadow=true;g.add(slab);
+ const underside=h-thickness,apronH=h*.062,legSize=Math.min(w*.047,d*.063,h*.11);
+ const legX=w*.407,legZ=d*.365,apronY=underside-apronH/2;
+ for(const side of [-1,1]){
+  B(g,2*legX,apronH,legSize*.55,0,apronY,side*legZ,frame,legSize*.08);
+  B(g,legSize*.55,apronH,2*legZ,side*legX,apronY,0,frame,legSize*.08);
+  for(const end of [-1,1]){
+   const anchor=new T.Vector3(side*legX,underside+.15,end*legZ);
+   const foot=new T.Vector3(side*w*.427,0,end*d*.392);
+   const axis=anchor.clone().sub(foot);
+   const taper=new T.CylinderGeometry(legSize*Math.SQRT1_2,legSize*.67*Math.SQRT1_2,axis.length(),4);
+   taper.rotateY(Math.PI/4);
+   const leg=new T.Mesh(taper,legs);
+   leg.position.copy(anchor).add(foot).multiplyScalar(.5);
+   leg.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
+   leg.castShadow=leg.receiveShadow=true;g.add(leg);
+  }
+ }
+}
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{mesh.userData.part={t:key};mesh.castShadow=true;mesh.receiveShadow=key==='feet';return mesh};
@@ -4484,6 +4523,7 @@ case'panel':{
  break;
 }
 case'table':{
+ if(it.roomType==='comedor'&&it.n==='Mesa comedor rectangular'){buildRectangularDiningTable(g,it);break;}
  if(isTerraceItem(it)){buildTerraceTable(g,it,mt);break;}
  const wood=partFinish(mt.clone(),'top'),edge=partFinish(M('#6f5339',.55,.1),'apron'),steel=partFinish(M('#343b40',.32,.78),'hardware'),name=(it.n||'').toLowerCase(),round=/redond|oval|circular/.test(name),extensible=/extensible/.test(name),small=/auxiliar|centro/.test(name),topT=Math.max(2.8,h*.055),topY=h-topT/2;
  if(extensible&&isLivingItem(it)){buildDiningExtension(g,it,wood,edge,steel);break;}
