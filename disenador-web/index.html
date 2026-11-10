@@ -1087,6 +1087,7 @@ const hasUpholstery=it=>isUpholsteredDiningChair(it)||it.t==='sofa'||(it.t==='ro
  ['sofa','outdoorsofa'].includes(it.shape)||(it.shape==='seat'&&!/puf/i.test(it.n||''))
 ));
 const sofaFabric=it=>Object.hasOwn(SOFA_FABRICS,it.upholstery)?it.upholstery:'lino';
+const tuftDepth=value=>Number.isFinite(value)?Math.max(0,Math.min(150,value)):100;
 async function importSofaTexture(file,item){
  const project=S;
  const url=URL.createObjectURL(file);
@@ -1164,6 +1165,9 @@ function props(){P.innerHTML='';const e=get();
   if(hasUpholstery(e)){
    const labels={...SOFA_FABRICS,...(e.upholsteryImage?{custom:'Imagen personalizada'}:{})};
    sel2('Tapicería',Object.keys(labels),e.upholsteryImage?'custom':sofaFabric(e),v=>{if(v!=='custom'){delete e.upholsteryImage;e.upholstery=v}},labels);
+   if(!e.upholsteryImage&&sofaFabric(e)==='capitone'){
+    row('Relieve del capitoné (%)',tuftDepth(e.tuftDepth),v=>e.tuftDepth=tuftDepth(v));
+   }
    const input=document.createElement('input');
    input.type='file';input.accept='image/png,image/jpeg,image/webp';
    input.onchange=()=>{const file=input.files[0];if(file)importSofaTexture(file,e)};
@@ -4529,7 +4533,7 @@ function applyUpholstery(it,fabric,frame){
   if(custom){mat.map=map;mat.color.set('#fff')}
   else{
    Object.assign(mat,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-   const relief={lino:.075,trama:.23,capitone:.12,boucle:.24}[finish];
+   const relief={lino:.075,trama:frame?.15:.23,capitone:.12,boucle:.24}[finish];
    mat.normalScale.setScalar(mat===frame?relief*.72:relief);
   }
  }
@@ -4544,7 +4548,9 @@ function upholsteredPad(parent,x,y,z,w,h,d,axis,material,stitch){
  mesh.add(seam);parent.add(mesh);
  return mesh;
 }
-function tuftUpholsteredBacks(group){
+function tuftUpholsteredBacks(group,amount){
+ const strength=tuftDepth(amount)/100;
+ if(!strength)return;
  group.traverse(mesh=>{
   if(!mesh.userData.upholsteredBack||(mesh.userData.part?.t||mesh.material.userData.partColorRole)!=='back')return;
   const {width,height,depth}=mesh.geometry.parameters;
@@ -4554,7 +4560,7 @@ function tuftUpholsteredBacks(group){
   for(const row of [-1,1])for(let col=0;col<count;col++){
    points.push([(col-(count-1)/2+row*.24)*.70/count,row*.20]);
   }
-  const amplitude=Math.min(depth*.34,2.65),spread=.081;
+  const amplitude=Math.min(depth*.34,2.65)*strength,spread=.081;
   for(let i=0;i<position.count;i++){
    const nz=normal.getZ(i);
    if(nz<=.05)continue;
@@ -9234,7 +9240,7 @@ function applyFurnitureSurface(g,it){
   orientDiningGrain(mesh,axis,true);
  });
 }
-function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}if(hasUpholstery(it)&&sofaFabric(it)==='capitone'&&!it.upholsteryImage)tuftUpholsteredBacks(g);
+function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}if(hasUpholstery(it)&&sofaFabric(it)==='capitone'&&!it.upholsteryImage)tuftUpholsteredBacks(g,it.tuftDepth);
  applyFurnitureSurface(g,it);
  applyItemPartColors(g,it,mt);
  const front=hasFurnitureFronts(it)&&FRONT_FINISHES.get(it.frontFinish);
