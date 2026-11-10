@@ -319,7 +319,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <div id="nuhioToolRow">
  <div id="nuhioToolActions" aria-label="Controles de edición"></div>
  <details id="nuhioOptions"><summary>Opciones</summary><div id="nuhioOptionsActions"></div></details>
- <details id="nuhioExport"><summary title="Render y exportar" aria-label="Render y exportar">Render</summary><div id="nuhioExportActions"></div></details>
+ <details id="nuhioExport"><summary>Imágenes</summary><div id="nuhioExportActions"></div></details>
 </div>
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
@@ -6926,6 +6926,8 @@ function updateMobileView(){
 const nuhioDock=$('#nuhioModes'),nuhioNav=$('#nuhioNav');
 const nuhioToolRow=$('#nuhioToolRow'),nuhioToolActions=$('#nuhioToolActions'),nuhioExport=$('#nuhioExport');
 const exportButtons=[$('#bP2'),$('#bP3')],imageMenu=$('#bX').nextElementSibling;
+const imageActions=[[$('#bReal'),'Generar render'],[$('#bFotoIA'),'Crear Foto IA'],[$('#bP3'),'Descargar captura 3D'],[$('#bP2'),'Descargar plano 2D (PNG)']]
+ .map(([button,label])=>({button,label,original:button.textContent}));
 const nuhioOptions=$('#nuhioOptions');
 const desktopOptions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label'));
 const desktopActions=[$('#tl'),$('#tr')];
@@ -6987,6 +6989,7 @@ function arrangeMobileTop(){
   document.body.classList.toggle('compact-workspace',useCompact());
   dualSplitter.setAttribute('aria-orientation',desktop?'vertical':'horizontal');
   dualSplitter.setAttribute('aria-valuenow',String(Math.round(dualRatio*100)));
+  for(const {button,label,original} of imageActions)button.textContent=desktop?label:original;
   if(!desktop){
     $('#lib').before($('#tools'),nuhioToolRow);
     imageMenu.append(...exportButtons);
@@ -7013,7 +7016,7 @@ function arrangeMobileTop(){
       mobileTop.append(nuhioToolRow);
       nuhioToolActions.append(...desktopActions);
       $('#nuhioOptionsActions').append(...desktopOptions);
-      $('#nuhioExportActions').append($('#bReal'),$('#bFotoIA'),...exportButtons);
+      $('#nuhioExportActions').append(...imageActions.map(({button})=>button));
     }
   }
 }
