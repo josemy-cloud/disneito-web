@@ -2144,7 +2144,7 @@ function applyViewportLook(){
  $('#nightInterior').setAttribute('aria-pressed',String(night));
  $('#sunsetInterior').setAttribute('aria-pressed',String(sunset));
  $('#dayInterior').setAttribute('aria-pressed',String(day));
- r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
+ r3.shadowMap.enabled=realistic;sun.castShadow=realistic&&!night;
  sc.environment=null;
  if(realistic)setSunShadowSize(2048);
  r3.toneMappingExposure=night?1:sunset?.96:day?1.03:realistic?1.00:materials?1.01:.88;
@@ -2451,6 +2451,7 @@ ceilingSpot(g,it,mt){
  lens.position.y=it.h*.1;lens.material.toneMapped=!fixtureIsOn(it);g.add(lens);
  if(!fixtureIsOn(it))return;
  const light=new T.SpotLight(fixtureColor(it,warm),5.5*power,750,it.wideBeam?.68:.42,.65,1);
+ light.userData.fixtureShadow=true;
  light.position.y=-.25;light.target.position.y=-200;
  g.add(light,light.target);
 },
@@ -3156,6 +3157,7 @@ function fixtureMaterial(it,color,intensity){
 function addFixtureLight(g,it,color,intensity,distance,x,y,z){
  if(!it.lightOn)return;
  const light=new T.PointLight(fixtureColor(it,color),intensity*fixturePower(it)/100,distance,1);
+ light.userData.fixtureShadow=true;
  light.position.set(x,y,z);g.add(light);
 }
 function applyLampLight(g,it,bulb,shade){
@@ -3167,7 +3169,8 @@ function applyLampLight(g,it,bulb,shade){
  bulb.material.emissive.set(warm);bulb.material.emissiveIntensity=2.6*power;
  if(shade?.emissive){shade.emissive.set(warm);shade.emissiveIntensity=.18*power}
  const light=new T.PointLight(warm,1.35*power,320,1);
- light.name='Luz de lámpara';light.position.copy(bulb.position);g.add(light);
+ light.name='Luz de lámpara';light.userData.fixtureShadow=true;
+ light.position.copy(bulb.position);g.add(light);
 }
 
 function buildDressingShoeRack(g,it,primary){
@@ -6105,12 +6108,51 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
   mats.forEach(m=>{if(m&&('roughness'in m)&&!Number.isFinite(m.roughness))m.roughness=.65;if(m&&('metalness'in m)&&!Number.isFinite(m.metalness))m.metalness=0});
  });
  g.userData.geometryAudit=audit;
-};function build3d(){if(!r3)return;roomsUpdate();root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
+};function enableFurnitureShadows(group){
+ group.traverse(mesh=>{
+  if(!mesh.isMesh||!mesh.material)return;
+  const materials=[].concat(mesh.material);
+  if(!materials.length||materials.some(mat=>mat.transparent||mat.visible===false||mat.userData?.castsRenderShadow===false))return;
+  mesh.castShadow=true;mesh.receiveShadow=true;
+ });
+}
+function configureFixtureShadows(scene,coarse){
+ const fixtures=[];
+ scene.traverse(light=>{if(light.isLight&&light.userData.fixtureShadow)fixtures.push(light)});
+ fixtures.sort((a,b)=>Number(b.isSpotLight===true)-Number(a.isSpotLight===true)||b.intensity-a.intensity);
+ let spots=0,points=0;
+ for(const light of fixtures){
+  // Una luz puntual necesita seis caras de sombra; se reserva un único mapa cúbico.
+  if(light.isSpotLight){
+   if(spots>=(coarse?2:4))continue;
+   spots++;
+  }else{
+   if(!light.isPointLight||points||(coarse&&spots))continue;
+   points++;
+  }
+  light.castShadow=true;
+  const shadow=light.shadow;
+  const size=light.isPointLight||coarse?256:512;
+  shadow.mapSize.set(size,size);
+  shadow.camera.near=2;
+  shadow.camera.far=light.distance||750;
+  shadow.camera.updateProjectionMatrix();
+  shadow.normalBias=.30;shadow.bias=-.00018;shadow.radius=2;
+ }
+}
+function build3d(){if(!r3)return;roomsUpdate();
+ root.traverse(light=>{
+  if(light.isLight&&light.userData.fixtureShadow&&light.shadow.map){
+   light.shadow.map.dispose();light.shadow.map=null;
+  }
+ });
+ root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),floorMaterial(S.fl,fw,fd,[fw/2,fd/2]));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
- S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
+ S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(!RVo&&$('#sq').value==='q'&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
+ if(!RVo&&$('#sq').value==='q')configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
  fitSunToProject();setSun();addRealisticDetails();
 }
 const realisticDetails=new T.Group();
