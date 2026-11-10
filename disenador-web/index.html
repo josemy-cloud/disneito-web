@@ -2289,7 +2289,11 @@ function openingMesh(parent,o,left,width){
  const sliding=kind==='corredera',double=kind==='doble'||sliding;
  const timber=M('#8a5a3a',.6),trim=M(door&&kind!=='corredera'?'#684b37':'#eceeed',.46);
  const metal=M('#586467',.32,.68);
- const glass=new T.MeshStandardMaterial({color:'#9fd0ee',transparent:true,opacity:.28,roughness:.05,metalness:.18,depthWrite:false});
+ const clear=!RVo&&$('#sq').value==='q';
+ const glass=new T.MeshStandardMaterial({
+  color:clear?'#e4f0f6':'#9fd0ee',transparent:true,opacity:clear?.13:.28,
+  roughness:clear?.19:.05,metalness:clear?0:.18,depthWrite:false
+ });
  glass.userData.clearArchitecturalGlass=true;
  B(opening,frame,height,9,frame/2,height/2,0,trim);
  B(opening,frame,height,9,width-frame/2,height/2,0,trim);
@@ -6120,17 +6124,76 @@ function windowFillSpecs(walls,openings,rooms){
   const left=inside(1),right=inside(-1);
   if(left===right)continue;
   const side=left?1:-1;
-  windows.push({x:x-dz*offset*side,z:z+dx*offset*side,y:+s+h*.57,nx:-dz*side,nz:dx*side,area:wd*h});
+  windows.push({x:x-dz*offset*side,z:z+dx*offset*side,y:+s+h*.57,nx:-dz*side,nz:dx*side,area:wd*h,width:+wd,groundDoor:ty==='d'&&+s<=5,wallOffset:offset});
  }
  return windows.sort((a,b)=>b.area-a.area);
 }
+const previewSky=new T.Color('#d8e6ef'),previewNeutralSky=new T.Color('#e8e7e2');
+let pilotExterior=null,pilotExteriorWidth=0;
+function pilotExteriorFor(window){
+ const width=window.width;
+ if(!pilotExterior||pilotExteriorWidth!==width){
+  if(pilotExterior){
+   const geometries=new Set(),materials=new Set();
+   pilotExterior.traverse(mesh=>{if(mesh.isMesh){geometries.add(mesh.geometry);materials.add(mesh.material);if(mesh.isInstancedMesh)mesh.dispose()}});
+   geometries.forEach(geometry=>geometry.dispose());
+   materials.forEach(material=>material.dispose());
+  }
+  const group=pilotExterior=new T.Group();
+  pilotExteriorWidth=width;
+  const box=new T.BoxGeometry(1,1,1);
+  const stone=[M('#a69e8e',.92),M('#b5aa98',.94),M('#aaa392',.9)];
+  const slab=(x,y,z,w,h,d,material)=>{
+   const mesh=new T.Mesh(box,material);
+   mesh.position.set(x,y,z);mesh.scale.set(w,h,d);group.add(mesh);
+  };
+  const terraceWidth=width+240,tileWidth=terraceWidth/8;
+  slab(0,-2,132,terraceWidth,3,264,M('#7d776b',.95));
+  for(let row=0;row<3;row++)for(let col=0;col<8;col++){
+   slab((col-3.5)*tileWidth,-.6,44+row*88,tileWidth-.65,1,87.35,stone[(row*5+col*2)%3]);
+  }
+  slab(0,-.7,570,terraceWidth*2,1,610,M('#84936b',.96));
+  const foliage=new T.InstancedMesh(new T.IcosahedronGeometry(1,2),M('#ffffff',.94),44);
+  const transform=new T.Object3D();
+  const colors=['#536d44','#6d8550','#889966','#64794f'].map(hex=>new T.Color(hex));
+  let index=0;
+  const canopy=(x,y,z,w,h,d,count)=>{
+   for(let i=0;i<count;i++){
+    const a=i*2.39996,r=i===0?0:.62;
+    transform.position.set(x+Math.cos(a)*w*r,y+(i%3-1)*h*.24,z+Math.sin(a)*d*r);
+    transform.rotation.set(i*.27,a,i*.12);
+    transform.scale.set(w*.53,h*(.50+i%3*.05),d*.56);transform.updateMatrix();
+    foliage.setMatrixAt(index,transform.matrix);foliage.setColorAt(index++,colors[i%colors.length]);
+   }
+  };
+  for(let i=0;i<4;i++)canopy((i-1.5)*width*.53,32+i%2*12,330+i%2*32,65,57,50,6);
+  const bark=M('#75614a',.96);
+  for(const side of [-1,1]){
+   slab(side*width*.69,74,465+side*42,15,148,13,bark);
+   canopy(side*width*.69,168,465+side*42,105,104,98,10);
+  }
+  group.add(foliage);
+ }
+ const distance=window.wallOffset*2-12;
+ pilotExterior.position.set(window.x-window.nx*distance,0,window.z-window.nz*distance);
+ pilotExterior.rotation.y=Math.atan2(-window.nx,-window.nz);
+ return pilotExterior;
+}
 function addRealisticDetails(){
  realisticDetails.clear();
- if(RVo||$('#sq').value!=='q')return;
+ if(RVo)return;
+ sc.background=previewNeutralSky;
+ if($('#sq').value!=='q')return;
  const rooms=(S.rooms||[]).filter(room=>room.poly);
  if(!rooms.length)return;
  const coarse=matchMedia('(pointer:coarse)').matches,day=dayInteriorActive();
- for(const [index,window] of windowFillSpecs(S.w,S.o,rooms).slice(0,coarse?1:2).entries()){
+ const windows=windowFillSpecs(S.w,S.o,rooms);
+ const exterior=S.interiorPilot===1&&windows.find(window=>window.groundDoor);
+ if(exterior){
+  sc.background=previewSky;
+  realisticDetails.add(pilotExteriorFor(exterior));
+ }
+ for(const [index,window] of windows.slice(0,coarse?1:2).entries()){
   const strength=day&&index===0?Math.min(.78,.40+window.area/170000):Math.min(.42,.16+window.area/120000);
   const light=new T.SpotLight(day?'#f5f7ff':'#fff1df',strength,day?620:520,day?.98:.86,day?.88:.75,1.15);
   light.position.set(window.x,window.y,window.z);
