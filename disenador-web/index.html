@@ -2085,7 +2085,7 @@ function setSun(){
  sun.target.position.copy(sunTarget);
  const direct=.57+Math.sin(e)*.40,q=$('#sq').value,day=!RVo&&dayInteriorActive();
  // La vista Realista equilibra el sol con luz difusa para evitar contrastes duros.
- sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(day?.88:.68):direct;
+ sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(day?.76:.68):direct;
  sun.shadow.radius=day?5.5:4;
  fill.position.set(sunC.x-900,1100,sunC.z+650);
  rim.position.set(sunC.x+700,850,sunC.z-900);
@@ -2107,11 +2107,11 @@ function applyViewportLook(){
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
  sc.environment=null;
  if(realistic)setSunShadowSize(2048);
- r3.toneMappingExposure=day?1.08:realistic?1.00:materials?1.01:.88;
+ r3.toneMappingExposure=day?1.03:realistic?1.00:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
  hemi.color.set(day?'#f3f5f7':'#fafcff');
  hemi.groundColor.set(day?'#b6a797':'#8b8276');
- hemi.intensity=day?.40:realistic?.82:materials?.95:.55;
+ hemi.intensity=day?.48:realistic?.82:materials?.95:.55;
  fill.intensity=day?.07:realistic?.22:materials?0:.20;
  rim.intensity=day?.03:realistic?.07:materials?0:.12;
 }
@@ -6110,7 +6110,7 @@ function addRealisticDetails(){
  if(!rooms.length)return;
  const coarse=matchMedia('(pointer:coarse)').matches,day=dayInteriorActive();
  for(const [index,window] of windowFillSpecs(S.w,S.o,rooms).slice(0,coarse?1:2).entries()){
-  const strength=day&&index===0?Math.min(.90,.44+window.area/150000):Math.min(.42,.16+window.area/120000);
+  const strength=day&&index===0?Math.min(.78,.40+window.area/170000):Math.min(.42,.16+window.area/120000);
   const light=new T.SpotLight(day?'#f5f7ff':'#fff1df',strength,day?620:520,day?.98:.86,day?.88:.75,1.15);
   light.position.set(window.x,window.y,window.z);
   light.target.position.set(window.x+window.nx*240,40,window.z+window.nz*240);
