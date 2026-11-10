@@ -650,6 +650,7 @@ function drawTools(){
   t.append(b)
  })
 }
+let surfaceUse='floor';
 function armMaterial(material){armed=material;tool='sel';drawTools();libUI();hint()}
 function applyArmedFloor(floor){
  if(armed.floor)Object.assign(floor,armed.floor);
@@ -657,7 +658,7 @@ function applyArmedFloor(floor){
  finishMaterialPlacement();
 }
 function finishMaterialPlacement(){armed=null;commit();libUI();hint()}
-function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?'Material activo para un solo clic. Toca un suelo o una pared. Esc para cancelar.':({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar elementos. Ctrl+C / Ctrl+V: copiar y pegar. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
+function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?(armed.target==='wall'?'Toca una pared para aplicar el revestimiento. Esc cancela.':'Toca un suelo para aplicar el pavimento. Esc cancela.'):({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar elementos. Ctrl+C / Ctrl+V: copiar y pegar. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
 function createCustomFurniture(){
  const data={'Cocina modular':{key:'cocina',items:[['Mueble bajo a medida',60,87,60,true],['Mueble alto a medida',60,70,35,false],['Columna a medida',60,210,60,false]]},'Baño':{key:'baño',items:[['Mueble de lavabo',120,55,48,true],['Columna de baño',40,180,35,false],['Mueble auxiliar',60,80,35,false]]},'Dormitorio':{key:'dormitorio',items:[['Armario a medida',180,220,60,false],['Cómoda',100,90,45,true],['Mesita de noche',50,55,40,true]]},'Vestidor':{key:'vestidor',items:[['Módulo de vestidor',100,220,60,false],['Módulo zapatero',80,100,40,false],['Módulo de cajones',80,90,55,false]]},'Salón':{key:'salón',items:[['Mueble de televisión',180,50,42,true],['Aparador',140,85,45,true],['Librería',100,210,35,false],['Vitrina',80,190,40,false]]},'Recibidor':{key:'recibidor',items:[['Consola',100,85,35,true],['Zapatero',100,110,30,false],['Banco con almacenamiento',100,48,40,true]]},'Despacho':{key:'despacho',items:[
   ['Escritorio recto a medida',140,75,70,true,'desk','custom-despacho-escritorio'],
@@ -716,7 +717,14 @@ function libUI(q=''){
  const custom=document.createElement('button');custom.className='it';custom.textContent='＋ Crear mueble';custom.title='Crear mueble personalizado';custom.onclick=createCustomFurniture;actions.append(custom);
  if(CATALOG_MASTER){const imp=document.createElement('button');imp.className='it';imp.textContent='⬆ Importar 3D';imp.onclick=()=>$('#fmod').click();actions.append(imp);}head.append(actions);L.append(head);
  const content=document.createElement('div');L.append(content);
- const materials=()=>{const h=document.createElement('h4');h.textContent='Suelos y revestimientos';content.append(h);
+ const materials=()=>{
+  const use=surfaceUse,h=document.createElement('h4');content.append(h);
+  const tabs=document.createElement('div');tabs.className='library-actions';content.append(tabs);
+  for(const [id,label] of [['floor','Suelos'],['wall','Paredes']]){
+   const tab=document.createElement('button');tab.type='button';tab.textContent=label;
+   tab.setAttribute('aria-pressed',String(use===id));
+   tab.onclick=()=>{if(use!==id){surfaceUse=id;libUI();}};tabs.append(tab);
+  }
   const grid=document.createElement('div');grid.className='material-grid';content.append(grid);
   const card=(name,preview,active)=>{
    const d=document.createElement('button');d.type='button';d.className='sw surface-swatch'+(active?' on':'');
@@ -724,16 +732,16 @@ function libUI(q=''){
    const caption=document.createElement('span');caption.textContent=name;
    d.append(preview,caption);grid.append(d);return d;
   };
-  const chooseFloorFinish=material=>{
-   armMaterial(material);
+  const chooseSurfaceFinish=material=>{
+   armMaterial({...material,target:use});
    if(useCompact()&&L.classList.contains('adaptive-open')){
     setMobilePanel(null);$('#tl').focus();
    }
   };
-  const swatch=(m,name,preview,parquet=false)=>{
+  const swatch=(m,name,preview)=>{
    const selected=armed?.m===m,d=card(name,preview,selected);
    d.setAttribute('aria-pressed',String(selected));
-   d.onclick=()=>parquet?chooseFloorFinish({m}):armMaterial({m});
+   d.onclick=()=>chooseSurfaceFinish({m});
   };
   const photo=src=>{const image=document.createElement('img');image.className='surface-preview';image.alt='';image.src=src;return image};
   const previewOf=def=>{
@@ -747,7 +755,7 @@ function libUI(q=''){
    return preview;
   };
   const back=document.createElement('button');back.type='button';back.className='it';
-  back.textContent='← Suelos y revestimientos';
+  back.textContent='← Pavimentos';
   const tileEditor=document.createElement('div');
   const tilePreview=(tw,th,color)=>{
    const preview=document.createElement('canvas');preview.className='surface-preview';
@@ -770,19 +778,20 @@ function libUI(q=''){
    const preview=tilePreview(tw,th,input.value);
    const use=document.createElement('button');use.type='button';use.className='it';use.textContent='Usar en el suelo';
    input.oninput=()=>tileEditor.firstElementChild.replaceWith(tilePreview(tw,th,input.value));
-   use.onclick=()=>chooseFloorFinish({floor:{pat:'recta',tw,th,j:.3,jc:'#dedbd5',fin:'mate',rot:0,base:input.value,bc:input.value}});
+   use.onclick=()=>chooseSurfaceFinish({floor:{pat:'recta',tw,th,j:.3,jc:'#dedbd5',fin:'mate',rot:0,base:input.value,bc:input.value}});
    tileEditor.replaceChildren(preview,label,use);back.focus();
   };
   const renderCards=showParquet=>{
    tileEditor.remove();grid.replaceChildren();
-   h.textContent=showParquet?'Parquet de madera':'Suelos y revestimientos';
+   h.textContent=showParquet?'Parquet de madera':use==='floor'?'Pavimentos':'Revestimientos de pared';
    if(showParquet){
     grid.before(back);
-    PARQUET_FINISHES.forEach(([id,name])=>swatch('pbr:'+id,name,previewOf(pbrDef(id)),true));
+    PARQUET_FINISHES.forEach(([id,name])=>swatch('pbr:'+id,name,previewOf(pbrDef(id))));
     back.focus();
     return;
    }
    back.remove();
+   if(use==='floor'){
    const activeId=armed?.m?.slice(4),activeParquet=isParquet(activeId);
    const parquet=card('Parquet de madera',previewOf(pbrDef(activeParquet?activeId:'parquet-natural')),activeParquet);
    parquet.setAttribute('aria-label','Parquet de madera, elegir acabado');
@@ -792,17 +801,18 @@ function libUI(q=''){
     const button=card(name,tilePreview(tw,th,active?armed.floor.base:'#bdb5a8'),active);
     button.onclick=()=>showTile(tw,th,name);
    }
+   }
    back.onclick=()=>{
     const title=h.textContent;renderCards(false);
     [...grid.children].find(button=>button.title===title)?.focus();
    };
-   for(const def of surfaceMaterials()){
-    if(!isParquet(def[0]))swatch('pbr:'+def[0],def[1],previewOf(def));
+   for(const def of surfaceMaterials(use)){
+    if(use==='wall'||!isParquet(def[0]))swatch('pbr:'+def[0],def[1],previewOf(def));
    }
-   S.cm.forEach((src,i)=>swatch('img'+i,'Imagen '+(i+1),photo(src)));
+   for(const {id,src} of surfaceImages(use))swatch(id,'Imagen '+(+id.slice(3)+1),photo(src));
   };
   renderCards(false);
-  const ph=document.createElement('h4');ph.textContent='Pinturas';content.append(ph);PAINT.forEach(c=>{const d=document.createElement('div');d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>armMaterial({c});content.append(d)});
+  if(use==='wall'){const ph=document.createElement('h4');ph.textContent='Pinturas';content.append(ph);PAINT.forEach(c=>{const d=document.createElement('button');d.type='button';d.setAttribute('aria-label','Pintura '+c);d.className='sw'+(armed&&armed.c==c?' on':'');d.style.background=c;d.onclick=()=>chooseSurfaceFinish({c});content.append(d)});}
   const u=document.createElement('button');u.className='it';u.textContent='+ Añadir material desde imagen';u.onclick=()=>$('#fm').click();content.append(u)
  };
  const render=()=>{
@@ -1065,7 +1075,7 @@ function props(){P.innerHTML='';const e=get();
  if(sel.k=='w'){P.innerHTML='<h4>Pared</h4>';row('Longitud (cm)',R(len(e)),v=>setLen(e,v));row('Ángulo (°)',R(Math.atan2(e.y2-e.y1,e.x2-e.x1)/D*100)/100,v=>{const L=len(e);setEnd(e,e.x1+Math.cos(v*D)*L,e.y1+Math.sin(v*D)*L)});row('Posición X',R(e.x1),v=>{const d=v-e.x1;e.x1+=d;e.x2+=d});row('Posición Y',R(e.y1),v=>{const d=v-e.y1;e.y1+=d;e.y2+=d});
   btn('Dividir por la mitad',()=>{const mx=(e.x1+e.x2)/2,my=(e.y1+e.y2)/2,n=Object.assign({},e,{id:nid(),x1:mx,y1:my});e.x2=mx;e.y2=my;S.w.push(n);S.o.forEach(o=>{if(o.w==e.id&&o.p>len(e)){o.w=n.id;o.p-=len(e)}})});
   btn('Pared paralela…',()=>{const dd=+prompt('Distancia (cm):','100');if(!dd)return;const L=len(e),nx=-(e.y2-e.y1)/L*dd,ny=(e.x2-e.x1)/L*dd;S.w.push({id:nid(),x1:e.x1+nx,y1:e.y1+ny,x2:e.x2+nx,y2:e.y2+ny,t:e.t,h:e.h})});
-  btn('Perpendicular desde el final…',()=>{const dd=+prompt('Longitud (cm):','200');if(!dd)return;const L=len(e),nx=-(e.y2-e.y1)/L*dd,ny=(e.x2-e.x1)/L*dd;S.w.push({id:nid(),x1:e.x2,y1:e.y2,x2:e.x2+nx,y2:e.y2+ny,t:e.t,h:e.h})});row('Grosor (cm)',e.t,v=>e.t=v);row('Altura (cm)',e.h,v=>e.h=v);sel2('Revestimiento',['(pintura)'].concat(surfaceOptions(e.m)),e.m||'(pintura)',v=>e.m=v=='(pintura)'?null:v,surfaceLabels());row('Color pintura',e.c||S.pt,v=>e.c=v,'color');btn(e.hid?'👁 Mostrar pared':'🙈 Ocultar pared',()=>{e.hid=!e.hid;if(e.hid)e.tr=false});btn(e.tr?'Hacer opaca':'Hacer transparente',()=>{e.tr=!e.tr;if(e.tr)e.hid=false});rvUI(e);btn('Eliminar',()=>{S.o=S.o.filter(o=>o.w!=e.id);S.w=S.w.filter(w=>w!=e);sel=null})}
+  btn('Perpendicular desde el final…',()=>{const dd=+prompt('Longitud (cm):','200');if(!dd)return;const L=len(e),nx=-(e.y2-e.y1)/L*dd,ny=(e.x2-e.x1)/L*dd;S.w.push({id:nid(),x1:e.x2,y1:e.y2,x2:e.x2+nx,y2:e.y2+ny,t:e.t,h:e.h})});row('Grosor (cm)',e.t,v=>e.t=v);row('Altura (cm)',e.h,v=>e.h=v);sel2('Revestimiento',['(pintura)'].concat(surfaceOptions(e.m,'wall')),e.m||'(pintura)',v=>e.m=v=='(pintura)'?null:v,surfaceLabels());row('Color pintura',e.c||S.pt,v=>e.c=v,'color');btn(e.hid?'👁 Mostrar pared':'🙈 Ocultar pared',()=>{e.hid=!e.hid;if(e.hid)e.tr=false});btn(e.tr?'Hacer opaca':'Hacer transparente',()=>{e.tr=!e.tr;if(e.tr)e.hid=false});rvUI(e);btn('Eliminar',()=>{S.o=S.o.filter(o=>o.w!=e.id);S.w=S.w.filter(w=>w!=e);sel=null})}
  else if(sel.k=='o'){
   const kind=openingKind(e),types=OPENINGS[e.ty]||OPENINGS.v;
   P.innerHTML='<h4>'+(e.ty==='d'?'Puerta':'Ventana')+'</h4>';
@@ -1403,16 +1413,16 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  sel=hit?{k:hit.k,id:hit.id}:null;selPart=null;
  if(wallVis&&hit&&hit.k=='w'){wvToggle(hit.o);sel=null;commit();return}
  if(armed){
-  if((armed.m||armed.floor)&&hit?.k==='rooms'){
+  if(armed.target==='floor'&&hit?.k==='rooms'){
    const floor=hit.o.floor||=JSON.parse(JSON.stringify(S.fl));
    applyArmedFloor(floor);return;
   }
-  if((armed.m||armed.floor)&&!hit){applyArmedFloor(S.fl);return}
-  if(!armed.floor&&hit?.k==='w'){
+  if(armed.target==='floor'&&!hit){applyArmedFloor(S.fl);return}
+  if(armed.target==='wall'&&hit?.k==='w'){
    const w=hit.o;if(armed.m){w.m=armed.m}else{w.c=armed.c;w.m=null}
    finishMaterialPlacement();return;
   }
-  if(armed.floor)return;
+  return;
  }
  if(hit&&hit.k=='i'&&!hit.o.lk)drag={mv:'i',e:hit.o,dx:wx-hit.o.x,dy:wy-hit.o.y,x0:hit.o.x,y0:hit.o.y};
  else if(hit&&hit.k=='w'){const w=hit.o,e1=Math.hypot(wx-w.x1,wy-w.y1)<20,e2=Math.hypot(wx-w.x2,wy-w.y2)<20;drag=e1||e2?{ep:1,px:e1?w.x1:w.x2,py:e1?w.y1:w.y2}:{mv:'w',e:w,sx:wx,sy:wy,o:[w.x1,w.y1,w.x2,w.y2]}}
@@ -1640,6 +1650,8 @@ const PARQUET_FINISHES=[
 const isParquet=id=>PARQUET_FINISHES.some(([finish])=>finish===id);
 // Acabados de encimera propios. Los identificadores no forman parte del catálogo de suelos.
 const COUNTERTOPS=[
+ ['enc-cuarzo-marfil','Cuarzo marfil satinado','Cuarzo','enc-quartz-satin','#e5dfd3',.46,0,.11,88],
+ ['enc-mineral-gris','Mineral gris mate','Mineral','scan:concrete_floor_03','#b4afaa',1,0,.10,180],
  ['enc-porcelanico-blanco','Blanco ártico','Porcelánico','grain','#f2f1ee',.32,0,.08,120],
  ['enc-porcelanico-arena','Arena mate','Porcelánico','cloud','#d3c3a9',.66,0,.14,135],
  ['enc-porcelanico-cemento','Gris cemento','Porcelánico','cloud','#a2a09b',.66,0,.26,150],
@@ -1649,7 +1661,7 @@ const COUNTERTOPS=[
  ['enc-fresno','Fresno claro','Madera','enc-wood','#d9c4a0',.48,0,.32,130],
  ['enc-iroko','Iroko miel','Madera','enc-wood','#ae753f',.43,0,.38,135],
  ['enc-nogal','Nogal oscuro','Madera','enc-wood','#664332',.43,0,.34,150],
- ['enc-marmol-carrara','Carrara blanco','Mármol','enc-vein-fine','#e5e7e9',.24,0,.07,160],
+ ['enc-marmol-carrara','Blanco Carrara satinado','Mármol','enc-vein-fine','#e8e6e3',.41,0,.07,220],
  ['enc-marmol-calacatta','Calacatta dorado','Mármol','enc-vein-bold','#eee3cc',.24,0,.06,240],
  ['enc-marmol-marquina','Negro Marquina','Mármol','enc-vein-dark','#242328',.22,0,.06,180],
  ['enc-marmol-verde','Verde oscuro veteado','Mármol','enc-vein-dark','#254439',.27,0,.08,205],
@@ -1665,10 +1677,21 @@ const COUNTERTOPS=[
  ['enc-madera-escaneada','Madera rústica escaneada','Madera','scan:wood_table','#745537',1,0,.16,120]
 ];
 const COUNTERTOP_BY_ID=new Map(COUNTERTOPS.map(d=>[d[0],d]));
+const COUNTERTOP_SELECTION=[
+ 'enc-cuarzo-marfil','enc-marmol-carrara','enc-porcelanico-arena','enc-porcelanico-basalto',
+ 'enc-mineral-gris','enc-terrazo-escaneado','enc-madera-escaneada'
+].map(id=>COUNTERTOP_BY_ID.get(id));
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
 const availableCustomMaterials=()=> (S.pbr||[]).filter(d=>String(d[1]).trim().toLowerCase()!=='mármol negro (copia)');
-const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),surfaceMaterials=()=>SURFACE_SCANS.concat([pbrDef('nogal-oscuro'),pbrDef('pared-cal-mate')],availableCustomMaterials()),
- pbrDef=id=>PL().find(d=>d[0]==id);
+const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),pbrDef=id=>PL().find(d=>d[0]==id);
+const WALL_FINISHES=new Set(['azulejo-blanco','azulejo-esmaltado','mosaico-marmol','marmol-veteado','pared-cal-mate']);
+function surfaceMaterials(use='floor'){
+ const builtIn=use==='wall'
+  ?SURFACE_SCANS.filter(d=>WALL_FINISHES.has(d[0])).concat([pbrDef('pared-cal-mate')])
+  :SURFACE_SCANS.filter(d=>!WALL_FINISHES.has(d[0])&&d[0]!=='madera-tablero').concat([pbrDef('nogal-oscuro')]);
+ return builtIn.concat(availableCustomMaterials().filter(d=>(d[10]||'floor')===use));
+}
+const surfaceImages=use=>S.cm.map((src,i)=>({src,id:'img'+i})).filter(({id})=>(S.cmUse?.[id]||'floor')===use);
 function scanAsset(d){
  const legacy={'scan:smooth_concrete_floor':'concrete_floor_03','scan:terrazzo_tiles':'ambient-terrazzo001'};
  return Object.hasOwn(legacy,d[3])?legacy[d[3]]:SURFACE_SCANS.some(p=>p[3]===d[3])?d[3].slice(5):null;
@@ -1772,13 +1795,19 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const growth=Math.sin(2*Math.PI*(27*v+1.6*bend));
    t=(grain-.5)*.34+growth*.055-(pore>.74?.1:0);
    h=.5+growth*.075+(pore-.5)*.12;r=(grain-.5)*.08;
+  }else if(gen==='enc-quartz-satin'){
+   const clouds=fb(u,v,7,8,161)-.5,micro=nz(u,v,178,181,162)-.5;
+   const mineral=Math.max(0,nz(u,v,105,112,163)-.64);
+   t=clouds*.048+micro*.036-mineral*.18;
+   h=.5+micro*.037+mineral*.055;
+   r=clouds*.055+micro*.035;
   }else if(/^enc-vein-/.test(gen)){
    const bend=fb(u,v,3,3,24),coarse=Math.abs(Math.sin(2*Math.PI*(u+v+1.5*bend)));
    const fine=Math.abs(Math.sin(2*Math.PI*(u+2*v+.95*fb(u,v,4,4,25))));
    const vein=Math.exp(-(gen==='enc-vein-bold'?5:13)*coarse);
    const hairline=Math.exp(-27*fine);
    const cloud=(fb(u,v,5,6,26)-.5)*.12;
-   t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.28)-hairline*.14;
+   t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.16)-hairline*(gen==='enc-vein-fine'?.045:.14);
    h=.5;r=vein*.035;
   }else if(gen==='sofa-woven'){
    // Tafetán: la urdimbre y la trama alternan por encima y por debajo.
@@ -1844,9 +1873,9 @@ function materialFromDefinition(d,o){if(!d)return null;o=o||{};const key=d[0]+'|
 const pb=(c,k)=>{const id=c.pbr&&c.pbr[k];return id?pbrMat(id,{sw:k=='cf'&&c.pvt!='horizontal',w:k=='cn'}):null};
 SURFACE_SCANS.forEach(d=>MATS.push('pbr:'+d[0]));
 MATS.push('pbr:nogal-oscuro');
-const surfaceLabels=()=>Object.fromEntries(surfaceMaterials().map(d=>['pbr:'+d[0],d[1]]));
-function surfaceOptions(current){
- const values=surfaceMaterials().map(d=>'pbr:'+d[0]).concat(S.cm.map((_,i)=>'img'+i));
+const surfaceLabels=()=>Object.fromEntries(PL().map(d=>['pbr:'+d[0],d[1]]));
+function surfaceOptions(current,use='floor'){
+ const values=surfaceMaterials(use).map(d=>'pbr:'+d[0]).concat(surfaceImages(use).map(({id})=>id));
  if(current&&!values.includes(current))values.unshift(current);
  return values;
 }
@@ -2089,10 +2118,10 @@ const PTH={};function pbrThumb(d){
 const thumbOf=m=>{if(m.startsWith('pbr:')){const d=pbrDef(m.slice(4));return d?pbrThumb(d):null}const mt=sm(m,'#ccc',60,60,30,.3,'#555',0);return mt&&mt.map?mt.map.image:null};
 function roomUI(R){P.innerHTML='<h4>Habitación</h4>';row('Nombre',R.name,v=>{R.name=v;R.nameAuto=false},'text');sel2('Categoría',['(sin clasificar)',...ROOMCATS],R.cat||'(sin clasificar)',v=>{R.cat=v=='(sin clasificar)'?'':v;R.catAuto=false});
  P.insertAdjacentHTML('beforeend','<small>'+(R.catAuto&&R.cat?'Categoría sugerida por el contenido (puedes cambiarla). ':'')+'Superficie '+(R.area/1e4).toFixed(2)+' m² · perímetro '+(R.per/100).toFixed(2)+' m · dimensiones '+(R.w/100).toFixed(2)+' × '+(R.d/100).toFixed(2)+' m</small>');
- P.insertAdjacentHTML('beforeend','<h4>Techo</h4>');sel2('Techo',['activado','desactivado'],R.ceil.on?'activado':'desactivado',v=>R.ceil.on=v=='activado');row('Altura del techo (cm)',R.ceil.h,v=>{R.ceil.h=Math.max(150,Math.min(600,v));syncWallH(R)});row('Color del techo',R.ceil.col||'#f4f2ee',v=>R.ceil.col=v,'color');const ceilingFinish=ceilingMaterial(R.ceil);sel2('Material del techo',['(pintura)'].concat(surfaceOptions(ceilingFinish)),ceilingFinish||'(pintura)',v=>R.ceil.m=v==='(pintura)'?null:v,surfaceLabels());row('Tamaño de textura (cm)',R.ceil.sz||60,v=>R.ceil.sz=Math.max(5,v));row('Anchura de junta (cm)',R.ceil.j==null ? .3 : R.ceil.j,v=>R.ceil.j=Math.max(0,v));row('Color de junta',R.ceil.jc||'#ddd',v=>R.ceil.jc=v,'color');sel2('Orientación',['0','45','90'],''+(R.ceil.r||0),v=>R.ceil.r=+v);
+ P.insertAdjacentHTML('beforeend','<h4>Techo</h4>');sel2('Techo',['activado','desactivado'],R.ceil.on?'activado':'desactivado',v=>R.ceil.on=v=='activado');row('Altura del techo (cm)',R.ceil.h,v=>{R.ceil.h=Math.max(150,Math.min(600,v));syncWallH(R)});row('Color del techo',R.ceil.col||'#f4f2ee',v=>R.ceil.col=v,'color');const ceilingFinish=ceilingMaterial(R.ceil);sel2('Material del techo',['(pintura)'].concat(surfaceOptions(ceilingFinish,'wall')),ceilingFinish||'(pintura)',v=>R.ceil.m=v==='(pintura)'?null:v,surfaceLabels());row('Tamaño de textura (cm)',R.ceil.sz||60,v=>R.ceil.sz=Math.max(5,v));row('Anchura de junta (cm)',R.ceil.j==null ? .3 : R.ceil.j,v=>R.ceil.j=Math.max(0,v));row('Color de junta',R.ceil.jc||'#ddd',v=>R.ceil.jc=v,'color');sel2('Orientación',['0','45','90'],''+(R.ceil.r||0),v=>R.ceil.r=+v);
  P.insertAdjacentHTML('beforeend','<h4>Suelo</h4>');sel2('Suelo',['general del proyecto','propio de esta habitación'],R.floor?'propio de esta habitación':'general del proyecto',v=>{R.floor=v=='general del proyecto'?null:(R.floor||JSON.parse(JSON.stringify(S.fl)))});
  if(R.floor){const F=R.floor,gal=document.createElement('div');gal.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:4px 0;max-height:200px;overflow:auto';
-  const jobs=[];MATS.forEach(m=>{const c=document.createElement('canvas');c.width=c.height=40;c.title=m.startsWith('pbr:')?((pbrDef(m.slice(4))||[])[1]||m):m;c.style.cssText='cursor:pointer;border:2px solid '+(F.m==m&&!F.pat?'#3d7be0':'transparent')+';border-radius:4px;background:#888';jobs.push(()=>{const paint=()=>{const im=thumbOf(m);if(im)c.getContext('2d').drawImage(im,0,0,40,40)};paint();pbrTex(pbrDef(m.slice(4))).ready?.then(paint)});c.onclick=()=>{F.m=m;F.pat=null;CB()};gal.append(c)});P.append(gal);const run=()=>{for(let q=0;q<5&&jobs.length;q++)jobs.shift()();if(jobs.length)setTimeout(run,0)};setTimeout(run,0);
+  const jobs=[];surfaceOptions(F.m).forEach(m=>{const c=document.createElement('canvas');c.width=c.height=40;c.title=m.startsWith('pbr:')?((pbrDef(m.slice(4))||[])[1]||m):m;c.style.cssText='cursor:pointer;border:2px solid '+(F.m==m&&!F.pat?'#3d7be0':'transparent')+';border-radius:4px;background:#888';jobs.push(()=>{const paint=()=>{const im=thumbOf(m);if(im)c.getContext('2d').drawImage(im,0,0,40,40)};paint();const def=m.startsWith('pbr:')&&pbrDef(m.slice(4));if(def&&scanAsset(def))pbrTex(def).ready.then(paint)});c.onclick=()=>{F.m=m;F.pat=null;CB()};gal.append(c)});P.append(gal);const run=()=>{for(let q=0;q<5&&jobs.length;q++)jobs.shift()();if(jobs.length)setTimeout(run,0)};setTimeout(run,0);
   row('Tamaño de pieza (cm)',F.sz,v=>F.sz=Math.max(5,v));row('Junta (cm)',F.j,v=>F.j=v);row('Color de junta',F.jc,v=>F.jc=v,'color');sel2('Orientación del patrón',['0','45','90'],''+F.r,v=>F.r=+v);patUI(F,true);
   btn('Aplicar este suelo a todas las habitaciones',()=>S.rooms.forEach(r=>{r.floor=JSON.parse(JSON.stringify(F))}))}}
 function wallMesh(w){const L=len(w),t=w.t,H=w.h,g=new T.Group(),hid=!!w.hid,tr=!!w.tr&&!RVo&&!hid,wm0=(w.m==='pbr:pared-cal-mate'&&pbrMat('pared-cal-mate',{w:true}))||sm(w.m,w.c||S.pt,L,H,30,.3,'#bbbbbb');let wm=wm0;if(hid){wm=new T.MeshBasicMaterial({visible:false})}else if(tr){wm=wm0.clone();wm.onBeforeCompile=wm0.onBeforeCompile;wm.userData=wm0.userData;wm.transparent=true;wm.opacity=.12;wm.depthWrite=false}
@@ -6163,10 +6192,10 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
  if(wallVis&&wl&&!it){const w=S.w.find(x=>x.id==wl);if(w){wvToggle(w);commit()}return}
  if(armed){
   const w=wl&&S.w.find(w=>w.id==wl);
-  if(w&&!it&&!armed.floor){
+  if(w&&!it&&armed.target==='wall'){
    if(armed.m)w.m=armed.m;else{w.c=armed.c;w.m=null}
    finishMaterialPlacement();
-  }else if(fl&&(armed.m||armed.floor)){
+  }else if(fl&&armed.target==='floor'){
    const room=rm&&S.rooms.find(q=>q.id==rm);
    const floor=room?(room.floor||=JSON.parse(JSON.stringify(S.fl))):S.fl;
    applyArmedFloor(floor);
@@ -6488,7 +6517,7 @@ $('#bP3').onclick=()=>{if(!requireSceneRenderer())return;if(mode!='3d')setMode('
   finally{await refreshFotoIAStats();busy=false;syncGenerate()}
  };
 })(); 
-$('#fm').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(im,0,0,256,256);S.cm.push(c.toDataURL('image/jpeg',.85));commit();libUI()};im.src=r.result};r.readAsDataURL(f)};
+$('#fm').onchange=e=>{const f=e.target.files[0];if(!f)return;const use=surfaceUse,r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(im,0,0,256,256);(S.cmUse||={})['img'+S.cm.length]=use;S.cm.push(c.toDataURL('image/jpeg',.85));commit();libUI()};im.src=r.result};r.readAsDataURL(f)};
 $('#ck').onchange=()=>{};
 /* ===== Paredes conectadas, colisiones, medición, colocación ===== */
 function setEnd(w,nx,ny){const a=w.x2,b=w.y2;S.w.forEach(q=>{if(q==w)return;if(q.x1==a&&q.y1==b){q.x1=nx;q.y1=ny}if(q.x2==a&&q.y2==b){q.x2=nx;q.y2=ny}});w.x2=nx;w.y2=ny}
@@ -7858,13 +7887,14 @@ function countertopUI(c){
  const select=document.createElement('select'),current=COUNTERTOP_BY_ID.get(c.countertop);
  if(!current&&c.countertop!=='color')select.add(new Option('Acabado guardado',''));
  const groups=new Map();
- for(const [id,name,family] of COUNTERTOPS){
+ for(const [id,name,family] of COUNTERTOP_SELECTION){
   if(!groups.has(family)){
    const group=document.createElement('optgroup');group.label=family;
    groups.set(family,group);select.append(group);
   }
   groups.get(family).append(new Option(name,id));
  }
+ if(current&&!COUNTERTOP_SELECTION.includes(current))select.add(new Option(current[1]+' · guardado',current[0]));
  select.add(new Option('Color personalizado','color'));
  select.value=current?.[0]||(c.countertop==='color'?'color':'');
  select.onchange=()=>{c.countertop=select.value;delete c.pbr?.cn;save()};
@@ -7874,7 +7904,8 @@ function countertopUI(c){
   sample.style.cssText='display:block;width:100%;height:48px;border-radius:6px;margin:4px 0';
   sample.setAttribute('role','img');sample.setAttribute('aria-label',current[2]+' · '+current[1]);
   const ctx=sample.getContext('2d'),thumb=pbrThumb(current);
-  ctx.drawImage(thumb,0,20,64,24,0,0,128,48);
+  const paint=()=>{const height=thumb.width*48/128;ctx.drawImage(thumb,0,(thumb.height-height)/2,thumb.width,height,0,0,128,48)};
+  paint();if(scanAsset(current))pbrTex(current).ready.then(paint);
   P.append(sample);
  }else if(c.countertop==='color'){
   row('Color encimera',c.cn||'#d8d2c4',v=>c.cn=v,'color');
@@ -7888,16 +7919,18 @@ function pbrUI(it){const c=it.cfg,L=SURFACE_SCANS.concat(PL0,availableCustomMate
  });
  sel2('Dirección de la veta (frentes)',['vertical','horizontal'],c.pvt||'vertical',v=>c.pvt=v)}
 function pbrLib(){let box=document.getElementById('pbrbox');if(box){box.remove();return}box=document.createElement('div');box.id='pbrbox';box.style.cssText='position:fixed;inset:60px 20px 20px 20px;z-index:50;background:#1a1d24;border:1px solid #556;border-radius:8px;padding:10px;overflow:auto;color:#eee;font:13px Arial';document.body.append(box);
- let cat='Todas',q='',selId=null,fav=[];try{fav=JSON.parse(localStorage.getItem('pbrFav')||'[]')}catch(e){}
- const sf=()=>{try{localStorage.setItem('pbrFav',JSON.stringify(fav))}catch(e){}},draw=()=>{const L=surfaceMaterials(),cats=['Todas','Favoritos',...new Set(L.map(d=>d[2]))],f=L.filter(d=>(cat=='Todas'||(cat=='Favoritos'?fav.includes(d[0]):d[2]==cat))&&(d[1]+d[0]).toLowerCase().includes(q));
-  box.innerHTML='<b>🎨 Suelos y revestimientos PBR</b> <button id=px style="float:right">✕</button><br>';const sc=document.createElement('select');cats.forEach(c2=>{const o=document.createElement('option');o.textContent=c2;sc.append(o)});sc.value=cat;sc.onchange=()=>{cat=sc.value;draw()};const si=document.createElement('input');si.placeholder='Buscar…';si.value=q;si.onchange=()=>{q=si.value.toLowerCase();draw()};box.append(sc,' ',si);box.querySelector('#px').onclick=()=>box.remove();
+ let use=surfaceUse,cat='Todas',q='',selId=null,fav=[];try{fav=JSON.parse(localStorage.getItem('pbrFav')||'[]')}catch(e){}
+ const sf=()=>{try{localStorage.setItem('pbrFav',JSON.stringify(fav))}catch(e){}},draw=()=>{const L=surfaceMaterials(use),cats=['Todas','Favoritos',...new Set(L.map(d=>d[2]))],f=L.filter(d=>(cat=='Todas'||(cat=='Favoritos'?fav.includes(d[0]):d[2]==cat))&&(d[1]+d[0]).toLowerCase().includes(q));
+  box.innerHTML='<b>🎨 Suelos y revestimientos PBR</b> <button id=px style="float:right">✕</button><br>';const sc=document.createElement('select');cats.forEach(c2=>{const o=document.createElement('option');o.textContent=c2;sc.append(o)});sc.value=cat;sc.onchange=()=>{cat=sc.value;draw()};const si=document.createElement('input');si.placeholder='Buscar…';si.value=q;si.onchange=()=>{q=si.value.toLowerCase();draw()};const target=document.createElement('select');target.setAttribute('aria-label','Tipo de superficie');
+  target.add(new Option('Suelos','floor'));target.add(new Option('Paredes','wall'));target.value=use;
+  target.onchange=()=>{use=surfaceUse=target.value;cat='Todas';selId=null;draw()};box.append(target,' ',sc,' ',si);box.querySelector('#px').onclick=()=>box.remove();
   const jb=[],g=document.createElement('div');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:8px 0';const rn=()=>{for(let q=0;q<5&&jb.length;q++)jb.shift()();if(jb.length)setTimeout(rn,0)};setTimeout(rn,0);f.forEach(d=>{const cv=document.createElement('canvas');cv.width=cv.height=96;jb.push(()=>{const paint=()=>cv.getContext('2d').drawImage(pbrThumb(d),0,0,96,96);paint();if(scanAsset(d))pbrTex(d).ready.then(paint)});const k=document.createElement('div');k.style.cssText='background:#252a33;padding:4px;border-radius:6px;cursor:pointer;border:2px solid '+(d[0]==selId?'#6af':'transparent');k.append(cv);k.append(document.createTextNode((fav.includes(d[0])?'★ ':'')+d[1]));k.onclick=()=>{selId=d[0];draw()};g.append(k)});box.append(g);
   const d=pbrDef(selId);if(d){const cu=(S.pbr||[]).includes(d),row2=(l,v,cb,t2)=>{const e=document.createElement('label');e.style.display='block';e.textContent=l+' ';const i=document.createElement('input');i.type=t2||'number';i.step='any';i.value=v;i.disabled=!cu;i.onchange=()=>{cb(t2=='color'?i.value:+i.value);S.pbr=S.pbr;Object.keys(MCH).forEach(k=>{if(k.startsWith(d[0]+'|'))delete MCH[k]});commit();draw()};e.append(i);box.append(e)};
    box.insertAdjacentHTML('beforeend','<h4>'+htmlText(d[1])+' · '+htmlText(d[2])+(cu?' (personalizado)':' (incluido: duplica para editar)')+'</h4><small>'+(scanAsset(d)?'Textura escaneada · Color, rugosidad y normal · '+(scanAsset(d)==='ambient-terrazzo001'?'ambientCG':'Poly Haven')+' (CC0).':'Material personalizado con mapas procedurales.')+'</small>');
    if(!scanAsset(d))row2('Color base',d[4],v=>d[4]=v,'color');row2('Rugosidad 0-1',d[5],v=>d[5]=Math.max(0,Math.min(1,v)));row2('Metal 0-1',d[6],v=>d[6]=Math.max(0,Math.min(1,v)));row2('Relieve',d[7],v=>d[7]=Math.max(0,v));row2('Tamaño de la muestra (cm reales)',d[8],v=>d[8]=Math.max(5,v));
    const b=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.onclick=fn;e.style.margin='6px 4px 0 0';box.append(e)};b(fav.includes(d[0])?'☆ Quitar favorito':'★ Favorito',()=>{fav=fav.includes(d[0])?fav.filter(x=>x!=d[0]):[...fav,d[0]];sf();draw()});
-   b('Usar en suelo o pared',()=>{box.remove();armMaterial({m:'pbr:'+d[0]})});
-   b('⧉ Duplicar / crear variante',()=>{const n=d.slice();n[0]='u'+Date.now();n[1]=d[1]+' (copia)';S.pbr=(S.pbr||[]).concat([n]);selId=n[0];commit();draw()});if(cu)b('🗑 Eliminar',()=>{S.pbr=S.pbr.filter(x=>x!=d);selId=null;commit();draw()})}};draw()}
+   b(use==='wall'?'Aplicar a una pared':'Aplicar a un suelo',()=>{box.remove();armMaterial({m:'pbr:'+d[0],target:use})});
+   b('⧉ Duplicar / crear variante',()=>{const n=d.slice();n[0]='u'+Date.now();n[1]=d[1]+' (copia)';n[10]=use;S.pbr=(S.pbr||[]).concat([n]);selId=n[0];commit();draw()});if(cu)b('🗑 Eliminar',()=>{S.pbr=S.pbr.filter(x=>x!=d);selId=null;commit();draw()})}};draw()}
 /* ===== Revestimientos y pavimentos: patrones con medidas reales, juntas y variación por pieza ===== */
 const PATS=['recta','vertical','cuadrícula','matajunta','espiga','punta hungría','diagonal'];
 function tilePolys(pat,tw,th,j){const a=tw+j,b=th+j,R=(x,y,w,h)=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
@@ -7930,7 +7963,7 @@ function zoneMesh(z,w){const L=len(w),x0=Math.max(0,Math.min(z.x0,z.x1)),x1=Math
  zoneRects(x0,x1,y0,y1,ops).forEach(([p,q,c,d])=>{const m=new T.Mesh(new T.PlaneGeometry(q-p,d-c),tileMat(z,[sd*((p+q)/2-zcx)+zw/2,(c+d)/2-zcy+zh/2])),s2=(p+q)/2;m.position.set(w.x1+Math.cos(a)*s2-Math.sin(a)*sd*off,(c+d)/2,w.y1+Math.sin(a)*s2+Math.cos(a)*sd*off);m.rotation.y=-a+(sd<0?Math.PI:0);m.receiveShadow=true;g.add(m)});return g}
 function patUI(o,simple){const nm=id=>(pbrDef(id)||[])[1];if(simple){sel2('Patrón de colocación',['(simple)',...PATS],o.pat||'(simple)',v=>o.pat=v=='(simple)'?null:v);if(!o.pat)return}else sel2('Patrón de colocación',PATS,o.pat||'recta',v=>o.pat=v);
  row('Ancho de pieza (cm)',o.tw||60,v=>o.tw=Math.max(2,v));row('Alto de pieza (cm)',o.th||60,v=>o.th=Math.max(2,v));row('Junta (cm)',o.j==null?.3:o.j,v=>o.j=Math.max(0,v));row('Color de junta',o.jc||'#cccccc',v=>o.jc=v,'color');sel2('Acabado',['mate','satinado','brillante'],o.fin||'satinado',v=>o.fin=v);
- const current=o.base?.startsWith('pbr:')?pbrDef(o.base.slice(4)):null,L=surfaceMaterials();if(current&&!L.includes(current))L.unshift(current);sel2('Material base',['(color)',...L.map(d=>d[1])],o.base&&o.base.startsWith('pbr:')?nm(o.base.slice(4)):'(color)',v=>{const d=L.find(x=>x[1]==v);o.base=d?'pbr:'+d[0]:(o.bc||'#e9e6df')});if(!(o.base||'').startsWith('pbr:'))row('Color base',o.bc||'#e9e6df',v=>{o.bc=v;o.base=v},'color');row('Giro de la textura (°)',o.rot||0,v=>o.rot=v);
+ const current=o.base?.startsWith('pbr:')?pbrDef(o.base.slice(4)):null,L=surfaceMaterials(simple?'floor':'wall');if(current&&!L.includes(current))L.unshift(current);sel2('Material base',['(color)',...L.map(d=>d[1])],o.base&&o.base.startsWith('pbr:')?nm(o.base.slice(4)):'(color)',v=>{const d=L.find(x=>x[1]==v);o.base=d?'pbr:'+d[0]:(o.bc||'#e9e6df')});if(!(o.base||'').startsWith('pbr:'))row('Color base',o.bc||'#e9e6df',v=>{o.bc=v;o.base=v},'color');row('Giro de la textura (°)',o.rot||0,v=>o.rot=v);
  if(o.pat=='espiga'||o.pat=='punta hungría'){const a=Math.max(o.tw||60,o.th||60)+(o.j||.3),b=Math.min(o.tw||60,o.th||60)+(o.j||.3);if(o.pat=='espiga'&&Math.abs(a/b-Math.round(a/b))>.02)P.insertAdjacentHTML('beforeend','<small style="color:#f90">⚠ La espiga exige largo = nº entero × ancho (con junta); se redondea a '+Math.round(a/b)+'.</small>')}}
 function rvUI(e){S.rv=S.rv||[];const Z=S.rv.filter(z=>z.w==e.id),L=Math.round(len(e));P.insertAdjacentHTML('beforeend','<h4>Revestimientos por zonas ('+Z.length+')</h4>');
  Z.forEach((z,i)=>{P.insertAdjacentHTML('beforeend','<b>Zona '+(i+1)+'</b>');sel2('Cara',['frontal','trasera'],z.side<0?'trasera':'frontal',v=>z.side=v=='trasera'?-1:1);row('Desde (cm del inicio)',z.x0,v=>z.x0=v);row('Hasta (cm)',z.x1,v=>z.x1=v);row('Altura inferior (cm)',z.y0,v=>z.y0=v);row('Altura superior (cm)',z.y1,v=>z.y1=v);
@@ -8109,7 +8142,7 @@ function makeInteriorPilot(){
   add('Silla tapizada',x,219,{d:42,r:180,col:'#ad9883',upholstery:'trama'});
  }
  const kitchen=base('Bajo 90 · Salón piloto',90,'puertas',{
-  cf:'#c1aa92',cc:'#d4c6b6',ct:'#302b28',cz:'#51473e',acab:'mate',countertop:'enc-marmol-carrara',flushTop:true
+  cf:'#c1aa92',cc:'#d4c6b6',ct:'#302b28',cz:'#51473e',acab:'mate',countertop:'enc-cuarzo-marfil',flushTop:true
  });
  kitchen.col=kitchen.cfg.cf;
  for(const x of [213,303,393,483])place(kitchen,x,36);
