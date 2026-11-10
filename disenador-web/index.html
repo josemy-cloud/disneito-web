@@ -168,6 +168,12 @@ body.adaptive.compact-workspace:not(.ui-legacy) #top #bMo[hidden]{display:none!i
 body.adaptive.compact-workspace:not(.ui-legacy) #top #mobileViewButton{min-width:0}
 body.compact-workspace #mobileViewButton span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:370px){body.compact-workspace #top #mobileViewButton svg{display:none}body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton,#mobileBack):not([hidden]){padding-inline:7px!important}}
+/* Evita que una pulsación larga sobre el plano abra la selección de Safari. */
+#view,#c2,#d3,#d3 canvas{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
 #d3 canvas{touch-action:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton,#mobileBack):not([hidden]){display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px!important;font-weight:700}
 body.compact-workspace #compactMenu img{width:30px;height:28px;flex:none;object-fit:cover;object-position:left center;border-radius:4px}
@@ -1895,6 +1901,7 @@ function requireSceneRenderer(){
  alert(WEBGL_UNAVAILABLE);return false;
 }
 const d3=$('#d3'),r3=createWebGLRenderer({antialias:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+d3.addEventListener('contextmenu',e=>e.preventDefault());
 const sc=new T.Scene(),cam=new T.PerspectiveCamera(48,1,5,10000),root=new T.Group();
 const oc=r3?new T.OrbitControls(cam,r3.domElement):null;
 function stopOrbit(){
