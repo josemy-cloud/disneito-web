@@ -94,6 +94,14 @@ body.adaptive:not(.ui-legacy) #view #planMove[aria-pressed="true"]{
 }
 body.adaptive:not(.ui-legacy) #view #walkPad{background:#202b3ee8}
 
+/* En escritorio con ratón, ampliar solo la herramienta señalada. */
+@media (hover: hover) and (pointer: fine){
+ body.adaptive.desktop-workspace:not(.ui-legacy) #tools button[data-tool]{min-width:34px}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #tools button span{display:none}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #tools button:hover span,
+ body.adaptive.desktop-workspace:not(.ui-legacy) #tools:not(:has(button:hover)) button:focus-visible span{display:block}
+}
+
 /* Escritorio: controles de vista y catálogo junto al plano. */
 body.desktop-workspace:not(.ui-legacy) #top{
  background:#202b3e!important;border-color:#344459;color:#f2f6fc
