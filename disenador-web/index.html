@@ -162,13 +162,14 @@ body #view.walk-full :is(#viewActions,.nuhio-view-label,#c2,#dualSplitter){displ
 #view.walk-full #walkAim{display:grid;place-items:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:11;pointer-events:none;color:white;text-shadow:0 1px 4px #000,0 0 3px #000;font:700 25px system-ui}
 .mobile-ui{display:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #top{display:flex;justify-content:space-between;min-height:54px;padding:5px 10px!important}
-body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton){display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px!important;font-weight:700}
+body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton,#mobileBack):not([hidden]){display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px!important;font-weight:700}
 body.compact-workspace #compactMenu img{width:30px;height:28px;flex:none;object-fit:cover;object-position:left center;border-radius:4px}
-body.compact-workspace #mobileViewButton{background:#e6f0ff;color:#174f98;border-color:#bbd4f5}
+body.compact-workspace #top :is(#mobileViewButton,#mobileBack)[hidden]{display:none!important}
+body.compact-workspace #top :is(#mobileViewButton,#mobileBack){background:#e6f0ff;color:#174f98;border-color:#bbd4f5}
 body.compact-workspace .mobile-ui svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #main{position:relative;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;transition:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #view{grid-area:1/1}
-body.compact-workspace #mobileBar{grid-area:2/1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:5px 6px;background:#f7faff;border-top:1px solid #cfdef1;z-index:6}
+body.compact-workspace #mobileBar{grid-area:2/1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:5px 6px;background:#f7faff;border-top:1px solid #cfdef1;position:relative;z-index:10}
 body.compact-workspace #mobileBar button{min-width:0;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 1px!important;border:1px solid transparent;border-radius:10px;background:transparent;color:#234466;font-size:clamp(10px,3vw,12px);font-weight:650}
 body.compact-workspace #mobileBar button:first-child,body.compact-workspace #mobileBar button[aria-expanded="true"]{background:#e6f0ff;color:#174f98;border-color:#bbd4f5}
 body.adaptive.compact-workspace:not(.ui-legacy) #main :is(#mobileContext,#mobileViews,#compactActions,#lib,#pr).adaptive-open{
@@ -5957,13 +5958,15 @@ function mobileUI(tag,id){
 }
 const mobileBar=mobileUI('nav','mobileBar'),mobileContext=mobileUI('section','mobileContext'),
  mobileViews=mobileUI('section','mobileViews'),mobileShade=mobileUI('div','mobileShade'),
- mobileViewButton=mobileUI('button','mobileViewButton'),mobileContextButton=document.createElement('button'),
+ mobileViewButton=mobileUI('button','mobileViewButton'),mobileBack=mobileUI('button','mobileBack'),mobileContextButton=document.createElement('button'),
  mobileFit=document.createElement('button'),mobileCamera=document.createElement('div');
 mobileBar.setAttribute('aria-label','Herramientas del editor');
 mobileContext.innerHTML='<h2 class="mobile-sheet-title">Herramientas del plano</h2>';
 mobileViews.innerHTML='<h2 class="mobile-sheet-title">Vista del proyecto</h2>';
 mobileCamera.id='mobileCamera';mobileContext.append(mobileCamera);
-mobileViewButton.type=mobileContextButton.type=mobileFit.type='button';
+mobileViewButton.type=mobileBack.type=mobileContextButton.type=mobileFit.type='button';
+mobileBack.hidden=true;mobileBack.textContent='← Volver al plano';
+mobileBack.onclick=()=>{setMobilePanel(null);mobileViewButton.focus({preventScroll:true})};
 mobileViewButton.setAttribute('aria-controls','mobileViews');
 mobileContextButton.setAttribute('aria-controls','mobileContext');
 mobileMenu.setAttribute('aria-controls','compactActions');
@@ -6053,7 +6056,7 @@ function arrangeMobileTop(){
   }
   if(useCompact()){
     if(dualView)setMode('2d');
-    mobileTop.append(mobileMenu,mobileViewButton);
+    mobileTop.append(mobileMenu,mobileViewButton,mobileBack);
     mobileBar.append(mobileContextButton,mobileDock[1],mobileDock[2],mobileFit);
     mobileViews.append(mobileDock[3]);
     mobileContext.insertBefore($('#tools'),mobileCamera);
@@ -6063,7 +6066,7 @@ function arrangeMobileTop(){
     updateMobileView();setMobilePanel(null);
   }else{
     nuhioToolRow.before($('#tools'));
-    mobileActions.remove();mobileContext.remove();mobileViews.remove();mobileShade.remove();mobileBar.remove();mobileViewButton.remove();
+    mobileActions.remove();mobileContext.remove();mobileViews.remove();mobileShade.remove();mobileBar.remove();mobileViewButton.remove();mobileBack.remove();
     mobileTop.append(...topNodes);
     if(desktop){
       $('#cameraDock').append($('#v3'));
@@ -6076,6 +6079,9 @@ function arrangeMobileTop(){
 }
 function setMobilePanel(panelId){
   const menuOpen=panelId==='compactActions';
+  const lowerPanel=['lib','pr','mobileContext'].includes(panelId);
+  mobileBack.hidden=!lowerPanel;
+  mobileViewButton.hidden=lowerPanel;
   mobileWorkspace.classList.toggle('panel-open',Boolean(panelId));
   mobileActions.classList.toggle('adaptive-open',menuOpen);
   mobileShade.classList.toggle('adaptive-open',Boolean(panelId));
