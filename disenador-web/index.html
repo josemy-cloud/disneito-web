@@ -161,7 +161,14 @@ body #view.walk-full :is(#viewActions,.nuhio-view-label,#c2,#dualSplitter){displ
 .nuhio-render-stage canvas{touch-action:none}
 #view.walk-full #walkAim{display:grid;place-items:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:11;pointer-events:none;color:white;text-shadow:0 1px 4px #000,0 0 3px #000;font:700 25px system-ui}
 .mobile-ui{display:none}
-body.adaptive.compact-workspace:not(.ui-legacy) #top{display:flex;justify-content:space-between;min-height:54px;padding:5px 10px!important}
+body.adaptive.compact-workspace:not(.ui-legacy) #top{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:5px;min-height:54px;padding:5px 8px!important}
+body.adaptive.compact-workspace:not(.ui-legacy) #top #bMo{display:inline-flex;justify-content:center;align-items:center;min-height:44px;min-width:0;padding:0 7px!important;margin:0;font-size:clamp(11px,3vw,13px);white-space:nowrap}
+body.adaptive.compact-workspace:not(.ui-legacy) #top #bMo[aria-pressed="true"]{background:#145bb7!important;border-color:#145bb7;color:#fff}
+body.adaptive.compact-workspace:not(.ui-legacy) #top #bMo[hidden]{display:none!important}
+body.adaptive.compact-workspace:not(.ui-legacy) #top #mobileViewButton{min-width:0}
+body.compact-workspace #mobileViewButton span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:370px){body.compact-workspace #top #mobileViewButton svg{display:none}body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton,#mobileBack):not([hidden]){padding-inline:7px!important}}
+#d3 canvas{touch-action:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton,#mobileBack):not([hidden]){display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px!important;font-weight:700}
 body.compact-workspace #compactMenu img{width:30px;height:28px;flex:none;object-fit:cover;object-position:left center;border-radius:4px}
 body.compact-workspace #top :is(#mobileViewButton,#mobileBack)[hidden]{display:none!important}
@@ -6026,12 +6033,84 @@ function animate(){requestAnimationFrame(animate);
   // Permite mirar hacia arriba sin orbitar por debajo del suelo.
   const radius=Math.max(oc.minDistance,cam.position.distanceTo(oc.target));
   oc.maxPolarAngle=Math.acos(T.MathUtils.clamp((8-oc.target.y)/radius,-.98,.98));
-  oc.update();
+  if(!itemTouchDrag)oc.update();
   if(cam.position.y<8){cam.position.y=8;cam.lookAt(oc.target)}
  }
  r3.render(sc,cam)}
 let pd=null,walkPressTravel=0;
 const viewPointers=new Set();
+let itemTouchDrag=null;
+function viewRay(e){
+ const raycaster=new T.Raycaster(),r=r3.domElement.getBoundingClientRect();
+ const pointer=document.pointerLockElement?new T.Vector2():new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+ raycaster.setFromCamera(pointer,cam);return raycaster;
+}
+function pickEditor3D(raycaster){
+ return raycaster.intersectObjects(root.children,true).find(({object})=>{
+  for(let node=object;node;node=node.parent)if(!node.visible||node.userData.noPick)return false;
+  if(object.material?.visible===false||object.userData.ceil&&!showCeil)return false;
+  return object.type==='Mesh'&&object.geometry.type!=='PlaneGeometry'||object.userData.fl;
+ });
+}
+function positionTouchModel(it){
+ const model=root.children.find(o=>o.userData.id===it.id);
+ if(!model)return;
+ model.position.set(it.x,it.e,it.y);model.updateMatrixWorld(true);
+ for(const overlay of root.children)if(overlay.object===model)overlay.update();
+}
+function finishItemTouch(cancel=false){
+ const gesture=itemTouchDrag;
+ if(!gesture)return false;
+ itemTouchDrag=null;
+ oc.enabled=gesture.orbitEnabled;
+ if(!gesture.dragged)return false;
+ const {item,x,y}=gesture;
+ if(cancel){item.x=x;item.y=y;}
+ if(item.rel)updateChildOffset(item);
+ syncSupportedChildren(item);
+ if(item.x!==x||item.y!==y)commit();else refresh();
+ return true;
+}
+r3?.domElement.addEventListener('pointerdown',e=>{
+ if(itemTouchDrag){finishItemTouch(true);return;}
+ if(e.pointerType!=='touch'||!e.isPrimary||!editMode||walk||armed||wallVis||smode)return;
+ const rc=viewRay(e),hit=pickEditor3D(rc);
+ let model=hit?.object;
+ while(model&&model.parent!==root)model=model.parent;
+ if(!model?.userData.id)return;
+ const item=S.i.find(it=>it.id===model.userData.id);
+ if(!item||item.lk||item.hid)return;
+ const plane=new T.Plane(new T.Vector3(0,1,0),-hit.point.y);
+ stopOrbit();
+ itemTouchDrag={item,plane,start:hit.point.clone(),screenX:e.clientX,screenY:e.clientY,x:item.x,y:item.y,
+  id:e.pointerId,orbitEnabled:oc.enabled,dragged:false};
+ oc.enabled=false;
+ r3.domElement.setPointerCapture(e.pointerId);
+},true);
+r3?.domElement.addEventListener('pointermove',e=>{
+ const gesture=itemTouchDrag;
+ if(!gesture||gesture.id!==e.pointerId)return;
+ if(!gesture.dragged&&Math.hypot(e.clientX-gesture.screenX,e.clientY-gesture.screenY)<6)return;
+ const point=viewRay(e).ray.intersectPlane(gesture.plane,new T.Vector3());
+ if(!point)return;
+ const item=gesture.item;
+ if(!gesture.dragged){
+  gesture.dragged=true;sel={k:'i',id:item.id};selPart=null;refresh();
+ }
+ const x=gesture.x+sn(point.x-gesture.start.x),y=gesture.y+sn(point.z-gesture.start.z);
+ if(x===item.x&&y===item.y)return;
+ const parent=item.rel&&S.i.find(it=>it.id===item.rel.parentId);
+ if(parent&&!pointInItem(parent,x,y))return;
+ const prevX=item.x,prevY=item.y;
+ item.x=x;item.y=y;
+ syncSupportedChildren(item);
+ const children=S.i.filter(it=>it.rel?.parentId===item.id);
+ if(!fits(item)||children.some(it=>!fits(it))){
+  item.x=prevX;item.y=prevY;syncSupportedChildren(item);return;
+ }
+ positionTouchModel(item);children.forEach(positionTouchModel);draw();
+});
+
 r3?.domElement.addEventListener('pointerdown',e=>{
   r3.domElement.focus({preventScroll:true});
   viewPointers.add(e.pointerId);
@@ -6039,8 +6118,9 @@ r3?.domElement.addEventListener('pointerdown',e=>{
   walkPressTravel=0;
   if(walk&&e.pointerType!=='mouse') r3.domElement.setPointerCapture(e.pointerId);
 });
-r3?.domElement.addEventListener('pointercancel',e=>{viewPointers.delete(e.pointerId);pd=null});
-r3?.domElement.addEventListener('lostpointercapture',e=>{viewPointers.delete(e.pointerId);pd=null});
+r3?.domElement.addEventListener('pointercancel',e=>{viewPointers.delete(e.pointerId);pd=null;if(itemTouchDrag?.id===e.pointerId)finishItemTouch(true)});
+r3?.domElement.addEventListener('lostpointercapture',e=>{viewPointers.delete(e.pointerId);pd=null;if(itemTouchDrag?.id===e.pointerId)finishItemTouch(true)});
+window.addEventListener('blur',()=>finishItemTouch(true));
 r3?.domElement.addEventListener('pointermove',e=>{if(!walk)return;
 const touch=e.pointerType!=='mouse';
 if(touch&&pd?.[2]!==e.pointerId)return;
@@ -6050,14 +6130,12 @@ if(pd?.[2]===e.pointerId)walkPressTravel+=Math.hypot(dx,dy);
 if(touch) pd=[e.clientX,e.clientY,e.pointerId];
 cam.rotation.y-=dx*.004;
 cam.rotation.x=T.MathUtils.clamp(cam.rotation.x-dy*.003,-Math.PI*.495,Math.PI*.495);});
-r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId);const start=pd;pd=null;if(walk){
+r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId);const start=pd;pd=null;if(itemTouchDrag?.id===e.pointerId&&finishItemTouch())return;if(walk){
  if(e.button===0&&start?.[2]===e.pointerId&&walkPressTravel<7&&Math.hypot(e.clientX-start[0],e.clientY-start[1])<7){
   activateWalkAction();
  }
  return;
-}if(!start||start[2]!==e.pointerId||Math.hypot(e.clientX-start[0],e.clientY-start[1])>(e.pointerType==='mouse'?4:9))return;const rc=new T.Raycaster(),r=r3.domElement.getBoundingClientRect();rc.setFromCamera(document.pointerLockElement?new T.Vector2(0,0):new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),cam);
- const pkb=o=>{for(let q=o;q;q=q.parent){if(q.visible===false||(q.userData&&q.userData.noPick))return false}if(o.material&&!Array.isArray(o.material)&&o.material.visible===false)return false;if(o.userData&&o.userData.ceil&&!showCeil)return false;return true};
- const h=rc.intersectObjects(root.children,true).find(h=>pkb(h.object)&&(h.object.type=='Mesh'&&h.object.geometry.type!='PlaneGeometry'||h.object.userData.fl));if(!h){if(sel||selPart){sel=null;selPart=null;refresh()}return}let mv=null,it=null,wl=null,fl=0,rm=null,opening=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.opening!=null)opening=u.opening;if(u.fl)fl=1;if(u.room)rm=u.room}
+}if(!start||start[2]!==e.pointerId||Math.hypot(e.clientX-start[0],e.clientY-start[1])>(e.pointerType==='mouse'?4:9))return;const h=pickEditor3D(viewRay(e));if(!h){if(sel||selPart){sel=null;selPart=null;refresh()}return}let mv=null,it=null,wl=null,fl=0,rm=null,opening=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.opening!=null)opening=u.opening;if(u.fl)fl=1;if(u.room)rm=u.room}
  if(wallVis&&wl&&!it){const w=S.w.find(x=>x.id==wl);if(w){wvToggle(w);commit()}return}
  if(armed){
   const w=wl&&S.w.find(w=>w.id==wl);
@@ -6143,7 +6221,7 @@ dualSplitter.addEventListener('keydown',e=>{
 $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
 let startupOrbitPending=true;
-function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;startupOrbitPending=false;stopOrbit();if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
+function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;startupOrbitPending=false;finishItemTouch(true);stopOrbit();if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 function showOrbit(rotate=true){
@@ -6551,7 +6629,7 @@ mobileViews.addEventListener('click',e=>{if(e.target.closest('.view-mode'))setMo
 mobileCamera.addEventListener('click',e=>{if(e.target.closest('button'))setMobilePanel(null)});
 function updateMobileView(){
  const is3D=mode==='3d',label=is3D?({f:'3D rápida',m:'3D con materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
- mobileLabel(mobileViewButton,'view','Vista: '+label+' ▾');
+ mobileLabel(mobileViewButton,'view',label+' ▾');
  mobileViewButton.setAttribute('aria-label','Cambiar vista. Actual: '+label);
  mobileContext.classList.toggle('is-3d',is3D);
  mobileContext.querySelector('h2').textContent=is3D?'Cámara, luz y render':'Herramientas del plano';
@@ -6626,18 +6704,18 @@ function arrangeMobileTop(){
   }
   if(useCompact()){
     if(dualView)setMode('2d');
-    mobileTop.append(mobileMenu,mobileViewButton,mobileBack);
+    mobileTop.append(mobileMenu,$('#bMo'),mobileViewButton,mobileBack);
     mobileBar.append(mobileContextButton,mobileDock[1],mobileDock[2],mobileFit);
     mobileViews.append(mobileDock[3]);
     mobileContext.insertBefore($('#tools'),mobileCamera);
     mobileWorkspace.append(mobileActions,mobileContext,mobileViews,mobileShade,mobileBar);
-    for(const node of topNodes)if(!mobileDock.includes(node))mobileActions.append(node);
+    for(const node of topNodes)if(!mobileDock.includes(node)&&node!==$('#bMo'))mobileActions.append(node);
     mobileCamera.append($('#bReal'),$('#bFotoIA'),$('#v3'));
     updateMobileView();setMobilePanel(null);
   }else{
     nuhioToolRow.before($('#tools'));
     mobileActions.remove();mobileContext.remove();mobileViews.remove();mobileShade.remove();mobileBar.remove();mobileViewButton.remove();mobileBack.remove();
-    mobileTop.append(...topNodes);
+    mobileTop.append(...topNodes);$('#bMo').hidden=false;sbUpdate();
     if(desktop){
       $('#cameraDock').append($('#v3'));
       nuhioDock.append(mobileDock[3]);
@@ -6652,6 +6730,8 @@ function setMobilePanel(panelId){
   const lowerPanel=['lib','pr','mobileContext'].includes(panelId);
   mobileBack.hidden=!lowerPanel;
   mobileViewButton.hidden=lowerPanel;
+  $('#bMo').hidden=lowerPanel;
+  sbUpdate();
   mobileWorkspace.classList.toggle('panel-open',Boolean(panelId));
   mobileActions.classList.toggle('adaptive-open',menuOpen);
   mobileShade.classList.toggle('adaptive-open',Boolean(panelId));
@@ -8617,8 +8697,8 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=editMode?'Modo: edición':'Modo: navegación';b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
-$('#bMo').onclick=()=>{navigationHeld.clear();editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(useCompact()?'':'Modo: ')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
+$('#bMo').onclick=()=>{finishItemTouch(true);navigationHeld.clear();editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
 async function catalogPost(path,body){const token=await sbTok(),r=await fetch(path,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j}
