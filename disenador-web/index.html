@@ -1076,7 +1076,7 @@ function props(){P.innerHTML='';const e=get();
  if(sel.k=='w'){P.innerHTML='<h4>Pared</h4>';row('Longitud (cm)',R(len(e)),v=>setLen(e,v));row('Ángulo (°)',R(Math.atan2(e.y2-e.y1,e.x2-e.x1)/D*100)/100,v=>{const L=len(e);setEnd(e,e.x1+Math.cos(v*D)*L,e.y1+Math.sin(v*D)*L)});row('Posición X',R(e.x1),v=>{const d=v-e.x1;e.x1+=d;e.x2+=d});row('Posición Y',R(e.y1),v=>{const d=v-e.y1;e.y1+=d;e.y2+=d});
   btn('Dividir por la mitad',()=>{const mx=(e.x1+e.x2)/2,my=(e.y1+e.y2)/2,n=Object.assign({},e,{id:nid(),x1:mx,y1:my});e.x2=mx;e.y2=my;S.w.push(n);S.o.forEach(o=>{if(o.w==e.id&&o.p>len(e)){o.w=n.id;o.p-=len(e)}})});
   btn('Pared paralela…',()=>{const dd=+prompt('Distancia (cm):','100');if(!dd)return;const L=len(e),nx=-(e.y2-e.y1)/L*dd,ny=(e.x2-e.x1)/L*dd;S.w.push({id:nid(),x1:e.x1+nx,y1:e.y1+ny,x2:e.x2+nx,y2:e.y2+ny,t:e.t,h:e.h})});
-  btn('Perpendicular desde el final…',()=>{const dd=+prompt('Longitud (cm):','200');if(!dd)return;const L=len(e),nx=-(e.y2-e.y1)/L*dd,ny=(e.x2-e.x1)/L*dd;S.w.push({id:nid(),x1:e.x2,y1:e.y2,x2:e.x2+nx,y2:e.y2+ny,t:e.t,h:e.h})});row('Grosor (cm)',e.t,v=>e.t=v);row('Altura (cm)',e.h,v=>e.h=v);sel2('Revestimiento',['(pintura)'].concat(surfaceOptions(e.m,'wall')),e.m||'(pintura)',v=>e.m=v=='(pintura)'?null:v,surfaceLabels());row('Color pintura',e.c||S.pt,v=>e.c=v,'color');btn(e.hid?'👁 Mostrar pared':'🙈 Ocultar pared',()=>{e.hid=!e.hid;if(e.hid)e.tr=false});btn(e.tr?'Hacer opaca':'Hacer transparente',()=>{e.tr=!e.tr;if(e.tr)e.hid=false});rvUI(e);btn('Eliminar',()=>{S.o=S.o.filter(o=>o.w!=e.id);S.w=S.w.filter(w=>w!=e);sel=null})}
+  btn('Perpendicular desde el final…',()=>{const dd=+prompt('Longitud (cm):','200');if(!dd)return;const L=len(e),nx=-(e.y2-e.y1)/L*dd,ny=(e.x2-e.x1)/L*dd;S.w.push({id:nid(),x1:e.x2,y1:e.y2,x2:e.x2+nx,y2:e.y2+ny,t:e.t,h:e.h})});row('Grosor (cm)',e.t,v=>e.t=v);row('Altura (cm)',e.h,v=>e.h=v);sel2('Revestimiento',['(pintura)'].concat(surfaceOptions(e.m,'wall')),e.m||'(pintura)',v=>{e.m=v=='(pintura)'?null:v;delete e.surfaceTint},surfaceLabels());const wallDef=e.m?.startsWith('pbr:')&&pbrDef(e.m.slice(4));if(wallDef)surfaceTintUI(e,wallDef,'del revestimiento');else row('Color pintura',e.c||S.pt,v=>e.c=v,'color');btn(e.hid?'👁 Mostrar pared':'🙈 Ocultar pared',()=>{e.hid=!e.hid;if(e.hid)e.tr=false});btn(e.tr?'Hacer opaca':'Hacer transparente',()=>{e.tr=!e.tr;if(e.tr)e.hid=false});rvUI(e);btn('Eliminar',()=>{S.o=S.o.filter(o=>o.w!=e.id);S.w=S.w.filter(w=>w!=e);sel=null})}
  else if(sel.k=='o'){
   const kind=openingKind(e),types=OPENINGS[e.ty]||OPENINGS.v;
   P.innerHTML='<h4>'+(e.ty==='d'?'Puerta':'Ventana')+'</h4>';
@@ -1428,7 +1428,7 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
   }
   if(armed.target==='floor'&&!hit){applyArmedFloor(S.fl);return}
   if(armed.target==='wall'&&hit?.k==='w'){
-   const w=hit.o;if(armed.m){w.m=armed.m}else{w.c=armed.c;w.m=null}
+   const w=hit.o;delete w.surfaceTint;if(armed.m){w.m=armed.m}else{w.c=armed.c;w.m=null}
    finishMaterialPlacement();return;
   }
   return;
@@ -2156,7 +2156,15 @@ function roomUI(R){P.innerHTML='<h4>Habitación</h4>';row('Nombre',R.name,v=>{R.
   const jobs=[];surfaceOptions(F.m).forEach(m=>{const c=document.createElement('canvas');c.width=c.height=40;c.title=m.startsWith('pbr:')?((pbrDef(m.slice(4))||[])[1]||m):m;c.style.cssText='cursor:pointer;border:2px solid '+(F.m==m&&!F.pat?'#3d7be0':'transparent')+';border-radius:4px;background:#888';jobs.push(()=>{const paint=()=>{const im=thumbOf(m);if(im)c.getContext('2d').drawImage(im,0,0,40,40)};paint();const def=m.startsWith('pbr:')&&pbrDef(m.slice(4));if(def&&scanAsset(def))pbrTex(def).ready.then(paint)});c.onclick=()=>{F.m=m;F.pat=null;CB()};gal.append(c)});P.append(gal);const run=()=>{for(let q=0;q<5&&jobs.length;q++)jobs.shift()();if(jobs.length)setTimeout(run,0)};setTimeout(run,0);
   row('Tamaño de pieza (cm)',F.sz,v=>F.sz=Math.max(5,v));row('Junta (cm)',F.j,v=>F.j=v);row('Color de junta',F.jc,v=>F.jc=v,'color');sel2('Orientación del patrón',['0','45','90'],''+F.r,v=>F.r=+v);patUI(F,true);
   btn('Aplicar este suelo a todas las habitaciones',()=>S.rooms.forEach(r=>{r.floor=JSON.parse(JSON.stringify(F))}))}}
-function wallMesh(w){const L=len(w),t=w.t,H=w.h,g=new T.Group(),hid=!!w.hid,tr=!!w.tr&&!RVo&&!hid,wm0=(w.m==='pbr:pared-cal-mate'&&pbrMat('pared-cal-mate',{w:true}))||sm(w.m,w.c||S.pt,L,H,30,.3,'#bbbbbb');let wm=wm0;if(hid){wm=new T.MeshBasicMaterial({visible:false})}else if(tr){wm=wm0.clone();wm.onBeforeCompile=wm0.onBeforeCompile;wm.userData=wm0.userData;wm.transparent=true;wm.opacity=.12;wm.depthWrite=false}
+function wallFinish(w,L,H){
+ const def=w.m?.startsWith('pbr:')?pbrDef(w.m.slice(4)):null;
+ if(def){
+  const material=materialFromDefinition(def,{w:w.m==='pbr:pared-cal-mate'});
+  return tintSurfaceMaterial(material,w,def);
+ }
+ return sm(w.m,w.c||S.pt,L,H,30,.3,'#bbbbbb');
+}
+function wallMesh(w){const L=len(w),t=w.t,H=w.h,g=new T.Group(),hid=!!w.hid,tr=!!w.tr&&!RVo&&!hid,wm0=wallFinish(w,L,H);let wm=wm0;if(hid){wm=new T.MeshBasicMaterial({visible:false})}else if(tr){wm=wm0.clone();wm.onBeforeCompile=wm0.onBeforeCompile;wm.userData=wm0.userData;wm.transparent=true;wm.opacity=.12;wm.depthWrite=false}
  const box=(a,b,y0,y1)=>{if(b-a<.5||y1-y0<.5)return;const m=new T.Mesh(new T.BoxGeometry(b-a,y1-y0,t),wm);m.position.set((a+b)/2-L/2,(y0+y1)/2,0);m.castShadow=m.receiveShadow=!hid&&!tr;if(hid||tr)m.userData.noPick=1;g.add(m)};
  let x=-t/2;
  for(const o of S.o.filter(o=>o.w==w.id).sort((a,b)=>a.p-b.p)){
@@ -6241,6 +6249,7 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
  if(armed){
   const w=wl&&S.w.find(w=>w.id==wl);
   if(w&&!it&&armed.target==='wall'){
+   delete w.surfaceTint;
    if(armed.m)w.m=armed.m;else{w.c=armed.c;w.m=null}
    finishMaterialPlacement();
   }else if(fl&&armed.target==='floor'){
@@ -7042,7 +7051,7 @@ const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lava
 function fm(c,acab,mat){if(mat&&mat!='liso')return sm(mat,c,60,60,30,.2,'#999');const f=FIN[acab||'satinado'];return new T.MeshStandardMaterial({color:c,roughness:f[0],metalness:f[1]})}
 function topMat(c){
  const d=COUNTERTOP_BY_ID.get(c.countertop);
- if(d)return materialFromDefinition(d,{w:true});
+ if(d)return tintSurfaceMaterial(materialFromDefinition(d,{w:true}),c,d);
  if(c.countertop==='color')return M(c.cn||'#d8d2c4',.42);
  // Compatibilidad con encimeras guardadas antes del catálogo independiente.
  const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='madera')return pbrMat('madera-tablero',{w:true});if(m=='mármol')return sm(m,'#fff',100,100,60,.1,'#999');if(m=='granito')return sm('piedra','#fff',100,100,40,.1,'#777');return new T.MeshStandardMaterial({color:c.cn,roughness:m=='laminado'?.6:.2})}
@@ -7944,16 +7953,16 @@ function countertopUI(c){
  }
  select.add(new Option('Color personalizado','color'));
  select.value=current?.[0]||(c.countertop==='color'?'color':'');
- select.onchange=()=>{c.countertop=select.value;delete c.pbr?.cn;save()};
+ select.onchange=()=>{c.countertop=select.value;delete c.surfaceTint;delete c.pbr?.cn;save()};
  field.append(select);P.append(field);
  if(current){
   const sample=document.createElement('canvas');sample.width=128;sample.height=48;
   sample.style.cssText='display:block;width:100%;height:48px;border-radius:6px;margin:4px 0';
   sample.setAttribute('role','img');sample.setAttribute('aria-label',current[2]+' · '+current[1]);
-  const ctx=sample.getContext('2d'),thumb=pbrThumb(current);
+  const tinted=surfaceTintTexture(c,current),ctx=sample.getContext('2d'),thumb=tinted?.image||pbrThumb(current);
   const paint=()=>{const height=thumb.width*48/128;ctx.drawImage(thumb,0,(thumb.height-height)/2,thumb.width,height,0,0,128,48)};
-  paint();if(scanAsset(current))pbrTex(current).ready.then(paint);
-  P.append(sample);
+  paint();if(tinted)tinted.userData.tintReady.then(paint);else if(scanAsset(current))pbrTex(current).ready.then(paint);
+  P.append(sample);surfaceTintUI(c,current,'de la encimera');
  }else if(c.countertop==='color'){
   row('Color encimera',c.cn||'#d8d2c4',v=>c.cn=v,'color');
  }
@@ -7987,8 +7996,8 @@ function tilePolys(pat,tw,th,j){const a=tw+j,b=th+j,R=(x,y,w,h)=>[[x,y],[x+w,y],
  if(pat=='punta hungría'){const L=Math.max(tw,th)+j,W=Math.min(tw,th)+j,Lx=L/Math.SQRT2,wv=W*Math.SQRT2,p=[],K=Math.ceil((Lx+wv)/wv)+1;for(let k=-K;k<=1;k++){const y=k*wv;p.push([[0,y],[Lx,y+Lx],[Lx,y+Lx+wv],[0,y+wv]],[[Lx,y+Lx],[2*Lx,y],[2*Lx,y+wv],[Lx,y+Lx+wv]])}return{cw:2*Lx,ch:wv,p}}
  return{cw:a,ch:b,p:[R(0,0,a,b)]}}
 const TLM={};
-function tileMat0(c,off){off=off||[0,0];const key=JSON.stringify([c.pat,c.tw,c.th,c.j,c.jc,c.base,c.fin,c.rot,off,(S.pbr||[]).length]);if(TLM[key])return TLM[key];
- const P0=tilePolys(c.pat||'recta',c.tw||60,c.th||60,c.j==null?.3:c.j),ppc=Math.min(8,1024/Math.max(P0.cw,P0.ch)),W=Math.max(2,Math.round(P0.cw*ppc)),H=Math.max(2,Math.round(P0.ch*ppc)),mk=()=>{const k=document.createElement('canvas');k.width=W;k.height=H;return k},ca=mk(),cb=mk(),xa=ca.getContext('2d'),xb=cb.getContext('2d'),pid=c.base&&c.base.startsWith('pbr:')?pbrDef(c.base.slice(4)):null,maps=pid?pbrTex(pid):null,src=maps?.thumb,spc=pid?512/pid[8]:0;
+function tileMat0(c,off){off=off||[0,0];const key=JSON.stringify([c.pat,c.tw,c.th,c.j,c.jc,c.base,c.fin,c.rot,off,c.surfaceTint,(S.pbr||[]).length]);if(TLM[key])return TLM[key];
+ const P0=tilePolys(c.pat||'recta',c.tw||60,c.th||60,c.j==null?.3:c.j),ppc=Math.min(8,1024/Math.max(P0.cw,P0.ch)),W=Math.max(2,Math.round(P0.cw*ppc)),H=Math.max(2,Math.round(P0.ch*ppc)),mk=()=>{const k=document.createElement('canvas');k.width=W;k.height=H;return k},ca=mk(),cb=mk(),xa=ca.getContext('2d'),xb=cb.getContext('2d'),pid=c.base&&c.base.startsWith('pbr:')?pbrDef(c.base.slice(4)):null,maps=pid?pbrTex(pid):null,tinted=pid&&surfaceTintTexture(c,pid),src=tinted?.image||maps?.thumb,spc=pid?512/pid[8]:0;
  const paint=()=>{
  xa.fillStyle=c.jc||'#ccc';xa.fillRect(0,0,W,H);xb.fillStyle='#808080';xb.fillRect(0,0,W,H);let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
  for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)P0.p.forEach(poly=>{const pts=poly.map(([x,y])=>[(x+dx*P0.cw)*ppc,(y+dy*P0.ch)*ppc]),x0=Math.min(...pts.map(q=>q[0])),x1=Math.max(...pts.map(q=>q[0])),y0=Math.min(...pts.map(q=>q[1])),y1=Math.max(...pts.map(q=>q[1]));if(x1<0||y1<0||x0>W||y0>H)return;
@@ -7998,10 +8007,11 @@ function tileMat0(c,off){off=off||[0,0];const key=JSON.stringify([c.pat,c.tw,c.t
  };
  paint();
  const tx=(k,srgb)=>{const t=new T.CanvasTexture(k);t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;if(srgb)t.encoding=T.sRGBEncoding;return t},m=new T.MeshStandardMaterial({map:tx(ca,1),bumpMap:tx(cb),bumpScale:.12,roughness:{mate:.85,satinado:.45,brillante:.15}[c.fin||'satinado']});
- if(maps?.ready)maps.ready.then(ok=>{if(ok){paint();m.map.needsUpdate=true}});
+ const ready=tinted?.userData.tintReady||maps?.ready;
+ if(ready)ready.then(ok=>{if(ok!==false){paint();m.map.needsUpdate=true}});
  wuv(m,{uT:{value:new T.Vector2(P0.cw,P0.ch)},uSw:{value:0},uR:{value:((c.rot||0)+(c.pat=='diagonal'?45:0))*Math.PI/180},uO:{value:new T.Vector2(off[0],off[1])}});m.userData.P0=P0;return TLM[key]=m}
 const TLT={},TLM2={};
-function tileMat(c,off){off=off||[0,0];const tk=JSON.stringify([c.pat,c.tw,c.th,c.j,c.jc,c.base,c.fin,c.rot,(S.pbr||[]).length]);let b=TLT[tk];if(!b){const m0=tileMat0(c,[0,0]);b=TLT[tk]={map:m0.map,bump:m0.bumpMap,P0:m0.userData.P0,rough:m0.roughness}}
+function tileMat(c,off){off=off||[0,0];const tk=JSON.stringify([c.pat,c.tw,c.th,c.j,c.jc,c.base,c.fin,c.rot,c.surfaceTint,(S.pbr||[]).length]);let b=TLT[tk];if(!b){const m0=tileMat0(c,[0,0]);b=TLT[tk]={map:m0.map,bump:m0.bumpMap,P0:m0.userData.P0,rough:m0.roughness}}
  const k=tk+JSON.stringify(off);if(TLM2[k])return TLM2[k];const m=new T.MeshStandardMaterial({map:b.map,roughness:b.rough});wuv(m,{uT:{value:new T.Vector2(b.P0.cw,b.P0.ch)},uSw:{value:0},uR:{value:((c.rot||0)+(c.pat=='diagonal'?45:0))*Math.PI/180},uO:{value:new T.Vector2(off[0],off[1])},uW:{value:0}});return TLM2[k]=m}
 /* rectángulos de la zona SIN los huecos de puertas y ventanas (geometría real, juntas continuas) */
 function zoneRects(x0,x1,y0,y1,ops){const xs=[x0,x1];ops.forEach(o=>[o.a,o.b].forEach(v=>{if(v>x0&&v<x1)xs.push(v)}));xs.sort((a,b)=>a-b);const R=[];for(let i=0;i<xs.length-1;i++){const a=xs[i],b=xs[i+1];if(b-a<.05)continue;const m=(a+b)/2,o=ops.find(q=>m>q.a&&m<q.b);if(!o)R.push([a,b,y0,y1]);else{if(Math.min(y1,o.y0)-y0>.05)R.push([a,b,y0,Math.min(y1,o.y0)]);if(y1-Math.max(y0,o.y1)>.05)R.push([a,b,Math.max(y0,o.y1),y1])}}return R}
@@ -8010,7 +8020,7 @@ function zoneMesh(z,w){const L=len(w),x0=Math.max(0,Math.min(z.x0,z.x1)),x1=Math
  zoneRects(x0,x1,y0,y1,ops).forEach(([p,q,c,d])=>{const m=new T.Mesh(new T.PlaneGeometry(q-p,d-c),tileMat(z,[sd*((p+q)/2-zcx)+zw/2,(c+d)/2-zcy+zh/2])),s2=(p+q)/2;m.position.set(w.x1+Math.cos(a)*s2-Math.sin(a)*sd*off,(c+d)/2,w.y1+Math.sin(a)*s2+Math.cos(a)*sd*off);m.rotation.y=-a+(sd<0?Math.PI:0);m.receiveShadow=true;g.add(m)});return g}
 function patUI(o,simple){const nm=id=>(pbrDef(id)||[])[1];if(simple){sel2('Patrón de colocación',['(simple)',...PATS],o.pat||'(simple)',v=>o.pat=v=='(simple)'?null:v);if(!o.pat)return}else sel2('Patrón de colocación',PATS,o.pat||'recta',v=>o.pat=v);
  row('Ancho de pieza (cm)',o.tw||60,v=>o.tw=Math.max(2,v));row('Alto de pieza (cm)',o.th||60,v=>o.th=Math.max(2,v));row('Junta (cm)',o.j==null?.3:o.j,v=>o.j=Math.max(0,v));row('Color de junta',o.jc||'#cccccc',v=>o.jc=v,'color');sel2('Acabado',['mate','satinado','brillante'],o.fin||'satinado',v=>o.fin=v);
- const current=o.base?.startsWith('pbr:')?pbrDef(o.base.slice(4)):null,L=surfaceMaterials(simple?'floor':'wall');if(current&&!L.includes(current))L.unshift(current);sel2('Material base',['(color)',...L.map(d=>d[1])],o.base&&o.base.startsWith('pbr:')?nm(o.base.slice(4)):'(color)',v=>{const d=L.find(x=>x[1]==v);o.base=d?'pbr:'+d[0]:(o.bc||'#e9e6df')});if(!(o.base||'').startsWith('pbr:'))row('Color base',o.bc||'#e9e6df',v=>{o.bc=v;o.base=v},'color');row('Giro de la textura (°)',o.rot||0,v=>o.rot=v);
+ const current=o.base?.startsWith('pbr:')?pbrDef(o.base.slice(4)):null,L=surfaceMaterials(simple?'floor':'wall');if(current&&!L.includes(current))L.unshift(current);sel2('Material base',['(color)',...L.map(d=>d[1])],o.base&&o.base.startsWith('pbr:')?nm(o.base.slice(4)):'(color)',v=>{const d=L.find(x=>x[1]==v);o.base=d?'pbr:'+d[0]:(o.bc||'#e9e6df');delete o.surfaceTint});if(!simple&&current)surfaceTintUI(o,current,'del revestimiento');if(!(o.base||'').startsWith('pbr:'))row('Color base',o.bc||'#e9e6df',v=>{o.bc=v;o.base=v},'color');row('Giro de la textura (°)',o.rot||0,v=>o.rot=v);
  if(o.pat=='espiga'||o.pat=='punta hungría'){const a=Math.max(o.tw||60,o.th||60)+(o.j||.3),b=Math.min(o.tw||60,o.th||60)+(o.j||.3);if(o.pat=='espiga'&&Math.abs(a/b-Math.round(a/b))>.02)P.insertAdjacentHTML('beforeend','<small style="color:#f90">⚠ La espiga exige largo = nº entero × ancho (con junta); se redondea a '+Math.round(a/b)+'.</small>')}}
 function rvUI(e){S.rv=S.rv||[];const Z=S.rv.filter(z=>z.w==e.id),L=Math.round(len(e));P.insertAdjacentHTML('beforeend','<h4>Revestimientos por zonas ('+Z.length+')</h4>');
  Z.forEach((z,i)=>{P.insertAdjacentHTML('beforeend','<b>Zona '+(i+1)+'</b>');sel2('Cara',['frontal','trasera'],z.side<0?'trasera':'frontal',v=>z.side=v=='trasera'?-1:1);row('Desde (cm del inicio)',z.x0,v=>z.x0=v);row('Hasta (cm)',z.x1,v=>z.x1=v);row('Altura inferior (cm)',z.y0,v=>z.y0=v);row('Altura superior (cm)',z.y1,v=>z.y1=v);
@@ -8783,26 +8793,54 @@ function partMaterialRole(mesh,mat,primary,it){
 const diningTintMaps=new WeakMap();
 function diningTintMap(it,role,base,vein,strength){
  const source=pbrTex(COUNTERTOP_BY_ID.get('enc-roble'));
- if(base==='#bb915f'&&!strength)return source.a;
+ return base==='#bb915f'&&!strength?source.a:tintedTexture(it,role,source,base,vein,strength);
+}
+function tintedTexture(it,role,source,base,vein,strength){
  let parts=diningTintMaps.get(it);
  if(!parts){parts=new Map();diningTintMaps.set(it,parts)}
- const key=[base,vein,strength].join('|');
+ const key=[source.a.uuid,base,vein,strength].join('|');
  const previous=parts.get(role);
  if(previous?.key===key)return previous.map;
- const canvas=previous?.map.image||document.createElement('canvas');
- const map=previous?.map||source.a.clone();
+ const canvas=document.createElement('canvas');
+ const map=source.a.clone();
+ previous?.map.dispose();
  canvas.width=canvas.height=512;
  map.image=canvas;
  const ctx=canvas.getContext('2d');
  ctx.fillStyle=base;ctx.fillRect(0,0,512,512);map.needsUpdate=true;
  const entry={key,map};parts.set(role,entry);
- source.ready.then(()=>{
+ map.userData.tintReady=Promise.resolve(source.ready).then(()=>{
   if(parts.get(role)!==entry)return;
-  ctx.drawImage(source.a.image,0,0);
+  ctx.drawImage(source.a.image,0,0,512,512);
   tintDiningGrain(ctx,base,vein,strength);
   map.needsUpdate=true;
  });
  return map;
+}
+function surfaceTintTexture(owner,def){
+ const tint=owner.surfaceTint;
+ if(!tint)return null;
+ const color=(hex,fallback)=>/^#[0-9a-f]{6}$/i.test(hex)?hex:fallback;
+ const base=color(tint.base,def[4]),accent=color(tint.accent,'#64594c');
+ const strength=Math.max(0,Math.min(100,+tint.strength||0));
+ return tintedTexture(owner,'surface',pbrTex(def),base,accent,strength);
+}
+function tintSurfaceMaterial(material,owner,def){
+ const map=surfaceTintTexture(owner,def);
+ if(!map)return material;
+ const result=material.clone();result.map=map;
+ if(material.userData.U)wuv(result,material.userData.U);
+ return result;
+}
+function surfaceTintUI(owner,def,kind){
+ const tint=owner.surfaceTint||{},set=(k,v)=>{(owner.surfaceTint||={})[k]=v};
+ const wood=def[2]==='Madera';
+ row('Color base '+kind,tint.base||def[4],v=>set('base',v),'color');
+ row(wood?'Color de veta y nudos':'Color del dibujo y grano',tint.accent||'#64594c',v=>{
+  set('accent',v);if(tint.strength==null)set('strength',65);
+ },'color');
+ row('Intensidad del tinte (%)',tint.strength??0,v=>set('strength',Math.max(0,Math.min(100,v))));
+ if(owner.surfaceTint)btn('Restaurar color del material',()=>{delete owner.surfaceTint});
 }
 function tintDiningGrain(ctx,base,vein,strength){
  const image=ctx.getImageData(0,0,512,512),pixels=image.data;
