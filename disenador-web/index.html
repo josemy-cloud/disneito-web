@@ -8087,10 +8087,13 @@ function makeInteriorPilot(){
  project.w=[[0,0,610,0],[610,0,610,510],[610,510,0,510],[0,510,0,0]]
   .map(([x1,y1,x2,y2])=>({id:project.id++,x1,y1,x2,y2,t:10,h:255}));
  project.o.push({id:project.id++,w:project.w[3].id,p:255,ty:'d',variant:'corredera',wd:330,h:225,s:0});
- const add=(name,x,y,overrides={})=>{
+ const place=(entry,x,y,overrides={})=>{
+  project.i.push({...structuredClone(entry),x,y,r:0,...overrides,id:project.id++});
+ };
+ const add=(name,x,y,overrides)=>{
   const entry=LIB.find(item=>item.n===name);
   if(!entry)throw new Error('Falta en la biblioteca: '+name);
-  project.i.push({...structuredClone(entry),x,y,r:0,...overrides,id:project.id++});
+  place(entry,x,y,overrides);
  };
  add('Alfombra',225,302,{w:280,d:230,col:'#b6a38d'});
  add('Sofá 2 plazas',230,258,{w:222,d:92,col:'#c6b5a1',upholstery:'trama',partColors:{seat:'#c6b5a1',back:'#cabbab',frame:'#b5a28e'}});
@@ -8100,12 +8103,11 @@ function makeInteriorPilot(){
   add('Silla tapizada',x,88,{d:42,col:'#ad9883',upholstery:'trama'});
   add('Silla tapizada',x,219,{d:42,r:180,col:'#ad9883',upholstery:'trama'});
  }
- const kitchen=LIB.find(item=>item.n==='Bajo 2 puertas + 2 cajones');
- if(!kitchen)throw new Error('Falta el módulo de cocina del salón piloto.');
- for(const x of [213,303,393,483])add(kitchen.n,x,36,{col:'#c1aa92',cfg:{
-  ...kitchen.cfg,lay:'puertas',nd:2,cf:'#c1aa92',cc:'#d4c6b6',ct:'#302b28',cz:'#51473e',
-  acab:'mate',countertop:'enc-marmol-escaneado'
- }});
+ const kitchen=base('Bajo 90 · Salón piloto',90,'puertas',{
+  cf:'#c1aa92',cc:'#d4c6b6',ct:'#302b28',cz:'#51473e',acab:'mate',countertop:'enc-marmol-escaneado'
+ });
+ kitchen.col=kitchen.cfg.cf;
+ for(const x of [213,303,393,483])place(kitchen,x,36);
  add('Columna despensa',558,36,{h:220,col:'#c6b6a1'});
  add('Foco empotrado · amplio',317,120,{e:252,lightOn:false});
  add('Foco empotrado · amplio',443,124,{e:252,lightOn:false});
