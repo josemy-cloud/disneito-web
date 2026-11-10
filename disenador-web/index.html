@@ -163,6 +163,7 @@ body #view.walk-full :is(#viewActions,.nuhio-view-label,#c2,#dualSplitter){displ
 .mobile-ui{display:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #top{display:flex;justify-content:space-between;min-height:54px;padding:5px 10px!important}
 body.adaptive.compact-workspace:not(.ui-legacy) #top :is(#compactMenu,#mobileViewButton){display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px!important;font-weight:700}
+body.compact-workspace #compactMenu img{width:30px;height:28px;flex:none;object-fit:cover;object-position:left center;border-radius:4px}
 body.compact-workspace #mobileViewButton{background:#e6f0ff;color:#174f98;border-color:#bbd4f5}
 body.compact-workspace .mobile-ui svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 body.adaptive.compact-workspace:not(.ui-legacy) #main{position:relative;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;transition:none}
@@ -218,10 +219,10 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <div id="top"><button id="compactMenu" aria-controls="compactActions" aria-expanded="false">Menú</button><b id="pn" style="color:#8fb4ff;margin-right:6px"></b><button id="tl">◧ Izq.</button><button id="tr">Der. ◨</button>
 <span class="dd"><button id="bF" title="Archivo: nuevo, guardar, abrir, exportar e importar"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6"/></svg><span>Archivo</span><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><div class="ddm"><button id="bN">Nuevo</button><button id="bS">Guardar copia local</button><button id="bO">Abrir copia local</button><button id="bE">Exportar proyecto</button><button id="bI">Importar</button><button id="bScanRoom" type="button">Escanear habitación</button></div></span>
 <button id="bU" aria-label="Deshacer" title="Deshacer (Ctrl+Z)"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 4 10l5 5M4 10h10a5 5 0 0 1 5 5v3"/></svg></button><button id="bR" aria-label="Rehacer" title="Rehacer (Ctrl+Y)"><svg class="studio-top-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 5 5-5 5m5-5H10a5 5 0 0 0-5 5v3"/></svg></button>
-<button id="bPbr" style="background:#7a4fd1">🎨 Materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><label class="studio-step"><select id="bSt" aria-label="Paso de movimiento en centímetros" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select><span aria-hidden="true">cm</span></label> <span class="seg view-modes" role="group" aria-label="Modos de visualización">
+<button id="bPbr" style="background:#7a4fd1">🎨 Catálogo de materiales</button><button id="bPry" style="background:#1f8a5b">☁ Mi espacio</button><button id="bAcc" title="Cuenta de usuario">👤 Mi cuenta</button><span id="saveCloudState" role="status" style="display:inline-block;margin:0 5px;padding:4px 7px;border-radius:6px;background:#202633;color:#aeb8c8;font-size:11px">Sin cambios</span><button id="bReal" style="background:#c0392b">📷 Ver en Realidad</button><button id="bFotoIA" style="background:#16865b">✨ Foto IA</button><button id="bMo">Modo: navegación</button><label class="studio-step"><select id="bSt" aria-label="Paso de movimiento en centímetros" title="Paso de movimiento (cm)"><option>1</option><option selected>5</option><option>10</option><option>25</option></select><span aria-hidden="true">cm</span></label> <span class="seg view-modes" role="group" aria-label="Modos de visualización">
 <button id="mv2" class="view-mode" title="Vista 2D · Plano técnico" aria-label="Vista 2D"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h18v15H3zM8 4.5v6h5v-6M3 15h5v4.5M13 10.5h8M13 15h8"/></svg><span>2D</span></button>
 <button id="mvf" class="view-mode" title="Vista 3D rápida · Volumen" aria-label="Vista 3D rápida"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 9 4.8v8.8l-9 4.8-9-4.8V7.6zM12 12.5l9-4.9M12 12.5v8.7M12 12.5 3 7.6"/></svg><span>3D rápida</span></button>
-<button id="mvm" class="view-mode" title="3D con materiales · Texturas y acabados" aria-label="3D con materiales"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 9 4.8v8.8l-9 4.8-9-4.8V7.6zM12 12.5l9-4.9M12 12.5v8.7M12 12.5 3 7.6M7.5 10l9 4.8"/></svg><span>Materiales</span></button>
+<button id="mvm" class="view-mode" title="3D con materiales · Texturas y acabados" aria-label="3D con materiales"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 9 4.8v8.8l-9 4.8-9-4.8V7.6zM12 12.5l9-4.9M12 12.5v8.7M12 12.5 3 7.6M7.5 10l9 4.8"/></svg><span>3D con materiales</span></button>
 <button id="mvq" class="view-mode" title="Vista realista · Iluminación y sombras" aria-label="Vista realista"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span>Realista</span></button>
 <button id="mvDual" class="view-mode" title="Mostrar el plano 2D y el modelo 3D simultáneamente. Arrastra la línea divisoria para cambiar el tamaño." aria-label="Vista doble 2D y 3D"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="2"/><path d="M3 11.5h18M12 11.5v9M7 7.5h3M7 15.5h3m5 0h3"/></svg><span>2D + 3D</span></button>
 </span><button id="bM" style="display:none">Cambiar a 3D</button><select id="sq" style="display:none"><option value="f">Vista rápida</option><option value="m" selected>3D con materiales</option><option value="q">Realista (sombras)</option></select>
@@ -5941,7 +5942,6 @@ mobileActions.setAttribute('aria-label','Acciones del proyecto');
 const mobileDock=[mobileMenu,$('#tl'),$('#tr'),mobileTop.querySelector('.view-modes')];
 const topNodes=[...mobileTop.childNodes];
 const mobileIcons={
- menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
  view:'<path d="M3 5h18v14H3zM8 12h8m-6-2 2 2 2-2"/>',
  draw:'<path d="m4 16 12-12 4 4L8 20H4zM13 7l4 4"/>',
  camera:'<rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/>',
@@ -5977,8 +5977,8 @@ mobileContextButton.onclick=()=>setMobilePanel(mobileContext.classList.contains(
 mobileViews.addEventListener('click',e=>{if(e.target.closest('.view-mode'))setMobilePanel(null)});
 mobileCamera.addEventListener('click',e=>{if(e.target.closest('button'))setMobilePanel(null)});
 function updateMobileView(){
- const is3D=mode==='3d',label=is3D?({f:'3D rápida',m:'Materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
- mobileLabel(mobileViewButton,'view',label+' ▾');
+ const is3D=mode==='3d',label=is3D?({f:'3D rápida',m:'3D con materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
+ mobileLabel(mobileViewButton,'view','Vista: '+label+' ▾');
  mobileViewButton.setAttribute('aria-label','Cambiar vista. Actual: '+label);
  mobileContext.classList.toggle('is-3d',is3D);
  mobileContext.querySelector('h2').textContent=is3D?'Cámara, luz y render':'Herramientas del plano';
@@ -6091,7 +6091,7 @@ function setMobilePanel(panelId){
   }
 }
 const useCompact=()=>compact.matches&&!document.body.classList.contains('ui-legacy');
-mobileLabel(mobileMenu,'menu','NuHio');
+mobileMenu.innerHTML='<img src="/nuhio-logo.webp" width="30" height="28" alt=""><span>NuHio</span>';
 mobileMenu.setAttribute('aria-label','Menú de NuHio');
 mobileMenu.onclick=()=>setMobilePanel(mobileActions.classList.contains('adaptive-open')?null:'compactActions');
 for(const [buttonId,panelId,label] of [['tl','lib','Biblioteca'],['tr','pr','Propiedades']]){
