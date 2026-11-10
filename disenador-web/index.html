@@ -6127,14 +6127,19 @@ function addRealisticDetails(){
    corners=cors({...it,r:it.r||0,w:width,d:depth});
    if(!rooms.some(room=>corners.every(([x,z])=>inPoly(x,z,room.poly))))continue;
   }
-  const rug=rugs.find(r=>corners.every(([x,z])=>pointInItem(r,x,z)));
+  // Las mesas y sillas abiertas solo apoyan en las patas, no en toda su planta.
+  const feet=diningCollisionParts(it)?.filter(part=>Math.abs(part.e-(+it.e||0))<.01);
+  const patches=feet?.length?feet.map(part=>({...part,w:part.w+8,d:part.d+8})):[{...it,w:width,d:depth}];
   const material=contactShadowMaterial();
-  const mesh=new T.Mesh(contactGeometry,material);
-  mesh.scale.set(width,1,depth);
-  mesh.rotation.y=-(it.r||0)*D;
-  mesh.position.set(it.x,rug?(+rug.e||0)+(+rug.h||0)+.12:.12,it.y);
-  realisticDetails.add(mesh);
-  if(++shadows>=(coarse?30:60))break;
+  for(const patch of patches){
+   const rug=rugs.find(r=>feet?.length?pointInItem(r,patch.x,patch.y):corners.every(([x,z])=>pointInItem(r,x,z)));
+   const mesh=new T.Mesh(contactGeometry,material);
+   mesh.scale.set(patch.w,1,patch.d);
+   mesh.rotation.y=-(it.r||0)*D;
+   mesh.position.set(patch.x,rug?(+rug.e||0)+(+rug.h||0)+.12:.12,patch.y);
+   realisticDetails.add(mesh);
+   if(++shadows>=(coarse?30:60))return;
+  }
  }
 }
 const walkOverlay=$('#walkTouch');
