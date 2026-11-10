@@ -1729,6 +1729,12 @@ function requireSceneRenderer(){
 const d3=$('#d3'),r3=createWebGLRenderer({antialias:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});
 const sc=new T.Scene(),cam=new T.PerspectiveCamera(48,1,5,10000),root=new T.Group();
 const oc=r3?new T.OrbitControls(cam,r3.domElement):null;
+function stopOrbit(){
+ if(!oc?.autoRotate)return;
+ oc.autoRotate=false;
+ oc.enableDamping=true;
+}
+oc?.addEventListener('start',stopOrbit);
 sc.background=new T.Color('#e8e7e2');sc.add(root);cam.position.set(500,500,700);
 if(r3){
  r3.outputEncoding=T.sRGBEncoding;r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=.92;r3.shadowMap.type=T.PCFShadowMap;
@@ -5349,6 +5355,7 @@ function moveNavigationCamera(dt){
  if(!length)return;
  const dx=oc.target.x-cam.position.x,dz=oc.target.z-cam.position.z;
  const distance=Math.hypot(dx,dz),fx=distance>1e-4?dx/distance:0,fz=distance>1e-4?dz/distance:-1;
+ stopOrbit();
  const step=200*dt/length;
  const x=(forward*fx-right*fz)*step,z=(forward*fz+right*fx)*step;
  cam.position.x+=x;cam.position.z+=z;
@@ -5411,6 +5418,7 @@ function animate(){requestAnimationFrame(animate);
  else{
   const lift=cameraLift(dt,now);
   if(lift){
+   stopOrbit();
    const height=Math.max(8,cam.position.y+lift);
    oc.target.y+=height-cam.position.y;
    cam.position.y=height;
@@ -5534,10 +5542,37 @@ dualSplitter.addEventListener('keydown',e=>{
 });
 $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
-function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
+let startupOrbitPending=true;
+function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;startupOrbitPending=false;stopOrbit();if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
-function vw(t){if(!r3)return;if(walk)exitWalk();oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
-$('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
+function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
+function showOrbit(rotate=true){
+ vw('iso');
+ const box=projectBounds3D();
+ if(!box.isEmpty()){
+  const center=box.getCenter(new T.Vector3());
+  const radius=box.getSize(new T.Vector3()).length()/2;
+  const vertical=T.MathUtils.degToRad(cam.getEffectiveFOV()/2);
+  const horizontal=Math.atan(Math.tan(vertical)*cam.aspect);
+  const distance=radius/Math.sin(Math.min(vertical,horizontal)) * 1.08;
+  oc.minDistance=90;
+  oc.maxDistance=Math.max(6500,distance);
+  oc.target.copy(center);
+  cam.position.copy(center).addScaledVector(new T.Vector3(1,1.35,1.3).normalize(),Math.max(90,distance));
+  oc.update();
+ }
+ oc.autoRotate=rotate;
+ oc.enableDamping=!rotate;
+ oc.autoRotateSpeed=.65;
+}
+function startEditorOrbit(){
+ if(!startupOrbitPending)return;
+ startupOrbitPending=false;
+ if(!r3||(!S.w.length&&!S.i.some(item=>!item.hid)))return;
+ setMode('3d');
+ showOrbit(!matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+$('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>showOrbit();
 $('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');walkInteract.hidden=!touchWalk;$('#walkExit').textContent=touchWalk?'Salir':'Salir del recorrido · Esc';$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)requestWalkPointer();if(document.fullscreenEnabled&&!document.fullscreenElement)editorView.requestFullscreen().catch(()=>{})};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
 $('#bS').onclick=()=>{try{localStorage.setItem('p:'+S.nm,JSON.stringify(S));alert('Guardado: '+S.nm)}catch(e){alert('No se pudo guardar (¿demasiadas imágenes?). Usa «Exportar proyecto».')}};
@@ -7441,7 +7476,7 @@ function frameProject(item=null){
   draw();
  }
  if(mode!=='3d')return;
- exitWalk();resize();oc.autoRotate=false;
+ exitWalk();resize();stopOrbit();
  const model=item&&root.children.find(o=>o.userData.id===item.id);
  const box=model?new T.Box3().setFromObject(model):projectBounds3D();
  if(box.isEmpty())return;
@@ -8022,20 +8057,26 @@ $('#bPbr').onclick=pbrLib;$('#bPry').onclick=projLib;$('#bAcc').onclick=accountP
 /* Arranque */
 window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
 window.addEventListener('storage',e=>{if(e.key==='sbSes'&&!e.newValue&&REMEMBER_SESSION&&!localStorage.getItem('sbSes'))location.reload()});
+let startupProject;
 try{
  const active=localStorage.getItem(activeProjectKey),draft=active&&readProjectDraft(active);
  const data=draft||(!active&&localStorage.getItem(draftKey));
  if(data){S=migrate(JSON.parse(data));H=[JSON.stringify(S)]}
  if(active){
   if(draft){setActiveProject(active);setCloudSaveState('pending','Borrador recuperado. Guarda para sincronizarlo.')}
-  else openProj(active).catch(e=>setCloudSaveState('error',e.message));
+  else {
+   const opening=openProj(active),revision=projectTransition;
+   startupProject=opening.then(()=>{if(revision===projectTransition)startEditorOrbit()})
+    .catch(e=>setCloudSaveState('error',e.message));
+  }
  }
 }catch(e){}
 try{JSON.parse(localStorage.getItem('ml')||'[]').forEach(o=>{ML.push(o);LIB.push(o)})}catch(e){}
 if(r4)r4.outputEncoding=T.sRGBEncoding;
 if(!r3)$('#editorHint').textContent=WEBGL_UNAVAILABLE;
-drawTools();libUI();hint();setSun();setQ();refresh();animate();
-if(r3&&document.body.classList.contains('desktop-workspace'))setMode('dual');
+drawTools();libUI();hint();setSun();setQ();refresh();
+if(!startupProject)startEditorOrbit();
+animate();
 document.body.classList.remove('editor-booting');
 refreshNuhioProjects();catLoad().then(()=>libUI());sbUpdate();if(window.indexedDB)idbAll().then(async l=>{for(const m of l){try{await addModel(m)}catch(e){console.warn(e)}}libUI();refresh()});
 const recoveryOnLoad=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type')==='recovery'||new URLSearchParams(window.location.hash.replace(/^#/,'')).has('error_description');
