@@ -18,3 +18,4 @@ Mapas de color, normales OpenGL y rugosidad de [Poly Haven](https://polyhaven.co
 - [Marble Tiles](https://polyhaven.com/a/marble_tiles) · Charlotte Baglioni
 - [Herringbone Concrete Tile 02](https://polyhaven.com/a/herringbone_concrete_tile_02) · Charlotte Baglioni
 - [Terrazzo 001](https://ambientcg.com/view?id=Terrazzo001) · ambientCG, CC0.
+- [Concrete Floor 02](https://polyhaven.com/a/concrete_floor_02) · Poly Haven, CC0. Base de los acabados de encimera gris grafito y gris claro.

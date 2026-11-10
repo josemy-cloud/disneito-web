@@ -1650,9 +1650,9 @@ const PARQUET_FINISHES=[
 const isParquet=id=>PARQUET_FINISHES.some(([finish])=>finish===id);
 // Acabados de encimera propios. Los identificadores no forman parte del catálogo de suelos.
 const COUNTERTOPS=[
- ['enc-piedra-grafito-texturada','Gris grafito texturado','Mineral','enc-stone-honed-dark','#676664',.67,0,.36,125],
- ['enc-piedra-gris-clara-texturada','Gris claro mineral texturado','Mineral','enc-stone-honed-light','#c2c1ba',.69,0,.33,125],
- ['enc-roble-claro-continuo','Roble claro de veta continua','Madera','enc-oak-continuous','#cdaa79',.48,0,.20,230],
+ ['enc-piedra-grafito-texturada','Gris grafito texturado','Mineral','scan:concrete_floor_02','#676664',.93,0,.82,95,'grayscale(1) contrast(1.20) brightness(.84)'],
+ ['enc-piedra-gris-clara-texturada','Gris claro mineral texturado','Mineral','scan:concrete_floor_02','#c2c1ba',.98,0,.69,125,'grayscale(1) contrast(.80) brightness(1.50)'],
+ ['enc-roble-claro-continuo','Roble claro de veta continua','Madera','scan:wood_table','#cdaa79',1,0,.26,120,'brightness(1.48) contrast(.82) saturate(.77)'],
  ['enc-cuarzo-marfil','Cuarzo marfil satinado','Cuarzo','enc-quartz-satin','#e5dfd3',.46,0,.11,88],
  ['enc-mineral-gris','Mineral gris mate','Mineral','scan:concrete_floor_03','#b4afaa',1,0,.10,180],
  ['enc-porcelanico-blanco','Blanco ártico','Porcelánico','grain','#f2f1ee',.32,0,.08,120],
@@ -1692,7 +1692,7 @@ function surfaceMaterials(use='floor'){
 }
 const surfaceImages=use=>S.cm.map((src,i)=>({src,id:'img'+i})).filter(({id})=>(S.cmUse?.[id]||'floor')===use);
 function scanAsset(d){
- const legacy={'scan:smooth_concrete_floor':'concrete_floor_03','scan:terrazzo_tiles':'ambient-terrazzo001'};
+ const legacy={'scan:concrete_floor_02':'concrete_floor_02','scan:smooth_concrete_floor':'concrete_floor_03','scan:terrazzo_tiles':'ambient-terrazzo001'};
  return Object.hasOwn(legacy,d[3])?legacy[d[3]]:SURFACE_SCANS.some(p=>p[3]===d[3])?d[3].slice(5):null;
 }
 const scanURL=(asset,map)=>'/materiales/'+asset+'-'+map+'.webp';
@@ -1794,29 +1794,6 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const growth=Math.sin(2*Math.PI*(27*v+1.6*bend));
    t=(grain-.5)*.34+growth*.055-(pore>.74?.1:0);
    h=.5+growth*.075+(pore-.5)*.12;r=(grain-.5)*.08;
-  }else if(gen==='enc-stone-honed-dark'||gen==='enc-stone-honed-light'){
-   const dark=gen==='enc-stone-honed-dark';
-   const cloud=fb(u,v,7,9,166)-.5, mottling=fb(u,v,28,25,167)-.5;
-   const mineral=nz(u,v,112,119,168)-.5, grain=nz(u,v,237,221,169)-.5;
-   const pit=Math.max(0,nz(u,v,151,137,170)-.72);
-   t=cloud*(dark?.32:.19)+mottling*(dark?.24:.15)+mineral*.13+grain*.09-pit*.34;
-   h=.5+mottling*.15+mineral*.21+grain*.23-pit*.44;
-   r=cloud*.095+mottling*.075+grain*.055+pit*.17;
-  }else if(gen==='enc-oak-continuous'){
-   // La fibra recorre U y se curva de forma suave alrededor de nudos dispersos.
-   const dx=Math.sin(Math.PI*(u-.32)),dy=Math.sin(Math.PI*(v-.62));
-   const bend=dy*Math.exp(-dx*dx*14-dy*dy*70);
-   const fiberV=v+(fb(u,v,4,6,174)-.5)*.062+bend*.25;
-   const longGrain=fb(u,fiberV,3,27,175)-.5;
-   const fiber=nz(u,fiberV,11,215,176)-.5;
-   const ring=.5+.5*Math.sin(2*Math.PI*(38*fiberV+.34*fb(u,v,6,7,177)));
-   const knotDist=Math.min(Math.hypot(dx*7,dy*31),
-    Math.hypot(Math.sin(Math.PI*(u-.74))*10,Math.sin(Math.PI*(v-.21))*41));
-   const knot=Math.exp(-knotDist*knotDist*2.7);
-   const pores=Math.max(0,nz(u,fiberV,25,168,178)-.71);
-   t=.035+longGrain*.25+fiber*.125-ring*.086-knot*.28-pores*.25;
-   h=.5+fiber*.11-ring*.035-pores*.09-knot*.05;
-   r=longGrain*.055+fiber*.039+pores*.09;
   }else if(gen==='enc-quartz-satin'){
    const clouds=fb(u,v,7,8,161)-.5,micro=nz(u,v,178,181,162)-.5;
    const mineral=Math.max(0,nz(u,v,105,112,163)-.64);
