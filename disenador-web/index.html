@@ -284,7 +284,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 /* Motor de render fotorrealista (path tracing en la GPU del usuario). Módulo ES cargado bajo demanda desde index.html.
    Usa three 0.163 + three-mesh-bvh 0.7.4 + three-gpu-pathtracer 0.0.23 (ver import map en index.html). */
 
-const PRESETS = { prev: { res: '1280x720', samples: 64, bounces: 4 }, alta: { res: '1920x1080', samples: 512, bounces: 8 }, pro: { res: '2560x1440', samples: 2048, bounces: 10 } };
+const PRESETS = { prev: { res: '1280x720', samples: 64, bounces: 6 }, alta: { res: '1920x1080', samples: 512, bounces: 8 }, pro: { res: '2560x1440', samples: 2048, bounces: 10 } };
 
 /* Adapta resolución y texturas a las capacidades de la GPU para evitar errores de memoria */
 function adapt(res, caps) {
@@ -297,10 +297,11 @@ function adapt(res, caps) {
 
 /* Entorno equirectangular: cielo en degradado + disco solar de radiancia alta (sombras suaves reales) */
 function makeEnv(w, h, sd, sunRad, sky, sc) {
-  const a = new Float32Array(w * h * 4), R = .021, c0 = Math.cos(R), c1 = Math.cos(R * 1.6), m = Math.hypot(sd[0], sd[1], sd[2]), s = [sd[0] / m, sd[1] / m, sd[2] / m];
+  const a = new Float32Array(w * h * 4), R = .030, c0 = Math.cos(R), c1 = Math.cos(R * 1.6), m = Math.hypot(sd[0], sd[1], sd[2]), s = [sd[0] / m, sd[1] / m, sd[2] / m];
   for (let j = 0; j < h; j++) { const el = ((j + .5) / h - .5) * Math.PI, ce = Math.cos(el), y = Math.sin(el);
     for (let i = 0; i < w; i++) { const ph = ((i + .5) / w - .5) * 2 * Math.PI, x = ce * Math.cos(ph), z = ce * Math.sin(ph), o = (j * w + i) * 4; let r, g, b;
-      if (y >= 0) { const t = Math.pow(y, .5); r = (.95 + (.35 - .95) * t) * sky; g = (.95 + (.55 - .95) * t) * sky; b = sky; } else { r = .3 * sky; g = .28 * sky; b = .25 * sky; }
+      const t = Math.sqrt(Math.max(0,y)); const ambient = (.76 + .24 * t) * sky;
+      r = ambient * (1 - .11 * t); g = ambient * (1 - .055 * t); b = ambient;
       const d = x * s[0] + y * s[1] + z * s[2]; if (d > c1) { const k = d >= c0 ? 1 : (d - c1) / (c0 - c1); r += sc[0] * sunRad * k; g += sc[1] * sunRad * k; b += sc[2] * sunRad * k; }
       a[o] = r; a[o + 1] = g; a[o + 2] = b; a[o + 3] = 1; } }
   return a;
@@ -314,9 +315,9 @@ async function createRender(container, j, opt, cb) {
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain'; container.append(canvas);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }), gl = renderer.getContext(), P = PRESETS[opt.quality] || PRESETS.alta;
   const A = adapt(opt.res || P.res, { maxTex: renderer.capabilities.maxTextureSize, maxRb: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), mem: navigator.deviceMemory });
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = opt.exp ?? 1.15;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = opt.exp ?? 1.05;
   const pt = new WebGLPathTracer(renderer); pt.bounces = P.bounces; pt.tiles.set(2, 2); pt.filteredGlossyFactor = .5;
-  const st = { sun: opt.sun ?? 5200, sky: opt.sky ?? .68, fs: 22, fd: 3, target: P.samples, k: (j.look && j.look.k) || 6500 }; let W = A.w, H = A.h, mode = 'foto', dead = false, scene, cam, eq;
+  const st = { sun: opt.sun ?? 1250, sky: opt.sky ?? 1.45, fs: 22, fd: 3, target: P.samples, k: (j.look && j.look.k) || 6500 }; let W = A.w, H = A.h, mode = 'foto', dead = false, scene, cam, eq;
   const ctrl = { state: 'cargando', warnings: A.warn, get samples() { return pt.samples; } };
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ctrl.state = 'error'; cb({ state: 'error', msg: 'La GPU se quedó sin memoria o se reinició. Baja la resolución o la calidad.' }); });
   const sz = () => { renderer.setSize(mode == 'pano' ? Math.min(2048, W) : W, mode == 'pano' ? Math.min(2048, W) / 2 : H, false); if (cam) { cam.filmGauge = 36; cam.aspect = W / H; cam.setFocalLength(j.cam.mm); cam.fStop = st.fs; cam.focusDistance = st.fd; cam.updateProjectionMatrix(); } };
@@ -8379,7 +8380,7 @@ let RE=null,rcv=null,renderRun=0;
  const rs=(l,mn,mx,v,step,fn)=>rangeRow(rp,l,mn,mx,v,step,fn);
  rp.innerHTML='<h3>Ajustes del render</h3>';
  const rq=document.createElement('select');[['prev','Vista previa'],['alta','Alta calidad'],['pro','Calidad profesional']].forEach(([v,l])=>rq.add(new Option(l,v)));rq.value=touchRender?'prev':'alta';rq.setAttribute('aria-label','Calidad');rp.append(rq);const rz=document.createElement('select');['1280x720','1920x1080','2560x1440','3840x2160'].forEach(v=>rz.add(new Option(v)));rz.value=touchRender?'1280x720':'1920x1080';rz.setAttribute('aria-label','Resolución');rp.append(rz);rq.onchange=()=>{rz.value={prev:'1280x720',alta:'1920x1080',pro:'2560x1440'}[rq.value]};
- const lt=()=>RE&&RE.setLight(+sS.value,+sK.value),sS=rs('Sol',0,20000,5200,250,lt),sK=rs('Cielo',0,2,.68,.05,lt),sE=rs('Exposición del render',.2,4,1.15,.05,v=>RE&&RE.setExposure(v));
+ const lt=()=>RE&&RE.setLight(+sS.value,+sK.value),sS=rs('Sol',0,20000,1250,250,lt),sK=rs('Cielo',0,2,1.45,.05,lt),sE=rs('Exposición del render',.2,4,1.05,.05,v=>RE&&RE.setExposure(v));
  const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');rp.append(zc);
  const pg=document.createElement('progress');pg.max=1;pg.value=0;pg.style.width='100%';const pm=document.createElement('div');pm.className='studio-muted';pm.setAttribute('role','status');actions.append(pg,pm);
  const renderLights=document.createElement('div');renderLights.className='studio-muted';rp.append(renderLights);
