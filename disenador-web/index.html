@@ -226,6 +226,35 @@ body.editor-booting{background:#e8eff9}
 body.editor-booting > :not(#editorBoot){visibility:hidden}
 body.editor-booting > #editorBoot{display:grid;place-content:center;justify-items:center;gap:12px;position:fixed;inset:0;background:#e8eff9;color:#132f50;text-align:center;padding:24px;z-index:1000}
 </style><link rel="stylesheet" href="ui-redesign.css?v=11" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
+<style>
+#bPbr{display:none!important}
+@media (min-width:1051px){
+ body.adaptive.desktop-workspace:not(.ui-legacy){grid-template-rows:auto minmax(0,1fr) auto}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #top{overflow:visible}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #view,
+ body.adaptive.desktop-workspace:not(.ui-legacy) #lib{grid-area:2 / 2}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #pr{grid-area:2 / 3}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #sb{grid-area:3 / 2 / 4 / -1}
+ body.desktop-workspace:not(.ui-legacy) #top #nuhioToolRow{
+  flex:0 1 auto;flex-wrap:wrap;max-width:100%;margin-left:auto;
+  padding:0;border:0;background:transparent
+ }
+ #top #nuhioToolActions{flex-wrap:wrap;flex:0 1 auto;border-color:#344459}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #view #tools{
+  position:absolute;z-index:6;top:8px;left:8px;max-width:calc(100% - 16px);
+  box-sizing:border-box
+ }
+ body.adaptive.desktop-workspace:not(.ui-legacy) #view.view-dual #tools{
+  max-width:calc(var(--dual-ratio) - 16px)
+ }
+ body.adaptive.desktop-workspace:not(.ui-legacy) #view.plan-tools-inactive :is(#tools,#openingType){
+  display:none!important
+ }
+ body.desktop-workspace:not(.ui-legacy) #view.view-dual #nuhioFullPlan{top:68px}
+ body.desktop-workspace:not(.ui-legacy) #view #openingType:not([hidden]){top:68px}
+ body.desktop-workspace:not(.ui-legacy) #view.view-dual #openingType:not([hidden]){top:100px}
+}
+</style>
 </head><body><script>
 if(new URLSearchParams(location.search).get('ui')==='legacy'){
  document.body.classList.add('ui-legacy');
@@ -6883,7 +6912,7 @@ function updateMobileView(){
 const nuhioDock=$('#nuhioModes'),nuhioNav=$('#nuhioNav');
 const nuhioToolRow=$('#nuhioToolRow'),nuhioToolActions=$('#nuhioToolActions'),nuhioExport=$('#nuhioExport');
 const exportButtons=[$('#bP2'),$('#bP3')],imageMenu=$('#bX').nextElementSibling;
-const desktopActions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label')).concat($('#tl'),$('#bPbr'),$('#tr'));
+const desktopActions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label')).concat($('#tl'),$('#tr'));
 const navTab=$('#nuhioNavTab'),navPin=$('#nuhioPin');
 let navPinned=true;
 try{navPinned=localStorage.getItem('nuhio:sidebar')!=='auto'}catch{}
@@ -6943,7 +6972,7 @@ function arrangeMobileTop(){
   dualSplitter.setAttribute('aria-orientation',desktop?'vertical':'horizontal');
   dualSplitter.setAttribute('aria-valuenow',String(Math.round(dualRatio*100)));
   if(!desktop){
-    nuhioToolRow.before($('#tools'));
+    $('#lib').before($('#tools'),nuhioToolRow);
     imageMenu.append(...exportButtons);
     nuhioExport.open=false;
   }
@@ -6958,13 +6987,13 @@ function arrangeMobileTop(){
     mobileCamera.append($('#bReal'),$('#bFotoIA'),$('#v3'));
     updateMobileView();setMobilePanel(null);
   }else{
-    nuhioToolRow.before($('#tools'));
     mobileActions.remove();mobileContext.remove();mobileViews.remove();mobileShade.remove();mobileBar.remove();mobileViewButton.remove();mobileBack.remove();
     mobileTop.append(...topNodes);$('#bMo').hidden=false;sbUpdate();
     if(desktop){
       $('#cameraDock').append($('#v3'));
       nuhioDock.append(mobileDock[3]);
-      nuhioToolRow.prepend($('#tools'));
+      editorView.append($('#tools'));
+      mobileTop.append(nuhioToolRow);
       nuhioToolActions.append(...desktopActions);
       $('#nuhioExportActions').append($('#bReal'),$('#bFotoIA'),...exportButtons);
     }
@@ -8553,7 +8582,7 @@ let RE=null,rcv=null,renderRun=0;
  function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
-function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
+function modeUI(){const q=$('#sq').value,m3=mode=='3d';editorView.classList.toggle('plan-tools-inactive',m3&&!dualView);$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
  const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
 function frameProject(item=null){
  if(!S.w.length&&!S.i.some(it=>!it.hid))return;
