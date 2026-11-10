@@ -7085,9 +7085,9 @@ function topMat(c){
  const pp=pb(c,'cn');if(pp)return pp;const m=c.cm;if(m=='madera')return pbrMat('madera-tablero',{w:true});if(m=='mármol')return sm(m,'#fff',100,100,60,.1,'#999');if(m=='granito')return sm('piedra','#fff',100,100,40,.1,'#777');return new T.MeshStandardMaterial({color:c.cn,roughness:m=='laminado'?.6:.2})}
 const polishedBase=c=>c.k==='base'&&c.lay==='puertas'&&(!c.fr||c.fr==='lisa'||c.fr==='liso');
 function pan(p,w,h,cx,c,mf){
- const f=c.fr||'liso',z=1,edge=M('#b9b5ad',.62,.08),shadow=M('#77766f',.78,.02),limit=Math.max(2,Math.min(w,h)*.12);
+ const f=c.fr||'liso',z=1;
  // Frente estructural con espesor real y canto ligeramente suavizado.
- B(p,Math.max(2,w-.5),Math.max(2,h-.5),PT||2,cx,0,z,mf,polishedBase(c)?.22:undefined);
+ B(p,Math.max(2,w-(polishedBase(c)?.2:.5)),Math.max(2,h-.5),PT||2,cx,0,z,mf,polishedBase(c)?.12:undefined);
  const rail=(ww,hh,x,y,zz=2.45,mat=mf)=>B(p,ww,hh,.9,x,y,zz,mat);
  if(f==='cristal'){
   const frame=M('#292d30',.34,.72),seal=M('#161a1d',.72,.05);
@@ -7135,12 +7135,6 @@ function pan(p,w,h,cx,c,mf){
   }
   return;
  }
- // Acabado liso: canto perimetral y microdetalle de junta, sin molduras decorativas falsas.
- const band=M('#aaa69e',.7,.04);
- B(p,w-.8,.45,.35,cx,h/2-.45,2.12,band);
- B(p,w-.8,.45,.35,cx,-h/2+.45,2.12,band);
- B(p,.45,h-.8,.35,cx-w/2+.45,0,2.12,band);
- B(p,.45,h-.8,.35,cx+w/2-.45,0,2.12,band);
 }
 function hdl(p,c,w,h,cx,vert,mh,hideMounts=false){
  const t=c.ti,L=Math.max(8,c.tl||30);
@@ -7163,14 +7157,18 @@ function hdl(p,c,w,h,cx,vert,mh,hideMounts=false){
  });
 }
 function fdoor(g,it,k,x0,w,y0,h,fl,Mx){const c=it.cfg,op=c.op||'lateral',mf=Mx.mf,mh=Mx.mh,p=new T.Group(),s=fl?-1:1,sw=it.d/2;g.add(p);p.userData.part={t:'puerta',i:k};if(selPart&&selPart.id==it.id&&selPart.t=='puerta'&&selPart.i==k)HL.push(p);
- if(op=='lateral'){p.position.set(fl?x0+w:x0,y0+h/2,sw);pan(p,w,h,s*w/2,c,mf);hdl(p,c,w,h,s*(c.cornerL?w*.36:w-5),true,mh);
+ if(op=='lateral'){
+  const overlay=polishedBase(c),leaf=overlay?new T.Group():p;
+  p.position.set(fl?x0+w:x0,y0+h/2,sw+(overlay?2:0));
+  if(overlay){leaf.position.z=-2;p.add(leaf)}
+  pan(leaf,w,h,s*w/2,c,mf);hdl(leaf,c,w,h,s*(c.cornerL?w*.36:w-5),true,mh);
   // Bisagras de cazoleta: copas, brazos y placas montadas en el canto interior de la hoja.
   const hingeMetal=M('#aeb6bb',.34,.82),hingeDark=M('#626c72',.42,.72);
   [-1,1].forEach(end=>{const hy=end*(h/2-Math.min(8,h*.12));
-   B(p,5.5,6.5,1.5,s*7,hy,-1.15,hingeMetal);
-   const cup=new T.Mesh(new T.CylinderGeometry(2.25,2.25,1.2,24),hingeMetal);cup.rotation.x=Math.PI/2;cup.position.set(s*5,hy,-.45);p.add(cup);
-   B(p,5,2.2,1.3,s*10,hy,-1.05,hingeDark);
-   B(p,3.2,2.2,1.2,s*12,hy,-.45,hingeMetal);
+   B(leaf,5.5,6.5,1.5,s*7,hy,-1.15,hingeMetal);
+   const cup=new T.Mesh(new T.CylinderGeometry(2.25,2.25,1.2,24),hingeMetal);cup.rotation.x=Math.PI/2;cup.position.set(s*5,hy,-.45);leaf.add(cup);
+   B(leaf,5,2.2,1.3,s*10,hy,-1.05,hingeDark);
+   B(leaf,3.2,2.2,1.2,s*12,hy,-.45,hingeMetal);
   });
   mv(p,{it,k,t:'d',sg:fl?1:-1})}
  else if(op=='plegable'){p.position.set(fl?x0+w:x0,y0+h/2,sw);const w2=w/2,q=new T.Group();q.position.set(s*w2,0,0);p.add(q);pan(p,w2,h,s*w2/2,c,mf);pan(q,w2,h,s*w2/2,c,mf);hdl(q,c,w2,h,s*(w2-4),true,mh);mv(p,{it,k,t:'f',sg:fl?1:-1,c:q})}
@@ -7223,7 +7221,12 @@ function worktop(g,it,c,y,cut){const mn=topMat(c),flush=c.flushTop===true&&!cut,
  if(cut.t=='s'){const st=M('#c4c7cc',.25,.9);B(g,cw-4,1,cd-4,0,y-16,1,st);B(g,cw-4,16,1,0,y-8,1+cd/2-2,st);B(g,cw-4,16,1,0,y-8,1-cd/2+2,st);B(g,1,16,cd-4,-cw/2+2,y-8,1,st);B(g,1,16,cd-4,cw/2-2,y-8,1,st);const ft=new T.Mesh(new T.CylinderGeometry(1.2,1.2,26,10),st);ft.position.set(0,y+16,1-cd/2-6);g.add(ft);B(g,2,2,16,0,y+28,1-cd/2+2,st)}
  else{B(g,cw,.8,cd,0,y+2.6,1,M('#0b0e12',.05,.3));[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b],i)=>{const r=new T.Mesh(new T.CylinderGeometry(7+(i%2)*2,7+(i%2)*2,.3,24),M('#444',.4,.5));r.position.set(a*cw/4,y+3.1,1+b*cd/4);g.add(r)})}}
 const LAY={};
-LAY['puertas']=LAY['armario alto']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(1,c.nd|0),w=iw/n;for(let i=0;i<n;i++)if(!(c.xd||[]).includes(i))fdoor(g,it,i,-iw/2+i*w,w-.3,y0+1.5,H-3,n>1?i>=n/2:it.fl,Mx)};
+LAY['puertas']=LAY['armario alto']=(g,it,c,Mx,y0,H,iw)=>{
+ const n=Math.max(1,c.nd|0),overlay=polishedBase(c),span=overlay?it.w:iw,w=span/n;
+ for(let i=0;i<n;i++)if(!(c.xd||[]).includes(i)){
+  fdoor(g,it,i,-span/2+i*w+(overlay?.15:0),w-.3,y0+1.5,H-3,n>1?i>=n/2:it.fl,Mx);
+ }
+};
 LAY['cajones']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(1,c.nc|0),ws=Array.from({length:n},(_,i)=>c.dh?1+(n-1-i)*.6:1),sum=ws.reduce((a,b)=>a+b),av=H-2;let y=y0+1;ws.forEach((q,i)=>{const hh=av*q/sum;ndrw(g,it,i,-iw/2,iw,y,hh-.6,Mx);y+=hh})};
 LAY['puertas+cajones']=(g,it,c,Mx,y0,H,iw)=>{
  const n=Math.max(1,c.nc|0),dh=Math.min(18,H*.35),n2=Math.max(1,c.nd|0),w=iw/n2;
@@ -7451,7 +7454,7 @@ function buildLCarousel(g,it,c,Mx,y0,H,hasTop){
 function buildKitchenPlinth(g,it,height){
  const {w,d,cfg}=it,plate=Math.min(2,d*.09),recess=Math.min(7,d*.22),front=d/2-recess,back=front-plate;
  const mat=pb(cfg,'cz')||fm(cfg.cz,'mate');
- tagp(B(g,w-Math.min(2,w*.18),height,plate,0,height/2,front-plate/2,mat),'zócalo');
+ tagp(B(g,w-Math.min(.25,w*.18),height,plate,0,height/2,front-plate/2,mat,0),'zócalo');
  const footRadius=Math.min(3.1,w*.11,(back+d/2)*.16),margin=footRadius+Math.min(1.5,d*.05);
  const x=w/2-footRadius-Math.min(4,w*.1),frontFoot=back-margin,backFoot=-d/2+margin;
  const metal=M('#737d83',.34,.82),poly=M('#292e32',.72,.04);
