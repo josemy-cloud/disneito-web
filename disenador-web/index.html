@@ -4284,9 +4284,14 @@ function orientDiningGrain(mesh,axis,shared=false){
  const across=[0,1,2].filter(i=>i!==axis);
  const value=(attribute,i,component)=>component===0?attribute.getX(i):component===1?attribute.getY(i):attribute.getZ(i);
  const offset=mesh.position.x*.003+mesh.position.y*.005+mesh.position.z*.007;
+ // Cada pata se corta de un tablón: ampliar la veta sin cruzar sus juntas.
+ const solidLeg=axis===1&&geometry.type==='CylinderGeometry';
+ const along=solidLeg?125:215;
+ const width=solidLeg?geometry.parameters.radiusTop*16:108;
+ const acrossOffset=solidLeg?(mesh.position.x*mesh.position.z<0?.34:.57):offset;
  for(let i=0;i<position.count;i++){
   const cross=Math.abs(value(normal,i,across[0]))>Math.abs(value(normal,i,across[1]))?across[1]:across[0];
-  uv.setXY(i,value(position,i,axis)/215,value(position,i,cross)/108+offset);
+  uv.setXY(i,value(position,i,axis)/along+(solidLeg?offset:0),value(position,i,cross)/width+acrossOffset);
  }
  uv.needsUpdate=true;
  mesh.geometry=geometry;
