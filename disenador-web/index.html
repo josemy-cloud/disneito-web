@@ -1003,6 +1003,14 @@ function sofaImageMap(data){
  }
  return sofaImageMaps.get(data);
 }
+const CABINET_SURFACES={roble:'Roble aceitado',rustica:'Madera escaneada'};
+const VANITY_SURFACES={marmol:'Mármol escaneado',terrazo:'Terrazo escaneado'};
+function furnitureSurfaces(it){
+ if(it.t!=='roomObject')return null;
+ if(it.shape==='vanity')return VANITY_SURFACES;
+ if(['dresser','wardrobe','sideboard','console','desk','panel'].includes(it.shape))return CABINET_SURFACES;
+ return null;
+}
 function props(){P.innerHTML='';const e=get();
  if(sel?.k==='group'){
   P.innerHTML='<h4>Selección múltiple</h4><small>'+sel.ids.size+' elementos seleccionados. Arrastra para moverlos o usa Ctrl+C y Ctrl+V.</small>';
@@ -1054,6 +1062,15 @@ function props(){P.innerHTML='';const e=get();
   if(isRectangularDiningTable(e)||isUpholsteredDiningChair(e)){
    const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble en tablones',rustico:'Roble rústico con nudos'};
    sel2('Veta de la madera',Object.keys(grains),Object.hasOwn(grains,e.woodGrain)?e.woodGrain:'suave',v=>{e.woodGrain=v},grains);
+  }
+  const finishes=furnitureSurfaces(e);
+  if(finishes){
+   const labels={original:'Original',...finishes};
+   const surface=Object.hasOwn(finishes,e.furnitureSurface)?e.furnitureSurface:'original';
+   sel2(e.shape==='vanity'?'Material de encimera':'Acabado del mueble',Object.keys(labels),surface,v=>{
+    if(v==='original')delete e.furnitureSurface;
+    else e.furnitureSurface=v;
+   },labels);
   }
   partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
@@ -1601,7 +1618,10 @@ const COUNTERTOPS=[
  ['enc-granito-blanco','Blanco moteado','Granito','granite','#cbc7be',.28,0,.24,95],
  ['enc-granito-negro','Negro de grano fino','Granito','granite','#303039',.26,0,.18,135],
  ['enc-granito-rosa','Rosa granulado','Granito','granite','#b88d83',.31,0,.23,88],
- ['enc-travertino','Travertino romano beige','Travertino','travert','#c7b493',.52,0,.30,150]
+ ['enc-travertino','Travertino romano beige','Travertino','travert','#c7b493',.52,0,.30,150],
+ ['enc-marmol-escaneado','Mármol beige escaneado','Mármol','scan:marble_01','#ddd9d0',1,0,.12,150],
+ ['enc-terrazo-escaneado','Terrazo blanco escaneado','Terrazo','scan:ambient-terrazzo001','#cfcecd',1,0,.15,100],
+ ['enc-madera-escaneada','Madera rústica escaneada','Madera','scan:wood_table','#745537',1,0,.16,120]
 ];
 const COUNTERTOP_BY_ID=new Map(COUNTERTOPS.map(d=>[d[0],d]));
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
@@ -2442,7 +2462,7 @@ function furnitureDrawer(g,it,k,{x=0,width,depth,frontZ,bottom,top,ceiling,front
  const boxHeight=boxTop-boxBottom,panel=Math.min(1.2,boxHeight/2,boxWidth/4,boxDepth/4);
  const drawer=new T.Group();drawer.name='Cajón '+(k+1);
  drawer.position.set(x,(top+bottom)/2,frontZ);g.add(drawer);
- B(drawer,width-1,faceHeight,faceThickness,0,0,faceThickness/2,front);
+ B(drawer,width-1,faceHeight,faceThickness,0,0,faceThickness/2,front,.22);
  if(boxHeight>0&&boxWidth>2&&boxDepth>3){
   const z=-boxDepth/2,y=(boxBottom+boxTop)/2;
   B(drawer,boxWidth,panel,boxDepth,0,boxBottom+panel/2,z,inside);
@@ -2573,7 +2593,7 @@ function buildBathVanity(g,it,front){
   hole.absellipse(x,-z,rx,rz,0,Math.PI*2,true,0);cut.holes.push(hole);
  }
  const slab=new T.Mesh(new T.ExtrudeGeometry(cut,{depth:counter,bevelEnabled:false,curveSegments:40}),partFinish(M('#f0ece3',.32,.04),'top'));
- slab.rotation.x=-Math.PI/2;slab.position.y=top-counter;g.add(slab);
+ slab.rotation.x=-Math.PI/2;slab.position.y=top-counter;slab.castShadow=slab.receiveShadow=true;g.add(slab);
  const bowlDepth=Math.min(12,(top-plinth)*.28);
  for(const x of basins){
   const rimY=top+.65,drainY=top-bowlDepth,r=Math.min(2.35,rx*.2);
@@ -2848,15 +2868,18 @@ function buildBedroomDesk(g,it,primary){
 }
 
 function buildBedroomMirror(g,it,primary){
- const {w,h,d}=it,t=Math.min(2.3,w*.055),mat=partFinish(primary.clone(),'frame');
- const reflective=partFinish(M('#cbd3d7',.06,.94),'glass'),hardware=partFinish(M('#626668',.45,.5),'hardware');
- const backD=d*.62,faceZ=backD/2+.45;
- B(g,w,h,backD,0,h/2,0,mat);
- B(g,w-2*t,h-2*t,.8,0,h/2,faceZ,reflective);
+ const {w,h,d}=it,t=Math.min(2.3,w*.055,h*.055),frame=partFinish(primary.clone(),'frame');
+ const glass=partFinish(M('#e2e5e7',.025,1),'glass');
+ const hardware=partFinish(M('#626668',.45,.5),'hardware');
+ const back=Math.min(d*.55,2.1),lip=Math.min(d*.30,1.3),glassT=Math.min(lip*.7,.55);
+ B(g,w-2*t,h-2*t,back,0,h/2,-d*.11,hardware,.10);
+ B(g,w-2*t+.10,h-2*t+.10,glassT,0,h/2,-d*.11+back/2+glassT/2-.02,glass,.06);
+ const frameDepth=back+lip,frameZ=-d*.11+lip/2;
  for(const side of [-1,1]){
-  B(g,t,h,.9,side*(w-t)/2,h/2,faceZ,mat);
-  B(g,w-2*t,t,.9,0,side===-1?t/2:h-t/2,faceZ,mat);
-  B(g,w*.52,1.4,.8,0,h*(side===-1?.2:.8),-backD/2-.35,hardware);
+  B(g,t,h,frameDepth,side*(w-t)/2,h/2,frameZ,frame,.18);
+  B(g,w-2*t,t,frameDepth,0,side===-1?t/2:h-t/2,frameZ,frame,.18);
+  const mount=Math.min(.45,d*.14);
+  B(g,w*.52,Math.min(1.4,h*.05),mount,0,h*(side===-1?.2:.8),-d*.11-back/2-mount/2+.04,hardware,.08);
  }
 }
 
@@ -3089,13 +3112,13 @@ function buildDiningExtension(g,it,wood,edge,steel){
 
 function buildLivingRoundMirror(g,it,primary){
  const {w,h,d}=it,r=Math.min(w,h)/2,frame=partFinish(primary.clone(),'frame');
- const glass=partFinish(M('#c6d0d4',.065,.95),'glass'),metal=partFinish(M('#666b6a',.48,.52),'hardware');
+ const glass=partFinish(M('#e2e5e7',.025,1),'glass'),metal=partFinish(M('#666b6a',.48,.52),'hardware');
  const disk=(radius,depth,z,mat)=>{
   const mesh=new T.Mesh(new T.CylinderGeometry(radius,radius,depth,80),mat);
   mesh.rotation.x=Math.PI/2;mesh.position.set(0,r,z);g.add(mesh);
  };
  disk(r,d*.64,0,frame);
- disk(r*.944,d*.14,d*.38,glass);
+ disk(r*.944,d*.14,d*.31,glass);
  B(g,r*.66,2,d*.14,0,h*.72,-d*.37,metal);
 }
 
@@ -8134,7 +8157,43 @@ function applyItemPartColors(g,it,primary){
  });
  if(defaults)modelPartDefaults.set(it,defaults);
 }
+function applyFurnitureSurface(g,it){
+ const surface=it.furnitureSurface,finishes=furnitureSurfaces(it);
+ if(!finishes||!Object.hasOwn(finishes,surface))return;
+ const countertop=finishes===VANITY_SURFACES;
+ const roles=countertop?['top']:['top','carcass','cabinet','fronts','drawers','drawerFronts','doors','shelves','frame','casing','body','panel'];
+ const scan={rustica:'wood_table',marmol:'marble_01',terrazo:'ambient-terrazzo001'}[surface];
+ const definition=scan&&SURFACE_SCANS.find(d=>d[3]==='scan:'+scan);
+ if(scan&&!definition)return;
+ const wood=surface==='roble'?diningOak(it,'#e3d1b9'):null;
+ const maps=definition?pbrTex(definition):null;
+ const cache=new Map();
+ g.traverse(mesh=>{
+  if(!mesh.isMesh||Array.isArray(mesh.material))return;
+  const source=mesh.material,role=mesh.userData.partColorRole||source.userData.partColorRole;
+  if(!roles.includes(role)||source.transparent||source.metalness>.35)return;
+  if(!cache.has(source)){
+   const mat=source.clone();
+   if(wood){
+    Object.assign(mat,{map:wood.map,normalMap:wood.normalMap,roughnessMap:wood.roughnessMap});
+    mat.color.copy(wood.color);mat.roughness=1;mat.normalScale.copy(wood.normalScale);
+   }else{
+    Object.assign(mat,{map:maps.a,normalMap:maps.n,roughnessMap:maps.r,roughness:1});
+    mat.color.set('#ffffff');mat.normalScale.setScalar(countertop?.12:.18);
+   }
+   mat.metalness=0;cache.set(source,mat);
+  }
+  mesh.material=cache.get(source);
+  const geometry=mesh.geometry;
+  if(!geometry.attributes.uv||!geometry.attributes.normal)return;
+  geometry.computeBoundingBox();
+  const size=geometry.boundingBox.getSize(new T.Vector3());
+  const axis=countertop||role==='top'?0:size.y>=Math.max(size.x,size.z)?1:size.x>=size.z?0:2;
+  orientDiningGrain(mesh,axis,true);
+ });
+}
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}if(hasUpholstery(it)&&sofaFabric(it)==='capitone'&&!it.upholsteryImage)tuftUpholsteredBacks(g);
+ applyFurnitureSurface(g,it);
  applyItemPartColors(g,it,mt)}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
