@@ -972,7 +972,7 @@ function partColorUI(e,panel=P,save=commit){
 }
 
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
-const SOFA_FABRICS={lino:'Lino fino',boucle:'Bouclé texturizado',liso:'Tela lisa'};
+const SOFA_FABRICS={lino:'Lino fino',trama:'Trama fina',boucle:'Bouclé texturizado',liso:'Tela lisa'};
 const isUpholsteredChairPilot=it=>it.t==='roomObject'&&it.shape==='chair'&&it.roomType==='comedor'&&it.variant===0&&it.n==='Silla tapizada';
 const hasUpholstery=it=>isUpholsteredChairPilot(it)||it.t==='sofa'||(it.t==='roomObject'&&(
  ['sofa','outdoorsofa'].includes(it.shape)||(it.shape==='seat'&&!/puf/i.test(it.n||''))
@@ -1648,6 +1648,17 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const cloud=(fb(u,v,5,6,26)-.5)*.12;
    t=gen==='enc-vein-dark'?vein*3.1+hairline*1.9+cloud:cloud-vein*(gen==='enc-vein-bold'?.46:.28)-hairline*.14;
    h=.5;r=vein*.035;
+  }else if(gen==='sofa-woven'){
+   // Tafetán: la urdimbre y la trama alternan por encima y por debajo.
+   const tx=u*112,ty=v*112,ix=Math.floor(tx),iy=Math.floor(ty);
+   const warp=Math.sin(Math.PI*(tx-ix))**2,weft=Math.sin(Math.PI*(ty-iy))**2;
+   const warpOnTop=(ix+iy)%2===0;
+   const upper=warpOnTop?warp:weft,lower=warpOnTop?weft:warp;
+   const yarn=upper+lower*.68*(1-upper);
+   const fiber=nz(u,v,223,227,46)-.5,shade=nz(u,v,17,19,47)-.5;
+   t=-.15+yarn*.19+fiber*.038+shade*.022;
+   h=.45+yarn*.14+fiber*.025;
+   r=(1-yarn)*.028;
   }else if(gen==='sofa-boucle'){
    const nap=fb(u,v,36,36,41),loops=nz(u,v,110,110,42),fiber=nz(u,v,213,213,43);
    const tuft=Math.max(0,loops-.33);
@@ -4189,12 +4200,14 @@ function applyUpholstery(it,fabric,frame){
  const finish=sofaFabric(it);
  if(!custom&&finish==='liso')return;
  const map=custom?sofaImageMap(it.upholsteryImage):null;
- const linen=custom?null:pbrTex(['sofa-linen','Tapicería de lino','Textil',finish==='boucle'?'sofa-boucle':'sofa-linen-fine','#eeeeee',.88,0,.17,42]);
+ const generator={lino:'sofa-linen-fine',trama:'sofa-woven',boucle:'sofa-boucle'}[finish];
+ const linen=custom?null:pbrTex(['sofa-linen','Tapicería','Textil',generator,'#eeeeee',.88,0,.17,42]);
  for(const mat of frame?[fabric,frame]:[fabric]){
   if(custom){mat.map=map;mat.color.set('#fff')}
   else{
    Object.assign(mat,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-   mat.normalScale.setScalar(finish==='boucle'?(mat===frame?.17:.24):(mat===frame?.055:.075));
+   const relief={lino:.075,trama:.14,boucle:.24}[finish];
+   mat.normalScale.setScalar(mat===frame?relief*.72:relief);
   }
  }
  if(frame)wuv(frame,{uT:{value:new T.Vector2(42,42)},uSw:{value:0},uR:{value:0},uO:{value:new T.Vector2(0,0)},uW:{value:0}});
