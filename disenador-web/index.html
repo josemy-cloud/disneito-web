@@ -98,6 +98,9 @@ body.adaptive:not(.ui-legacy) #view #walkPad{background:#202b3ee8}
 @media (hover: hover) and (pointer: fine){
  body.adaptive.desktop-workspace:not(.ui-legacy) #tools button[data-tool]{min-width:34px}
  body.adaptive.desktop-workspace:not(.ui-legacy) #tools button span{display:none}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #tools button:not(.on):is(:hover,:focus-visible){
+  background:#e4effc!important;border-color:#9dbadd!important;color:#203956!important
+ }
  body.adaptive.desktop-workspace:not(.ui-legacy) #tools button:hover span,
  body.adaptive.desktop-workspace:not(.ui-legacy) #tools:not(:has(button:hover)) button:focus-visible span{display:block}
 }
