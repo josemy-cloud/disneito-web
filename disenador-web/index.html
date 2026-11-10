@@ -142,7 +142,19 @@ body.desktop-workspace:not(.ui-legacy) #viewActions summary{display:list-item;li
  body.desktop-workspace:not(.ui-legacy) #viewActions :is(summary,#fitProject){min-height:44px;line-height:32px}
  body.desktop-workspace:not(.ui-legacy) #viewActions #nuhioModes button{min-height:44px}
 }
-#cameraDock{position:relative}
+#cameraDock,#lightsDock{position:relative}
+#lightsDock[hidden]{display:none}
+#lightsDock summary{cursor:pointer;padding:6px 8px;background:#fff;color:#263432;border:1px solid #d9d8d0;border-radius:8px;font-weight:600}
+#lightsList{
+ position:absolute;right:0;bottom:calc(100% + 6px);width:min(300px,65vw);max-height:48dvh;
+ overflow:auto;overscroll-behavior:contain;padding:8px;background:#f7faff;color:#203956;
+ border:1px solid #d1def1;border-radius:10px;box-shadow:0 8px 24px #1e2a3b30
+}
+#lightsList fieldset{min-width:0;margin:0 0 8px;padding:8px;border:1px solid #d1def1;border-radius:7px}
+#lightsList legend{font-weight:700;padding:0 4px}
+#lightsList .r{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+#lightsList .r input[type=range]{width:43%}
+#mobileCamera #lightsList{position:static;width:auto;max-height:none;box-shadow:none;margin-top:6px}
 #cameraDock summary{
  cursor:pointer;padding:6px 8px;background:white;color:#263432;
  border:1px solid #d9d8d0;border-radius:8px;font-weight:600
@@ -324,7 +336,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
-<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido</button><button id="walkInteract" type="button" hidden disabled>Interactuar</button><div id="walkTouch">
+<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><details id="lightsDock" hidden><summary>Luces</summary><div id="lightsList"></div></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido</button><button id="walkInteract" type="button" hidden disabled>Interactuar</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento"><span aria-hidden="true"></span></button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
@@ -2423,16 +2435,19 @@ function drw(g,it,k,x0,w,y0,h,mt,hm){
 }
 function doors(g,it,mt,hm,y0,h,k0){const w=it.w-4;if(it.w>80){door(g,it,k0,-w/2,w/2,y0,h,mt,hm,false);door(g,it,k0+1,0,w/2,y0,h,mt,hm,true)}else door(g,it,k0,-w/2,w,y0,h,mt,hm,it.fl)}
 const fixtureIsOn=it=>it.t==='ceilingSpot'?it.lightOn!==false:!!it.lightOn;
-const spotPower=it=>Number.isFinite(it.lightPower)?Math.max(10,Math.min(100,it.lightPower)):75;
+const fixturePower=it=>Number.isFinite(it.lightPower)?Math.max(10,Math.min(100,it.lightPower)):it.t==='ceilingSpot'?75:100;
+const LIGHT_TONES={warm:'#ffd3a0',neutral:'#fff5e8',cool:'#d6e8ff'};
+const fixtureColor=(it,fallback)=>Object.hasOwn(LIGHT_TONES,it.lightTone)?LIGHT_TONES[it.lightTone]:fallback;
+const hasAdjustableLight=it=>isLightingFixture(it)||(it.t==='mod'&&it.cfg?.k==='alto'&&!!it.cfg.led);
 const BUILD={
 ceilingSpot(g,it,mt){
- const radius=Math.min(it.w,it.d)/2,power=spotPower(it)/100,warm='#ffe3b5';
+ const radius=Math.min(it.w,it.d)/2,power=fixturePower(it)/100,warm='#ffe3b5';
  const mount=new T.Mesh(new T.CylinderGeometry(radius,radius,it.h*.8,32),mt);
  mount.position.y=it.h*.6;g.add(mount);
- const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15*power));
+ const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15));
  lens.position.y=it.h*.1;lens.material.toneMapped=!fixtureIsOn(it);g.add(lens);
  if(!fixtureIsOn(it))return;
- const light=new T.SpotLight(warm,5.5*power,750,it.wideBeam?.68:.42,.65,1);
+ const light=new T.SpotLight(fixtureColor(it,warm),5.5*power,750,it.wideBeam?.68:.42,.65,1);
  light.position.y=-.25;light.target.position.y=-200;
  g.add(light,light.target);
 },
@@ -3133,22 +3148,22 @@ function buildBedroomLamp(g,it,primary){
  for(const side of [-1,1])bedroomTube(g,[0,low+shadeH*.66,0],[side*r*.67,low+shadeH*.66,0],.24,bulb);
 }
 function fixtureMaterial(it,color,intensity){
- return new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:fixtureIsOn(it)?intensity:0,roughness:.35});
+ return new T.MeshStandardMaterial({color,emissive:fixtureColor(it,color),emissiveIntensity:fixtureIsOn(it)?intensity*fixturePower(it)/100:0,roughness:.35});
 }
 function addFixtureLight(g,it,color,intensity,distance,x,y,z){
  if(!it.lightOn)return;
- const light=new T.PointLight(color,intensity,distance,1);
+ const light=new T.PointLight(fixtureColor(it,color),intensity*fixturePower(it)/100,distance,1);
  light.position.set(x,y,z);g.add(light);
 }
 function applyLampLight(g,it,bulb,shade){
  if(!it.lightOn)return;
- const warm='#ffe4b7';
+ const warm=fixtureColor(it,'#ffe4b7'),power=fixturePower(it)/100;
  bulb.material=bulb.material.clone();
  // La luz puntual se origina dentro de la bombilla.
  bulb.material.userData.castsRenderShadow=false;
- bulb.material.emissive.set(warm);bulb.material.emissiveIntensity=2.6;
- if(shade?.emissive){shade.emissive.set(warm);shade.emissiveIntensity=.18}
- const light=new T.PointLight(warm,1.35,320,1);
+ bulb.material.emissive.set(warm);bulb.material.emissiveIntensity=2.6*power;
+ if(shade?.emissive){shade.emissive.set(warm);shade.emissiveIntensity=.18*power}
+ const light=new T.PointLight(warm,1.35*power,320,1);
  light.name='Luz de lámpara';light.position.copy(bulb.position);g.add(light);
 }
 
@@ -7146,13 +7161,14 @@ function arrangeMobileTop(){
     mobileContext.insertBefore($('#tools'),mobileCamera);
     mobileWorkspace.append(mobileActions,mobileContext,mobileViews,mobileShade,mobileBar);
     for(const node of topNodes)if(!mobileDock.includes(node)&&node!==$('#bMo'))mobileActions.append(node);
-    mobileCamera.append($('#bReal'),$('#bFotoIA'),$('#v3'));
+    mobileCamera.append($('#lightsDock'),$('#bReal'),$('#bFotoIA'),$('#v3'));
     updateMobileView();setMobilePanel(null);
   }else{
     mobileActions.remove();mobileContext.remove();mobileViews.remove();mobileShade.remove();mobileBar.remove();mobileViewButton.remove();mobileBack.remove();
     mobileTop.append(...topNodes);$('#bMo').hidden=false;sbUpdate();
     if(desktop){
       $('#cameraDock').append($('#v3'));
+      $('#fitProject').before($('#lightsDock'));
       nuhioDock.append(mobileDock[3]);
       editorView.append($('#tools'));
       mobileTop.append(nuhioToolRow);
@@ -8754,7 +8770,7 @@ let RE=null,rcv=null,renderRun=0;
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
 function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
- const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
+ const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;syncLightsDock(m3);[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
 function frameProject(item=null){
  if(!S.w.length&&!S.i.some(it=>!it.hid))return;
  if(mode==='2d'||dualView){
@@ -9190,7 +9206,7 @@ function applyItemPartColors(g,it,primary){
    if(!recolored.has(id)){
     const mat=src.clone();mat.color.set(hex);
     if(hasUpholstery(it)&&src.userData.U)wuv(mat,src.userData.U);
-    if(key==='light'&&mat.emissive)mat.emissive.set(hex);
+    if(key==='light'&&mat.emissive&&!Object.hasOwn(LIGHT_TONES,it.lightTone))mat.emissive.set(hex);
     recolored.set(id,mat);
    }
    return recolored.get(id);
@@ -9306,14 +9322,54 @@ function appendLightButton(panel,it,save){
  update();
  button.onclick=()=>{it.lightOn=!fixtureIsOn(it);update();save()};
  panel.append(button,' ');
- if(it.t==='ceilingSpot'){
+ if(hasAdjustableLight(it)){
   const label=document.createElement('label');label.className='r';
-  const text=document.createElement('span');text.textContent='Intensidad (%)';
-  const input=document.createElement('input');input.type='range';input.min=10;input.max=100;input.step=5;input.value=spotPower(it);
+  const text=document.createElement('span');
+  const input=document.createElement('input');input.type='range';input.min=10;input.max=100;input.step=5;input.value=fixturePower(it);
+  input.setAttribute('aria-label','Intensidad de luz');
+  const showPower=()=>{text.textContent='Intensidad '+input.value+' %'};
+  showPower();input.oninput=showPower;
   input.onchange=()=>{it.lightPower=+input.value;save()};
   label.append(text,input);panel.append(label);
+  const tone=document.createElement('label');tone.className='r';
+  const toneSelect=document.createElement('select');
+  for(const [value,name] of [['','Original'],['warm','Cálida'],['neutral','Neutra'],['cool','Fría']]){
+   toneSelect.add(new Option(name,value));
+  }
+  toneSelect.value=Object.hasOwn(LIGHT_TONES,it.lightTone)?it.lightTone:'';
+  toneSelect.onchange=()=>{
+   if(toneSelect.value)it.lightTone=toneSelect.value;
+   else delete it.lightTone;
+   save();
+  };
+  tone.append('Tono de luz',toneSelect);panel.append(tone);
  }
 }
+function syncLightsDock(is3D){
+ const dock=$('#lightsDock');
+ dock.hidden=!is3D;
+ if(!is3D){dock.open=false;return}
+ if(!dock.open)return;
+ const panel=$('#lightsList'),active=document.activeElement;
+ const focusIndex=[...panel.querySelectorAll('button,input,select')].indexOf(active);
+ const scroll=panel.scrollTop;
+ panel.replaceChildren();
+ const fixtures=S.i.filter(it=>!it.hid&&hasAdjustableLight(it));
+ if(!fixtures.length){panel.textContent='No hay lámparas visibles en este proyecto.';return}
+ fixtures.forEach((it,index)=>{
+  const group=document.createElement('fieldset'),legend=document.createElement('legend');
+  legend.textContent=(index+1)+'. '+(it.n||'Lámpara');
+  group.append(legend);appendLightButton(group,it,commit);panel.append(group);
+ });
+ if(focusIndex>=0)panel.querySelectorAll('button,input,select')[focusIndex]?.focus({preventScroll:true});
+ panel.scrollTop=scroll;
+}
+$('#lightsDock').addEventListener('toggle',()=>{
+ if(!$('#lightsDock').open)return;
+ $('#cameraDock').open=false;
+ syncLightsDock(mode==='3d');
+});
+$('#cameraDock').addEventListener('toggle',()=>{if($('#cameraDock').open)$('#lightsDock').open=false});
 $('#fmod').onchange=async e=>{if(!CATALOG_MASTER){alert('Solo MASTER puede importar muebles y objetos 3D.');e.target.value='';return}const files=[...e.target.files];if(files.length>1){alert('Importa un modelo cada vez para poder revisarlo visualmente antes de aceptarlo.');e.target.value='';return}const f=files[0];if(!f){return}const ext=f.name.split('.').pop().toLowerCase(),name=prompt('Nombre del producto:',f.name.replace(/\.[^.]+$/,''));if(!name){e.target.value='';return}const brand=prompt('Fabricante (opcional):','')||'',ref=prompt('Referencia comercial (opcional):','')||'',author=prompt('Autor del modelo (si procede):','')||'',source=prompt('URL de procedencia del modelo:','')||'',lic=prompt('Licencia (ej.: CC0 1.0, CC BY 4.0):','No indicada')||'No indicada',cat=prompt('Categoría (ej.: Sofás, Sillas, Sanitarios):','Importados')||'Importados',un=({m:100,cm:1,mm:.1})[prompt('Unidades del modelo: m, cm o mm (los GLB suelen ir en m):','m')]||100;const m={id:'m'+Date.now()+Math.random().toString(36).slice(2,6),name,brand,ref,author,source,lic,cat,units:un,ext,date:new Date().toISOString().slice(0,10),data:ext=='glb'?await f.arrayBuffer():await f.text()};try{const result=await addModel(m);pendingModel={data:m,entry:result.entry,quality:result.quality};openPrevObj(result.entry);hint('Revisa el modelo en 3D. Todavía no se ha guardado.')}catch(er){alert('Modelo rechazado o no se pudo leer: '+er.message)}e.target.value=''};
 /* ===== Modo edición con teclado ===== */
 function camFwd(){if(mode!='3d')return[0,-1];const fx=oc.target.x-cam.position.x,fz=oc.target.z-cam.position.z;return Math.abs(fx)>Math.abs(fz)?[Math.sign(fx),0]:[0,Math.sign(fz)||-1]}
