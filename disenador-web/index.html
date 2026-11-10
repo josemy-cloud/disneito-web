@@ -6161,7 +6161,7 @@ function pilotExteriorFor(window){
   leaf.computeVertexNormals();
   const greens=M('#ffffff',.91);greens.side=T.DoubleSide;
   const foliage=new T.InstancedMesh(leaf,greens,4200);
-  const bark=new T.InstancedMesh(new T.CylinderGeometry(.55,1,1,8),M('#695743',.96),28);
+  const bark=new T.InstancedMesh(new T.CylinderGeometry(.55,1,1,8),M('#695743',.96),36);
   const transform=new T.Object3D(),up=new T.Vector3(0,1,0);
   const colors=['#354d2b','#4e6736','#657e43','#7e9355','#8d9d62'].map(hex=>new T.Color(hex));
   let leafIndex=0,branchIndex=0,seed=21873;
@@ -6185,15 +6185,28 @@ function pilotExteriorFor(window){
    transform.quaternion.setFromUnitVectors(up,axis.normalize());transform.updateMatrix();
    bark.setMatrixAt(branchIndex++,transform.matrix);
   };
+  const shadowMaterial=contactShadowMaterial().clone();
+  shadowMaterial.opacity=.48;
+  const shadowGeometry=contactGeometry.clone();
+  const contact=(x,z,w,d)=>{
+   const shadow=new T.Mesh(shadowGeometry,shadowMaterial);
+   shadow.position.set(x,-.13,z);shadow.scale.set(w,1,d);group.add(shadow);
+  };
   for(let i=0;i<4;i++){
    const x=(i-1.5)*width*.53,z=330+i%2*32;
+   contact(x,z,115,100);
+   const base=new T.Vector3(x,-.2,z);
    for(let j=0;j<6;j++){
     const angle=j*2.4+i,r=j===0?0:24+random()*14;
-    cluster(x+Math.cos(angle)*r,23+random()*30,z+Math.sin(angle)*r,29,24,27,65,4.6);
+    const px=x+Math.cos(angle)*r,pz=z+Math.sin(angle)*r;
+    const y=(j<3?18:33)+random()*12;
+    if(j<3)branch(base,new T.Vector3(px,y+7,pz),1.7);
+    cluster(px,y,pz,29,j<3?17:22,27,65,4.6);
    }
   }
   for(const side of [-1,1]){
    const x=side*width*.69,z=465+side*42;
+   contact(x,z,72,62);
    const root=new T.Vector3(x,0,z),fork=new T.Vector3(x+side*9,120,z-7),tip=new T.Vector3(x+side*18,221,z+12);
    branch(root,fork,8);branch(fork,tip,4.6);
    for(let i=0;i<10;i++){
