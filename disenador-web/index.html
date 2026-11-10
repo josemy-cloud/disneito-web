@@ -1052,7 +1052,8 @@ function props(){P.innerHTML='';const e=get();
    btn(e.upholsteryImage?'Cambiar imagen de tapicería…':'Subir textura de tapicería…',()=>input.click(),false);
   }
   if(isRectangularDiningTable(e)||isUpholsteredDiningChair(e)){
-   sel2('Veta de la madera',['suave','marcada'],e.woodGrain==='marcada'?'marcada':'suave',v=>{e.woodGrain=v},{suave:'Suave',marcada:'Marcada natural'});
+   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble tangencial'};
+   sel2('Veta de la madera',Object.keys(grains),Object.hasOwn(grains,e.woodGrain)?e.woodGrain:'suave',v=>{e.woodGrain=v},grains);
   }
   partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
@@ -1639,7 +1640,21 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
  fb=(u,v,fx,fy,o)=>{let s0=0,am=.5,tot=0;for(let k=0;k<4;k++){s0+=am*nz(u,v,fx<<k,fy<<k,o+k);tot+=am;am/=2}return s0/tot},
  T0=new Float32Array(N*N),H0=new Float32Array(N*N),R0=new Float32Array(N*N);
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const u=x/N,v=y/N,i=y*N+x;let t=0,h=.5,r=0;
-  if(gen==='furniture-oak-grain'){
+  if(gen==='furniture-oak-flat-sawn'){
+   // Anillos de crecimiento en un corte tangencial, con arcos y poros alargados.
+   const growth=.21*Math.exp(-9*Math.sin(Math.PI*(u-.30))**2);
+   const drift=(fb(u,v,3,5,101)-.5)*.05;
+   const grain=v+growth+drift;
+   const density=nz(u,grain,3,12,102);
+   const wave=grain*17+(density-.5)*1.2;
+   const ring=(.5+.5*Math.cos(2*Math.PI*wave))**7;
+   const pores=Math.max(0,nz(u,grain,27,190,103)-.67);
+   const fiber=nz(u,grain,8,144,104)-.5;
+   const tone=fb(u,grain,4,8,105)-.5;
+   t=tone*.29+fiber*.10-ring*(.06+.18*density)-pores*.22;
+   h=.5-ring*.045+fiber*.041-pores*.05;
+   r=tone*.065+ring*.023;
+  }else if(gen==='furniture-oak-grain'){
    // La veta se curva con el crecimiento; su anchura y contraste cambian a lo largo de la pieza.
    const drift=(fb(u,v,3,5,91)-.5)*.15+(nz(u,v,2,3,92)-.5)*.16;
    const grain=v+drift;
@@ -2969,19 +2984,21 @@ function buildChaiseStorage(g,it,{x,rear,front,width,baseY,seatY,seatH,frame,fee
  const length=front-rear,z=(rear+front)/2,wall=Math.min(2.2,width*.10,length*.08),height=seatY-baseY;
  const lidT=Math.min(1.7,it.h*.04);
  const inside=partFinish(M('#a29a8d',.76),'storage'),metal=partFinish(M('#818584',.34,.63),'hardware');
+ const shell=(parent,...dimensions)=>{const panel=B(parent,...dimensions,frame);panel.userData.partColorRole='frame';return panel;};
  const pivot=new T.Group();pivot.name='Tapa del arcón';
  pivot.position.set(x,seatY+seatH,rear);g.add(pivot);
- B(g,width,wall,length,x,baseY+wall/2,z,inside);
+ shell(g,width,wall,length,x,baseY+wall/2,z);
+ B(g,width-2*wall,wall*.30,length-2*wall,x,baseY+wall*1.15,z,inside);
  for(const side of [-1,1]){
   const xx=x+side*(width-wall)/2;
-  B(g,wall,height,length,xx,baseY+height/2,z,frame);
-  B(g,width-2*wall,height,wall,x,baseY+height/2,z+side*(length-wall)/2,frame);
+  shell(g,wall,height,length,xx,baseY+height/2,z);
+  shell(g,width-2*wall,height,wall,x,baseY+height/2,z+side*(length-wall)/2);
   for(const zz of [rear+length*.17,front-length*.17])B(g,4,baseY,4,x+side*width*.34,baseY/2,zz,feet);
   const hingeX=side*width*.31;
   B(g,4,1.2,wall, x+hingeX,seatY-.6,rear+wall/2,metal);
   B(pivot,4,.9,3,hingeX,-seatH+.45,2.1,metal);
  }
- B(pivot,width,lidT,length,0,-seatH+lidT/2,length/2,frame);
+ shell(pivot,width,lidT,length,0,-seatH+lidT/2,length/2);
  const up=new T.Vector3(0,1,0),end=new T.Vector3(),direction=new T.Vector3();
  const struts=[-1,1].map(side=>{
   const sx=side*(width/2-wall-1.4);
@@ -4246,7 +4263,7 @@ function upholsteredPad(parent,x,y,z,w,h,d,axis,material,stitch){
  return mesh;
 }
 function diningOak(it,color){
- const style=it.woodGrain==='marcada'?'furniture-oak-grain':'furniture-oak';
+ const style={marcada:'furniture-oak-grain',tangencial:'furniture-oak-flat-sawn'}[it.woodGrain]||'furniture-oak';
  const grain=pbrTex(['furniture-oak','Roble aceitado','Maderas',style,'#e3ccad',.53,0,.12,215]);
  const wood=M(color,.53,0);
  Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r,roughness:1});
@@ -4384,14 +4401,16 @@ case'sofa':{
   cushion.rotation.x=-.10;
  };
  if(chaise){
-  const zFront=d*.48,zRear=-d*.35,zShort=d*.135;
-  const x=-w*.264,width=w*.312,rear=zShort+Math.min(2.1,d*.02),length=zFront-rear;
-  addSeat(x,(zRear+zShort)/2,width,zShort-zRear);
-  const lid=buildChaiseStorage(g,it,{x,rear,front:zFront,width,baseY:h*.08,seatY,seatH,frame,feet});
+  const front=d*.48,rear=-d*.35,zShort=d*.135,length=front-rear;
+  const x=-w*.264,width=w*.312,gap=w*.0025;
+  const lid=buildChaiseStorage(g,it,{x,rear,front,width,baseY:h*.08,seatY,seatH,frame,feet});
   const lidT=Math.min(1.7,h*.04);
-  tag(pad(lid,0,-seatH+lidT,length/2,width,seatH-lidT,length*.96,upholstery),'seat');
-  for(const x of [w*.015,w*.275])addSeat(x,(zShort+zRear)/2,w*.235,zShort-zRear);
-  for(const [x,width] of [[-w*.264,w*.309],[w*.015,w*.247],[w*.275,w*.267]])addBack(x,width,-d*.393);
+  tag(pad(lid,0,-seatH+lidT,length/2,width-gap,seatH-lidT,length-gap,upholstery),'seat');
+  for(const [center,span] of [[w*.0215,w*.259],[w*.2855,w*.269]]){
+   addSeat(center,(zShort+rear)/2,span-gap,zShort-rear);
+   addBack(center,span,-d*.393);
+  }
+  addBack(x,width,-d*.393);
  }else if(corner){
   const rear=-d*.38,join=d*.025,front=d*.48;
   const left=-w*.403,right=w*.402,gap=Math.min(.72,w*.004),span=(right-left-2*gap)/3;
