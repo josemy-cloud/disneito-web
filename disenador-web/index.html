@@ -1635,7 +1635,16 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
  fb=(u,v,fx,fy,o)=>{let s0=0,am=.5,tot=0;for(let k=0;k<4;k++){s0+=am*nz(u,v,fx<<k,fy<<k,o+k);tot+=am;am/=2}return s0/tot},
  T0=new Float32Array(N*N),H0=new Float32Array(N*N),R0=new Float32Array(N*N);
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const u=x/N,v=y/N,i=y*N+x;let t=0,h=.5,r=0;
-  if(gen==='enc-wood'){
+  if(gen==='furniture-oak'){
+   const bend=(fb(u,v,4,6,81)-.5)*.060+(nz(u,v,2,3,82)-.5)*.095;
+   const grain=v+bend;
+   const bands=fb(u,grain,3,15,83),fibers=nz(u,grain,10,176,84),pores=nz(u,grain,34,142,85);
+   const latewood=Math.max(0,bands-.57);
+   const pore=Math.max(0,pores-.72);
+   t=(bands-.5)*.23+(fibers-.5)*.095-latewood*.11-pore*.18;
+   h=.5+(fibers-.5)*.045-pore*.05;
+   r=(bands-.5)*.06;
+  }else if(gen==='enc-wood'){
    const grain=fb(u,v,2,24,21),bend=fb(u,v,2,5,22),pore=nz(u,v,42,13,23);
    const growth=Math.sin(2*Math.PI*(27*v+1.6*bend));
    t=(grain-.5)*.34+growth*.055-(pore>.74?.1:0);
@@ -4220,23 +4229,40 @@ function upholsteredPad(parent,x,y,z,w,h,d,axis,material,stitch){
  mesh.add(seam);parent.add(mesh);
  return mesh;
 }
+function diningOak(color){
+ const grain=pbrTex(['furniture-oak','Roble aceitado','Maderas','furniture-oak','#e3ccad',.53,0,.12,215]);
+ const wood=M(color,.53,0);
+ Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r,roughness:1});
+ wood.normalScale.setScalar(.09);
+ return wood;
+}
+function orientDiningGrain(mesh,axis,shared=false){
+ const geometry=shared?mesh.geometry.clone():mesh.geometry;
+ const {position,normal,uv}=geometry.attributes;
+ const across=[0,1,2].filter(i=>i!==axis);
+ const value=(attribute,i,component)=>component===0?attribute.getX(i):component===1?attribute.getY(i):attribute.getZ(i);
+ const offset=mesh.position.x*.003+mesh.position.y*.005+mesh.position.z*.007;
+ for(let i=0;i<position.count;i++){
+  const cross=Math.abs(value(normal,i,across[0]))>Math.abs(value(normal,i,across[1]))?across[1]:across[0];
+  uv.setXY(i,value(position,i,axis)/215,value(position,i,cross)/108+offset);
+ }
+ uv.needsUpdate=true;
+ mesh.geometry=geometry;
+}
 function buildUpholsteredDiningChair(g,it){
  const {w,h,d}=it;
  const modern=it.n==='Silla comedor tapizada';
  const fabric=M(it.col||'#9d8264',.88,.02);
  applyUpholstery(it,fabric);
  const stitch=M('#8f7c6c',.9,.01);stitch.color.copy(fabric.color).multiplyScalar(.84);
- const grain=pbrTex(['silla-roble','Roble natural','Maderas','wood','#eeeeee',.55,0,.28,60]);
- const wood=M(modern?'#795b43':'#b78e61',.57,0);
- Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r});
- wood.normalScale.setScalar(.14);
+ const wood=diningOak(modern?'#9c816b':'#c8aa88');
  const frame=partFinish(wood,'frame'),legs=partFinish(wood.clone(),'feet');
  const railY=h*.445,legX=w*.35,front=d*.31,rear=-d*.315;
  const legSize=Math.min(w*(modern?.078:.086),d*.09);
  const backW=w*.87,backH=h*.43,bow=d*.045,lean=d*.055,halfW=backW/2,halfH=backH/2;
  const backY=h*.785,backZ=-d*.365;
  for(const side of [-1,1]){
-  B(g,legSize*.78,h*.065,front-rear,side*legX,railY,(front+rear)/2,frame,legSize*.14);
+  orientDiningGrain(B(g,legSize*.78,h*.065,front-rear,side*legX,railY,(front+rear)/2,frame,legSize*.14),2,true);
   for(const z of [front,rear]){
    const top=new T.Vector3(side*legX,railY+h*.014,z);
    const bottom=new T.Vector3(side*w*.385,0,z>0?d*.38:-d*.41);
@@ -4247,6 +4273,7 @@ function buildUpholsteredDiningChair(g,it){
    leg.position.copy(top).add(bottom).multiplyScalar(.5);
    leg.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
    leg.castShadow=leg.receiveShadow=true;g.add(leg);
+   orientDiningGrain(leg,1);
   }
   // El montante ancla el tercio inferior del respaldo y termina dentro del tapizado.
   const endY=h*.71;
@@ -4255,9 +4282,10 @@ function buildUpholsteredDiningChair(g,it){
   const axis=new T.Vector3(0,endY-railY,endZ-startZ);
   const upright=B(g,legSize*.60,axis.length(),Math.min(legSize*.55,d*.024),side*legX,(railY+endY)/2,(startZ+endZ)/2,frame,legSize*.10);
   upright.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
+  orientDiningGrain(upright,1,true);
  }
- for(const z of [front,rear])B(g,2*legX,h*.065,legSize*.8,0,railY,z,frame,legSize*.14);
- B(g,w*.80,h*.034,d*.69,0,h*.467,d*.024,frame,legSize*.2);
+ for(const z of [front,rear])orientDiningGrain(B(g,2*legX,h*.065,legSize*.8,0,railY,z,frame,legSize*.14),0,true);
+ orientDiningGrain(B(g,w*.80,h*.034,d*.69,0,h*.467,d*.024,frame,legSize*.2),2,true);
  const seat=upholsteredPad(g,0,h*.513,d*.028,w*.91,h*.068,d*.76,'y',fabric,stitch);
  seat.userData.part={t:'seat'};seat.castShadow=true;
  const back=upholsteredPad(g,0,backY,backZ,backW,backH,d*.075,'z',fabric,stitch);
@@ -4276,10 +4304,7 @@ function buildUpholsteredDiningChair(g,it){
 }
 function buildRectangularDiningTable(g,it){
  const {w,h,d}=it;
- const grain=pbrTex(['mesa-roble','Roble natural','Maderas','wood','#eeeeee',.55,0,.28,60]);
- const oak=M(it.col||'#a88f78',.54,0);
- Object.assign(oak,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r});
- oak.normalScale.setScalar(.12);
+ const oak=diningOak(!it.col||it.col==='#a88f78'?'#c6a685':it.col);
  const top=partFinish(oak,'top'),frame=partFinish(oak.clone(),'apron'),legs=partFinish(oak.clone(),'legs');
  const thickness=Math.min(h*.049,w*.12,d*.12),bevel=thickness*.20;
  const x=w/2-bevel,z=d/2-bevel,r=Math.min(4,x*.2,z*.2);
@@ -4290,16 +4315,15 @@ function buildRectangularDiningTable(g,it){
  outline.lineTo(-x+r,z);outline.quadraticCurveTo(-x,z,-x,z-r);
  outline.lineTo(-x,-z+r);outline.quadraticCurveTo(-x,-z,-x+r,-z);
  const geometry=new T.ExtrudeGeometry(outline,{depth:thickness-2*bevel,bevelEnabled:true,bevelThickness:bevel,bevelSize:bevel,bevelSegments:3,curveSegments:8});
- const uv=geometry.attributes.uv;
- for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/95,uv.getY(i)/58);
  geometry.rotateX(Math.PI/2);
  const slab=new T.Mesh(geometry,top);
  slab.position.y=h-bevel;slab.castShadow=slab.receiveShadow=true;g.add(slab);
+ orientDiningGrain(slab,0);
  const underside=h-thickness,apronH=h*.062,legSize=Math.min(w*.047,d*.063,h*.11);
  const legX=w*.407,legZ=d*.365,apronY=underside-apronH/2;
  for(const side of [-1,1]){
-  B(g,2*legX,apronH,legSize*.55,0,apronY,side*legZ,frame,legSize*.08);
-  B(g,legSize*.55,apronH,2*legZ,side*legX,apronY,0,frame,legSize*.08);
+  orientDiningGrain(B(g,2*legX,apronH,legSize*.55,0,apronY,side*legZ,frame,legSize*.08),0,true);
+  orientDiningGrain(B(g,legSize*.55,apronH,2*legZ,side*legX,apronY,0,frame,legSize*.08),2,true);
   for(const end of [-1,1]){
    const anchor=new T.Vector3(side*legX,underside+.15,end*legZ);
    const foot=new T.Vector3(side*w*.427,0,end*d*.392);
@@ -4310,6 +4334,7 @@ function buildRectangularDiningTable(g,it){
    leg.position.copy(anchor).add(foot).multiplyScalar(.5);
    leg.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
    leg.castShadow=leg.receiveShadow=true;g.add(leg);
+   orientDiningGrain(leg,1);
   }
  }
 }
