@@ -165,7 +165,7 @@ body.desktop-workspace:not(.ui-legacy) #viewActions summary{display:list-item;li
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
-#v3 #dayInterior[aria-pressed="true"]{background:#145bb7!important;color:#fff!important;border-color:#145bb7}
+#v3 :is(#dayInterior,#sunsetInterior)[aria-pressed="true"]{background:#145bb7!important;color:#fff!important;border-color:#145bb7}
 #cameraDock #v3{max-height:48dvh;overflow:auto}
 #walkAim,#walkExit{display:none}
 body #view.walk-full{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:none!important;z-index:190;border:0;border-radius:0;background:#152942}
@@ -310,7 +310,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <span class="dd"><button id="bX" title="Exportar imagen">🖼 Imagen ▾</button><div class="ddm"><button id="bP2">Plano 2D (PNG)</button><button id="bP3">Captura 3D</button></div></span>
 <label><input type="checkbox" id="ck" checked> Ajuste</label>
 <label title="Elegir qué paredes ocultar o hacer transparentes"><input type="checkbox" id="ct"> 👁 Muros</label> <label title="Ocultar o mostrar todas las cotas del plano"><input type="checkbox" id="ckMeasures" checked> Medidas</label>
-<span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vInterior" type="button">Interior</button><button id="vInteriorDetail" type="button" hidden>Detalle piloto</button> <button type="button" id="dayInterior" aria-pressed="false" title="Activa la vista Realista con luz de interior">Día interior</button><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
+<span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vInterior" type="button">Interior</button><button id="vInteriorDetail" type="button" hidden>Detalle piloto</button> <button type="button" id="dayInterior" aria-pressed="false" title="Activa la vista Realista con luz de interior">Día interior</button><button type="button" id="sunsetInterior" aria-pressed="false" title="Reduce la luz exterior para apreciar las lámparas">Atardecer</button><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
 <label>Dirección del sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"></label><label>Altura del sol <input type="range" id="se" min="10" max="85" value="38" style="width:70px"></label></span>
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
@@ -2122,7 +2122,7 @@ function setSun(){
  sun.target.position.copy(sunTarget);
  const direct=.57+Math.sin(e)*.40,q=$('#sq').value,day=!RVo&&dayInteriorActive();
  // La vista Realista equilibra el sol con luz difusa para evitar contrastes duros.
- sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(day?.76:.68):direct;
+ sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(sunsetInteriorActive()?.14:day?.76:.68):direct;
  sun.shadow.radius=day?5.5:4;
  fill.position.set(sunC.x-900,1100,sunC.z+650);
  rim.position.set(sunC.x+700,850,sunC.z-900);
@@ -2138,19 +2138,21 @@ function setSunShadowSize(size){
  if(shadow.map){shadow.map.dispose();shadow.map=null}
 }
 function dayInteriorActive(){return $('#sq').value==='q'&&previousInteriorSun!==null}
+function sunsetInteriorActive(){return !RVo&&$('#sq').value==='q'&&interiorSunset}
 function applyViewportLook(){
- const q=$('#sq').value,realistic=q==='q',materials=q==='m',day=dayInteriorActive();
+ const q=$('#sq').value,realistic=q==='q',materials=q==='m',day=dayInteriorActive(),sunset=sunsetInteriorActive();
+ $('#sunsetInterior').setAttribute('aria-pressed',String(sunset));
  $('#dayInterior').setAttribute('aria-pressed',String(day));
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
  sc.environment=null;
  if(realistic)setSunShadowSize(2048);
- r3.toneMappingExposure=day?1.03:realistic?1.00:materials?1.01:.88;
+ r3.toneMappingExposure=sunset?.96:day?1.03:realistic?1.00:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
- hemi.color.set(day?'#f3f5f7':'#fafcff');
+ hemi.color.set(sunset?'#dbe3f4':day?'#f3f5f7':'#fafcff');
  hemi.groundColor.set(day?'#b6a797':'#8b8276');
- hemi.intensity=day?.48:realistic?.82:materials?.95:.55;
- fill.intensity=day?.07:realistic?.22:materials?0:.20;
- rim.intensity=day?.03:realistic?.07:materials?0:.12;
+ hemi.intensity=sunset?.25:day?.48:realistic?.82:materials?.95:.55;
+ fill.intensity=sunset?.035:day?.07:realistic?.22:materials?0:.20;
+ rim.intensity=sunset?.02:day?.03:realistic?.07:materials?0:.12;
 }
 function setQ(){
  if(!r3)return;
@@ -6149,7 +6151,7 @@ function windowFillSpecs(walls,openings,rooms){
  }
  return windows.sort((a,b)=>b.area-a.area);
 }
-const previewSky=new T.Color('#d8e6ef'),previewNeutralSky=new T.Color('#e8e7e2');
+const previewSky=new T.Color('#d8e6ef'),previewNeutralSky=new T.Color('#e8e7e2'),previewSunsetSky=new T.Color('#9faec9');
 let pilotExterior=null,pilotExteriorWidth=0;
 function pilotExteriorFor(window){
  const width=window.width;
@@ -6250,7 +6252,8 @@ function pilotExteriorFor(window){
 function addRealisticDetails(){
  realisticDetails.clear();
  if(RVo)return;
- sc.background=previewNeutralSky;
+ const sunset=sunsetInteriorActive();
+ sc.background=sunset?previewSunsetSky:previewNeutralSky;
  if($('#sq').value!=='q')return;
  const rooms=(S.rooms||[]).filter(room=>room.poly);
  if(!rooms.length)return;
@@ -6258,12 +6261,12 @@ function addRealisticDetails(){
  const windows=windowFillSpecs(S.w,S.o,rooms);
  const exterior=S.interiorPilot===1&&windows.find(window=>window.groundDoor);
  if(exterior){
-  sc.background=previewSky;
+  if(!sunset)sc.background=previewSky;
   realisticDetails.add(pilotExteriorFor(exterior));
  }
  for(const [index,window] of windows.slice(0,coarse?1:2).entries()){
-  const strength=day&&index===0?Math.min(.78,.40+window.area/170000):Math.min(.42,.16+window.area/120000);
-  const light=new T.SpotLight(day?'#f5f7ff':'#fff1df',strength,day?620:520,day?.98:.86,day?.88:.75,1.15);
+  const strength=sunset?Math.min(.15,.06+window.area/320000):day&&index===0?Math.min(.78,.40+window.area/170000):Math.min(.42,.16+window.area/120000);
+  const light=new T.SpotLight(sunset?'#ffe1bb':day?'#f5f7ff':'#fff1df',strength,day?620:520,day?.98:.86,day?.88:.75,1.15);
   light.position.set(window.x,window.y,window.z);
   light.target.position.set(window.x+window.nx*240,40,window.z+window.nz*240);
   realisticDetails.add(light,light.target);
@@ -6630,7 +6633,7 @@ function interiorCamera(detail=false){
  cam.position.fromArray(view.position);oc.target.fromArray(view.target);
  oc.minDistance=30;oc.update();oc.enableDamping=true;
 }
-let previousInteriorSun=null;
+let previousInteriorSun=null,interiorSunset=false;
 function setInteriorDay(enabled){
  const azimuth=$('#sa'),altitude=$('#se');
  if(enabled&&!previousInteriorSun){
@@ -6648,11 +6651,21 @@ function setInteriorDay(enabled){
 $('#dayInterior').onclick=()=>{
  if(!requireSceneRenderer())return;
  const enabled=!dayInteriorActive();
+ interiorSunset=false;
  if(enabled&&$('#sq').value!=='q'){
   $('#sq').value='q';
   setQ();modeUI();
  }
  setInteriorDay(enabled);
+};
+$('#sunsetInterior').onclick=()=>{
+ if(!requireSceneRenderer())return;
+ interiorSunset=!sunsetInteriorActive();
+ setInteriorDay(false);
+ if($('#sq').value!=='q'){
+  $('#sq').value='q';
+  setQ();modeUI();
+ }
 };
 $('#vInterior').onclick=()=>interiorCamera();
 $('#vInteriorDetail').onclick=()=>interiorCamera(true);
