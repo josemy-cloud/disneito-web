@@ -173,13 +173,14 @@ body.compact-workspace #mobileBar{grid-area:2/1;display:grid;grid-template-colum
 body.compact-workspace #mobileBar button{min-width:0;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 1px!important;border:1px solid transparent;border-radius:10px;background:transparent;color:#234466;font-size:clamp(10px,3vw,12px);font-weight:650}
 body.compact-workspace #mobileBar button:first-child,body.compact-workspace #mobileBar button[aria-expanded="true"]{background:#e6f0ff;color:#174f98;border-color:#bbd4f5}
 body.adaptive.compact-workspace:not(.ui-legacy) #main :is(#mobileContext,#mobileViews,#compactActions,#lib,#pr).adaptive-open{
- position:absolute;inset:auto 0 0;z-index:8;justify-self:center;width:min(100%,540px)!important;max-height:100%;overflow:auto;overscroll-behavior:contain;
+ position:relative;inset:auto;z-index:8;align-self:end;justify-self:center;margin:0;width:min(100%,540px)!important;
+ min-height:0;max-height:100%;overflow:auto;overscroll-behavior:contain;scroll-padding-bottom:12px;
  background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:16px 16px 0 0;padding:10px!important;box-shadow:0 -10px 32px #17305028;grid-area:1/1
 }
 body.compact-workspace :is(#mobileContext,#mobileViews).adaptive-open{display:block}
-body.compact-workspace :is(#mobileViews,#compactActions).adaptive-open{inset:0 0 auto!important;border-radius:0 0 16px 16px!important}
+body.compact-workspace :is(#mobileViews,#compactActions).adaptive-open{align-self:start!important;border-radius:0 0 16px 16px!important}
 body.compact-workspace .mobile-sheet-title{font-size:13px;font-weight:750;margin:0 0 8px;color:var(--ui-ink)}
-body.compact-workspace #mobileShade.adaptive-open{display:block;position:absolute;inset:0;grid-area:1/1;z-index:7;background:#13294532}
+body.compact-workspace #mobileShade.adaptive-open{display:block;grid-area:1/1;place-self:stretch;z-index:7;background:#13294532}
 body.adaptive.compact-workspace:not(.ui-legacy) #mobileContext #tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(67px,1fr));gap:5px!important;overflow:visible;padding:0!important;background:none!important;border:0!important}
 body.adaptive.compact-workspace:not(.ui-legacy) #mobileContext #tools button{width:100%!important;min-height:54px!important;background:#edf4ff!important;color:#244665!important;border:1px solid #d4e2f5!important}
 body.adaptive.compact-workspace:not(.ui-legacy) #mobileContext #tools button.on{background:#145bb7!important;color:#fff!important}
