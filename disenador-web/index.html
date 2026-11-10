@@ -4219,6 +4219,8 @@ function buildUpholsteredChairPilot(g,it){
  const frame=partFinish(wood,'frame'),legs=partFinish(wood.clone(),'feet');
  const railY=h*.445,legX=w*.35,front=d*.31,rear=-d*.315;
  const legSize=Math.min(w*.086,d*.09);
+ const backW=w*.87,backH=h*.43,bow=d*.045,lean=d*.055,halfW=backW/2,halfH=backH/2;
+ const backY=h*.785,backZ=-d*.365;
  for(const side of [-1,1]){
   B(g,legSize*.78,h*.065,front-rear,side*legX,railY,(front+rear)/2,frame,legSize*.14);
   for(const z of [front,rear]){
@@ -4232,18 +4234,21 @@ function buildUpholsteredChairPilot(g,it){
    leg.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
    leg.castShadow=leg.receiveShadow=true;g.add(leg);
   }
-  const upright=B(g,legSize*.78,h*.49,legSize*.86,side*legX,h*.69,-d*.368,frame,legSize*.14);
-  upright.rotation.x=-.12;
+  // El montante ancla el tercio inferior del respaldo y termina dentro del tapizado.
+  const endY=h*.71;
+  const endZ=backZ-bow*(1-(legX/halfW)**2)-lean*(endY-backY)/halfH;
+  const startZ=endZ+lean*(endY-railY)/halfH;
+  const axis=new T.Vector3(0,endY-railY,endZ-startZ);
+  const upright=B(g,legSize*.60,axis.length(),Math.min(legSize*.55,d*.024),side*legX,(railY+endY)/2,(startZ+endZ)/2,frame,legSize*.10);
+  upright.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
  }
  for(const z of [front,rear])B(g,2*legX,h*.065,legSize*.8,0,railY,z,frame,legSize*.14);
  B(g,w*.80,h*.034,d*.69,0,h*.467,d*.024,frame,legSize*.2);
  const seat=upholsteredPad(g,0,h*.513,d*.028,w*.91,h*.068,d*.76,'y',fabric,stitch);
  seat.userData.part={t:'seat'};seat.castShadow=true;
- const backW=w*.87,backH=h*.43;
- const back=upholsteredPad(g,0,h*.785,-d*.365,backW,backH,d*.075,'z',fabric,stitch);
+ const back=upholsteredPad(g,0,backY,backZ,backW,backH,d*.075,'z',fabric,stitch);
  back.userData.part={t:'back'};back.castShadow=true;
  // Curva lumbar y caída hacia atrás, incluida la costura.
- const bow=d*.045,lean=d*.055,halfW=backW/2,halfH=backH/2;
  back.traverse(mesh=>{
   const pos=mesh.geometry.attributes.position,norm=mesh.geometry.attributes.normal;
   for(let i=0;i<pos.count;i++){
