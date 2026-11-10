@@ -867,7 +867,7 @@ function openCatalogSource(value){
   } catch {}
 }
 function row(l,v,cb,t='number'){const K=CB;const d=document.createElement('label');d.className='r';const label=document.createElement('span');label.textContent=l;d.append(label);const i=document.createElement('input');i.type=t;i.value=v;i.onchange=()=>{cb(t=='number'?+i.value:i.value);K()};d.append(i);P.append(d)}
-function sel2(l,opts,v,cb,labels){const K=CB;const d=document.createElement('label');d.className='r';const label=document.createElement('span');label.textContent=l;d.append(label);const s=document.createElement('select');opts.forEach(o=>{const e=document.createElement('option');e.value=o;e.textContent=labels?.[o]||o;s.append(e)});s.value=v;s.onchange=()=>{cb(s.value);K()};d.append(s);P.append(d)}
+function sel2(l,opts,v,cb,labels){const K=CB;const d=document.createElement('label');d.className='r';const label=document.createElement('span');label.textContent=l;d.append(label);const s=document.createElement('select');opts.forEach(o=>{const e=document.createElement('option');e.value=o;e.textContent=labels?.[o]||o;s.append(e)});s.value=v;s.onchange=()=>{cb(s.value);K()};d.append(s);P.append(d);return s}
 function btn(l,cb,persist=true){const K=CB;const b=document.createElement('button');b.textContent=l;b.style.margin='3px 3px 0 0';b.onclick=()=>{cb();if(persist)K()};P.append(b)}
 /* Componentes cromáticos específicos por familia. Las claves se guardan por objeto. */
 const ITEM_COLOR_PARTS={
@@ -7996,14 +7996,34 @@ function countertopUI(c){
  }
 }
 /* UI: materiales PBR del mueble + biblioteca */
-function pbrUI(it){const c=it.cfg,L=SURFACE_SCANS.concat(PL0,availableCustomMaterials());P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');c.pbr=c.pbr||{};
- [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']].forEach(([k,l])=>{
-  const materials=k==='cf'?[...FRONT_FINISHES.values(),...L]:L;
-  const current=pbrDef(c.pbr[k]),choices=current&&!materials.includes(current)?[current,...materials]:materials;
-  const labels={'':'(color normal)',...Object.fromEntries(choices.map(d=>[d[0],FRONT_FINISHES.has(d[0])?d[1]+' · escaneado':d[1]]))};
-  sel2(l,['',...choices.map(d=>d[0])],current?c.pbr[k]:'',v=>{if(v)c.pbr[k]=v;else delete c.pbr[k]},labels);
- });
- sel2('Dirección de la veta (frentes)',['vertical','horizontal'],c.pvt||'vertical',v=>c.pvt=v);
+const CABINET_MATERIAL_IDS={
+ cc:['lacado-blanco','laca-negra','melamina-gris','roble-natural','madera-clara','nogal'],
+ cf:[...FRONT_FINISHES.keys(),'madera-tablero','lacado-blanco','laca-negra','melamina-gris'],
+ cz:['lacado-blanco','laca-negra','melamina-gris','acero-cepillado','aluminio-cepillado']
+};
+function pbrUI(it){
+ const c=it.cfg;
+ P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');
+ c.pbr=c.pbr||{};
+ for(const [key,label] of [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']]){
+  const ids=CABINET_MATERIAL_IDS[key],current=c.pbr[key]||'';
+  const legacy=current&&!ids.includes(current);
+  const labels={'':'Color personalizado'};
+  for(const id of ids){
+   const name=pbrDef(id)[1];
+   labels[id]=FRONT_FINISHES.has(id)?name+' · escaneado':name;
+  }
+  if(legacy)labels[current]=(pbrDef(current)?.[1]||'Material guardado')+' · acabado anterior';
+  const control=sel2(label,legacy?['',current,...ids]:['',...ids],current,value=>{
+   if(value)c.pbr[key]=value;
+   else delete c.pbr[key];
+  },labels);
+  if(legacy)control.selectedOptions[0].disabled=true;
+ }
+ const definition=pbrDef(c.pbr.cf);
+ if(['Madera','Maderas'].includes(definition?.[2])){
+  sel2('Dirección de la veta (frentes)',['vertical','horizontal'],c.pvt||'vertical',v=>c.pvt=v);
+ }
  const front=FRONT_FINISHES.get(c.pbr.cf);
  if(front)surfaceTintUI(c,front,'de los frentes','frontTint');
 }
