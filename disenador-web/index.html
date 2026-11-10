@@ -1112,8 +1112,8 @@ function props(){P.innerHTML='';const e=get();
    btn(e.upholsteryImage?'Cambiar imagen de tapicería…':'Subir textura de tapicería…',()=>input.click(),false);
   }
   if(isRectangularDiningTable(e)||isUpholsteredDiningChair(e)){
-   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble en tablones',rustico:'Roble rústico con nudos'};
-   sel2('Veta de la madera',Object.keys(grains),Object.hasOwn(grains,e.woodGrain)?e.woodGrain:'suave',v=>{e.woodGrain=v},grains);
+   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble en tablones',rustico:'Roble rústico con nudos',aceitado:'Roble natural cálido · escaneado'};
+   sel2('Veta de la madera',Object.keys(grains),Object.hasOwn(grains,e.woodGrain)?e.woodGrain:'suave',v=>{e.woodGrain=v;if(v==='aceitado'&&isRectangularDiningTable(e))delete e.furnitureSurface},grains);
   }
   const finishes=furnitureSurfaces(e);
   if(finishes){
@@ -4445,6 +4445,14 @@ function tuftUpholsteredBacks(group){
  });
 }
 function diningOak(it,color){
+ if(it.woodGrain==='aceitado'){
+  const maps=pbrTex(COUNTERTOP_BY_ID.get('enc-roble'));
+  const wood=M('#ffffff',.64,0);
+  Object.assign(wood,{map:maps.a,normalMap:maps.n,roughnessMap:maps.r});
+  wood.normalScale.setScalar(.27);
+  wood.userData.diningScan=true;
+  return wood;
+ }
  const style={marcada:'furniture-oak-grain',tangencial:'furniture-oak-flat-sawn',rustico:'furniture-oak-rustic'}[it.woodGrain]||'furniture-oak';
  const grain=pbrTex(['furniture-oak','Roble aceitado','Maderas',style,'#e3ccad',.53,0,.12,215]);
  const wood=M(color,.53,0);
@@ -4460,12 +4468,19 @@ function orientDiningGrain(mesh,axis,shared=false){
  const offset=mesh.position.x*.003+mesh.position.y*.005+mesh.position.z*.007;
  // Cada pata se corta de un tablón: ampliar la veta sin cruzar sus juntas.
  const solidLeg=axis===1&&geometry.type==='CylinderGeometry';
- const along=solidLeg?125:215;
- const width=solidLeg?geometry.parameters.radiusTop*16:108;
- const acrossOffset=solidLeg?(mesh.position.x*mesh.position.z<0?.34:.57):offset;
+ const scanned=mesh.material.userData.diningScan===true;
+ const narrow=solidLeg||(scanned&&mesh.material.userData.partColorRole!=='top');
+ const along=scanned?120:solidLeg?125:215;
+ const width=scanned?(narrow?145:120):solidLeg?geometry.parameters.radiusTop*16:108;
+ const acrossOffset=scanned&&narrow?(mesh.position.x*mesh.position.z<0?.34:.52):solidLeg?(mesh.position.x*mesh.position.z<0?.34:.57):offset;
  for(let i=0;i<position.count;i++){
   const cross=Math.abs(value(normal,i,across[0]))>Math.abs(value(normal,i,across[1]))?across[1]:across[0];
-  uv.setXY(i,value(position,i,axis)/along+(solidLeg?offset:0),value(position,i,cross)/width+acrossOffset);
+  if(scanned&&Math.abs(value(normal,i,axis))>.97){
+   // En el extremo de la pieza, ambas coordenadas se apoyan en la cara del corte.
+   uv.setXY(i,value(position,i,across[0])/120+offset,value(position,i,across[1])/width+acrossOffset);
+  }else{
+   uv.setXY(i,value(position,i,axis)/along+(narrow?offset:0),value(position,i,cross)/width+acrossOffset);
+  }
  }
  uv.needsUpdate=true;
  mesh.geometry=geometry;
@@ -8154,10 +8169,10 @@ function makeInteriorPilot(){
  add('Alfombra',225,302,{w:280,d:230,col:'#b6a38d'});
  add('Sofá 2 plazas',230,258,{w:222,d:92,col:'#c6b5a1',upholstery:'trama',partColors:{seat:'#c6b5a1',back:'#cabbab',frame:'#b5a28e'}});
  add('Mesa de centro ovalada',212,363,{col:'#96704f',furnitureSurface:'rustica'});
- add('Mesa comedor rectangular',452,152,{w:150,d:83,col:'#a47a55',furnitureSurface:'rustica',woodGrain:'marcada'});
+ add('Mesa comedor rectangular',452,152,{w:150,d:83,col:'#a47a55',woodGrain:'aceitado'});
  for(const x of [417,482]){
-  add('Silla tapizada',x,88,{d:42,col:'#ad9883',upholstery:'trama'});
-  add('Silla tapizada',x,219,{d:42,r:180,col:'#ad9883',upholstery:'trama'});
+  add('Silla tapizada',x,88,{d:42,col:'#ad9883',upholstery:'trama',woodGrain:'aceitado'});
+  add('Silla tapizada',x,219,{d:42,r:180,col:'#ad9883',upholstery:'trama',woodGrain:'aceitado'});
  }
  const kitchen=base('Bajo 90 · Salón piloto',90,'puertas',{
   cf:'#c1aa92',cc:'#d4c6b6',ct:'#302b28',cz:'#51473e',acab:'mate',countertop:'enc-cuarzo-marfil',flushTop:true
