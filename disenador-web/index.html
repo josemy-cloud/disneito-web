@@ -973,8 +973,8 @@ function partColorUI(e,panel=P,save=commit){
 
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
 const SOFA_FABRICS={lino:'Lino fino',trama:'Trama fina',boucle:'Bouclé texturizado',liso:'Tela lisa'};
-const isUpholsteredChairPilot=it=>it.t==='roomObject'&&it.shape==='chair'&&it.roomType==='comedor'&&it.variant===0&&it.n==='Silla tapizada';
-const hasUpholstery=it=>isUpholsteredChairPilot(it)||it.t==='sofa'||(it.t==='roomObject'&&(
+const isUpholsteredDiningChair=it=>it.t==='roomObject'&&it.shape==='chair'&&it.roomType==='comedor'&&(it.n==='Silla tapizada'||it.n==='Silla comedor tapizada');
+const hasUpholstery=it=>isUpholsteredDiningChair(it)||it.t==='sofa'||(it.t==='roomObject'&&(
  ['sofa','outdoorsofa'].includes(it.shape)||(it.shape==='seat'&&!/puf/i.test(it.n||''))
 ));
 const sofaFabric=it=>Object.hasOwn(SOFA_FABRICS,it.upholstery)?it.upholstery:'lino';
@@ -4220,18 +4220,19 @@ function upholsteredPad(parent,x,y,z,w,h,d,axis,material,stitch){
  mesh.add(seam);parent.add(mesh);
  return mesh;
 }
-function buildUpholsteredChairPilot(g,it){
+function buildUpholsteredDiningChair(g,it){
  const {w,h,d}=it;
+ const modern=it.n==='Silla comedor tapizada';
  const fabric=M(it.col||'#9d8264',.88,.02);
  applyUpholstery(it,fabric);
  const stitch=M('#8f7c6c',.9,.01);stitch.color.copy(fabric.color).multiplyScalar(.84);
  const grain=pbrTex(['silla-roble','Roble natural','Maderas','wood','#eeeeee',.55,0,.28,60]);
- const wood=M('#b78e61',.57,0);
+ const wood=M(modern?'#795b43':'#b78e61',.57,0);
  Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r});
  wood.normalScale.setScalar(.14);
  const frame=partFinish(wood,'frame'),legs=partFinish(wood.clone(),'feet');
  const railY=h*.445,legX=w*.35,front=d*.31,rear=-d*.315;
- const legSize=Math.min(w*.086,d*.09);
+ const legSize=Math.min(w*(modern?.078:.086),d*.09);
  const backW=w*.87,backH=h*.43,bow=d*.045,lean=d*.055,halfW=backW/2,halfH=backH/2;
  const backY=h*.785,backZ=-d*.365;
  for(const side of [-1,1]){
@@ -4435,7 +4436,7 @@ case'bench':{
  break;
 }
 case'chair':{
- if(isUpholsteredChairPilot(it)){buildUpholsteredChairPilot(g,it);break;}
+ if(isUpholsteredDiningChair(it)){buildUpholsteredDiningChair(g,it);break;}
  const name=(it.n||'').toLowerCase(),wood=partFinish(mt.clone(),'frame'),uphol=M('#c8bcae',.9,.02),seatY=h*.47,seatW=w*.82,seatD=d*.68,arms=/brazos/.test(name),padded=/tapiz/.test(name);
  // Marco de asiento y cojín independiente, con esquinas redondeadas y espesor real.
  const chairDeck=B(g,seatW,h*.07,seatD,0,seatY,0,wood);chairDeck.userData.partColorRole=padded?'frame':'seat';
