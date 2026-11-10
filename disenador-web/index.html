@@ -1660,10 +1660,10 @@ const COUNTERTOPS=[
  ['enc-porcelanico-cemento','Gris cemento','Porcelánico','cloud','#a2a09b',.66,0,.26,150],
  ['enc-porcelanico-basalto','Basalto antracita','Porcelánico','grain','#36383b',.58,0,.20,120],
  ['enc-porcelanico-calacatta','Calacatta cálido','Porcelánico','enc-vein-bold','#f3eee3',.34,0,.06,205],
- ['enc-roble','Roble natural aceitado','Madera','enc-wood','#bb915f',.47,0,.38,120],
- ['enc-fresno','Fresno claro','Madera','enc-wood','#d9c4a0',.48,0,.32,130],
- ['enc-iroko','Iroko miel','Madera','enc-wood','#ae753f',.43,0,.38,135],
- ['enc-nogal','Nogal oscuro','Madera','enc-wood','#664332',.43,0,.34,150],
+ ['enc-roble','Roble natural aceitado','Madera','scan:wood_table','#bb915f',.47,0,.24,120,'wood-tone'],
+ ['enc-fresno','Fresno claro','Madera','scan:wood_table','#d9c4a0',.48,0,.24,120,'wood-tone'],
+ ['enc-iroko','Iroko miel','Madera','scan:wood_table','#ae753f',.43,0,.24,120,'wood-tone'],
+ ['enc-nogal','Nogal oscuro','Madera','scan:wood_table','#664332',.43,0,.24,120,'wood-tone'],
  ['enc-marmol-carrara','Blanco Carrara satinado','Mármol','enc-vein-fine','#e8e6e3',.41,0,.07,220],
  ['enc-marmol-calacatta','Calacatta dorado','Mármol','enc-vein-bold','#eee3cc',.24,0,.06,240],
  ['enc-marmol-marquina','Negro Marquina','Mármol','enc-vein-dark','#242328',.22,0,.06,180],
@@ -1696,6 +1696,19 @@ function scanAsset(d){
  return Object.hasOwn(legacy,d[3])?legacy[d[3]]:SURFACE_SCANS.some(p=>p[3]===d[3])?d[3].slice(5):null;
 }
 const scanURL=(asset,map)=>'/materiales/'+asset+'-'+map+'.webp';
+function tintScannedWood(ctx,size,color){
+ const image=ctx.getImageData(0,0,size,size),pixels=image.data;
+ const tone=[1,3,5].map(start=>parseInt(color.slice(start,start+2),16));
+ const luminance=i=>pixels[i]*.2126+pixels[i+1]*.7152+pixels[i+2]*.0722;
+ let sum=0;
+ for(let i=0;i<pixels.length;i+=4)sum+=luminance(i);
+ const mean=sum/(pixels.length/4);
+ for(let i=0;i<pixels.length;i+=4){
+  const detail=(luminance(i)-mean)*.78;
+  for(let c=0;c<3;c++)pixels[i+c]=tone[c]+detail;
+ }
+ ctx.putImageData(image,0,0);
+}
 function scanTextures(d,asset){
  const key=d.slice(3,8).concat(d[9]||'').join('|');
  if(PCH[key])return PCH[key];
@@ -1707,8 +1720,11 @@ function scanTextures(d,asset){
   const loaded=new Promise(resolve=>{
    const image=new Image();
    image.onload=()=>{
-    if(role==='color'&&d[9])ctx.filter=d[9];
-    ctx.drawImage(image,0,0,512,512);ctx.filter='none';texture.needsUpdate=true;resolve(true);
+    const tintWood=role==='color'&&d[9]==='wood-tone';
+    if(role==='color'&&d[9]&&!tintWood)ctx.filter=d[9];
+    ctx.drawImage(image,0,0,512,512);ctx.filter='none';
+    if(tintWood)tintScannedWood(ctx,512,d[4]);
+    texture.needsUpdate=true;resolve(true);
    };
    image.onerror=()=>resolve(false);
    image.src=scanURL(asset,role);
