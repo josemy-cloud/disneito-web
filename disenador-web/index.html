@@ -2004,6 +2004,7 @@ function setSun(){
  const direct=.57+Math.sin(e)*.40,q=$('#sq').value,day=!RVo&&dayInteriorActive();
  // La vista Realista equilibra el sol con luz difusa para evitar contrastes duros.
  sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(day?.88:.68):direct;
+ sun.shadow.radius=day?5.5:4;
  fill.position.set(sunC.x-900,1100,sunC.z+650);
  rim.position.set(sunC.x+700,850,sunC.z-900);
  const camera=sun.shadow.camera;
@@ -2115,7 +2116,12 @@ function polyMesh(poly,y,mat,down){const pts=poly.map(p=>new T.Vector2(p[0],p[1]
 function ceilingMaterial(ceiling){return Object.hasOwn(ceiling,'m')?ceiling.m:'madera';}
 function addRooms(){(S.rooms||[]).forEach(R=>{if(!R.poly)return;const fc=R.floor||S.fl,xs=R.poly.map(p=>p[0]),ys=R.poly.map(p=>p[1]),minx=Math.min(...xs),miny=Math.min(...ys),fw=Math.max(...xs)-minx||1,fd=Math.max(...ys)-miny||1;
   const mat=fc.pat?tileMat(fc,[-minx,-miny]):sm(fc.m,fc.observedColor||'#ccc',fw,fd,fc.sz,fc.j,fc.jc,fc.r),f=polyMesh(R.poly,0,mat,false).mesh;f.receiveShadow=true;f.material.side=T.DoubleSide;f.material.needsUpdate=true;f.userData.fl=1;f.userData.room=R.id;root.add(f);
-  if(R.ceil&&R.ceil.on!==false&&ceilOn()){const cm=sm(ceilingMaterial(R.ceil),R.ceil.col||'#f4f2ee',fw,fd,R.ceil.sz||60,R.ceil.j==null ? .3 : R.ceil.j,R.ceil.jc||'#ddd',R.ceil.r||0);cm.side=T.DoubleSide;cm.needsUpdate=true;const c=polyMesh(R.poly,Math.max(150,+R.ceil.h||250),cm,true).mesh;c.castShadow=c.receiveShadow=true;c.userData.ceil=1;c.userData.room=R.id;root.add(c)}})}
+  if(R.ceil&&R.ceil.on!==false&&ceilOn()){const cm=sm(ceilingMaterial(R.ceil),R.ceil.col||'#f4f2ee',fw,fd,R.ceil.sz||60,R.ceil.j==null ? .3 : R.ceil.j,R.ceil.jc||'#ddd',R.ceil.r||0);cm.side=T.DoubleSide;cm.needsUpdate=true;const ceilingHeight=Math.max(150,+R.ceil.h||250),c=polyMesh(R.poly,ceilingHeight,cm,true).mesh;c.castShadow=c.receiveShadow=true;
+   c.onBeforeRender=(renderer,_scene,camera)=>{
+    // La cara superior del techo del editor no debe mostrar su autosombra.
+    c.receiveShadow=!(renderer===r3&&!RVo&&dayInteriorActive()&&camera.position.y>c.position.y+ceilingHeight);
+   };
+   c.userData.ceil=1;c.userData.room=R.id;root.add(c)}})}
 function wvToggle(w){if(wvMode=='hid'){w.hid=!w.hid;if(w.hid)w.tr=false}else{w.tr=!w.tr;if(w.tr)w.hid=false}}
 function wvBar(){let b=document.getElementById('wvb');if(!wallVis){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='wvb';b.style.cssText='position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(20,24,32,.96);color:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 4px 18px #0008;font:12px Arial;display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:80vw';document.body.append(b)}
  b.innerHTML='<b>Muros</b> · clic en una pared (plano 2D o vista 3D) para '+(wvMode=='hid'?'ocultarla':'hacerla transparente')+' ';const bt=(l,fn)=>{const e=document.createElement('button');e.textContent=l;e.onclick=fn;b.append(e)};
