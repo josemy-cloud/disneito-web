@@ -1014,7 +1014,8 @@ function itemColorParts(it){
 }
 function partColorUI(e,panel=P,save=commit){
  const defaults=modelPartDefaults.get(e);
- const parts=itemColorParts(e).filter(([key])=>!defaults||Object.hasOwn(defaults,key));
+ const frontFinish=hasFurnitureFronts(e)&&FRONT_FINISHES.has(e.frontFinish);
+ const parts=itemColorParts(e).filter(([key])=>(!defaults||Object.hasOwn(defaults,key))&&!(frontFinish&&FRONT_ROLES.includes(key)));
  if(!parts.length)return;
  e.partColors=e.partColors||{};
  panel.insertAdjacentHTML('beforeend','<h4>Acabados por componente</h4><small style="display:block;color:#aab4c4;margin-bottom:6px">Controles específicos de este tipo de objeto. Cada componente conserva su propio color.</small>');
@@ -1131,6 +1132,18 @@ function props(){P.innerHTML='';const e=get();
     if(v==='original')delete e.furnitureSurface;
     else e.furnitureSurface=v;
    },labels);
+  }
+  if(hasFurnitureFronts(e)&&(!modelPartDefaults.has(e)||FRONT_ROLES.some(role=>Object.hasOwn(modelPartDefaults.get(e),role)))){
+   const definition=FRONT_FINISHES.get(e.frontFinish);
+   const labels={original:'Acabado del mueble',...Object.fromEntries([...FRONT_FINISHES].map(([id,d])=>[id,d[1]]))};
+   sel2('Acabado de frentes',Object.keys(labels),definition?e.frontFinish:'original',value=>{
+    if(value==='original')delete e.frontFinish;
+    else e.frontFinish=value;
+   },labels);
+   if(definition){
+    sel2('Dirección de la veta (frentes)',['vertical','horizontal'],e.frontGrain||'vertical',value=>e.frontGrain=value);
+    surfaceTintUI(e,definition,'de los frentes','frontTint');
+   }
   }
   partColorUI(e);if(e.cfg)cfgUI(e);
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
@@ -1689,9 +1702,16 @@ const COUNTERTOPS=[
  ['enc-madera-escaneada','Madera rústica escaneada','Madera','scan:wood_table','#745537',1,0,.16,120]
 ];
 const COUNTERTOP_BY_ID=new Map(COUNTERTOPS.map(d=>[d[0],d]));
+const FRONT_FINISHES=new Map(['roble','fresno','iroko','nogal'].map(wood=>{
+ const definition=COUNTERTOP_BY_ID.get('enc-'+wood).slice();
+ definition[0]='frente-'+wood;
+ return [definition[0],definition];
+}));
+const FRONT_ROLES=['fronts','drawerFronts','doors','drawers'];
+const hasFurnitureFronts=it=>it.t==='roomObject'&&['dresser','wardrobe','sideboard','vanity','desk','panel','cabinet','console'].includes(it.shape);
 const LEGACY_SURFACES={madera:'parquet-natural','mármol':'marmol-veteado',cemento:'hormigon-liso',gres:'baldosa-gris',metro:'azulejo-blanco',piedra:'granito-baldosa'};
 const availableCustomMaterials=()=> (S.pbr||[]).filter(d=>String(d[1]).trim().toLowerCase()!=='mármol negro (copia)');
-const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),pbrDef=id=>PL().find(d=>d[0]==id);
+const PL=()=>SURFACE_SCANS.concat(PL0,S.pbr||[]),pbrDef=id=>FRONT_FINISHES.get(id)||PL().find(d=>d[0]==id);
 const WALL_FINISHES=new Set(['azulejo-blanco','azulejo-esmaltado','mosaico-marmol','marmol-veteado','pared-cal-mate']);
 function surfaceMaterials(use='floor'){
  const builtIn=use==='wall'
@@ -1894,7 +1914,15 @@ function wuv(m,U){m.userData.U=U;m.onBeforeCompile=sh=>{Object.assign(sh.uniform
 function pbrMat(id,o){return materialFromDefinition(pbrDef(id),o)}
 function materialFromDefinition(d,o){if(!d)return null;o=o||{};const key=d[0]+'|'+d.slice(3,10).join('|')+'|'+(o.sw?1:0)+(o.w?'w':'')+'|'+(o.rot||0);if(MCH[key])return MCH[key];const t=pbrTex(d),m=new T.MeshStandardMaterial({color:'#ffffff',map:t.a,roughnessMap:t.r,normalMap:t.n,roughness:scanAsset(d)?d[5]:1,metalness:d[6]});m.normalScale.set(d[7],d[7]);
  wuv(m,{uT:{value:new T.Vector2(d[8]||60,d[8]||60)},uSw:{value:o.sw?1:0},uR:{value:(o.rot||0)*D},uO:{value:new T.Vector2(0,0)},uW:{value:o.w?1:0}});return MCH[key]=m}
-const pb=(c,k)=>{const id=c.pbr&&c.pbr[k];return id?pbrMat(id,{sw:k=='cf'&&c.pvt!='horizontal',w:k=='cn'}):null};
+function frontMaterial(owner,def,horizontal){
+ const material=materialFromDefinition(def,{sw:!horizontal});
+ return tintSurfaceMaterial(material,owner,def,'frontTint');
+}
+const pb=(c,k)=>{
+ const id=c.pbr?.[k],front=k==='cf'&&FRONT_FINISHES.get(id);
+ if(front)return frontMaterial(c,front,c.pvt==='horizontal');
+ return id?pbrMat(id,{sw:k==='cf'&&c.pvt!=='horizontal',w:k==='cn'}):null;
+};
 SURFACE_SCANS.forEach(d=>MATS.push('pbr:'+d[0]));
 MATS.push('pbr:nogal-oscuro');
 const surfaceLabels=()=>Object.fromEntries(PL().map(d=>['pbr:'+d[0],d[1]]));
@@ -7968,12 +7996,17 @@ function countertopUI(c){
  }
 }
 /* UI: materiales PBR del mueble + biblioteca */
-function pbrUI(it){const c=it.cfg,L=SURFACE_SCANS.concat(PL0,availableCustomMaterials()),nm=id=>(pbrDef(id)||[])[1]||'(color normal)';P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');c.pbr=c.pbr||{};
+function pbrUI(it){const c=it.cfg,L=SURFACE_SCANS.concat(PL0,availableCustomMaterials());P.insertAdjacentHTML('beforeend','<h4>Materiales PBR</h4>');c.pbr=c.pbr||{};
  [['cc','Casco'],['cf','Frentes'],['cz','Zócalo']].forEach(([k,l])=>{
-  const current=pbrDef(c.pbr[k]),choices=current&&!L.includes(current)?[current,...L]:L;
-  sel2(l,['(color normal)',...choices.map(d=>d[1])],nm(c.pbr[k]),v=>{const d=choices.find(x=>x[1]==v);if(d)c.pbr[k]=d[0];else delete c.pbr[k]});
+  const materials=k==='cf'?[...FRONT_FINISHES.values(),...L]:L;
+  const current=pbrDef(c.pbr[k]),choices=current&&!materials.includes(current)?[current,...materials]:materials;
+  const labels={'':'(color normal)',...Object.fromEntries(choices.map(d=>[d[0],FRONT_FINISHES.has(d[0])?d[1]+' · escaneado':d[1]]))};
+  sel2(l,['',...choices.map(d=>d[0])],current?c.pbr[k]:'',v=>{if(v)c.pbr[k]=v;else delete c.pbr[k]},labels);
  });
- sel2('Dirección de la veta (frentes)',['vertical','horizontal'],c.pvt||'vertical',v=>c.pvt=v)}
+ sel2('Dirección de la veta (frentes)',['vertical','horizontal'],c.pvt||'vertical',v=>c.pvt=v);
+ const front=FRONT_FINISHES.get(c.pbr.cf);
+ if(front)surfaceTintUI(c,front,'de los frentes','frontTint');
+}
 function pbrLib(){let box=document.getElementById('pbrbox');if(box){box.remove();return}box=document.createElement('div');box.id='pbrbox';box.style.cssText='position:fixed;inset:60px 20px 20px 20px;z-index:50;background:#1a1d24;border:1px solid #556;border-radius:8px;padding:10px;overflow:auto;color:#eee;font:13px Arial';document.body.append(box);
  let use=surfaceUse,cat='Todas',q='',selId=null,fav=[];try{fav=JSON.parse(localStorage.getItem('pbrFav')||'[]')}catch(e){}
  const sf=()=>{try{localStorage.setItem('pbrFav',JSON.stringify(fav))}catch(e){}},draw=()=>{const L=surfaceMaterials(use),cats=['Todas','Favoritos',...new Set(L.map(d=>d[2]))],f=L.filter(d=>(cat=='Todas'||(cat=='Favoritos'?fav.includes(d[0]):d[2]==cat))&&(d[1]+d[0]).toLowerCase().includes(q));
@@ -8817,30 +8850,30 @@ function tintedTexture(it,role,source,base,vein,strength){
  }));
  return map;
 }
-function surfaceTintTexture(owner,def){
- const tint=owner.surfaceTint;
+function surfaceTintTexture(owner,def,key='surfaceTint'){
+ const tint=owner[key];
  if(!tint)return null;
  const color=(hex,fallback)=>/^#[0-9a-f]{6}$/i.test(hex)?hex:fallback;
  const base=color(tint.base,def[4]),accent=color(tint.accent,'#64594c');
  const strength=Math.max(0,Math.min(100,+tint.strength||0));
- return tintedTexture(owner,'surface',pbrTex(def),base,accent,strength);
+ return tintedTexture(owner,key,pbrTex(def),base,accent,strength);
 }
-function tintSurfaceMaterial(material,owner,def){
- const map=surfaceTintTexture(owner,def);
+function tintSurfaceMaterial(material,owner,def,key='surfaceTint'){
+ const map=surfaceTintTexture(owner,def,key);
  if(!map)return material;
  const result=material.clone();result.map=map;
  if(material.userData.U)wuv(result,material.userData.U);
  return result;
 }
-function surfaceTintUI(owner,def,kind){
- const tint=owner.surfaceTint||{},set=(k,v)=>{(owner.surfaceTint||={})[k]=v};
+function surfaceTintUI(owner,def,kind,key='surfaceTint'){
+ const tint=owner[key]||{},set=(k,v)=>{(owner[key]||={})[k]=v};
  const wood=def[2]==='Madera';
  row('Color base '+kind,tint.base||def[4],v=>set('base',v),'color');
  row(wood?'Color de veta y nudos':'Color del dibujo y grano',tint.accent||'#64594c',v=>{
   set('accent',v);if(tint.strength==null)set('strength',65);
  },'color');
  row('Intensidad del tinte (%)',tint.strength??0,v=>set('strength',Math.max(0,Math.min(100,v))));
- if(owner.surfaceTint)btn('Restaurar color del material',()=>{delete owner.surfaceTint});
+ if(owner[key])btn('Restaurar color del material',()=>{delete owner[key]});
 }
 function tintDiningGrain(ctx,base,vein,strength){
  const image=ctx.getImageData(0,0,512,512),pixels=image.data;
@@ -8931,7 +8964,20 @@ function applyFurnitureSurface(g,it){
 }
 function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}if(hasUpholstery(it)&&sofaFabric(it)==='capitone'&&!it.upholsteryImage)tuftUpholsteredBacks(g);
  applyFurnitureSurface(g,it);
- applyItemPartColors(g,it,mt)}
+ applyItemPartColors(g,it,mt);
+ const front=hasFurnitureFronts(it)&&FRONT_FINISHES.get(it.frontFinish);
+ if(front){
+  const material=frontMaterial(it,front,it.frontGrain==='horizontal');
+  g.traverse(mesh=>{
+   if(!mesh.isMesh||!mesh.material||Array.isArray(mesh.material))return;
+   const role=mesh.userData.partColorRole||mesh.material.userData.partColorRole;
+   if(FRONT_ROLES.includes(role)&&!mesh.material.transparent&&mesh.material.metalness<=.35){
+    mesh.userData.partColorRole=role;
+    mesh.material=material;
+   }
+  });
+ }
+}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
  if(motions.every(m=>m.hoodDoor))return open?'Cerrar puerta del armario':'Abrir puerta del armario';
