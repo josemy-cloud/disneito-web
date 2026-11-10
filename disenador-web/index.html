@@ -1052,7 +1052,7 @@ function props(){P.innerHTML='';const e=get();
    btn(e.upholsteryImage?'Cambiar imagen de tapicería…':'Subir textura de tapicería…',()=>input.click(),false);
   }
   if(isRectangularDiningTable(e)||isUpholsteredDiningChair(e)){
-   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble tangencial'};
+   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble en tablones'};
    sel2('Veta de la madera',Object.keys(grains),Object.hasOwn(grains,e.woodGrain)?e.woodGrain:'suave',v=>{e.woodGrain=v},grains);
   }
   partColorUI(e);if(e.cfg)cfgUI(e);
@@ -1641,19 +1641,27 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
  T0=new Float32Array(N*N),H0=new Float32Array(N*N),R0=new Float32Array(N*N);
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const u=x/N,v=y/N,i=y*N+x;let t=0,h=.5,r=0;
   if(gen==='furniture-oak-flat-sawn'){
-   // Anillos de crecimiento en un corte tangencial, con arcos y poros alargados.
-   const growth=.21*Math.exp(-9*Math.sin(Math.PI*(u-.30))**2);
-   const drift=(fb(u,v,3,5,101)-.5)*.05;
-   const grain=v+growth+drift;
-   const density=nz(u,grain,3,12,102);
-   const wave=grain*17+(density-.5)*1.2;
-   const ring=(.5+.5*Math.cos(2*Math.PI*wave))**7;
-   const pores=Math.max(0,nz(u,grain,27,190,103)-.67);
-   const fiber=nz(u,grain,8,144,104)-.5;
-   const tone=fb(u,grain,4,8,105)-.5;
-   t=tone*.29+fiber*.10-ring*(.06+.18*density)-pores*.22;
-   h=.5-ring*.045+fiber*.041-pores*.05;
-   r=tone*.065+ring*.023;
+   // Tablones de roble, con cortes alternos y nudos que desvían la veta.
+   const board=v<.22?0:v<.46?1:v<.68?2:v<.85?3:4;
+   const edges=[0,.22,.46,.68,.85,1];
+   const local=(v-edges[board])/(edges[board+1]-edges[board]);
+   const long=(u+[.08,.36,.62,.19,.81][board])%1;
+   const along=long-.54;
+   const cross=local-[.48,.68,.34,.58,.43][board];
+   const knot=Math.exp(-((along/.064)**2+(cross/.105)**2));
+   const bend=Math.sign(cross)*Math.sqrt(cross*cross+.012*knot);
+   const drift=(fb(long,local,3,5,101+board)-.5)*.125;
+   const grain=bend+drift;
+   const rings=fb(long,grain,4,11,103+board);
+   const early=nz(long,grain,9,71,113+board);
+   const pores=Math.max(0,nz(long,grain,38,154,123+board)-.69);
+   const growth=Math.exp(-Math.abs(grain*14+(rings-.5)*2-Math.round(grain*14+(rings-.5)*2))*10);
+   const border=Math.min(local,1-local);
+   const seam=Math.max(0,1-border*125)*.022;
+   const base=[.033,-.045,.022,-.024,.008][board];
+   t=base+(rings-.5)*.22+(early-.5)*.085-growth*(.025+.033*rings)-pores*.19-knot*.19-seam;
+   h=.5+(early-.5)*.029-pores*.047-growth*.018;
+   r=(rings-.5)*.06+knot*.025;
   }else if(gen==='furniture-oak-grain'){
    // La veta se curva con el crecimiento; su anchura y contraste cambian a lo largo de la pieza.
    const drift=(fb(u,v,3,5,91)-.5)*.15+(nz(u,v,2,3,92)-.5)*.16;
@@ -5956,7 +5964,12 @@ function furnitureCollisionParts(it){
  const part=(x,z,w,d)=>({...it,x:it.x+x*c-z*s,y:it.y+x*s+z*c,w,d});
  return [part(0,(arm-d)/2,w,arm),part((arm-w)/2,arm/2,arm,d-arm)];
 }
+function canOverlapFloorRug(rug,item){
+ return rug.t==='alfombra'&&Math.abs(+rug.e||0)<.1&&+rug.h<=4&&
+  item.t&&item.t!=='alfombra'&&(+item.e||0)>=0;
+}
 function itemCollision(a,b){
+ if(canOverlapFloorRug(a,b)||canOverlapFloorRug(b,a))return false;
  const aa=furnitureCollisionParts(a),bb=furnitureCollisionParts(b);
  return aa.some(p=>bb.some(q=>{
   const low=+p.e||0,other=+q.e||0;
