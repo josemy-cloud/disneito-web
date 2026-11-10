@@ -4481,6 +4481,215 @@ function buildRectangularDiningTable(g,it){
   }
  }
 }
+
+const accessoryTextures=new Map();
+function accessoryTexture(kind,repeatX=1,repeatY=1){
+ const key=[kind,repeatX,repeatY].join(':');
+ if(accessoryTextures.has(key))return accessoryTextures.get(key);
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=64;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle=kind==='grille'?'#dedede':'#f1f1f1';
+ ctx.fillRect(0,0,64,64);
+ if(kind==='grille'){
+  ctx.fillStyle='#555';
+  for(let y=4;y<64;y+=8)for(let x=4;x<64;x+=8){ctx.beginPath();ctx.arc(x,y,2.2,0,Math.PI*2);ctx.fill()}
+ }else if(kind==='brushed'){
+  for(let y=0;y<64;y++){
+   const shade=190+((y*37)%53);
+   ctx.fillStyle='rgb('+shade+','+shade+','+shade+')';ctx.fillRect(0,y,64,1);
+  }
+ }else{
+  for(let i=0;i<120;i++){
+   const x=(i*43+i*i*3)%64,y=(i*17+Math.floor(i/4)*7)%64;
+   ctx.fillStyle=i%3?'#d1d1d1':'#fff';ctx.fillRect(x,y,1,1);
+  }
+ }
+ const map=new T.CanvasTexture(canvas);
+ map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(repeatX,repeatY);map.anisotropy=4;
+ accessoryTextures.set(key,map);
+ return map;
+}
+function buildSurfaceAccessory(g,it){
+ const {w,h,d}=it,v=it.variant||0;
+ const finish=(color,roughness,metalness,role)=>partFinish(M(color,roughness,metalness),role);
+ const box=(width,height,depth,x,y,z,mat,radius)=>B(g,width,height,depth,x,y,z,mat,radius);
+ const mesh=(geometry,mat,x=0,y=0,z=0)=>{
+  const part=new T.Mesh(geometry,mat);
+  part.position.set(x,y,z);part.castShadow=part.receiveShadow=true;g.add(part);
+  return part;
+ };
+ const disc=(radius,height,x,y,z,mat)=>mesh(new T.CylinderGeometry(radius,radius,height,24),mat,x,y,z);
+ const lathe=(profile,mat,z=0)=>mesh(new T.LatheGeometry(profile.map(([x,y])=>new T.Vector2(x,y)),48),mat,0,0,z);
+ const rod=(a,b,r,mat)=>{
+  const start=new T.Vector3(...a),delta=new T.Vector3(...b).sub(start),mid=start.addScaledVector(delta,.5);
+  const part=disc(r,delta.length(),mid.x,mid.y,mid.z,mat);
+  part.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());
+  return part;
+ };
+ const feet=(mat,width,depth,height)=>{
+  for(const x of [-1,1])for(const z of [-1,1])box(width,height,depth,x*(w-width)*.38,height/2,z*(d-depth)*.38,mat,.2);
+ };
+ const frontDial=(r,depth,x,y,z,mat)=>rod([x,y,z],[x,y,z+depth],r,mat);
+ const plastic=finish('#25282a',.56,.02,'handles');
+ const steel=finish('#b2b7ba',.32,.79,'hardware');
+ const brushed=accessoryTexture('brushed');
+ steel.map=brushed;steel.roughnessMap=brushed;
+ const status=M('#83bac1',.3);
+ status.emissive.set('#5e9fa8');status.emissiveIntensity=.35;
+ if(it.shape==='television'){
+  const frame=finish(it.col,.35,.39,'frame'),glass=finish('#141b24',.16,.25,'screen');
+  const foot=h*.105,panelH=h-foot,depth=Math.min(v?2.4:1.5,d*.12);
+  box(w,panelH,depth,0,foot+panelH/2,0,frame,.3);
+  box(w*.988,panelH*.975,.24,0,foot+panelH*.506,depth/2+.1,glass,.055);
+  box(w*(v?.76:.56),panelH*.50,d*.19,0,foot+panelH*.285,-depth*.95,frame,.7);
+  for(const side of [-1,1]){
+   const x=side*w*(v?.30:.34);
+   box(w*.054,.72,d*.91,x,.36,0,frame,.17).rotation.y=side*.13;
+   rod([x,.64,-d*.10],[x-side*w*.018,foot+.7,-depth*.45],w*.010,frame);
+  }
+  box(.45,.18,.14,w*.39,foot+panelH*.009,depth/2+.09,status,.03);
+  for(let i=0;i<4;i++)box(w*.025,.38,.15,w*(.07+i*.033),foot+panelH*.23,-depth*.95-d*.096,plastic,.04);
+  return;
+ }
+ if(it.shape==='fryingpan'){
+  const r=w/2,z=-(d-w)/2,rim=h*(v?.94:.83);
+  const body=finish(it.col,v?.27:.47,v?.82:.16,'body');
+  const inside=finish(v?'#afb5ba':'#343638',v?.30:.56,v?.73:.04,'body');
+  if(v){inside.map=brushed;inside.roughnessMap=brushed;}
+  const grip=finish(v?'#9ea4a8':'#27292b',v?.34:.67,v?.76:0,'handles');
+  lathe([[0,0],[r*.65,0],[r*.70,.12],[r*.80,h*.16],[r*.90,h*.39],[r*.98,rim*.89],[r,rim-.11],[r*.996,rim],[r*.971,rim]],body,z);
+  lathe([[r*.971,rim],[r*.965,rim*.9],[r*.89,h*.43],[r*.79,h*.22],[r*.65,h*.13],[0,h*.13]],inside,z);
+  const root=z+r*.95,end=d*.49;
+  box(w*.135,h*.30,end-root,0,h*.80,(root+end)/2,grip,.36).rotation.x=-.045;
+  box(w*.17,h*.28,w*.12,0,h*.65,root,body,.16);
+  for(const x of [-1,1])frontDial(.21,.26,x*w*.045,h*.63,z+r*.895,steel);
+  return;
+ }
+ if(it.shape==='fruitbowl'){
+  const r=Math.min(w,d)/2,lip=h*.47;
+  const bowl=partFinish(v?diningOak(it,it.col):M(it.col,.25),'body');
+  const vessel=lathe([[0,0],[r*.41,0],[r*.44,.35],[r*.44,h*.05],[r*.57,h*.10],[r*.75,h*.20],[r*.92,h*.34],[r,lip-.24],[r*.993,lip],[r*.96,lip],[r*.89,h*.35],[r*.72,h*.24],[r*.50,h*.14],[0,h*.12]],bowl);
+  if(v)orientDiningGrain(vessel,0);
+  const stem=finish('#624529',.82,0,'details');
+  const fruit=[
+   [-.36,-.29,.56,.27,'#ad2b22',true], [.31,-.30,.55,.26,'#d97a24',false],
+   [.35,.29,.52,.25,'#83943b',true], [-.32,.32,.51,.23,'#dc972d',false],
+   [.01,-.02,.77,.26,'#b23928',true]
+  ];
+  for(const [x,z,y,size,color,apple] of fruit){
+   const geo=new T.SphereGeometry(1,24,16),pos=geo.attributes.position;
+   for(let i=0;i<pos.count;i++){
+    const px=pos.getX(i),py=pos.getY(i),pz=pos.getZ(i);
+    const angle=Math.atan2(pz,px),shape=apple?1+.055*Math.cos(5*angle)*(1-py*py)+.10*py:1;
+    pos.setXYZ(i,px*shape,py*(apple?1-.19*Math.pow(Math.abs(py),5):1),pz*shape);
+   }
+   geo.computeVertexNormals();
+   const width=r*size,height=Math.min(h*.215,width*.94);
+   const skin=finish(color,apple?.32:.62,0,'details');
+   if(!apple){skin.map=accessoryTexture('peel',3,2);skin.bumpMap=skin.map;skin.bumpScale=.055;}
+   const part=mesh(geo,skin,x*r,y*h,z*r);
+   part.scale.set(width,height,width*.96);
+   part.rotation.y=x*3;
+   if(apple)rod([x*r,y*h+height*.77,z*r],[x*r+.35,y*h+height*.98,z*r+.14],.10,stem);
+  }
+  return;
+ }
+ const metalHousing=it.shape==='countertopAppliance'&&(v===2||v===3);
+ const body=finish(it.col,metalHousing?.33:.46,metalHousing?.57:.12,'body');
+ const dark=finish('#21262a',.48,.05,'fronts');
+ const screen=finish('#14272d',.19,.15,'screen');
+ if(it.shape==='compactElectronics'){
+  if(v===2){
+   box(w,h*.66,d,0,h*.33,0,body,.55);
+   box(w*.94,h*.17,d*.94,0,h*.68,0,dark,.35);
+   for(let row=0;row<5;row++)for(const x of [-1,0,1]){
+    const mat=row===0&&x===1?M('#a73831',.62):dark;
+    disc(w*.077,h*.13,x*w*.24,h*.81,d*(.14-row*.101),mat);
+   }
+   disc(w*.22,h*.14,0,h*.82,d*.31,dark);
+   disc(w*.11,h*.15,0,h*.835,d*.31,body);
+   return;
+  }
+  if(v===3){
+   feet(dark,w*.13,d*.15,h*.06);
+   box(w,h*.90,d-.46,0,h*.51,-.23,body,.72);
+   box(w*.88,h*.19,.24,0,h*.56,d/2-.16,dark,.075);
+   for(let i=0;i<3;i++)box(w*.68,.19,.10,0,h*(.45-i*.065),d/2-.17,dark);
+   for(const x of [-1,1])box(w*.14,h*.13,.20,x*w*.25,h*.56,d/2-.07,screen,.04);
+   box(.44,.19,.11,w*.36,h*.70,d/2-.06,status,.03);
+   return;
+  }
+  feet(dark,w*.12,d*.23,h*.06);
+  box(w,h*.94,d*.94,0,h*.53,-d*.03,body,h*.22);
+  const grille=box(w*.965,h*.77,.60,0,h*.51,d*.465,dark,.13);
+  // Tile a small perforation map across the grille instead of adding one mesh per hole.
+  grille.material=dark.clone();grille.material.map=accessoryTexture('grille',v?7.5:35,v?3.3:2.5);
+  box(v?1.0:1.7,.24,.15,0,h*.48,d*.499,status,.045);
+  if(v)for(const x of [-1,0,1])disc(.28,.13,x*1.3,h*.975,0,plastic);
+  return;
+ }
+ if(v===3){
+  body.map=brushed;body.roughnessMap=brushed;
+  const center=d*.03;
+  disc(w*.345,h*.068,0,h*.034,center,dark);
+  lathe([[0,h*.065],[w*.27,h*.065],[w*.32,h*.11],[w*.36,h*.22],[w*.35,h*.57],[w*.31,h*.76],[w*.27,h*.81],[0,h*.81]],body,center);
+  disc(w*.265,h*.03,0,h*.823,center,dark);
+  disc(w*.075,h*.077,0,h*.867,center,plastic);
+  rod([0,h*.59,d*.29],[0,h*.79,d*.426],w*.092,steel);
+  rod([0,h*.783,d*.422],[0,h*.797,d*.431],w*.068,dark);
+  const path=new T.CatmullRomCurve3([[0,h*.73,-d*.23],[0,h*.69,-d*.39],[0,h*.49,-d*.426],[0,h*.27,-d*.39],[0,h*.23,-d*.23]].map(p=>new T.Vector3(...p)));
+  mesh(new T.TubeGeometry(path,24,w*.043,10,false),plastic);
+  box(.55,h*.26,.18,w*.15,h*.45,d*.348,screen,.04);
+ }else if(v===2){
+  feet(dark,w*.15,d*.18,h*.065);
+  box(w,h*.74,d,0,h*.435,0,body,.65);
+  const top=h*.805,slotW=w*.68,slotD=d*.125;
+  for(const side of [-1,1]){
+   box((w-slotW)/2,h*.15,d,side*(w+slotW)/4,top+h*.075,0,body,.35);
+   box(slotW,h*.15,d*(.5-.21)-slotD/2,0,top+h*.075,side*(d*.71+slotD/2)/2,steel,.16);
+   box(slotW,.16,slotD,0,top+.08,side*d*.21,dark,.03);
+  }
+  box(slotW,h*.15,d*.42-slotD,0,top+h*.075,0,steel,.16);
+  box(w*.10,h*.09,d*.08,w*.34,h*.64,d*.48,plastic,.15);
+  frontDial(w*.047,.56,w*.34,h*.27,d*.496,plastic);
+ }else if(v===1){
+  feet(dark,w*.14,d*.15,h*.045);
+  box(w,h*.12,d,0,h*.105,0,dark,.5);
+  box(w*.95,h*.77,d*.42,0,h*.535,-d*.28,body,.65);
+  box(w,h*.23,d*.84,0,h*.885,-d*.025,body,.64);
+  box(w*.89,h*.054,d*.43,0,h*.185,d*.20,steel,.15);
+  for(let i=-3;i<=3;i++)box(w*.73,.055,.24,0,h*.214,d*(.20+i*.053),dark,.015);
+  disc(w*.132,h*.115,0,h*.72,d*.17,steel);
+  disc(w*.11,h*.045,0,h*.645,d*.17,dark);
+  rod([0,h*.657,d*.25],[0,h*.627,d*.47],w*.055,plastic);
+  for(const x of [-1,1])frontDial(w*.048,.25,x*w*.24,h*.879,d*.397,steel);
+  box(w*.16,h*.061,.22,0,h*.884,d*.398,screen,.08);
+  rod([w*.31,h*.78,d*.14],[w*.34,h*.36,d*.32],.36,steel);
+ }else if(v===4){
+  feet(dark,w*.16,d*.13,h*.12);
+  box(w,h*.69,d,0,h*.465,0,body,.55);
+  box(w*.89,h*.19,d*.62,0,h*.905,-d*.12,steel,.12);
+  box(w*.35,h*.09,d*.16,0,h*.835,d*.33,screen,.055);
+  for(const x of [-1,0,1]){
+   const digitX=x*w*.072,digitZ=d*.326;
+   for(const side of [-1,1]){
+    box(w*.039,.025,.09,digitX,h*.884,digitZ+side*.32,status);
+    box(.09,.025,.55,digitX+side*w*.022,h*.884,digitZ,status);
+   }
+  }
+  for(const x of [-1,1])box(w*.13,h*.08,d*.11,x*w*.30,h*.837,d*.33,plastic,.08);
+ }else{
+  feet(dark,w*.16,d*.15,h*.045);
+  box(w,h*.955,d*.87,0,h*.5225,-d*.065,body,1.45);
+  box(w*.96,h*.50,d*.126,0,h*.315,d*.421,dark,.84);
+  box(w*.85,.21,.28,0,h*.57,d*.423,plastic,.045);
+  box(w*.53,h*.15,.36,0,h*.785,d*.373,screen,.18);
+  box(w*.085,.22,.12,0,h*.80,d*.380,status,.035);
+  for(const x of [-1,1])box(w*.085,h*.085,d*.13,x*w*.14,h*.36,d*.435,plastic,.22);
+  box(w*.36,h*.12,d*.058,0,h*.36,d*.470,plastic,.30);
+ }
+}
+
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{mesh.userData.part={t:key};mesh.castShadow=true;mesh.receiveShadow=key==='feet';return mesh};
@@ -4675,108 +4884,12 @@ case'chair':{
  g.userData.diningChairConstruction={schemaVersion:2,upholstered:padded,armrests:arms,backrest:padded?'inclined-panel':'slatted',legs:'four-connected',status:'integrated-pending-visual-validation'};
  break;
 }
-case'television':{
- const foot=h*.105,screenH=h-foot,thick=Math.min(2.2,d*.14);
- const frame=partFinish(M(it.col,.32,.38),'frame'),screen=partFinish(M('#151d24',.15,.28),'screen');
- B(g,w,screenH,thick,0,foot+screenH/2,0,frame,.42);
- B(g,w*.983,screenH*.973,.22,0,foot+screenH*.505,thick/2+.08,screen,.045);
- B(g,w*.54,screenH*.51,Math.min(3.4,d*.18),0,foot+screenH*.31,-thick*.75,frame,.55);
- for(const side of [-1,1]){
-  const x=w*(v?.28:.33)*side;
-  B(g,w*.022,foot,thick*1.25,x,foot/2,-.5,frame,.23);
-  const stand=B(g,w*.035,Math.min(1.3,foot*.3),d*.87,x,Math.min(.65,foot*.15),0,frame,.23);
-  stand.rotation.y=side*.09;
- }
- break;
-}
-case'fryingpan':{
- const r=w/2,center=-(d-w)/2;
- const pan=partFinish(M(it.col,.42,v?.75:.12),'body'),grip=partFinish(M('#27282a',.59),'handles');
- const profile=[[0,0],[r*.69,0],[r*.84,h*.08],[r*.96,h*.51],[r,h*.90],[r*.993,h],[r*.965,h],[r*.92,h*.65],[r*.80,h*.20],[r*.69,h*.14],[0,h*.14]];
- const bowl=new T.Mesh(new T.LatheGeometry(profile.map(p=>new T.Vector2(...p)),56),pan);bowl.position.z=center;g.add(bowl);
- const root=center+r*.90,end=d*.49;
- const handle=B(g,w*.115,h*.34,end-root,0,h*.83,(root+end)/2,grip,h*.12);
- handle.rotation.x=-.035;
- for(const x of [-1,1])B(g,w*.036,h*.22,w*.035,x*w*.062,h*.68,root,pan,.14);
- break;
-}
-case'fruitbowl':{
- const r=Math.min(w,d)/2,lip=h*.51;
- const ceramic=partFinish(M(it.col,v?.57:.29,.02),'body');
- const profile=[[0,0],[r*.40,0],[r*.48,h*.07],[r*.73,h*.20],[r*.94,lip*.77],[r,lip],[r*.94,lip],[r*.88,lip*.78],[r*.68,h*.26],[r*.43,h*.12],[0,h*.12]];
- g.add(new T.Mesh(new T.LatheGeometry(profile.map(p=>new T.Vector2(...p)),48),ceramic));
- const colors=['#b23828','#d77929','#899739','#d9a239','#942c23'];
- const fruitGeometry=new T.SphereGeometry(1,20,14);
- const stem=partFinish(M('#5a3e23',.82),'details');
- for(let k=0;k<5;k++){
-  const a=k*2.40,radius=k===4?r*.07:r*.43,rr=r*(k%2?.25:.29);
-  const x=Math.cos(a)*radius,z=Math.sin(a)*radius,y=h*(k===4?.73:.51);
-  const fruit=new T.Mesh(fruitGeometry,partFinish(M(colors[k],.49),'details'));
-  fruit.scale.set(rr,Math.min(h*.26,rr*.92),rr*.96);fruit.position.set(x,y,z);fruit.castShadow=true;g.add(fruit);
-  if(k%2===0)B(g,.30,.82,.30,x,y+fruit.scale.y+.22,z,stem,.06);
- }
- break;
-}
-case'countertopAppliance':{
- const body=partFinish(M(it.col,.49,.14),'body'),dark=partFinish(M('#25292b',.51),'fronts');
- const screen=partFinish(M('#142a30',.22,.19),'screen'),steel=partFinish(M('#aeb5b7',.34,.70),'hardware');
- const handle=partFinish(M('#323639',.49),'handles');
- if(v===3){
-  cyl(0,h*.035,d*.04,w*.35,h*.07,dark);
-  const kettle=new T.Mesh(new T.LatheGeometry([[0,h*.07],[w*.29,h*.07],[w*.37,h*.20],[w*.36,h*.63],[w*.28,h*.83],[0,h*.83]].map(p=>new T.Vector2(...p)),48),body);g.add(kettle);
-  B(g,w*.18,h*.09,d*.25,0,h*.73,d*.34,steel,.38);
-  B(g,w*.10,h*.49,d*.13,0,h*.52,-d*.40,handle,.38);
-  for(const y of [h*.33,h*.72])B(g,w*.10,h*.07,d*.23,0,y,-d*.33,handle,.25);
-  cyl(0,h*.87,0,w*.08,h*.08,handle);
- }else if(v===2){
-  B(g,w,h*.89,d,0,h*.445,0,body,.65);
-  for(const z of [-1,1]){
-   B(g,w*.74,h*.014,d*.15,0,h*.893,z*d*.20,dark,.035);
-   B(g,w*.78,h*.025,d*.035,0,h*.893,z*d*.30,steel,.035);
-  }
-  B(g,w*.085,h*.095,d*.10,w*.44,h*.62,d*.49,handle,.12);
-  cyl(w*.37,h*.28,d*.46,w*.047,h*.08,steel);
- }else if(v===1){
-  B(g,w,h*.13,d,0,h*.065,0,dark,.45);
-  B(g,w*.96,h*.82,d*.36,0,h*.47,-d*.28,body,.55);
-  B(g,w,h*.26,d*.80,0,h*.82,-d*.04,body,.58);
-  B(g,w*.78,h*.08,d*.45,0,h*.15,d*.17,steel,.15);
-  for(let i=-3;i<=3;i++)B(g,w*.65,.15,.22,0,h*.192,d*.17+i*d*.045,dark);
-  cyl(0,h*.60,d*.13,w*.14,h*.16,steel);
-  B(g,w*.11,h*.07,d*.28,0,h*.58,d*.30,handle,.22);
-  for(const x of [-1,1])B(g,w*.12,h*.06,.26,x*w*.27,h*.82,d*.366,screen,.10);
- }else if(v===4){
-  B(g,w,h*.90,d,0,h*.45,0,body,.36);
-  B(g,w*.86,h*.15,d*.61,0,h*.92,-d*.095,steel,.08);
-  B(g,w*.36,h*.08,d*.15,0,h*.92,d*.34,screen,.07);
- }else{
-  B(g,w,h,d*.91,0,h/2,-d*.045,body,1.1);
-  B(g,w*.90,h*.51,.65,0,h*.29,.41*d+.22,dark,.25);
-  B(g,w*.42,h*.10,.26,0,h*.79,.41*d+.14,screen,.10);
-  B(g,w*.38,h*.085,d*.14,0,h*.36,d*.465,handle,.26);
-  B(g,w*.34,h*.055,d*.15,0,h*.31,d*.465,handle,.22);
- }
- break;
-}
-case'compactElectronics':{
- const body=partFinish(M(it.col,.48,.08),'body'),grille=partFinish(M('#22272b',.84),'fronts');
- const display=partFinish(M('#24404a',.32),'screen');
- B(g,w,h,d,0,h/2,0,body,Math.min(.85,h*.20));
- if(v===2){
-  for(let row=0;row<6;row++)for(const x of [-1,0,1])B(g,w*.15,h*.14,d*.049,x*w*.24,h*.94,d*(.25-row*.088),row===0&&x===0?display:grille,.075);
- }else if(v===3){
-  B(g,w*.90,h*.25,.40,0,h*.50,d*.49,grille,.12);
-  B(g,w*.45,.22,.30,-w*.16,h*.51,d*.505,display,.06);
- }else{
-  B(g,w*.95,h*.70,.40,0,h*.50,d*.49,grille,.17);
-  for(const x of [-1,1]){
-   const driver=new T.Mesh(new T.CircleGeometry(h*.25,24),body);
-   driver.position.set(x*w*.30,h*.49,d*.497);g.add(driver);
-  }
-  B(g,w*.11,h*.17,.18,0,h*.55,d*.515,display,.055);
- }
- break;
-}
+case'television':
+case'fryingpan':
+case'fruitbowl':
+case'countertopAppliance':
+case'compactElectronics':
+ buildSurfaceAccessory(g,it);break;
 case'panel':{
  if(isLivingItem(it)){buildLivingWall(g,it,mt);break;}
  const wood=M(it.col||'#75563f',.62,.08),edge=M('#4b382c',.55,.12),inside=M('#d0c6b8',.82,.02),screen=M('#080d12',.12,.28),glass=new T.MeshStandardMaterial({color:'#18232b',roughness:.12,metalness:.35});
