@@ -829,7 +829,7 @@ const ITEM_COLOR_PARTS={
  sofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['arms','Brazos tapizados'],['frame','Estructura y bastidor'],['feet','Patas'],['piping','Ribetes y costuras'],['storage','Interior del arcón'],['hardware','Bisagras y pistones']],
  outdoorsofa:[['seat','Cojines de asiento'],['back','Cojines de respaldo'],['rope','Trenzado y cuerda'],['frame','Estructura'],['feet','Patas']],
  seat:[['seat','Asiento'],['back','Respaldo'],['arms','Brazos'],['frame','Estructura'],['feet','Patas'],['piping','Ribetes y costuras']],
- chair:[['seat','Asiento'],['back','Respaldo'],['arms','Reposabrazos'],['frame','Estructura'],['feet','Patas']],
+ chair:[['seat','Asiento'],['back','Respaldo'],['arms','Reposabrazos'],['frame','Estructura'],['feet','Patas'],['piping','Ribetes y costuras']],
  bench:[['seat','Superficie de asiento'],['back','Respaldo'],['frame','Estructura'],['feet','Patas']],
  table:[['top','Tablero y canto'],['apron','Faldón'],['legs','Patas'],['base','Pie o pedestal'],['hardware','Herrajes y guías']],
  desk:[['top','Sobre de escritorio'],['frame','Estructura y patas'],['drawerFronts','Frentes de cajón'],['drawerInterior','Interior de cajones'],['handles','Tiradores']],
@@ -973,7 +973,8 @@ function partColorUI(e,panel=P,save=commit){
 
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
 const SOFA_FABRICS={lino:'Lino fino',boucle:'Bouclé texturizado',liso:'Tela lisa'};
-const hasSofaFabric=it=>it.t==='sofa'||(it.t==='roomObject'&&(
+const isUpholsteredChairPilot=it=>it.t==='roomObject'&&it.shape==='chair'&&it.roomType==='comedor'&&it.variant===0&&it.n==='Silla tapizada';
+const hasUpholstery=it=>isUpholsteredChairPilot(it)||it.t==='sofa'||(it.t==='roomObject'&&(
  ['sofa','outdoorsofa'].includes(it.shape)||(it.shape==='seat'&&!/puf/i.test(it.n||''))
 ));
 const sofaFabric=it=>Object.hasOwn(SOFA_FABRICS,it.upholstery)?it.upholstery:'lino';
@@ -1041,7 +1042,7 @@ function props(){P.innerHTML='';const e=get();
    appendMotionButton(P,e,motions,commitQ,true);
   }
   if(hasItemLight(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
-  if(hasSofaFabric(e)){
+  if(hasUpholstery(e)){
    const labels={...SOFA_FABRICS,...(e.upholsteryImage?{custom:'Imagen personalizada'}:{})};
    sel2('Tapicería',Object.keys(labels),e.upholsteryImage?'custom':sofaFabric(e),v=>{if(v!=='custom'){delete e.upholsteryImage;e.upholstery=v}},labels);
    const input=document.createElement('input');
@@ -4206,6 +4207,54 @@ function upholsteredPad(parent,x,y,z,w,h,d,axis,material,stitch){
  mesh.add(seam);parent.add(mesh);
  return mesh;
 }
+function buildUpholsteredChairPilot(g,it){
+ const {w,h,d}=it;
+ const fabric=M(it.col||'#9d8264',.88,.02);
+ applyUpholstery(it,fabric);
+ const stitch=M('#8f7c6c',.9,.01);stitch.color.copy(fabric.color).multiplyScalar(.84);
+ const grain=pbrTex(['silla-roble','Roble natural','Maderas','wood','#eeeeee',.55,0,.28,60]);
+ const wood=M('#b78e61',.57,0);
+ Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r});
+ wood.normalScale.setScalar(.14);
+ const frame=partFinish(wood,'frame'),legs=partFinish(wood.clone(),'feet');
+ const railY=h*.445,legX=w*.35,front=d*.31,rear=-d*.315;
+ const legSize=Math.min(w*.086,d*.09);
+ for(const side of [-1,1]){
+  B(g,legSize*.78,h*.065,front-rear,side*legX,railY,(front+rear)/2,frame,legSize*.14);
+  for(const z of [front,rear]){
+   const top=new T.Vector3(side*legX,railY+h*.014,z);
+   const bottom=new T.Vector3(side*w*.385,0,z>0?d*.38:-d*.41);
+   const axis=top.clone().sub(bottom);
+   const geometry=new T.CylinderGeometry(legSize*.71,legSize*.46,axis.length(),4);
+   geometry.rotateY(Math.PI/4);
+   const leg=new T.Mesh(geometry,legs);
+   leg.position.copy(top).add(bottom).multiplyScalar(.5);
+   leg.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
+   leg.castShadow=leg.receiveShadow=true;g.add(leg);
+  }
+  const upright=B(g,legSize*.78,h*.49,legSize*.86,side*legX,h*.69,-d*.368,frame,legSize*.14);
+  upright.rotation.x=-.12;
+ }
+ for(const z of [front,rear])B(g,2*legX,h*.065,legSize*.8,0,railY,z,frame,legSize*.14);
+ B(g,w*.80,h*.034,d*.69,0,h*.467,d*.024,frame,legSize*.2);
+ const seat=upholsteredPad(g,0,h*.513,d*.028,w*.91,h*.068,d*.76,'y',fabric,stitch);
+ seat.userData.part={t:'seat'};seat.castShadow=true;
+ const backW=w*.87,backH=h*.43;
+ const back=upholsteredPad(g,0,h*.785,-d*.365,backW,backH,d*.075,'z',fabric,stitch);
+ back.userData.part={t:'back'};back.castShadow=true;
+ // Curva lumbar y caída hacia atrás, incluida la costura.
+ const bow=d*.045,lean=d*.055,halfW=backW/2,halfH=backH/2;
+ back.traverse(mesh=>{
+  const pos=mesh.geometry.attributes.position,norm=mesh.geometry.attributes.normal;
+  for(let i=0;i<pos.count;i++){
+   const x=pos.getX(i),y=pos.getY(i),u=x/halfW,v=y/halfH;
+   pos.setZ(i,pos.getZ(i)-bow*(1-u*u)-lean*v);
+   const nz=norm.getZ(i);
+   const normal=new T.Vector3(norm.getX(i)-2*bow*u/halfW*nz,norm.getY(i)+lean/halfH*nz,nz).normalize();
+   norm.setXYZ(i,normal.x,normal.y,normal.z);
+  }
+ });
+}
 BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M('#aeb5bb',.32,.82),dark=M('#30363b',.48,.16),glass=new T.MeshStandardMaterial({color:'#b8d5df',roughness:.12,transparent:true,opacity:.36});const box=(x,y,z,a,b,c,m=mt)=>B(g,a,b,c,x,y,z,m);const cyl=(x,y,z,r,hh,m=mt)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,hh,24),m);o.position.set(x,y,z);g.add(o);return o};const tube=(a,b,r=2,m=metal)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),u=q.clone().sub(p),o=new T.Mesh(new T.CylinderGeometry(r,r,u.length(),12),m);o.position.copy(p).add(q).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),u.normalize());g.add(o);return o};switch(it.shape){
 case'sofa':{
  const tag=(mesh,key)=>{mesh.userData.part={t:key};mesh.castShadow=true;mesh.receiveShadow=key==='feet';return mesh};
@@ -4368,6 +4417,7 @@ case'bench':{
  break;
 }
 case'chair':{
+ if(isUpholsteredChairPilot(it)){buildUpholsteredChairPilot(g,it);break;}
  const name=(it.n||'').toLowerCase(),wood=partFinish(mt.clone(),'frame'),uphol=M('#c8bcae',.9,.02),seatY=h*.47,seatW=w*.82,seatD=d*.68,arms=/brazos/.test(name),padded=/tapiz/.test(name);
  // Marco de asiento y cojín independiente, con esquinas redondeadas y espesor real.
  const chairDeck=B(g,seatW,h*.07,seatD,0,seatY,0,wood);chairDeck.userData.partColorRole=padded?'frame':'seat';
@@ -7888,7 +7938,7 @@ function applyItemPartColors(g,it,primary){
    const id=src.id+':'+hex;
    if(!recolored.has(id)){
     const mat=src.clone();mat.color.set(hex);
-    if(hasSofaFabric(it)&&src.userData.U)wuv(mat,src.userData.U);
+    if(hasUpholstery(it)&&src.userData.U)wuv(mat,src.userData.U);
     if(key==='light'&&mat.emissive)mat.emissive.set(hex);
     recolored.set(id,mat);
    }
@@ -8001,7 +8051,7 @@ function thumbO(o){
  if(TH.has(o))return TH.get(o);
  const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));
  buildPrev(it);
- const studio=hasSofaFabric(o)||(o.t==='mod'&&polishedBase(o.cfg)),background=sc4.background;
+ const studio=hasUpholstery(o)||(o.t==='mod'&&polishedBase(o.cfg)),background=sc4.background;
  const m=Math.max(o.w,o.h,o.d);
  cam4.position.set(m*(studio?.67:.9),o.h*.6+m*(studio?.24:.3),m*(studio?1.42:1.6));
  cam4.aspect=1;cam4.updateProjectionMatrix();cam4.lookAt(0,o.h/2,0);
