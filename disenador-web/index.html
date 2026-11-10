@@ -9106,6 +9106,11 @@ function applyFurnitureSurface(g,it){
    }else{
     Object.assign(mat,{map:maps.a,normalMap:maps.n,roughnessMap:maps.r,roughness:1});
     mat.color.set('#ffffff');mat.normalScale.setScalar(countertop?.12:.18);
+    if(tabletop&&it.n==='Mesa de centro ovalada'){
+     // Mantener la veta y el relieve del escaneo con un acabado satinado uniforme.
+     mat.roughnessMap=null;
+     mat.roughness=.78;
+    }
    }
    delete mat.userData.diningScan;
    mat.metalness=0;cache.set(source,mat);
