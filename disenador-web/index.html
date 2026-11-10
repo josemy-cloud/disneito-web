@@ -147,6 +147,9 @@ body.desktop-workspace:not(.ui-legacy) #viewActions summary{display:list-item;li
 body #view.walk-full{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:none!important;z-index:190;border:0;border-radius:0;background:#152942}
 body #view.walk-full #d3{inset:0!important;width:100%!important;height:100%!important;border:0}
 body #view.walk-full :is(#viewActions,.nuhio-view-label,#c2,#dualSplitter){display:none!important}
+#walkAim svg{display:none;width:26px;height:26px;filter:drop-shadow(0 1px 2px #0008)}
+#walkAim.is-interactive svg{display:block}
+#walkAim.is-interactive span{display:none}
 #view.walk-full #walkExit{display:block;position:absolute;right:12px;top:12px;z-index:12}
 #view.walk-full #walkAim{display:grid;place-items:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:11;pointer-events:none;color:white;text-shadow:0 1px 4px #000,0 0 3px #000;font:700 25px system-ui}
 #editorBoot{display:none}
@@ -209,7 +212,7 @@ Sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
-<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true">·</span><button id="walkExit" type="button">Salir del recorrido · Esc</button><div id="walkTouch">
+<button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido · Esc</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento">✥</button>
 <button id="walkReset" type="button">Restablecer</button>
 <button id="walkHide" type="button" aria-pressed="false">Ocultar</button>
@@ -266,15 +269,16 @@ async function createRender(container, j, opt, cb) {
   const imgs = await Promise.all(j.texs.map(u => loadImg(u, A.texMax)));
   const tx = (i, srgb) => { const t = new THREE.Texture(imgs[i]); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = 8; t.needsUpdate = true; return t; };
   const M = j.mats.map(m => { if (m.tr && m.op < .99) return new THREE.MeshPhysicalMaterial({ color: m.c, roughness: .02, metalness: 0, transmission: 1, ior: 1.5, thickness: .02 });
-    const o = new THREE.MeshStandardMaterial({ color: m.c, roughness: m.r, metalness: m.m, emissive: m.e, emissiveIntensity: m.ei }); if (m.ds) o.side = THREE.DoubleSide; if (m.map >= 0) o.map = tx(m.map, 1); if (m.rm >= 0) { o.roughnessMap = tx(m.rm, 0); o.roughness = 1; } if (m.nm >= 0) { o.normalMap = tx(m.nm, 0); o.normalScale.set(m.ns, m.ns); } return o; });
+    const o = new THREE.MeshStandardMaterial({ color: m.c, roughness: m.r, metalness: m.m, emissive: m.e, emissiveIntensity: m.ei }); o.castShadow = m.castsRenderShadow !== false; if (m.ds) o.side = THREE.DoubleSide; if (m.map >= 0) o.map = tx(m.map, 1); if (m.rm >= 0) { o.roughnessMap = tx(m.rm, 0); o.roughness = 1; } if (m.nm >= 0) { o.normalMap = tx(m.nm, 0); o.normalScale.set(m.ns, m.ns); } return o; });
   scene = new THREE.Scene(); const world = new THREE.Group(); world.scale.setScalar(.01); scene.add(world);
   j.meshes.forEach(m => { const g = new THREE.BufferGeometry(), p = new Float32Array(b64(m.p)); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); if (m.i) g.setIndex(new THREE.BufferAttribute(new Uint32Array(b64(m.i)), 1));
     if (m.n) g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(b64(m.n)), 3)); else g.computeVertexNormals(); g.setAttribute('uv', new THREE.BufferAttribute(m.uv ? new Float32Array(b64(m.uv)) : new Float32Array(p.length / 3 * 2), 2));
     const o = new THREE.Mesh(g, M[m.mat]); o.matrixAutoUpdate = false; o.matrix.fromArray(m.mw); world.add(o); });
   for(const lamp of j.lights||[]){
+    const decay=lamp.decay??2;
     const light=lamp.kind==='spot'
-      ?new PhysicalSpotLight(lamp.color,lamp.intensity*4,lamp.distance*.01,lamp.angle,lamp.penumbra,2)
-      :new THREE.PointLight(lamp.color,lamp.intensity*4,lamp.distance*.01,2);
+      ?new PhysicalSpotLight(lamp.color,lamp.intensity*4,lamp.distance*.01,lamp.angle,lamp.penumbra,decay)
+      :new THREE.PointLight(lamp.color,lamp.intensity*4,lamp.distance*.01,decay);
     light.position.fromArray(lamp.position).multiplyScalar(.01);
     if(lamp.kind==='spot'){
       light.radius=.025;
@@ -1435,6 +1439,7 @@ document.addEventListener('keyup',e=>cameraModifiers.delete(e.key.toLowerCase())
 document.addEventListener('pointerdown',()=>cameraModifiers.clear(),true);
 window.addEventListener('blur',()=>cameraModifiers.clear());
 document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&walk){e.preventDefault();exitWalk();return}
  if(e.target.closest?.('.studio-panel'))return;
  if(e.target.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))return;
  if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();
@@ -1451,7 +1456,6 @@ document.addEventListener('keydown',e=>{
   if((key==='c'&&copyPlanSelection())||(key==='v'&&pastePlanSelection())){e.preventDefault();return}
  }
  if(e.ctrlKey&&e.key=='z'){undo();return}if(e.ctrlKey&&e.key=='y'){redo();return}
- if(e.key=='Escape'&&walk){e.preventDefault();exitWalk();return}
  if(e.key=='Escape'&&pvOpen){e.preventDefault();$('#pvx').click();return}
  if(e.key=='Escape'){if(drag?.group){shiftPlanGroup(drag,0,0);drag=null}if(drag?.marquee)drag=null;if(sel?.k==='group'){sel=null;refresh()}ghost=null;place=null;measA=null;smode=false;selPart=null;closePreview();exitWalk();cur=null;armed=null;tool='sel';buf='';drawTools();libUI();hint();draw()}
  if((e.key==='Delete'||e.key==='Backspace')&&sel&&!drag&&!e.target.isContentEditable){
@@ -2751,6 +2755,8 @@ function applyLampLight(g,it,bulb,shade){
  if(!it.lightOn)return;
  const warm='#ffe4b7';
  bulb.material=bulb.material.clone();
+ // La luz puntual se origina dentro de la bombilla.
+ bulb.material.userData.castsRenderShadow=false;
  bulb.material.emissive.set(warm);bulb.material.emissiveIntensity=2.6;
  if(shade?.emissive){shade.emissive.set(warm);shade.emissiveIntensity=.18}
  const light=new T.PointLight(warm,1.35,320,1);
@@ -5374,7 +5380,7 @@ function animate(){requestAnimationFrame(animate);
  MV.forEach(m=>stepMV(m));
  if(walk&&now-lastWalkPick>=100){
   lastWalkPick=now;
-  $('#walkAim').textContent=walkAction()?'☝':'·';
+  $('#walkAim').classList.toggle('is-interactive',!!walkAction());
  }
  if(walk){const sp=+$('#sp').value,y=cam.rotation.y;let fx=walkX*Math.cos(y)+walkY*Math.sin(y),fz=-walkX*Math.sin(y)+walkY*Math.cos(y);if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
   vel.x+=(fx*sp-vel.x)*.15;vel.z+=(fz*sp-vel.z)*.15;if(!blocked(cam.position.x+vel.x,cam.position.z))cam.position.x+=vel.x;else vel.x=0;if(!blocked(cam.position.x,cam.position.z+vel.z))cam.position.z+=vel.z;else vel.z=0;
@@ -5515,7 +5521,7 @@ function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;if(walk)exitWalk
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){if(!r3)return;walk=false;oc.enabled=true;oc.autoRotate=t=='orb';oc.autoRotateSpeed=2.5;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>vw('orb');
-$('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)r3.domElement.requestPointerLock?.()};
+$('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)requestWalkPointer();if(document.fullscreenEnabled&&!document.fullscreenElement)editorView.requestFullscreen().catch(()=>{})};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
 $('#bS').onclick=()=>{try{localStorage.setItem('p:'+S.nm,JSON.stringify(S));alert('Guardado: '+S.nm)}catch(e){alert('No se pudo guardar (¿demasiadas imágenes?). Usa «Exportar proyecto».')}};
 $('#bO').onclick=()=>{const n=Object.keys(localStorage).filter(k=>k.startsWith('p:')).map(k=>k.slice(2));if(!n.length)return alert('No hay proyectos guardados.');const v=prompt('Proyectos guardados:\n'+n.join('\n')+'\n\nEscribe el nombre:',n[0]);if(v&&localStorage.getItem('p:'+v)){openDraft(localStorage.getItem('p:'+v))}};
@@ -5793,10 +5799,32 @@ $('#walkHide').onclick=()=>{
   $('#walkHide').textContent=hide?'Mostrar':'Ocultar';
   $('#walkHide').setAttribute('aria-pressed',String(hide));
 };
-function exitWalk(){if(!walk)return;walk=false;navigationHeld.clear();cameraModifiers.clear();editorView.classList.remove('walk-full');oc.enabled=true;if(document.pointerLockElement===r3.domElement)document.exitPointerLock();vw('iso');resize();sbUpdate()}
+function exitWalk(){
+ if(!walk)return;
+ walk=false;
+ navigationHeld.clear();cameraModifiers.clear();
+ for(const key of Object.keys(walkK))delete walkK[key];
+ walkX=walkY=vel.x=vel.z=0;
+ editorView.classList.remove('walk-full');
+ $('#walkAim').classList.remove('is-interactive');
+ if(document.pointerLockElement===r3.domElement)document.exitPointerLock();
+ if(document.fullscreenElement===editorView)document.exitFullscreen().catch(()=>{});
+ vw('iso');resize();sbUpdate();
+}
+function requestWalkPointer(){
+ if(document.pointerLockElement!==r3.domElement)r3.domElement.requestPointerLock?.()?.catch(()=>{});
+}
+let walkWasFullscreen=false;
+document.addEventListener('fullscreenchange',()=>{
+ const fullscreen=document.fullscreenElement===editorView;
+ if(fullscreen&&!walk){document.exitFullscreen().catch(()=>{});return}
+ if(walkWasFullscreen&&!fullscreen)exitWalk();
+ walkWasFullscreen=fullscreen;
+ if(walk)resize();
+});
 $('#walkExit').onclick=exitWalk;
 document.addEventListener('pointerlockchange',()=>{if(walk&&!document.pointerLockElement)exitWalk()});
-r3?.domElement.addEventListener('click',e=>{if(walk&&!touchWalk&&!document.pointerLockElement&&e.pointerType!=='touch')r3.domElement.requestPointerLock?.()});
+r3?.domElement.addEventListener('click',e=>{if(walk&&!touchWalk&&e.pointerType!=='touch')requestWalkPointer()});
 r3?.domElement.addEventListener('wheel',e=>{if(walk){cam.fov=Math.max(30,Math.min(90,cam.fov+e.deltaY*.03));cam.updateProjectionMatrix()}});
 document.body.classList.add('adaptive');
 const mobileTop=$('#top'),mobileMenu=$('#compactMenu'),mobileWorkspace=$('#main');
@@ -7207,13 +7235,13 @@ function skyEnv(renderer,strength=1.1){
 function exportScene(root,meta){root.updateMatrixWorld(true);const texs=[],tmap=new Map(),mats=[],mmap=new Map(),meshes=[],lights=[];
  const b64=a=>{const u=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
  const tex=t=>{if(!t||!t.image)return-1;if(tmap.has(t.uuid))return tmap.get(t.uuid);const im=t.image,w=im.width||im.naturalWidth,h=im.height||im.naturalHeight,k=Math.min(1,1024/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);texs.push(c.toDataURL('image/jpeg',.93));tmap.set(t.uuid,texs.length-1);return texs.length-1};
- const mat=m=>{if(mmap.has(m.uuid))return mmap.get(m.uuid);mats.push({c:'#'+m.color.getHexString(),r:m.roughness,m:m.metalness,e:m.emissive?'#'+m.emissive.getHexString():'#000000',ei:m.emissiveIntensity||0,op:m.opacity,tr:!!m.transparent,map:tex(m.map),rm:tex(m.roughnessMap),nm:tex(m.normalMap),ns:m.normalScale?m.normalScale.x:1,ds:!!((m.userData&&m.userData.ds)||m.side===2)});mmap.set(m.uuid,mats.length-1);return mats.length-1};
+ const mat=m=>{if(mmap.has(m.uuid))return mmap.get(m.uuid);mats.push({c:'#'+m.color.getHexString(),r:m.roughness,m:m.metalness,e:m.emissive?'#'+m.emissive.getHexString():'#000000',ei:m.emissiveIntensity||0,castsRenderShadow:m.userData?.castsRenderShadow,op:m.opacity,tr:!!m.transparent,map:tex(m.map),rm:tex(m.roughnessMap),nm:tex(m.normalMap),ns:m.normalScale?m.normalScale.x:1,ds:!!((m.userData&&m.userData.ds)||m.side===2)});mmap.set(m.uuid,mats.length-1);return mats.length-1};
  const uvOf=(P,N,e,U)=>{const n=P.count,out=new Float32Array(n*2),W=U.w>.5,tx=U.t[0],ty=U.t[1],cr=Math.cos(U.r),sr=Math.sin(U.r);for(let i=0;i<n;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i),a=N?N.getX(i):0,b=N?N.getY(i):1,c=N?N.getZ(i):0;if(W){const X=e[0]*x+e[4]*y+e[8]*z+e[12],Y=e[1]*x+e[5]*y+e[9]*z+e[13],Z=e[2]*x+e[6]*y+e[10]*z+e[14],A=e[0]*a+e[4]*b+e[8]*c,B=e[1]*a+e[5]*b+e[9]*c,C=e[2]*a+e[6]*b+e[10]*c,l=Math.hypot(A,B,C)||1;x=X;y=Y;z=Z;a=A/l;b=B/l;c=C/l}
   const ax=Math.abs(a),ay=Math.abs(b),az=Math.abs(c);let q=ax>ay&&ax>az?[z,y]:(ay>az?[x,z]:[x,y]);if(U.sw>.5)q=[q[1],q[0]];q=[cr*q[0]-sr*q[1],sr*q[0]+cr*q[1]];out[i*2]=(q[0]+U.o[0])/tx;out[i*2+1]=(q[1]+U.o[1])/ty}return out};
  root.traverse(o=>{
   for(let p=o;p;p=p.parent)if(p.visible===false)return;
   if((o.isSpotLight||o.isPointLight)&&o.intensity>0){
-   const lamp={kind:o.isSpotLight?'spot':'point',color:'#'+o.color.getHexString(),intensity:o.intensity,distance:o.distance,position:o.getWorldPosition(new T.Vector3()).toArray()};
+   const lamp={kind:o.isSpotLight?'spot':'point',color:'#'+o.color.getHexString(),intensity:o.intensity,distance:o.distance,decay:o.decay,position:o.getWorldPosition(new T.Vector3()).toArray()};
    if(o.isSpotLight)Object.assign(lamp,{angle:o.angle,penumbra:o.penumbra,target:o.target.getWorldPosition(new T.Vector3()).toArray()});
    lights.push(lamp);return;
   }
