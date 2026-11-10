@@ -6267,7 +6267,7 @@ function startEditorOrbit(){
  showOrbit(!matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
 const pilotCameras={
- interior:{position:[500,150,450],target:[249,150,185]},
+ interior:{position:[550,135,490],target:[274,80,192]},
  portrait:{position:[550,130,492],target:[270,130,177]},
  detail:{position:[371,78,435],target:[198,65,262]}
 };
@@ -6293,7 +6293,7 @@ function interiorCamera(detail=false){
  if(walk)exitWalk();
  stopOrbit();oc.enabled=true;oc.enableDamping=false;oc.update();
  resize();
- cam.fov=portrait?(pilot&&!detail?68:60):48;cam.updateProjectionMatrix();
+ cam.fov=portrait?(pilot&&!detail?68:60):(pilot&&!detail?51:48);cam.updateProjectionMatrix();
  cam.position.fromArray(view.position);oc.target.fromArray(view.target);
  oc.minDistance=30;oc.update();oc.enableDamping=true;
 }
