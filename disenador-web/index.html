@@ -1647,10 +1647,17 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
    const grain=v+(fb(u,v,3,6,110)-.5)*.15+dv*curl*.22;
    const bands=fb(u,grain,4,14,111),fiber=nz(u,grain,9,218,112)-.5;
    const pores=Math.max(0,nz(u,grain,35,185,113)-.66);
-   const knots=Math.max(0,nz(u,v,22,34,114)-.74)*Math.max(0,fb(u,v,5,6,115)-.28);
-   t=-.014+(bands-.5)*.28+fiber*.105-pores*.21-knots*.74;
-   h=.5+fiber*.04-pores*.047-knots*.08;
-   r=(bands-.5)*.065+knots*.035;
+   const knotRadius=Math.min(
+    Math.hypot(Math.sin(Math.PI*(u-.34))*12,Math.sin(Math.PI*(v-.60))*34),
+    Math.hypot(Math.sin(Math.PI*(u-.77))*17,Math.sin(Math.PI*(v-.27))*44),
+    Math.hypot(Math.sin(Math.PI*(u-.12))*21,Math.sin(Math.PI*(v-.83))*51)
+   );
+   const knot=Math.exp(-knotRadius*knotRadius*1.65);
+   const knotRings=(.5+.5*Math.cos(knotRadius*15))**3*Math.exp(-knotRadius*knotRadius*.31);
+   const fineGrain=nz(u,grain,7,68,114)-.5;
+   t=-.018+(bands-.5)*.39+fiber*.125+fineGrain*.17-pores*.26-knot*.48-knotRings*.19;
+   h=.5+fiber*.048+fineGrain*.047-pores*.057-knot*.12;
+   r=(bands-.5)*.079+knot*.066;
   }else if(gen==='furniture-oak-flat-sawn'){
    // Tablones de roble, con cortes alternos y nudos que desvían la veta.
    const board=v<.22?0:v<.46?1:v<.68?2:v<.85?3:4;
@@ -4292,7 +4299,7 @@ function tuftUpholsteredBacks(group){
   for(const row of [-1,1])for(let col=0;col<count;col++){
    points.push([(col-(count-1)/2+row*.24)*.70/count,row*.20]);
   }
-  const amplitude=Math.min(depth*.23,1.7),spread=.075;
+  const amplitude=Math.min(depth*.34,2.65),spread=.081;
   for(let i=0;i<position.count;i++){
    const nz=normal.getZ(i);
    if(nz<=.05)continue;
@@ -4316,7 +4323,7 @@ function diningOak(it,color){
  const grain=pbrTex(['furniture-oak','Roble aceitado','Maderas',style,'#e3ccad',.53,0,.12,215]);
  const wood=M(color,.53,0);
  Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r,roughness:1});
- wood.normalScale.setScalar(.09);
+ wood.normalScale.setScalar(style==='furniture-oak-rustic'?.19:.09);
  return wood;
 }
 function orientDiningGrain(mesh,axis,shared=false){
