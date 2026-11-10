@@ -7961,7 +7961,7 @@ function countertopUI(c){
   sample.setAttribute('role','img');sample.setAttribute('aria-label',current[2]+' · '+current[1]);
   const tinted=surfaceTintTexture(c,current),ctx=sample.getContext('2d'),thumb=tinted?.image||pbrThumb(current);
   const paint=()=>{const height=thumb.width*48/128;ctx.drawImage(thumb,0,(thumb.height-height)/2,thumb.width,height,0,0,128,48)};
-  paint();if(tinted)tinted.userData.tintReady.then(paint);else if(scanAsset(current))pbrTex(current).ready.then(paint);
+  paint();if(tinted)tintTextureReady.get(tinted).then(paint);else if(scanAsset(current))pbrTex(current).ready.then(paint);
   P.append(sample);surfaceTintUI(c,current,'de la encimera');
  }else if(c.countertop==='color'){
   row('Color encimera',c.cn||'#d8d2c4',v=>c.cn=v,'color');
@@ -8007,7 +8007,7 @@ function tileMat0(c,off){off=off||[0,0];const key=JSON.stringify([c.pat,c.tw,c.t
  };
  paint();
  const tx=(k,srgb)=>{const t=new T.CanvasTexture(k);t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;if(srgb)t.encoding=T.sRGBEncoding;return t},m=new T.MeshStandardMaterial({map:tx(ca,1),bumpMap:tx(cb),bumpScale:.12,roughness:{mate:.85,satinado:.45,brillante:.15}[c.fin||'satinado']});
- const ready=tinted?.userData.tintReady||maps?.ready;
+ const ready=(tinted&&tintTextureReady.get(tinted))||maps?.ready;
  if(ready)ready.then(ok=>{if(ok!==false){paint();m.map.needsUpdate=true}});
  wuv(m,{uT:{value:new T.Vector2(P0.cw,P0.ch)},uSw:{value:0},uR:{value:((c.rot||0)+(c.pat=='diagonal'?45:0))*Math.PI/180},uO:{value:new T.Vector2(off[0],off[1])}});m.userData.P0=P0;return TLM[key]=m}
 const TLT={},TLM2={};
@@ -8790,7 +8790,7 @@ function partMaterialRole(mesh,mat,primary,it){
  if(mat===primary)return 'principal';
  return 'body';
 }
-const diningTintMaps=new WeakMap();
+const diningTintMaps=new WeakMap(),tintTextureReady=new WeakMap();
 function diningTintMap(it,role,base,vein,strength){
  const source=pbrTex(COUNTERTOP_BY_ID.get('enc-roble'));
  return base==='#bb915f'&&!strength?source.a:tintedTexture(it,role,source,base,vein,strength);
@@ -8809,12 +8809,12 @@ function tintedTexture(it,role,source,base,vein,strength){
  const ctx=canvas.getContext('2d');
  ctx.fillStyle=base;ctx.fillRect(0,0,512,512);map.needsUpdate=true;
  const entry={key,map};parts.set(role,entry);
- map.userData.tintReady=Promise.resolve(source.ready).then(()=>{
+ tintTextureReady.set(map,Promise.resolve(source.ready).then(()=>{
   if(parts.get(role)!==entry)return;
   ctx.drawImage(source.a.image,0,0,512,512);
   tintDiningGrain(ctx,base,vein,strength);
   map.needsUpdate=true;
- });
+ }));
  return map;
 }
 function surfaceTintTexture(owner,def){
