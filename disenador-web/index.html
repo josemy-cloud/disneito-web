@@ -244,7 +244,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <span class="dd"><button id="bX" title="Exportar imagen">🖼 Imagen ▾</button><div class="ddm"><button id="bP2">Plano 2D (PNG)</button><button id="bP3">Captura 3D</button></div></span>
 <label><input type="checkbox" id="ck" checked> Ajuste</label>
 <label title="Elegir qué paredes ocultar o hacer transparentes"><input type="checkbox" id="ct"> 👁 Muros</label> <label title="Ocultar o mostrar todas las cotas del plano"><input type="checkbox" id="ckMeasures" checked> Medidas</label>
-<span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
+<span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vInterior" type="button">Interior</button><button id="vInteriorDetail" type="button" hidden>Detalle piloto</button> <label title="Perfil de luz para la vista Realista"><input type="checkbox" id="dayInterior"> Día interior</label><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
 <label>Dirección del sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"></label><label>Altura del sol <input type="range" id="se" min="10" max="85" value="38" style="width:70px"></label></span>
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
@@ -1941,7 +1941,7 @@ function setSun(){
  sun.target.position.copy(sunTarget);
  const direct=.57+Math.sin(e)*.40,q=$('#sq').value;
  // La vista Realista equilibra el sol con luz difusa para evitar contrastes duros.
- sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*.68:direct;
+ sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(dayInteriorActive()?1.08:.68):direct;
  fill.position.set(sunC.x-900,1100,sunC.z+650);
  rim.position.set(sunC.x+700,850,sunC.z-900);
  const camera=sun.shadow.camera;
@@ -1955,17 +1955,22 @@ function setSunShadowSize(size){
  shadow.mapSize.set(size,size);
  if(shadow.map){shadow.map.dispose();shadow.map=null}
 }
-function setQ(){
- if(!r3)return;
- const q=$('#sq').value,realistic=q==='q',materials=q==='m';
+function dayInteriorActive(){return $('#sq').value==='q'&&$('#dayInterior').checked}
+function applyViewportLook(){
+ const q=$('#sq').value,realistic=q==='q',materials=q==='m',day=dayInteriorActive();
+ $('#dayInterior').disabled=!realistic;
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
  sc.environment=null;
  if(realistic)setSunShadowSize(2048);
- r3.toneMappingExposure=realistic?1.00:materials?1.01:.88;
+ r3.toneMappingExposure=day?1.04:realistic?1.00:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
- hemi.intensity=realistic?.82:materials?.95:.55;
- fill.intensity=realistic?.22:materials?0:.20;
- rim.intensity=realistic?.07:materials?0:.12;
+ hemi.intensity=day?.48:realistic?.82:materials?.95:.55;
+ fill.intensity=day?.08:realistic?.22:materials?0:.20;
+ rim.intensity=day?.03:realistic?.07:materials?0:.12;
+}
+function setQ(){
+ if(!r3)return;
+ applyViewportLook();
  resize();build3d();
 }
 function previewPixelRatio(w,h){
@@ -5925,9 +5930,10 @@ function addRealisticDetails(){
  if(RVo||$('#sq').value!=='q')return;
  const rooms=(S.rooms||[]).filter(room=>room.poly);
  if(!rooms.length)return;
- const coarse=matchMedia('(pointer:coarse)').matches;
- for(const window of windowFillSpecs(S.w,S.o,rooms).slice(0,coarse?1:2)){
-  const light=new T.SpotLight('#fff1df',Math.min(.42,.16+window.area/120000),520,.86,.75,1.15);
+ const coarse=matchMedia('(pointer:coarse)').matches,day=dayInteriorActive();
+ for(const [index,window] of windowFillSpecs(S.w,S.o,rooms).slice(0,coarse?1:2).entries()){
+  const strength=day&&index===0?Math.min(.76,.38+window.area/140000):Math.min(.42,.16+window.area/120000);
+  const light=new T.SpotLight(day?'#fff5e7':'#fff1df',strength,520,.86,.75,1.15);
   light.position.set(window.x,window.y,window.z);
   light.target.position.set(window.x+window.nx*240,40,window.z+window.nz*240);
   realisticDetails.add(light,light.target);
@@ -6230,7 +6236,7 @@ $('#nuhioFullModel').onclick=()=>setMode('3d');
 let startupOrbitPending=true;
 function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;startupOrbitPending=false;finishItemTouch(true);stopOrbit();if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
-function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
+function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.fov=48;cam.updateProjectionMatrix();cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 function showOrbit(rotate=true){
  vw('iso');
  const box=projectBounds3D();
@@ -6257,6 +6263,53 @@ function startEditorOrbit(){
  setMode('3d');
  showOrbit(!matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
+const pilotCameras={
+ interior:{position:[500,150,450],target:[249,150,185]},
+ detail:{position:[371,78,435],target:[198,65,262]}
+};
+function interiorCamera(detail=false){
+ if(!requireSceneRenderer())return;
+ const pilot=S.interiorPilot===1&&pilotCameras[detail?'detail':'interior'];
+ const room=(S.rooms||[]).filter(r=>r.poly?.length>=3).sort((a,b)=>b.area-a.area)[0];
+ if(!room){sbUpdate('Dibuja una habitación cerrada para usar la cámara Interior.');return}
+ let view=pilot&&inPoly(pilot.position[0],pilot.position[2],room.poly)?pilot:null;
+ if(!view){
+  const box=new T.Box2().setFromPoints(room.poly.map(([x,z])=>new T.Vector2(x,z)));
+  const center=box.getCenter(new T.Vector2()),size=box.getSize(new T.Vector2());
+  const free=(x,z)=>inPoly(x,z,room.poly)&&!S.i.some(it=>!it.hid&&it.e<=155&&it.e+it.h>=145&&pointInItem(it,x,z));
+  const points=[[.37,.36],[-.37,.36],[.37,-.36],[-.37,-.36],[0,.34],[0,-.34],[.34,0],[-.34,0],[0,0]]
+   .map(([x,z])=>[center.x+x*size.x,center.y+z*size.y]).filter(([x,z])=>free(x,z));
+  if(points.length<2){sbUpdate('No se encontró espacio libre para la cámara Interior.');return}
+  const [x,z]=points[0];
+  const target=inPoly(center.x,center.y,room.poly)&&Math.hypot(center.x-x,center.y-z)>40?[center.x,center.y]:points.at(-1);
+  view={position:[x,150,z],target:[target[0],150,target[1]]};
+ }
+ if(walk)exitWalk();
+ stopOrbit();oc.enabled=true;oc.enableDamping=false;oc.update();
+ resize();
+ cam.fov=cam.aspect<1?60:48;cam.updateProjectionMatrix();
+ cam.position.fromArray(view.position);oc.target.fromArray(view.target);
+ oc.minDistance=30;oc.update();oc.enableDamping=true;
+}
+let previousInteriorSun=null;
+function setInteriorDay(enabled){
+ const azimuth=$('#sa'),altitude=$('#se');
+ if(enabled&&!previousInteriorSun){
+  previousInteriorSun=[azimuth.value,altitude.value];
+  const window=windowFillSpecs(S.w,S.o,S.rooms||[])[0];
+  if(window){
+   azimuth.value=String((Math.atan2(-window.nz,-window.nx)/D+360)%360);
+   altitude.value='32';
+  }
+ }else if(!enabled&&previousInteriorSun){
+  [azimuth.value,altitude.value]=previousInteriorSun;previousInteriorSun=null;
+ }
+ $('#dayInterior').checked=enabled;
+ if(r3){applyViewportLook();setSun();addRealisticDetails();}
+}
+$('#dayInterior').onchange=e=>setInteriorDay(e.target.checked);
+$('#vInterior').onclick=()=>interiorCamera();
+$('#vInteriorDetail').onclick=()=>interiorCamera(true);
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>showOrbit();
 $('#vW').onclick=()=>{if(!requireSceneRenderer())return;if(!S.w.length)return alert('Dibuja primero una habitación.');vw('iso');walk=true;editorView.classList.add('walk-full');walkInteract.hidden=!touchWalk;$('#walkExit').textContent=touchWalk?'Salir':'Salir del recorrido · Esc';$('#cameraDock').open=false;resize();lastWalkPick=-Infinity;navigationHeld.clear();walkX=walkY=0;editMode=false;sbUpdate();oc.enabled=false;oc.autoRotate=false;cam.rotation.order='YXZ';let p=[sunC.x,sunC.z];outer:for(let r=0;r<500;r+=30)for(let a=0;a<6.3;a+=.7){const x=sunC.x+Math.cos(a)*r,z=sunC.z+Math.sin(a)*r;if(inside(x,z)&&!blocked(x,z)){p=[x,z];break outer}}cam.position.set(p[0],165,p[1]);cam.rotation.set(0,0,0);cam.fov=60;cam.updateProjectionMatrix();if(!touchWalk)requestWalkPointer();if(document.fullscreenEnabled&&!document.fullscreenElement)editorView.requestFullscreen().catch(()=>{})};
 $('#bN').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? (el actual queda en guardado automático)')){const next=fresh();next.nm=prompt('Nombre del proyecto','Proyecto '+(Object.keys(localStorage).filter(k=>k.startsWith('p:')).length+1))||'Proyecto';openDraft(JSON.stringify(next))}};
@@ -8011,6 +8064,42 @@ async function openProj(id){
  refreshNuhioProjects();
  setCloudSaveState(readProjectDraft(id)?'pending':SES?'synced':'local');
 }
+function makeInteriorPilot(){
+ const project=fresh();
+ project.nm='Salón piloto · Día interior';
+ project.interiorPilot=1;project.pt='#e7ded0';
+ project.w=[[0,0,610,0],[610,0,610,510],[610,510,0,510],[0,510,0,0]]
+  .map(([x1,y1,x2,y2])=>({id:project.id++,x1,y1,x2,y2,t:10,h:255}));
+ project.o.push({id:project.id++,w:project.w[3].id,p:255,ty:'d',variant:'corredera',wd:330,h:225,s:0});
+ const add=(name,x,y,overrides={})=>{
+  const entry=LIB.find(item=>item.n===name);
+  if(!entry)throw new Error('Falta en la biblioteca: '+name);
+  project.i.push({...structuredClone(entry),x,y,r:0,...overrides,id:project.id++});
+ };
+ add('Alfombra',225,302,{w:280,d:230,col:'#b6a38d'});
+ add('Sofá 2 plazas',230,258,{w:222,d:92,col:'#d2c0a8'});
+ add('Mesa de centro ovalada',212,363,{col:'#96704f'});
+ add('Mesa comedor rectangular',452,152,{w:150,d:83,col:'#a47a55'});
+ for(const x of [417,482]){
+  add('Silla tapizada',x,88,{d:42,col:'#ad9883'});
+  add('Silla tapizada',x,219,{d:42,r:180,col:'#ad9883'});
+ }
+ for(const x of [213,303,393,483])add('Mueble bajo cocina 90 (2 puertas)',x,36,{col:'#c6b6a1'});
+ add('Columna despensa',558,36,{h:220,col:'#c6b6a1'});
+ add('Foco empotrado · amplio',317,120,{e:252,lightOn:false});
+ add('Foco empotrado · amplio',443,124,{e:252,lightOn:false});
+ return project;
+}
+async function openInteriorPilot(){
+ const project=makeInteriorPilot(),transition=projectTransition;
+ const id=await newProj(project.nm,JSON.stringify(project));
+ if(transition!==projectTransition)return;
+ await openProj(id);
+ if(curProj!==id||!r3)return;
+ setInteriorDay(false);
+ if(!showCeil){showCeil=true;$('#ckc').checked=true;}
+ $('#sq').value='q';setMode('3d');setQ();interiorCamera();
+}
 async function projLib(){
  let box=document.getElementById('pryBox');if(box){box.remove();return}
  box=document.createElement('dialog');box.id='pryBox';box.className='studio-panel studio-projects';
@@ -8032,6 +8121,12 @@ async function projLib(){
   body.append(actions);
   actions.append(btn2('+ Guardar como proyecto nuevo',async()=>{const n=prompt('Nombre del proyecto:','Mi proyecto');if(!n)return;const revision=++projectTransition,project=S,data=JSON.stringify(S);const id=await newProj(n,data);if(revision===projectTransition&&S===project){setActiveProject(id);if(JSON.stringify(S)!==data)persistEdit(JSON.stringify(S));else setCloudSaveState(SES?'synced':'local')}draw()}));
   actions.firstElementChild.className='studio-primary';
+  const pilotButton=btn2('Crear ejemplo · Salón piloto',async()=>{
+   pilotButton.disabled=true;
+   try{await openInteriorPilot();box.close()}
+   finally{pilotButton.disabled=false;}
+  });
+  actions.append(pilotButton);
   if(curProj)actions.append(btn2('Guardar versión',async()=>{await psave('manual');draw()}));
   const fi=document.createElement('input');fi.type='file';fi.accept='.json';fi.style.display='none';
   fi.onchange=async()=>{
@@ -8234,7 +8329,7 @@ let RE=null,rcv=null,renderRun=0;
  function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
-function modeUI(){const q=$('#sq').value,m3=mode=='3d';if(useCompact())updateMobileView();
+function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
  const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
 function frameProject(item=null){
  if(!S.w.length&&!S.i.some(it=>!it.hid))return;
