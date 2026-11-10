@@ -6153,26 +6153,60 @@ function pilotExteriorFor(window){
    slab((col-3.5)*tileWidth,-.6,44+row*88,tileWidth-.65,1,87.35,stone[(row*5+col*2)%3]);
   }
   slab(0,-.7,570,terraceWidth*2,1,610,M('#84936b',.96));
-  const foliage=new T.InstancedMesh(new T.IcosahedronGeometry(1,2),M('#ffffff',.94),44);
-  const transform=new T.Object3D();
-  const colors=['#536d44','#6d8550','#889966','#64794f'].map(hex=>new T.Color(hex));
-  let index=0;
-  const canopy=(x,y,z,w,h,d,count)=>{
+  const leaf=new T.BufferGeometry();
+  leaf.setAttribute('position',new T.Float32BufferAttribute([
+   0,-1,0, -.43,-.25,0, -.31,.52,0, 0,1,0, .31,.52,0, .43,-.25,0, 0,0,.16
+  ],3));
+  leaf.setIndex([0,6,1,1,6,2,2,6,3,3,6,4,4,6,5,5,6,0]);
+  leaf.computeVertexNormals();
+  const greens=M('#ffffff',.91);greens.side=T.DoubleSide;
+  const foliage=new T.InstancedMesh(leaf,greens,4200);
+  const bark=new T.InstancedMesh(new T.CylinderGeometry(.55,1,1,8),M('#695743',.96),28);
+  const transform=new T.Object3D(),up=new T.Vector3(0,1,0);
+  const colors=['#354d2b','#4e6736','#657e43','#7e9355','#8d9d62'].map(hex=>new T.Color(hex));
+  let leafIndex=0,branchIndex=0,seed=21873;
+  const random=()=>{seed=seed*16807%2147483647;return seed/2147483647};
+  const cluster=(x,y,z,w,h,d,count,size)=>{
    for(let i=0;i<count;i++){
-    const a=i*2.39996,r=i===0?0:.62;
-    transform.position.set(x+Math.cos(a)*w*r,y+(i%3-1)*h*.24,z+Math.sin(a)*d*r);
-    transform.rotation.set(i*.27,a,i*.12);
-    transform.scale.set(w*.53,h*(.50+i%3*.05),d*.56);transform.updateMatrix();
-    foliage.setMatrixAt(index,transform.matrix);foliage.setColorAt(index++,colors[i%colors.length]);
+    const azimuth=random()*Math.PI*2,vertical=random()*2-1;
+    const radius=Math.cbrt(random()),horizontal=Math.sqrt(1-vertical*vertical)*radius;
+    transform.position.set(x+Math.cos(azimuth)*w*horizontal,y+vertical*h*radius,z+Math.sin(azimuth)*d*horizontal);
+    transform.rotation.set(random()*Math.PI,random()*Math.PI*2,random()*Math.PI);
+    const scale=size*(.65+random()*.7);
+    transform.scale.set(scale,scale,scale);transform.updateMatrix();
+    foliage.setMatrixAt(leafIndex,transform.matrix);
+    foliage.setColorAt(leafIndex++,colors[Math.floor(random()*colors.length)]);
    }
   };
-  for(let i=0;i<4;i++)canopy((i-1.5)*width*.53,32+i%2*12,330+i%2*32,65,57,50,6);
-  const bark=M('#75614a',.96);
-  for(const side of [-1,1]){
-   slab(side*width*.69,74,465+side*42,15,148,13,bark);
-   canopy(side*width*.69,168,465+side*42,105,104,98,10);
+  const branch=(from,to,radius)=>{
+   const axis=to.clone().sub(from);
+   transform.position.copy(from).lerp(to,.5);
+   transform.scale.set(radius,axis.length(),radius);
+   transform.quaternion.setFromUnitVectors(up,axis.normalize());transform.updateMatrix();
+   bark.setMatrixAt(branchIndex++,transform.matrix);
+  };
+  for(let i=0;i<4;i++){
+   const x=(i-1.5)*width*.53,z=330+i%2*32;
+   for(let j=0;j<6;j++){
+    const angle=j*2.4+i,r=j===0?0:24+random()*14;
+    cluster(x+Math.cos(angle)*r,23+random()*30,z+Math.sin(angle)*r,29,24,27,65,4.6);
+   }
   }
-  group.add(foliage);
+  for(const side of [-1,1]){
+   const x=side*width*.69,z=465+side*42;
+   const root=new T.Vector3(x,0,z),fork=new T.Vector3(x+side*9,120,z-7),tip=new T.Vector3(x+side*18,221,z+12);
+   branch(root,fork,8);branch(fork,tip,4.6);
+   for(let i=0;i<10;i++){
+    const angle=i*2.39996+side,r=28+random()*51;
+    const start=fork.clone().lerp(tip,i*.068);
+    const end=new T.Vector3(start.x+Math.cos(angle)*r,start.y+16+random()*30,start.z+Math.sin(angle)*r);
+    branch(start,end,2.6-i*.15);
+    cluster(end.x,end.y,end.z,31+random()*14,23+random()*12,31+random()*13,105,5.3);
+   }
+   cluster(tip.x,tip.y+14,tip.z,32,33,34,140,5.2);
+  }
+  foliage.count=leafIndex;bark.count=branchIndex;
+  group.add(bark,foliage);
  }
  const distance=window.wallOffset*2-12;
  pilotExterior.position.set(window.x-window.nx*distance,0,window.z-window.nz*distance);
