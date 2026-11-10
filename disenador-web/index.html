@@ -230,25 +230,38 @@ body.editor-booting > #editorBoot{display:grid;place-content:center;justify-item
 #bPbr{display:none!important}
 @media (min-width:1051px){
  body.adaptive.desktop-workspace:not(.ui-legacy){grid-template-rows:auto minmax(0,1fr) auto}
- body.adaptive.desktop-workspace:not(.ui-legacy) #top{overflow:visible}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #top{overflow:visible;flex-wrap:nowrap;gap:5px}
+ body.adaptive.desktop-workspace:not(.ui-legacy) #top #pn{min-width:0;flex:1 1 auto}
  body.adaptive.desktop-workspace:not(.ui-legacy) #view,
  body.adaptive.desktop-workspace:not(.ui-legacy) #lib{grid-area:2 / 2}
  body.adaptive.desktop-workspace:not(.ui-legacy) #pr{grid-area:2 / 3}
  body.adaptive.desktop-workspace:not(.ui-legacy) #sb{grid-area:3 / 2 / 4 / -1}
  body.desktop-workspace:not(.ui-legacy) #top #nuhioToolRow{
-  flex:0 1 auto;flex-wrap:wrap;max-width:100%;margin-left:auto;
+  flex:0 0 auto;flex-wrap:nowrap;gap:5px;
   padding:0;border:0;background:transparent
  }
- #top #nuhioToolActions{flex-wrap:wrap;flex:0 1 auto;border-color:#344459}
+ #top #nuhioToolActions{border-color:#344459;padding-left:5px}
+ #nuhioOptions{position:relative;flex:0 0 auto}
+ #nuhioOptions summary{
+  cursor:pointer;padding:7px 8px;border:1px solid #344e6b;border-radius:9px;
+  color:#eff6ff;background:#1a3857;font-size:12px;font-weight:700;white-space:nowrap
+ }
+ #nuhioOptionsActions{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:15;display:grid;gap:7px;
+  min-width:145px;padding:9px;border:1px solid #d1def1;border-radius:10px;
+  background:#f5f9ff;color:#203956;box-shadow:0 8px 25px #10284336
+ }
+ #nuhioOptionsActions label{display:flex;align-items:center;gap:5px;white-space:nowrap}
+ @media (max-width:1350px){
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top button{padding-inline:5px!important}
+  body.adaptive.desktop-workspace:not(.ui-legacy) #top #saveCloudState{font-size:0!important;margin-inline:0!important;padding-inline:3px!important}
+ }
  body.adaptive.desktop-workspace:not(.ui-legacy) #view #tools{
   position:absolute;z-index:6;top:8px;left:8px;max-width:calc(100% - 16px);
   box-sizing:border-box
  }
  body.adaptive.desktop-workspace:not(.ui-legacy) #view.view-dual #tools{
   max-width:calc(var(--dual-ratio) - 16px)
- }
- body.adaptive.desktop-workspace:not(.ui-legacy) #view.plan-tools-inactive :is(#tools,#openingType){
-  display:none!important
  }
  body.desktop-workspace:not(.ui-legacy) #view.view-dual #nuhioFullPlan{top:68px}
  body.desktop-workspace:not(.ui-legacy) #view #openingType:not([hidden]){top:68px}
@@ -305,7 +318,8 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <div id="tools" role="toolbar" aria-label="Herramientas de plano"></div>
 <div id="nuhioToolRow">
  <div id="nuhioToolActions" aria-label="Controles de edición"></div>
- <details id="nuhioExport"><summary>Render y exportar</summary><div id="nuhioExportActions"></div></details>
+ <details id="nuhioOptions"><summary>Opciones</summary><div id="nuhioOptionsActions"></div></details>
+ <details id="nuhioExport"><summary title="Render y exportar" aria-label="Render y exportar">Render</summary><div id="nuhioExportActions"></div></details>
 </div>
 <div class="side" id="lib"></div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
@@ -687,7 +701,7 @@ function drawTools(){
   const b=document.createElement('button');b.type='button';b.className=tool==id?'on':'';
   b.dataset.tool=id;b.title=n;b.setAttribute('aria-label',n);
   b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[id]+'</svg><span>'+labels[id]+'</span>';
-  b.onclick=()=>{if(useCompact())setMobilePanel(null);if(id=='rx')return exact();tool=id;cur=null;if(openingTool()&&mode==='3d'&&!dualView)setMode('2d');drawTools();hint()};
+  b.onclick=()=>{if(useCompact())setMobilePanel(null);if(id==='rx'){if(mode==='3d'&&!dualView&&document.body.classList.contains('desktop-workspace'))setMode('2d');return exact()}tool=id;cur=null;if(id!=='sel'&&mode==='3d'&&!dualView&&(openingTool()||document.body.classList.contains('desktop-workspace')))setMode('2d');drawTools();hint()};
   t.append(b)
  })
 }
@@ -6912,7 +6926,9 @@ function updateMobileView(){
 const nuhioDock=$('#nuhioModes'),nuhioNav=$('#nuhioNav');
 const nuhioToolRow=$('#nuhioToolRow'),nuhioToolActions=$('#nuhioToolActions'),nuhioExport=$('#nuhioExport');
 const exportButtons=[$('#bP2'),$('#bP3')],imageMenu=$('#bX').nextElementSibling;
-const desktopActions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label')).concat($('#tl'),$('#tr'));
+const nuhioOptions=$('#nuhioOptions');
+const desktopOptions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label'));
+const desktopActions=[$('#tl'),$('#tr')];
 const navTab=$('#nuhioNavTab'),navPin=$('#nuhioPin');
 let navPinned=true;
 try{navPinned=localStorage.getItem('nuhio:sidebar')!=='auto'}catch{}
@@ -6956,10 +6972,10 @@ nuhioNav.addEventListener('focusout',e=>{
  if(!navPinned&&!nuhioNav.contains(e.relatedTarget)&&e.relatedTarget!==navTab)updateNuhioNav();
 });
 nuhioExport.addEventListener('click',e=>{if(e.target.closest('button'))nuhioExport.open=false});
-document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false;if(!isNuhioNavTarget(e.target))closeNuhioNav()});
+document.addEventListener('pointerdown',e=>{if(!nuhioExport.contains(e.target))nuhioExport.open=false;if(!nuhioOptions.contains(e.target))nuhioOptions.open=false;if(!isNuhioNavTarget(e.target))closeNuhioNav()});
 document.addEventListener('keydown',e=>{
  if(e.key!=='Escape')return;
- if(nuhioExport.open){nuhioExport.open=false;nuhioExport.querySelector('summary').focus()}
+ for(const menu of [nuhioExport,nuhioOptions])if(menu.open){menu.open=false;menu.querySelector('summary').focus()}
  closeNuhioNav();
 });
 for(const button of nuhioNav.querySelectorAll('[data-editor-action]')){
@@ -6975,6 +6991,7 @@ function arrangeMobileTop(){
     $('#lib').before($('#tools'),nuhioToolRow);
     imageMenu.append(...exportButtons);
     nuhioExport.open=false;
+    nuhioOptions.open=false;
   }
   if(useCompact()){
     if(dualView)setMode('2d');
@@ -6995,6 +7012,7 @@ function arrangeMobileTop(){
       editorView.append($('#tools'));
       mobileTop.append(nuhioToolRow);
       nuhioToolActions.append(...desktopActions);
+      $('#nuhioOptionsActions').append(...desktopOptions);
       $('#nuhioExportActions').append($('#bReal'),$('#bFotoIA'),...exportButtons);
     }
   }
@@ -8582,7 +8600,7 @@ let RE=null,rcv=null,renderRun=0;
  function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
-function modeUI(){const q=$('#sq').value,m3=mode=='3d';editorView.classList.toggle('plan-tools-inactive',m3&&!dualView);$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
+function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
  const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
 function frameProject(item=null){
  if(!S.w.length&&!S.i.some(it=>!it.hid))return;
@@ -9145,7 +9163,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(useCompact()?'':'Modo: ')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(document.body.classList.contains('ui-legacy')?'Modo: ':'')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{finishItemTouch(true);navigationHeld.clear();editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
