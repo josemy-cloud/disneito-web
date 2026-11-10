@@ -142,6 +142,7 @@ body.desktop-workspace:not(.ui-legacy) #viewActions summary{display:list-item;li
  box-shadow:0 8px 24px #1e2a3b30;line-height:2
 }
 #cameraDock #v3 button{margin:2px}
+#v3 #dayInterior[aria-pressed="true"]{background:#145bb7!important;color:#fff!important;border-color:#145bb7}
 #cameraDock #v3{max-height:48dvh;overflow:auto}
 #walkAim,#walkExit{display:none}
 body #view.walk-full{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:none!important;z-index:190;border:0;border-radius:0;background:#152942}
@@ -244,7 +245,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <span class="dd"><button id="bX" title="Exportar imagen">🖼 Imagen ▾</button><div class="ddm"><button id="bP2">Plano 2D (PNG)</button><button id="bP3">Captura 3D</button></div></span>
 <label><input type="checkbox" id="ck" checked> Ajuste</label>
 <label title="Elegir qué paredes ocultar o hacer transparentes"><input type="checkbox" id="ct"> 👁 Muros</label> <label title="Ocultar o mostrar todas las cotas del plano"><input type="checkbox" id="ckMeasures" checked> Medidas</label>
-<span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vInterior" type="button">Interior</button><button id="vInteriorDetail" type="button" hidden>Detalle piloto</button> <label title="Perfil de luz para la vista Realista"><input type="checkbox" id="dayInterior"> Día interior</label><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
+<span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vInterior" type="button">Interior</button><button id="vInteriorDetail" type="button" hidden>Detalle piloto</button> <button type="button" id="dayInterior" aria-pressed="false" title="Activa la vista Realista con luz de interior">Día interior</button><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
 <label>Dirección del sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"></label><label>Altura del sol <input type="range" id="se" min="10" max="85" value="38" style="width:70px"></label></span>
 <input type="file" id="fi" accept=".json" hidden><input type="file" id="fmod" accept=".glb,.gltf,.obj" multiple hidden><input type="file" id="fm" accept="image/*" hidden>
 </div>
@@ -1955,10 +1956,10 @@ function setSunShadowSize(size){
  shadow.mapSize.set(size,size);
  if(shadow.map){shadow.map.dispose();shadow.map=null}
 }
-function dayInteriorActive(){return $('#sq').value==='q'&&$('#dayInterior').checked}
+function dayInteriorActive(){return $('#sq').value==='q'&&previousInteriorSun!==null}
 function applyViewportLook(){
  const q=$('#sq').value,realistic=q==='q',materials=q==='m',day=dayInteriorActive();
- $('#dayInterior').disabled=!realistic;
+ $('#dayInterior').setAttribute('aria-pressed',String(day));
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic;
  sc.environment=null;
  if(realistic)setSunShadowSize(2048);
@@ -6309,10 +6310,17 @@ function setInteriorDay(enabled){
  }else if(!enabled&&previousInteriorSun){
   [azimuth.value,altitude.value]=previousInteriorSun;previousInteriorSun=null;
  }
- $('#dayInterior').checked=enabled;
  if(r3){applyViewportLook();setSun();addRealisticDetails();}
 }
-$('#dayInterior').onchange=e=>setInteriorDay(e.target.checked);
+$('#dayInterior').onclick=()=>{
+ if(!requireSceneRenderer())return;
+ const enabled=!dayInteriorActive();
+ if(enabled&&$('#sq').value!=='q'){
+  $('#sq').value='q';
+  setQ();modeUI();
+ }
+ setInteriorDay(enabled);
+};
 $('#vInterior').onclick=()=>interiorCamera();
 $('#vInteriorDetail').onclick=()=>interiorCamera(true);
 $('#vT').onclick=()=>vw('top');$('#vI').onclick=()=>vw('iso');$('#vO').onclick=()=>showOrbit();
