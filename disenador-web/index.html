@@ -972,7 +972,7 @@ function partColorUI(e,panel=P,save=commit){
 }
 
 function safeItemGeometryEdit(e,fn){const before={w:e.w,h:e.h,d:e.d,x:e.x,y:e.y,e:e.e,r:e.r,supportTop:e.supportTop?JSON.parse(JSON.stringify(e.supportTop)):null};fn();syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);if(!fits(e)){Object.assign(e,before);syncSupportedChildren(e);if(e.rel){const p=S.i.find(x=>x.id==e.rel.parentId);if(p)updateSupportTop(p)}updateSupportTop(e);alert('Cambio cancelado: las medidas o la posición provocarían una colisión física real. Los elementos apoyados se conservan.');return false}return true}
-const SOFA_FABRICS={lino:'Lino fino',trama:'Trama fina',boucle:'Bouclé texturizado',liso:'Tela lisa'};
+const SOFA_FABRICS={lino:'Lino fino',trama:'Trama fina',capitone:'Capitoné tejido',boucle:'Bouclé texturizado',liso:'Tela lisa'};
 const isRectangularDiningTable=it=>it.t==='roomObject'&&it.shape==='table'&&it.roomType==='comedor'&&it.n==='Mesa comedor rectangular';
 const isUpholsteredDiningChair=it=>it.t==='roomObject'&&it.shape==='chair'&&it.roomType==='comedor'&&(it.n==='Silla tapizada'||it.n==='Silla comedor tapizada');
 const hasUpholstery=it=>isUpholsteredDiningChair(it)||it.t==='sofa'||(it.t==='roomObject'&&(
@@ -1052,7 +1052,7 @@ function props(){P.innerHTML='';const e=get();
    btn(e.upholsteryImage?'Cambiar imagen de tapicería…':'Subir textura de tapicería…',()=>input.click(),false);
   }
   if(isRectangularDiningTable(e)||isUpholsteredDiningChair(e)){
-   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble en tablones'};
+   const grains={suave:'Suave',marcada:'Marcada natural',tangencial:'Roble en tablones',rustico:'Roble rústico con nudos'};
    sel2('Veta de la madera',Object.keys(grains),Object.hasOwn(grains,e.woodGrain)?e.woodGrain:'suave',v=>{e.woodGrain=v},grains);
   }
   partColorUI(e);if(e.cfg)cfgUI(e);
@@ -1640,7 +1640,18 @@ function pbrField(gen,N,seed){const hs=(a,b,s2)=>{let h=(a*374761393+b*668265263
  fb=(u,v,fx,fy,o)=>{let s0=0,am=.5,tot=0;for(let k=0;k<4;k++){s0+=am*nz(u,v,fx<<k,fy<<k,o+k);tot+=am;am/=2}return s0/tot},
  T0=new Float32Array(N*N),H0=new Float32Array(N*N),R0=new Float32Array(N*N);
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const u=x/N,v=y/N,i=y*N+x;let t=0,h=.5,r=0;
-  if(gen==='furniture-oak-flat-sawn'){
+  if(gen==='furniture-oak-rustic'){
+   // Roble de una pieza con fibra longitudinal y pequeños grupos de nudos.
+   const du=Math.sin(Math.PI*(u-.34)),dv=Math.sin(Math.PI*(v-.60));
+   const curl=Math.exp(-du*du*12-dv*dv*46);
+   const grain=v+(fb(u,v,3,6,110)-.5)*.15+dv*curl*.22;
+   const bands=fb(u,grain,4,14,111),fiber=nz(u,grain,9,218,112)-.5;
+   const pores=Math.max(0,nz(u,grain,35,185,113)-.66);
+   const knots=Math.max(0,nz(u,v,22,34,114)-.74)*Math.max(0,fb(u,v,5,6,115)-.28);
+   t=-.014+(bands-.5)*.28+fiber*.105-pores*.21-knots*.74;
+   h=.5+fiber*.04-pores*.047-knots*.08;
+   r=(bands-.5)*.065+knots*.035;
+  }else if(gen==='furniture-oak-flat-sawn'){
    // Tablones de roble, con cortes alternos y nudos que desvían la veta.
    const board=v<.22?0:v<.46?1:v<.68?2:v<.85?3:4;
    const edges=[0,.22,.46,.68,.85,1];
@@ -4250,13 +4261,13 @@ function applyUpholstery(it,fabric,frame){
  const finish=sofaFabric(it);
  if(!custom&&finish==='liso')return;
  const map=custom?sofaImageMap(it.upholsteryImage):null;
- const generator={lino:'sofa-linen-fine',trama:'sofa-woven',boucle:'sofa-boucle'}[finish];
+ const generator={lino:'sofa-linen-fine',trama:'sofa-woven',capitone:'sofa-woven',boucle:'sofa-boucle'}[finish];
  const linen=custom?null:pbrTex(['sofa-linen','Tapicería','Textil',generator,'#eeeeee',.88,0,.17,42]);
  for(const mat of frame?[fabric,frame]:[fabric]){
   if(custom){mat.map=map;mat.color.set('#fff')}
   else{
    Object.assign(mat,{map:linen.a,normalMap:linen.n,roughnessMap:linen.r,roughness:1,metalness:0});
-   const relief={lino:.075,trama:.14,boucle:.24}[finish];
+   const relief={lino:.075,trama:.14,capitone:.12,boucle:.24}[finish];
    mat.normalScale.setScalar(mat===frame?relief*.72:relief);
   }
  }
@@ -4265,13 +4276,43 @@ function applyUpholstery(it,fabric,frame){
 function upholsteredPad(parent,x,y,z,w,h,d,axis,material,stitch){
  const mesh=new T.Mesh(upholsteredCushionGeometry(w,h,d,axis),material);
  mesh.position.set(x,y,z);
+ mesh.userData.upholsteredBack=axis==='z';
  const seam=upholsteredCushionSeam(w,h,d,axis,stitch);
  seam.userData.part={t:'piping'};
  mesh.add(seam);parent.add(mesh);
  return mesh;
 }
+function tuftUpholsteredBacks(group){
+ group.traverse(mesh=>{
+  if(!mesh.userData.upholsteredBack||(mesh.userData.part?.t||mesh.material.userData.partColorRole)!=='back')return;
+  const {width,height,depth}=mesh.geometry.parameters;
+  const {position,normal}=mesh.geometry.attributes;
+  const count=Math.max(2,Math.min(4,Math.round(width/21)));
+  const points=[];
+  for(const row of [-1,1])for(let col=0;col<count;col++){
+   points.push([(col-(count-1)/2+row*.24)*.70/count,row*.20]);
+  }
+  const amplitude=Math.min(depth*.23,1.7),spread=.075;
+  for(let i=0;i<position.count;i++){
+   const nz=normal.getZ(i);
+   if(nz<=.05)continue;
+   const u=position.getX(i)/width,v=position.getY(i)/height;
+   let indent=0,dx=0,dy=0;
+   for(const [x,y] of points){
+    const a=(u-x)/spread,b=(v-y)/spread;
+    const dip=amplitude*Math.exp(-.5*(a*a+b*b));
+    indent+=dip;dx+=dip*a/(spread*width);dy+=dip*b/(spread*height);
+   }
+   position.setZ(i,position.getZ(i)-indent*nz);
+   const n=new T.Vector3(normal.getX(i)-dx*nz*nz,normal.getY(i)-dy*nz*nz,nz).normalize();
+   normal.setXYZ(i,n.x,n.y,n.z);
+  }
+  position.needsUpdate=normal.needsUpdate=true;
+  mesh.geometry.computeBoundingBox();mesh.geometry.computeBoundingSphere();
+ });
+}
 function diningOak(it,color){
- const style={marcada:'furniture-oak-grain',tangencial:'furniture-oak-flat-sawn'}[it.woodGrain]||'furniture-oak';
+ const style={marcada:'furniture-oak-grain',tangencial:'furniture-oak-flat-sawn',rustico:'furniture-oak-rustic'}[it.woodGrain]||'furniture-oak';
  const grain=pbrTex(['furniture-oak','Roble aceitado','Maderas',style,'#e3ccad',.53,0,.12,215]);
  const wood=M(color,.53,0);
  Object.assign(wood,{map:grain.a,normalMap:grain.n,roughnessMap:grain.r,roughness:1});
@@ -8086,7 +8127,8 @@ function applyItemPartColors(g,it,primary){
  });
  if(defaults)modelPartDefaults.set(it,defaults);
 }
-function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}applyItemPartColors(g,it,mt)}
+function buildItemGeometry(g,it,mt,hm){const fn=BUILD[it.t];if(typeof fn==='function')fn(g,it,mt,hm);else{console.warn('Tipo de objeto sin modelo 3D validado; se omite en lugar de mostrar geometría primitiva:',it.t,it.n)}if(it.supportTop){const t=it.supportTop,topMat0=it.cfg&&it.cfg.k?topMat(it.cfg):M('#d7d1c7',.35);B(g,t.w,1.8,t.d,t.x||0,it.h+.9,t.z||0,topMat0)}if(hasUpholstery(it)&&sofaFabric(it)==='capitone'&&!it.upholsteryImage)tuftUpholsteredBacks(g);
+ applyItemPartColors(g,it,mt)}
 function motionButtonLabel(it,motions){
  const open=motions.every(m=>m.it.op?.[m.k]);
  if(motions.every(m=>m.hoodDoor))return open?'Cerrar puerta del armario':'Abrir puerta del armario';
