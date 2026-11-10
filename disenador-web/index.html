@@ -418,7 +418,7 @@ LIB.push(...[
  ['salón','Salón','compactElectronics','Barra de sonido',84,6,10,'#2c3033',0],
  ['salón','Salón','compactElectronics','Altavoz Bluetooth',18,8,8,'#424a4e',1],
  ['salón','Salón','compactElectronics','Mando a distancia',5,2,17,'#25272a',2],
- ['salón','Salón','compactElectronics','Consola de videojuegos compacta',27,6,19,'#e1e0dc',3],
+ ['salón','Salón','compactElectronics','Consola de videojuegos compacta',27,10,19,'#e1e0dc',3],
  ['cocina','Cocina','fryingpan','Sartén antiadherente 28 cm',28,6,46,'#303334',0],
  ['cocina','Cocina','fryingpan','Sartén de acero 24 cm',24,5,40,'#a4a7a8',1],
  ['cocina','Cocina','fruitbowl','Frutero de cerámica con fruta',29,18,29,'#eee6d8',0],
@@ -4482,6 +4482,7 @@ function buildRectangularDiningTable(g,it){
  }
 }
 
+
 const accessoryTextures=new Map();
 function accessoryTexture(kind,repeatX=1,repeatY=1){
  const key=[kind,repeatX,repeatY].join(':');
@@ -4508,6 +4509,57 @@ function accessoryTexture(kind,repeatX=1,repeatY=1){
  map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(repeatX,repeatY);map.anisotropy=4;
  accessoryTextures.set(key,map);
  return map;
+}
+function accessoryLoft(w,h,d,profile){
+ const segments=64,positions=[],uvs=[],indices=[];
+ for(const [y,xRadius,zRadius] of profile){
+  for(let i=0;i<=segments;i++){
+   const a=2*Math.PI*(i%segments)/segments,x=Math.cos(a),z=Math.sin(a);
+   positions.push(w*xRadius*Math.sign(x)*Math.pow(Math.abs(x),.62),h*y,d*zRadius*Math.sign(z)*Math.pow(Math.abs(z),.62));
+   uvs.push(i/segments,y);
+  }
+ }
+ for(let row=0;row<profile.length-1;row++)for(let i=0;i<segments;i++){
+  const a=row*(segments+1)+i,b=a+segments+1;
+  indices.push(a,b,a+1,b,b+1,a+1);
+ }
+ const geometry=new T.BufferGeometry();
+ geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+ geometry.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));
+ geometry.setIndex(indices);geometry.computeVertexNormals();
+ const normal=geometry.attributes.normal;
+ for(let row=0;row<profile.length;row++){
+  const first=row*(segments+1),last=first+segments;
+  const seam=new T.Vector3().fromBufferAttribute(normal,first).add(new T.Vector3().fromBufferAttribute(normal,last)).normalize();
+  normal.setXYZ(first,seam.x,seam.y,seam.z);normal.setXYZ(last,seam.x,seam.y,seam.z);
+ }
+ return geometry;
+}
+function accessoryFruitMap(kind){
+ const key='fruit:'+kind;
+ if(accessoryTextures.has(key))return accessoryTextures.get(key);
+ const n=128,canvas=document.createElement('canvas');
+ canvas.width=canvas.height=n;
+ const ctx=canvas.getContext('2d'),pixels=ctx.createImageData(n,n),data=pixels.data;
+ const colors={red:[[145,39,28],[244,160,67]],green:[[106,126,31],[209,200,83]],orange:[[177,74,15],[245,157,38]]};
+ const [low,high]=colors[kind];
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+  const u=x/n*2*Math.PI,v=y/n;
+  const mottling=.36+.20*Math.sin(u*2+v*5)+.08*Math.sin(u*7+v*11);
+  const streak=Math.pow(.5+.5*Math.cos(u*19+.6*Math.sin(v*7+u*3)),4);
+  const seed=(Math.imul(x+11,73856093)^Math.imul(y+7,19349663))>>>0;
+  const fleck=(seed%71===0?.20:(seed%13-6)*.008);
+  const blend=Math.max(0,Math.min(1,mottling+(kind==='red'?.25*streak:.05*streak)+fleck));
+  const i=(y*n+x)*4;
+  for(let c=0;c<3;c++)data[i+c]=low[c]+blend*(high[c]-low[c]);
+  data[i+3]=255;
+ }
+ ctx.putImageData(pixels,0,0);
+ const map=new T.CanvasTexture(canvas);
+ map.colorSpace=T.SRGBColorSpace;map.encoding=T.sRGBEncoding;
+ map.wrapS=T.RepeatWrapping;map.magFilter=T.LinearFilter;map.minFilter=T.LinearMipmapLinearFilter;
+ map.generateMipmaps=true;map.needsUpdate=true;
+ accessoryTextures.set(key,map);return map;
 }
 function buildSurfaceAccessory(g,it){
  const {w,h,d}=it,v=it.variant||0;
@@ -4566,31 +4618,40 @@ function buildSurfaceAccessory(g,it){
   return;
  }
  if(it.shape==='fruitbowl'){
-  const r=Math.min(w,d)/2,lip=h*.47;
-  const bowl=partFinish(v?diningOak(it,it.col):M(it.col,.25),'body');
-  const vessel=lathe([[0,0],[r*.41,0],[r*.44,.35],[r*.44,h*.05],[r*.57,h*.10],[r*.75,h*.20],[r*.92,h*.34],[r,lip-.24],[r*.993,lip],[r*.96,lip],[r*.89,h*.35],[r*.72,h*.24],[r*.50,h*.14],[0,h*.12]],bowl);
+  const r=Math.min(w,d)/2,lip=h*.51,floor=h*.135;
+  const bowl=partFinish(v?diningOak(it,it.col):M(it.col,.35),'body');
+  if(!v){bowl.roughnessMap=accessoryTexture('peel',1,1);}
+  const vessel=lathe([[0,0],[r*.43,0],[r*.46,.25],[r*.47,h*.055],[r*.59,h*.09],[r*.73,h*.17],[r*.87,h*.29],[r*.97,h*.43],[r,lip-.21],[r*.995,lip],[r*.973,lip],[r*.957,lip-.18],[r*.93,h*.43],[r*.84,h*.32],[r*.73,h*.23],[r*.60,floor+.20],[r*.53,floor],[0,floor]],bowl);
   if(v)orientDiningGrain(vessel,0);
-  const stem=finish('#624529',.82,0,'details');
+  const stem=finish('#634026',.78,0,'details'),leaf=finish('#45602a',.68,0,'details');
   const fruit=[
-   [-.36,-.29,.56,.27,'#ad2b22',true], [.31,-.30,.55,.26,'#d97a24',false],
-   [.35,.29,.52,.25,'#83943b',true], [-.32,.32,.51,.23,'#dc972d',false],
-   [.01,-.02,.77,.26,'#b23928',true]
+   [-.38,.21,.31,'green',.29], [.36,.22,.29,'orange',-.20],
+   [.01,-.44,.32,'red',.43], [-.015,-.045,.31,'red',-.38]
   ];
-  for(const [x,z,y,size,color,apple] of fruit){
-   const geo=new T.SphereGeometry(1,24,16),pos=geo.attributes.position;
-   for(let i=0;i<pos.count;i++){
-    const px=pos.getX(i),py=pos.getY(i),pz=pos.getZ(i);
-    const angle=Math.atan2(pz,px),shape=apple?1+.055*Math.cos(5*angle)*(1-py*py)+.10*py:1;
-    pos.setXYZ(i,px*shape,py*(apple?1-.19*Math.pow(Math.abs(py),5):1),pz*shape);
+  for(const [i,[x,z,size,kind,tilt]] of fruit.entries()){
+   const apple=kind!=='orange',geo=new T.SphereGeometry(1,32,24),pos=geo.attributes.position;
+   for(let k=0;k<pos.count;k++){
+    const px=pos.getX(k),py=pos.getY(k),pz=pos.getZ(k),angle=Math.atan2(pz,px);
+    const lobes=1+.065*Math.cos(5*angle+.3)*(1-py*py);
+    const shoulder=apple?lobes*(1+.14*py):1+.022*Math.cos(angle*3)*py;
+    const dimple=apple?.23*Math.pow(Math.abs(py),12):.025*Math.pow(Math.abs(py),4);
+    pos.setXYZ(k,px*shoulder,py*(1-dimple),pz*shoulder);
    }
    geo.computeVertexNormals();
-   const width=r*size,height=Math.min(h*.215,width*.94);
-   const skin=finish(color,apple?.32:.62,0,'details');
-   if(!apple){skin.map=accessoryTexture('peel',3,2);skin.bumpMap=skin.map;skin.bumpScale=.055;}
-   const part=mesh(geo,skin,x*r,y*h,z*r);
-   part.scale.set(width,height,width*.96);
-   part.rotation.y=x*3;
-   if(apple)rod([x*r,y*h+height*.77,z*r],[x*r+.35,y*h+height*.98,z*r+.14],.10,stem);
+   const width=r*size,height=Math.min(h*.27,width*(apple?.96:.94));
+   const skin=finish('#ffffff',apple?.39:.67,0,'details');
+   skin.map=accessoryFruitMap(kind);
+   if(!apple){skin.bumpMap=accessoryTexture('peel',3,2);skin.bumpScale=.045;}
+   const y=i===3?floor+h*.56:floor+height*.91;
+   const fruitGroup=new T.Group();g.add(fruitGroup);fruitGroup.position.set(x*r,y,z*r);fruitGroup.rotation.z=tilt;
+   const part=mesh(geo,skin);fruitGroup.add(part);part.scale.set(width,height,width*.95);
+   if(apple){
+    const twig=rod([0,height*.74,0],[.17,height*.98,.09],.105,stem);fruitGroup.add(twig);
+    if(i===3){
+     const blade=mesh(new T.SphereGeometry(1,12,8),leaf,width*.24,height*.92,.15);
+     fruitGroup.add(blade);blade.scale.set(width*.24,.10,width*.09);blade.rotation.z=.38;
+    }
+   }
   }
   return;
  }
@@ -4611,12 +4672,38 @@ function buildSurfaceAccessory(g,it){
    return;
   }
   if(v===3){
-   feet(dark,w*.13,d*.15,h*.06);
-   box(w,h*.90,d-.46,0,h*.51,-.23,body,.72);
-   box(w*.88,h*.19,.24,0,h*.56,d/2-.16,dark,.075);
-   for(let i=0;i<3;i++)box(w*.68,.19,.10,0,h*(.45-i*.065),d/2-.17,dark);
-   for(const x of [-1,1])box(w*.14,h*.13,.20,x*w*.25,h*.56,d/2-.07,screen,.04);
-   box(.44,.19,.11,w*.36,h*.70,d/2-.06,status,.03);
+   feet(dark,w*.13,d*.15,h*.045);
+   box(w*.97,h*.35,d*.96,0,h*.22,-d*.02,dark,.50);
+   box(w,h*.43,d*.95,0,h*.385,-d*.025,body,.78);
+   box(w*.85,h*.12,.28,0,h*.31,d*.452,dark,.065);
+   for(const x of [-1,1])box(w*.09,h*.065,.19,x*w*.21,h*.31,d*.468,screen,.035);
+   box(.42,.14,.11,w*.36,h*.31,d*.461,status,.03);
+   // Mando de dos empuñaduras con una sola carcasa continua.
+   const outline=new T.Shape();
+   outline.moveTo(-.35,.33);
+   outline.bezierCurveTo(-.53,.34,-.57,.08,-.56,-.21);
+   outline.bezierCurveTo(-.56,-.51,-.45,-.56,-.33,-.43);
+   outline.bezierCurveTo(-.25,-.35,-.24,-.20,-.15,-.18);
+   outline.quadraticCurveTo(0,-.15,.15,-.18);
+   outline.bezierCurveTo(.24,-.20,.25,-.35,.33,-.43);
+   outline.bezierCurveTo(.45,-.56,.56,-.51,.56,-.21);
+   outline.bezierCurveTo(.57,.08,.53,.34,.35,.33);
+   outline.quadraticCurveTo(0,.28,-.35,.33);
+   const controller=new T.ExtrudeGeometry(outline,{depth:.62,steps:1,bevelEnabled:true,bevelThickness:.18,bevelSize:.045,bevelSegments:4,curveSegments:12});
+   controller.rotateX(-Math.PI/2);
+   controller.scale(w*.50,h*.28,d*.55);
+   const gamepad=finish('#d9dbe0',.48,.04,'body'),buttons=M('#282b32',.53);
+   mesh(controller,gamepad,0,h*.65,d*.035);
+   box(w*.18,h*.058,d*.115,0,h*.867,-d*.074,buttons,.15);
+   box(w*.14,.075,.09,0,h*.893,-d*.016,status);
+   for(const x of [-1,1]){
+    disc(w*.046,h*.046,x*w*.095,h*.877,d*.095,buttons);
+    disc(w*.030,h*.075,x*w*.095,h*.928,d*.095,buttons);
+    box(w*.12,h*.06,d*.075,x*w*.17,h*.727,-d*.165,buttons,.12);
+   }
+   box(w*.105,h*.047,d*.046,-w*.168,h*.88,-d*.036,buttons,.06);
+   box(w*.033,h*.047,d*.118,-w*.168,h*.88,-d*.036,buttons,.06);
+   for(const [x,z] of [[0,-1],[1,0],[0,1],[-1,0]])disc(w*.018,h*.046,w*(.168+x*.032),h*.881,d*(-.036+z*.045),buttons);
    return;
   }
   feet(dark,w*.12,d*.23,h*.06);
@@ -4679,14 +4766,21 @@ function buildSurfaceAccessory(g,it){
   }
   for(const x of [-1,1])box(w*.13,h*.08,d*.11,x*w*.30,h*.837,d*.33,plastic,.08);
  }else{
-  feet(dark,w*.16,d*.15,h*.045);
-  box(w,h*.955,d*.87,0,h*.5225,-d*.065,body,1.45);
-  box(w*.96,h*.50,d*.126,0,h*.315,d*.421,dark,.84);
-  box(w*.85,.21,.28,0,h*.57,d*.423,plastic,.045);
-  box(w*.53,h*.15,.36,0,h*.785,d*.373,screen,.18);
-  box(w*.085,.22,.12,0,h*.80,d*.380,status,.035);
-  for(const x of [-1,1])box(w*.085,h*.085,d*.13,x*w*.14,h*.36,d*.435,plastic,.22);
-  box(w*.36,h*.12,d*.058,0,h*.36,d*.470,plastic,.30);
+  for(const x of [-1,1])for(const z of [-1,1]){
+   box(w*.14,h*.075,d*.14,x*w*.235,h*.0375,z*d*.185-d*.043,dark,.22);
+  }
+  const housing=[[.045,0,0],[.045,.325,.29],[.065,.37,.32],[.13,.425,.35],[.29,.475,.375],[.49,.49,.384],[.67,.49,.391],[.81,.467,.384],[.90,.428,.356],[.965,.36,.309],[.992,.26,.23],[1,.13,.12],[1,0,0]];
+  const basket=[[.095,0,0],[.095,.34,.30],[.13,.393,.36],[.22,.43,.388],[.36,.468,.405],[.53,.48,.407],[.58,.474,.402],[.596,.441,.379],[.596,0,0]];
+  mesh(accessoryLoft(w,h,d,housing),body,0,0,-d*.043);
+  mesh(accessoryLoft(w,h,d,basket),dark,0,0,d*.006);
+  const trim=finish('#34383c',.43,.21,'fronts');
+  box(w*.52,h*.16,d*.034,0,h*.761,d*.333,trim,.40).rotation.x=-.15;
+  box(w*.32,h*.068,d*.017,0,h*.786,d*.358,screen,.10).rotation.x=-.15;
+  for(const x of [-1,1])frontDial(w*.022,.16,x*w*.155,h*.718,d*.359,plastic);
+  box(w*.09,.13,.11,0,h*.791,d*.368,status,.025);
+  box(w*.22,h*.07,d*.065,0,h*.469,d*.426,plastic,.26);
+  const grip=new T.CatmullRomCurve3([[0,h*.49,d*.45],[0,h*.43,d*.468],[0,h*.33,d*.468],[0,h*.27,d*.455]].map(p=>new T.Vector3(...p)));
+  mesh(new T.TubeGeometry(grip,22,1,16,false),plastic).scale.x=w*.049;
  }
 }
 
@@ -6610,8 +6704,11 @@ document.addEventListener('keydown',e=>{
 /* ===== Previsualización 3D real ===== */
 const r4=r3?createWebGLRenderer({antialias:true,preserveDrawingBuffer:true}):null,sc4=new T.Scene(),cam4=new T.PerspectiveCamera(40,520/330,5,6000),oc4=r4?new T.OrbitControls(cam4,r4.domElement):null,g4=new T.Group();sc4.add(g4,new T.HemisphereLight('#fff','#887',.9));const dl4=new T.DirectionalLight('#fff',.8);dl4.position.set(300,500,400);sc4.add(dl4);sc4.background=new T.Color('#2b303a');
 let PV=[],pvIt=null,pvOpen=false,pendingModel=null;
+function detailedAccessoryPreview(it){
+ return it.shape==='fruitbowl'||(it.shape==='countertopAppliance'&&!it.variant)||(it.shape==='compactElectronics'&&it.variant===3);
+}
 function buildPrev(it,room){if(!r4)return;g4.clear();const sv=MV;MV=PV=[];it.op=it.op||[];const g=new T.Group();buildItemGeometry(g,it,M(it.col,.5,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));MV=sv;g4.add(g);
- if(room){const f=new T.Mesh(new T.PlaneGeometry(400,400),sm(S.fl.m,'#ccc',400,400,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r));f.rotation.x=-Math.PI/2;f.position.set(0,-.1,100);g4.add(f);const wm=sm(null,S.pt);[[150,125,-it.d/2-2,400,250,4],[-it.w/2-2,125,100,4,250,400]].forEach(([x,y,z,w,h,d])=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),wm);m.position.set(x,y,z);g4.add(m)})}}
+ if(room){const f=new T.Mesh(new T.PlaneGeometry(400,400),sm(S.fl.m,'#ccc',400,400,S.fl.sz,S.fl.j,S.fl.jc,S.fl.r));f.rotation.x=-Math.PI/2;f.position.set(0,-.1,100);f.receiveShadow=detailedAccessoryPreview(it);g4.add(f);const wm=sm(null,S.pt);[[150,125,-it.d/2-2,400,250,4],[-it.w/2-2,125,100,4,250,400]].forEach(([x,y,z,w,h,d])=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),wm);m.position.set(x,y,z);g4.add(m)})}}
 const TH=new WeakMap(),thumbnailRefresh=new WeakMap(),studioThumbBackground=new T.Color('#eef1f5');
 function thumb(i){return thumbO(LIB[i])}
 /* Portadas 3D independientes del catálogo: composición de habitación completa. No se ejecuta para Cocina. */
@@ -6636,7 +6733,19 @@ function roomCover(room){if(!r4)return ROOM_PHOTOS[room.key];if(ROOM_COVERS.has(
 const all=LIB.filter(o=>!o.libraryHidden&&(o.roomType===room.key||o.c===room.n)).filter(o=>o.t==='roomObject'||!o.roomType);const preferred={salón:['sofa','table','panel','lamp'],dormitorio:['bed','dresser','wardrobe','lamp'],baño:['bath','shower','vanity','mirror'],comedor:['table','chair','sideboard','lamp'],recibidor:['console','cabinet','bench','mirror'],despacho:['desk','officechair','shelf','computer'],lavadero:['washer','sink','cabinet','basket'],vestidor:['wardrobe','dresser','shelf','mirror'],garaje:['car','shelf','workbench','toolcab'],trastero:['shelf','box','trunk','bike'],terraza:['outdoorsofa','table','umbrella','planter'],jardin:['tree','outdoorsofa','planter','pool']};const wanted=preferred[room.key]||[];const items=wanted.map(shape=>all.find(o=>o.shape===shape)).filter(Boolean);all.forEach(o=>{if(items.length<4&&!items.includes(o))items.push(o)});const positions=[[-220,90],[110,100],[-210,-190],[170,-190]];
 items.forEach((o,i)=>{const it=Object.assign({op:[],ang:100,fl:false},JSON.parse(JSON.stringify(o)));const obj=new T.Group();buildItemGeometry(obj,it,M(it.col||'#a88f78',.58,0),M('#999',.3,.8));const [x,z]=positions[i];obj.position.set(x,0,z);if(o.shape==='car'||o.shape==='van')obj.rotation.y=Math.PI/2;g4.add(obj)});
 cam4.aspect=260/150;cam4.position.set(920,700,1120);cam4.lookAt(0,90,0);cam4.updateProjectionMatrix();r4.setSize(260,150);r4.render(sc4,cam4);const url=r4.domElement.toDataURL('image/jpeg',.86);g4.clear();MV=savedMV;PV=savedPV;ROOM_COVERS.set(room.key,url);return url}
-function fitCam(){if(!r4)return;const it=pvIt,m=Math.max(it.w,it.h,it.d);cam4.position.set(m*.9,it.h*.6+m*.3,m*1.6);oc4.target.set(0,it.h/2,0);oc4.update()}
+function fitCam(){
+ if(!r4)return;
+ const it=pvIt,m=Math.max(it.w,it.h,it.d);
+ const showTop=it.shape==='fruitbowl'||(it.shape==='compactElectronics'&&it.variant===3);
+ cam4.position.set(m*(showTop?.8:.9),it.h*.6+m*(showTop?.65:.30),m*1.6);
+ oc4.target.set(0,it.h/2,0);oc4.update();
+ if(detailedAccessoryPreview(it)){
+  const span=m*1.2,shadow=dl4.shadow,camera=shadow.camera;
+  Object.assign(camera,{left:-span,right:span,top:span,bottom:-span,far:Math.max(1200,m*2)});
+  camera.updateProjectionMatrix();
+  shadow.mapSize.set(512,512);shadow.normalBias=.018;shadow.bias=-.00015;
+ }
+}
 function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX='hidden';P2.style.maxHeight='none';P2.innerHTML='';
  if(pvKitchenPresets){
   const label=document.createElement('label'),select=document.createElement('select');
@@ -6659,7 +6768,15 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
   if(pvIt.c=='Mi biblioteca'||pvIt.t=='model'){const bx=document.createElement('button');bx.textContent='Quitar de mi biblioteca';bx.onclick=async()=>{const i=LIB.findIndex(o=>o.n==pvIt.n&&o.c==pvIt.c);if(i>=0)LIB.splice(i,1);if(pvIt.t=='model'){await idbDel(pvIt.mid);delete MODS[pvIt.mid]}else{const j=ML.findIndex(o=>o.n==pvIt.n);if(j>=0)ML.splice(j,1);saveML()}closePreview();libUI();refresh()};P2.append(bx,' ')}
   const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';closePreview();$('#cat').style.display='none';if($('#lib').classList.contains('nuhio-library-open'))$('#tl').click();if(mode!='2d'&&!dualView)setMode('2d');drawTools();$('#editorHint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};P2.append(b2,' ');
  }
- P2.append(document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · '+(pvIt.lic?'Licencia '+pvIt.lic+' · ':'')+(pvIt.source?'Origen '+pvIt.source+' · ':'')+(r4?'arrastra para girar, rueda para zoom':''));if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}function pvLoop(){if(!pvOpen||!r4)return;requestAnimationFrame(pvLoop);PV.forEach(m=>stepMV(m));oc4.update();r4.render(sc4,cam4)}
+ P2.append(document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · '+(pvIt.lic?'Licencia '+pvIt.lic+' · ':'')+(pvIt.source?'Origen '+pvIt.source+' · ':'')+(r4?'arrastra para girar, rueda para zoom':''));if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}function pvLoop(){
+ if(!pvOpen||!r4)return;
+ requestAnimationFrame(pvLoop);PV.forEach(m=>stepMV(m));oc4.update();
+ const detailed=detailedAccessoryPreview(pvIt),shadowEnabled=r4.shadowMap.enabled;
+ if(detailed){dl4.castShadow=true;r4.shadowMap.enabled=true;}
+ try{r4.render(sc4,cam4)}finally{
+  if(detailed){dl4.castShadow=false;r4.shadowMap.enabled=shadowEnabled;}
+ }
+}
 let pvKitchenPresets=null,pvKitchenVariant=0;
 function openPrev(i){const o=LIB[i],presets=KITCHEN_PRESETS.get(o);openPrevObj(presets?.[0]||o,presets)}
 function resizePreviewRenderer(){if(!r4)return;const host=$('#pvc');if(!host)return;const w=Math.max(160,Math.floor(host.clientWidth||520)),h=Math.max(140,Math.floor(host.clientHeight||260));r4.setSize(w,h,false);r4.domElement.style.width='100%';r4.domElement.style.height='100%';cam4.aspect=w/h;cam4.updateProjectionMatrix();oc4.update()}
