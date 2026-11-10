@@ -327,7 +327,7 @@ async function createRender(container, j, opt, cb) {
   cb({ state: 'cargando', samples: 0, target: st.target, msg: 'Cargando texturas y geometría…' });
   const imgs = await Promise.all(j.texs.map(u => loadImg(u, A.texMax)));
   const tx = (i, srgb) => { const t = new THREE.Texture(imgs[i]); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = 8; t.needsUpdate = true; return t; };
-  const M = j.mats.map(m => { if (m.tr && m.op < .99) return new THREE.MeshPhysicalMaterial({ color: m.c, roughness: .02, metalness: 0, transmission: 1, ior: 1.5, thickness: .02 });
+  const M = j.mats.map(m => { if (m.tr && m.op < .99) return new THREE.MeshPhysicalMaterial({ color: m.clearArchitecturalGlass ? '#ffffff' : m.c, roughness: .02, metalness: 0, transmission: 1, ior: 1.5, thickness: m.clearArchitecturalGlass ? .01 : .02 });
     const o = new THREE.MeshStandardMaterial({ color: m.c, roughness: m.r, metalness: m.m, emissive: m.e, emissiveIntensity: m.ei }); o.castShadow = m.castsRenderShadow !== false; if (m.ds) o.side = THREE.DoubleSide; if (m.map >= 0) o.map = tx(m.map, 1); if (m.rm >= 0) { o.roughnessMap = tx(m.rm, 0); o.roughness = 1; } if (m.nm >= 0) { o.normalMap = tx(m.nm, 0); o.normalScale.set(m.ns, m.ns); } return o; });
   scene = new THREE.Scene(); const world = new THREE.Group(); world.scale.setScalar(.01); scene.add(world);
   j.meshes.forEach(m => { const g = new THREE.BufferGeometry(), p = new Float32Array(b64(m.p)); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); if (m.i) g.setIndex(new THREE.BufferAttribute(new Uint32Array(b64(m.i)), 1));
@@ -2163,6 +2163,7 @@ function openingMesh(parent,o,left,width){
  const timber=M('#8a5a3a',.6),trim=M(door&&kind!=='corredera'?'#684b37':'#eceeed',.46);
  const metal=M('#586467',.32,.68);
  const glass=new T.MeshStandardMaterial({color:'#9fd0ee',transparent:true,opacity:.28,roughness:.05,metalness:.18,depthWrite:false});
+ glass.userData.clearArchitecturalGlass=true;
  B(opening,frame,height,9,frame/2,height/2,0,trim);
  B(opening,frame,height,9,width-frame/2,height/2,0,trim);
  B(opening,innerW,frame,9,width/2,height-frame/2,0,trim);
@@ -8256,7 +8257,7 @@ function skyEnv(renderer,strength=1.1){
 function exportScene(root,meta){root.updateMatrixWorld(true);const texs=[],tmap=new Map(),mats=[],mmap=new Map(),meshes=[],lights=[];
  const b64=a=>{const u=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
  const tex=t=>{if(!t||!t.image)return-1;if(tmap.has(t.uuid))return tmap.get(t.uuid);const im=t.image,w=im.width||im.naturalWidth,h=im.height||im.naturalHeight,k=Math.min(1,1024/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);texs.push(c.toDataURL('image/jpeg',.93));tmap.set(t.uuid,texs.length-1);return texs.length-1};
- const mat=m=>{if(mmap.has(m.uuid))return mmap.get(m.uuid);mats.push({c:'#'+m.color.getHexString(),r:m.roughness,m:m.metalness,e:m.emissive?'#'+m.emissive.getHexString():'#000000',ei:m.emissiveIntensity||0,castsRenderShadow:m.userData?.castsRenderShadow,op:m.opacity,tr:!!m.transparent,map:tex(m.map),rm:tex(m.roughnessMap),nm:tex(m.normalMap),ns:m.normalScale?m.normalScale.x:1,ds:!!((m.userData&&m.userData.ds)||m.side===2)});mmap.set(m.uuid,mats.length-1);return mats.length-1};
+ const mat=m=>{if(mmap.has(m.uuid))return mmap.get(m.uuid);mats.push({c:'#'+m.color.getHexString(),r:m.roughness,m:m.metalness,e:m.emissive?'#'+m.emissive.getHexString():'#000000',ei:m.emissiveIntensity||0,castsRenderShadow:m.userData?.castsRenderShadow,clearArchitecturalGlass:m.userData?.clearArchitecturalGlass===true,op:m.opacity,tr:!!m.transparent,map:tex(m.map),rm:tex(m.roughnessMap),nm:tex(m.normalMap),ns:m.normalScale?m.normalScale.x:1,ds:!!((m.userData&&m.userData.ds)||m.side===2)});mmap.set(m.uuid,mats.length-1);return mats.length-1};
  const uvOf=(P,N,e,U)=>{const n=P.count,out=new Float32Array(n*2),W=U.w>.5,tx=U.t[0],ty=U.t[1],cr=Math.cos(U.r),sr=Math.sin(U.r);for(let i=0;i<n;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i),a=N?N.getX(i):0,b=N?N.getY(i):1,c=N?N.getZ(i):0;if(W){const X=e[0]*x+e[4]*y+e[8]*z+e[12],Y=e[1]*x+e[5]*y+e[9]*z+e[13],Z=e[2]*x+e[6]*y+e[10]*z+e[14],A=e[0]*a+e[4]*b+e[8]*c,B=e[1]*a+e[5]*b+e[9]*c,C=e[2]*a+e[6]*b+e[10]*c,l=Math.hypot(A,B,C)||1;x=X;y=Y;z=Z;a=A/l;b=B/l;c=C/l}
   const ax=Math.abs(a),ay=Math.abs(b),az=Math.abs(c);let q=ax>ay&&ax>az?[z,y]:(ay>az?[x,z]:[x,y]);if(U.sw>.5)q=[q[1],q[0]];q=[cr*q[0]-sr*q[1],sr*q[0]+cr*q[1]];out[i*2]=(q[0]+U.o[0])/tx;out[i*2+1]=(q[1]+U.o[1])/ty}return out};
  root.traverse(o=>{
