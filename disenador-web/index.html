@@ -2231,6 +2231,14 @@ function roomsUpdate(){try{const found=detectRooms(S.w),old=S.rooms||[],pairs=[]
 function syncWallH(R){S.w.forEach(w=>{if((R.walls||[]).includes(w.id)){let h=0;S.rooms.forEach(r=>{if((r.walls||[]).includes(w.id))h=Math.max(h,r.ceil.h)});if(h)w.h=h}})}
 /*ROOMS_END*/
 const ceilOn=()=>RVo?rvCeil==='full':showCeil;
+const roomCeilingVisible=room=>Boolean(room.ceil&&room.ceil.on!==false&&ceilOn());
+function syncCeilingSpotVisuals(group,it){
+ if(it.t!=='ceilingSpot')return true;
+ const room=(S.rooms||[]).find(r=>r.poly&&inPoly(it.x,it.y,r.poly));
+ const visible=room?roomCeilingVisible(room):ceilOn();
+ group.children.forEach(child=>{if(child.userData.ceilingSpotVisual)child.visible=visible});
+ return visible;
+}
 function polyMesh(poly,y,mat,down){const pts=poly.map(p=>new T.Vector2(p[0],p[1])),tri=T.ShapeUtils.triangulateShape(pts,[]),pos=[],uv=[],idx=[],xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]),minx=Math.min(...xs),miny=Math.min(...ys),fw=Math.max(...xs)-minx||1,fd=Math.max(...ys)-miny||1;
  poly.forEach(p=>{pos.push(p[0],y,p[1]);uv.push((p[0]-minx)/fw,(p[1]-miny)/fd)});
  tri.forEach(([a,b,c])=>{const ay=(pts[b].x-pts[a].x)*(pts[c].y-pts[a].y)-(pts[b].y-pts[a].y)*(pts[c].x-pts[a].x),up=-ay>0;if(up==!down)idx.push(a,b,c);else idx.push(a,c,b)});
@@ -2238,7 +2246,7 @@ function polyMesh(poly,y,mat,down){const pts=poly.map(p=>new T.Vector2(p[0],p[1]
 function ceilingMaterial(ceiling){return Object.hasOwn(ceiling,'m')?ceiling.m:'madera';}
 function addRooms(){(S.rooms||[]).forEach(R=>{if(!R.poly)return;const fc=R.floor||S.fl,xs=R.poly.map(p=>p[0]),ys=R.poly.map(p=>p[1]),minx=Math.min(...xs),miny=Math.min(...ys),fw=Math.max(...xs)-minx||1,fd=Math.max(...ys)-miny||1;
   const mat=floorMaterial(fc,fw,fd,[-minx,-miny]),f=polyMesh(R.poly,0,mat,false).mesh;f.receiveShadow=true;f.material.side=T.DoubleSide;f.material.needsUpdate=true;f.userData.fl=1;f.userData.room=R.id;root.add(f);
-  if(R.ceil&&R.ceil.on!==false&&ceilOn()){const cm=sm(ceilingMaterial(R.ceil),R.ceil.col||'#f4f2ee',fw,fd,R.ceil.sz||60,R.ceil.j==null ? .3 : R.ceil.j,R.ceil.jc||'#ddd',R.ceil.r||0);cm.side=T.DoubleSide;cm.needsUpdate=true;const ceilingHeight=Math.max(150,+R.ceil.h||250),c=polyMesh(R.poly,ceilingHeight,cm,true).mesh;c.castShadow=c.receiveShadow=true;
+  if(roomCeilingVisible(R)){const cm=sm(ceilingMaterial(R.ceil),R.ceil.col||'#f4f2ee',fw,fd,R.ceil.sz||60,R.ceil.j==null ? .3 : R.ceil.j,R.ceil.jc||'#ddd',R.ceil.r||0);cm.side=T.DoubleSide;cm.needsUpdate=true;const ceilingHeight=Math.max(150,+R.ceil.h||250),c=polyMesh(R.poly,ceilingHeight,cm,true).mesh;c.castShadow=c.receiveShadow=true;
    c.onBeforeRender=(renderer,_scene,camera)=>{
     // La cara superior del techo del editor no debe mostrar su autosombra.
     c.receiveShadow=!(renderer===r3&&!RVo&&dayInteriorActive()&&camera.position.y>c.position.y+ceilingHeight);
@@ -2446,9 +2454,9 @@ const BUILD={
 ceilingSpot(g,it,mt){
  const radius=Math.min(it.w,it.d)/2,power=fixturePower(it)/100,warm='#ffe3b5';
  const mount=new T.Mesh(new T.CylinderGeometry(radius,radius,it.h*.8,32),mt);
- mount.position.y=it.h*.6;g.add(mount);
+ mount.position.y=it.h*.6;mount.userData.ceilingSpotVisual=true;g.add(mount);
  const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15));
- lens.position.y=it.h*.1;lens.material.toneMapped=!fixtureIsOn(it);g.add(lens);
+ lens.position.y=it.h*.1;lens.material.toneMapped=!fixtureIsOn(it);lens.userData.ceilingSpotVisual=true;g.add(lens);
  if(!fixtureIsOn(it))return;
  const light=new T.SpotLight(fixtureColor(it,warm),5.5*power,750,it.wideBeam?.68:.42,.65,1);
  light.userData.fixtureShadow=true;
@@ -6152,7 +6160,7 @@ function build3d(){if(!r3)return;roomsUpdate();
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),floorMaterial(S.fl,fw,fd,[fw/2,fd/2]));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
- S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
+ S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);const visualVisible=syncCeilingSpotVisuals(g,it);if(visualVisible&&planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
  if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
  fitSunToProject();setSun();addRealisticDetails();
 }
@@ -6451,7 +6459,8 @@ function positionTouchModel(it){
  const model=root.children.find(o=>o.userData.id===it.id);
  if(!model)return;
  model.position.set(it.x,it.e,it.y);model.updateMatrixWorld(true);
- for(const overlay of root.children)if(overlay.object===model)overlay.update();
+ const visualVisible=syncCeilingSpotVisuals(model,it);
+ for(const overlay of root.children)if(overlay.object===model){overlay.visible=visualVisible;overlay.update();}
 }
 function finishItemTouch(cancel=false){
  const gesture=itemTouchDrag;
