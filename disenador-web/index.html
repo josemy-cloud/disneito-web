@@ -6146,13 +6146,14 @@ function build3d(){if(!r3)return;roomsUpdate();
    light.shadow.map.dispose();light.shadow.map=null;
   }
  });
+ const useFixtureShadows=RVo||$('#sq').value==='q';
  root.clear();MV=[];HL=[];if(!S.w.length&&!S.i.length){}
  S.w.forEach(w=>root.add(wallMesh(w)));(S.rv||[]).forEach(z=>{const w=S.w.find(x=>x.id==z.w);if(w&&!w.hid&&!w.tr)root.add(zoneMesh(z,w))});
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),floorMaterial(S.fl,fw,fd,[fw/2,fd/2]));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
- S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(!RVo&&$('#sq').value==='q'&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
- if(!RVo&&$('#sq').value==='q')configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
+ S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);if(planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
+ if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
  fitSunToProject();setSun();addRealisticDetails();
 }
 const realisticDetails=new T.Group();
