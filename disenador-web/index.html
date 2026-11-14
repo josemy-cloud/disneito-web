@@ -249,23 +249,48 @@ body.compact-workspace #nuhioToolRow details{position:relative}
 body.compact-workspace #nuhioToolRow details>div{position:absolute;right:0;top:100%;z-index:20;min-width:145px;padding:8px;background:#f5f9ff;color:#234665;border:1px solid #c7d9ee;border-radius:9px}
 #nuhioToolActions button[aria-expanded=true]{background:#175ba8;color:white}
 body.adaptive.compact-workspace:not(.ui-legacy) #main #lib.adaptive-open{max-height:min(58dvh,100%)}
-#layersTree button[aria-pressed=true]{background:#175ba8;color:white}
 #layersPanel[hidden],#libraryContent[hidden]{display:none!important}
-#layersPanel{padding:4px 2px 10px;display:grid;gap:8px;color:#244665}
-#layersPanel label{display:grid;gap:3px;font-weight:650}
-#layersPanel :is(select,input){width:100%;min-width:0;min-height:36px}
-#layersTree details{margin:3px 0;padding-left:8px;border-left:1px solid #d4e2f5}
-#layersTree summary{cursor:pointer;padding:6px 0;overflow-wrap:anywhere}
-#layersTree button{width:100%;text-align:left;min-height:34px;overflow-wrap:anywhere}
-#layersTree small{display:block;font-size:.75em}
-#layersFit{justify-self:start}
-.layer-eye-row{display:flex;align-items:flex-start;gap:4px;margin:2px 0}
-.layer-eye-row>details,.layer-eye-row>[data-layer-key]{flex:1;min-width:0}
-#layersTree .layer-eye{flex:0 0 34px;width:34px;text-align:center;padding:4px;color:#234665}
-#layersTree .layer-eye[aria-pressed=true]{background:#dbe8f7}
-.layer-eye svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;vertical-align:middle}
-body.compact-workspace #layersTree .layer-eye{flex-basis:44px;width:44px}
-body.compact-workspace #layersPanel button{min-height:44px}
+body #main #lib.layers-active{overflow:hidden;padding:0!important}
+body.adaptive.compact-workspace:not(.ui-legacy) #main #lib.layers-active.adaptive-open{height:min(58dvh,100%);overflow:hidden;box-shadow:none}
+#layersPanel{height:100%;min-height:0;display:flex;flex-direction:column;color:#244665;font:13px/1.35 Inter,system-ui,sans-serif}
+.layers-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;align-items:end;padding:8px 10px;border-bottom:1px solid #e0e9f4}
+.layers-tools label{display:grid;gap:2px;min-width:0;font-size:11px;font-weight:650}
+.layers-tools label:nth-child(2){grid-column:1/-1;grid-row:2}
+#layersPanel :is(select,input){box-sizing:border-box;width:100%;min-width:0;min-height:29px;padding:3px 7px;border:1px solid #d5e1ef;border-radius:6px;background:#fff;color:#244665;font:inherit}
+.layers-help{position:relative}
+.layers-help summary{display:grid;place-items:center;cursor:pointer;width:29px;height:29px;border-radius:6px;background:#eaf2fe;color:#20548c;font-weight:700;list-style:none}
+.layers-help summary::-webkit-details-marker,.layer-branch summary::-webkit-details-marker{display:none}
+.layers-help p{position:absolute;right:0;top:100%;z-index:2;width:min(230px,70vw);margin:4px 0;padding:8px;border:1px solid #d5e1ef;border-radius:6px;background:#fff;font-size:12px}
+#layersTree{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:4px 8px;scrollbar-width:thin}
+.layer-branch{margin:0;padding:0;border:0}
+.layer-children{padding-left:12px}
+.layer-row{display:flex;align-items:center;gap:2px;min-width:0;border-radius:5px}
+.layer-branch-wrap{position:relative}
+.layer-branch-wrap>.layer-eye{position:absolute;right:0;top:0}
+.layer-branch>summary{display:inline-flex;align-items:center;gap:5px;width:calc(100% - var(--eye-width,30px));min-height:28px;vertical-align:top;cursor:pointer;list-style:none;border-radius:5px;box-sizing:border-box;padding:2px 3px}
+.layer-branch>summary::before{content:'›';width:9px;color:#5c7796;flex:none}
+.layer-branch[open]>summary::before{transform:rotate(90deg)}
+.layer-branch>summary:hover,.layer-row:hover{background:#edf4fd}
+.layer-count{margin-left:auto;color:#5c7290;font-size:11px}
+.layer-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.layer-icon{flex:none;color:#557698}
+#layersTree :is(.layer-eye,[data-layer-key]){border:0!important;box-shadow:none!important;border-radius:5px;background:transparent!important;color:inherit;font:inherit;min-height:28px;padding:2px 4px!important;margin:0}
+#layersTree [data-layer-key]{flex:1;min-width:0;text-align:left;display:flex;align-items:center;gap:5px}
+#layersTree [data-layer-key][aria-pressed=true]{background:#dcecff!important;color:#174e89}
+#layersTree .layer-eye{width:var(--eye-width,30px);flex:0 0 var(--eye-width,30px);text-align:center;vertical-align:top;color:#496785}
+#layersTree .layer-eye:hover{background:#dfebfa!important}
+#layersTree .layer-eye[aria-pressed=true]{color:#8094ab}
+#layersTree .layer-eye[aria-pressed=mixed]{background:#e5eefb!important}
+.layer-eye svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;vertical-align:middle}
+#layersTree small{color:#536d89;font-size:10px;flex:none}
+#layersFit{align-self:flex-start;margin:5px 10px 7px}
+#layersPanel :is(button,summary,select,input):focus-visible{outline:2px solid #2166b4;outline-offset:-2px}
+@media(pointer:coarse),(max-width:1050px){
+ #layersTree{--eye-width:44px}
+ #layersTree :is(.layer-eye,[data-layer-key],summary),#layersFit{min-height:44px}
+ .layers-help summary{min-width:44px;min-height:44px}
+}
+
 @media (min-width:1051px){
  body.adaptive.desktop-workspace:not(.ui-legacy){grid-template-rows:auto minmax(0,1fr) auto}
  body.adaptive.desktop-workspace:not(.ui-legacy) #top{overflow:visible;flex-wrap:nowrap;gap:5px}
@@ -361,10 +386,12 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 </div>
 <div class="side" id="lib">
  <div id="libraryContent"></div>
- <section id="layersPanel" class="studio-panel" aria-label="Capas" hidden>
+ <section id="layersPanel" aria-label="Capas" hidden>
+  <div class="layers-tools">
   <label>Estancia <select id="layersRoom"></select></label>
   <label>Buscar <input id="layersSearch" type="search" placeholder="Nombre o categoría"></label>
-  <small>Visibilidad temporal. Los ojos de categoría actúan sobre los resultados del filtro. Las luces y el render conservan su configuración.</small>
+   <details class="layers-help"><summary aria-label="Ayuda sobre visibilidad temporal">?</summary><p>Visibilidad temporal. Los ojos de categoría actúan sobre los resultados del filtro. Las luces y el render conservan su configuración.</p></details>
+  </div>
   <div id="layersTree"></div>
   <button id="layersFit" type="button" disabled>Encuadrar</button>
  </section>
@@ -1682,7 +1709,7 @@ function canLiftCamera(){
   !document.querySelector('dialog[open]')&&$('#fotoIAModal')?.style.display!=='flex';
 }
 function canNavigate3D(){return !editMode&&canLiftCamera()}
-const blocksCameraKeys=target=>target?.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"]),.studio-panel,.dd.open,.nuhio-render-workspace,#nuhioNav,#dualSplitter');
+const blocksCameraKeys=target=>target?.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"]),#layersPanel,.studio-panel,.dd.open,.nuhio-render-workspace,#nuhioNav,#dualSplitter');
 document.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
  if(key!=='control'&&key!=='shift'){cameraModifiers.clear();return}
@@ -1693,7 +1720,7 @@ document.addEventListener('pointerdown',()=>cameraModifiers.clear(),true);
 window.addEventListener('blur',()=>cameraModifiers.clear());
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&walk){e.preventDefault();exitWalk();return}
- if(e.target.closest?.('.studio-panel,#nuhioToolRow'))return;
+ if(e.target.closest?.('.studio-panel,#layersPanel,#nuhioToolRow'))return;
  if(e.target.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))return;
  if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();
  const key=e.key.toLowerCase();
@@ -7429,17 +7456,31 @@ function renderLayers(reindex=false){
  if(!groups.size){tree.textContent=query?'No hay coincidencias.':'No hay elementos en esta vista.';updateLayerSelection();return}
  function branch(parent,key,label,entries){
   const node=document.createElement('details'),summary=document.createElement('summary');
-  summary.textContent=label+' ('+entries.length+')';const header=document.createElement('div');header.className='layer-eye-row';header.append(layerEye(entries,label),node);node.append(summary);parent.append(header);
+  node.className='layer-branch';
+  const name=document.createElement('span'),count=document.createElement('span'),children=document.createElement('div');
+  name.className='layer-name';name.textContent=label;name.title=label;
+  count.className='layer-count';count.textContent=entries.length;
+  children.className='layer-children';
+  summary.append(name,count);
+  // The eye is a separate control, including when the branch is collapsed.
+  const eye=layerEye(entries,label),container=document.createElement('div');
+  container.className='layer-branch-wrap';
+  node.append(summary,children);container.append(node,eye);parent.append(container);
   node.open=Boolean(query)||layerOpen.get(key)!==false;
   summary.onclick=()=>{if(!query)layerOpen.set(key,!node.open)};
-  return node;
+  return children;
  }
  function row(parent,entry){
   const button=document.createElement('button');
-  button.type='button';button.dataset.layerKey=entry.key;button.textContent=entry.name;
+  button.type='button';button.dataset.layerKey=entry.key;
+  const name=document.createElement('span'),icon=document.createElement('span');
+  name.className='layer-name';name.textContent=entry.name;button.title=entry.name;
+  icon.className='layer-icon';icon.setAttribute('aria-hidden','true');
+  icon.textContent=({wall:'▥',opening:entry.branch==='Puertas'?'▯':'⊞',floor:'▱',ceiling:'▵'})[entry.kind]||layerIcons[entry.category];
+  button.append(icon,name);
   if(entry.status.length){const state=document.createElement('small');state.textContent=entry.status.join(' · ');button.append(state)}
   button.onclick=()=>selectLayerEntry(entry);
-  const line=document.createElement('div');line.className='layer-eye-row';line.append(layerEye([entry],entry.name),button);parent.append(line);
+  const line=document.createElement('div');line.className='layer-row';line.append(button,layerEye([entry],entry.name));parent.append(line);
  }
  for(const category of Object.keys(layerIcons)){
   const entries=groups.get(category);if(!entries)continue;
@@ -7470,6 +7511,7 @@ function selectLayerEntry(entry){
 }
 function showLibraryTab(layers){
  layersActive=layers;
+ $('#lib').classList.toggle('layers-active',layers);
  $('#layersPanel').hidden=!layers;
  $('#libraryContent').hidden=layers;
  $('#lib').scrollTop=0;
