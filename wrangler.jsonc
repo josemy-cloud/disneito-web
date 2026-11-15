@@ -8,6 +8,7 @@
     "binding": "ASSETS",
     "run_worker_first": [
       "/*",
+      "!/icons/*",
       "!/vendor/*",
       "!/materiales/*",
       "!/auth.js",
