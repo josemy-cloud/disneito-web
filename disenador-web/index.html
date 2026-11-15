@@ -3365,6 +3365,30 @@ function buildLivingWall(g,it,primary){
  buildLivingCabinet(cabinet,dims,primary,'wall');
 }
 
+function isChaiseSofa(it){
+ return (it.t==='sofa'||(it.t==='roomObject'&&it.shape==='sofa'))&&/chaise/i.test(it.n||'');
+}
+function chaiseLayout(w,d){
+ return {
+  extension:{x:-w*.264,width:w*.312},
+  seats:[[w*.0215,w*.259],[w*.2855,w*.269]],
+  rear:-d*.35,front:d*.48,shortFront:d*.135,backZ:-d*.393,
+  armX:w*.446,armZ:-d*.116,armDepth:d*.40
+ };
+}
+function chaisePlanZones(it){
+ const {w,d}=it;
+ const {extension,seats,front,shortFront,backZ,armX,armZ,armDepth}=chaiseLayout(w,d);
+ // Include the fixed back frame and close the narrow seams between seats.
+ const backEdge=backZ-d*.052-d*.053/2;
+ const shortLeft=seats[0][0]-seats[0][1]/2;
+ const shortRight=seats[1][0]+seats[1][1]/2;
+ return [
+  {x:extension.x,y:(backEdge+front)/2,w:extension.width,d:front-backEdge},
+  {x:(shortLeft+shortRight)/2,y:(backEdge+shortFront)/2,w:shortRight-shortLeft,d:shortFront-backEdge},
+  ...[-1,1].map(side=>({x:side*armX,y:armZ,w:w*.107,d:armDepth}))
+ ];
+}
 function buildChaiseStorage(g,it,{x,rear,front,width,baseY,seatY,seatH,frame,feet}){
  const length=front-rear,z=(rear+front)/2,wall=Math.min(2.2,width*.10,length*.08),height=seatY-baseY;
  const lidT=Math.min(1.7,it.h*.04);
@@ -5116,7 +5140,7 @@ BUILD.roomObject=(g,it,mt)=>{const w=it.w,h=it.h,d=it.d,v=it.variant||0,metal=M(
 case'sofa':{
  const tag=(mesh,key)=>{mesh.userData.part={t:key};mesh.castShadow=true;mesh.receiveShadow=key==='feet';return mesh};
  const name=(it.n||'').toLowerCase(),upholstery=M(it.col||'#a88f78',.88,.02),frame=M(it.col||'#a88f78',.85,.02),feet=M('#272c2e',.42,.42),stitch=M('#8f7c6c',.9,.01);
- const chaise=/chaise/.test(name),corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
+ const chaise=isChaiseSofa(it)?chaiseLayout(w,d):null,corner=/rinconero/.test(name),modular=/modular/.test(name),outdoor=/exterior|jard[ií]n/.test(name);
  const segmented=chaise||corner;
  applyUpholstery(it,upholstery,frame);
  stitch.color.copy(upholstery.color).multiplyScalar(.84);
@@ -5141,16 +5165,16 @@ case'sofa':{
   cushion.rotation.x=-.10;
  };
  if(chaise){
-  const front=d*.48,rear=-d*.35,zShort=d*.135,length=front-rear;
-  const x=-w*.264,width=w*.312,gap=w*.0025;
+  const {front,rear,shortFront:zShort,backZ,seats,extension:{x,width}}=chaise;
+  const length=front-rear,gap=w*.0025;
   const lid=buildChaiseStorage(g,it,{x,rear,front,width,baseY:h*.08,seatY,seatH,frame,feet});
   const lidT=Math.min(1.7,h*.04);
   tag(pad(lid,0,-seatH+lidT,length/2,width-gap,seatH-lidT,length-gap,upholstery),'seat');
-  for(const [center,span] of [[w*.0215,w*.259],[w*.2855,w*.269]]){
+  for(const [center,span] of seats){
    addSeat(center,(zShort+rear)/2,span-gap,zShort-rear);
-   addBack(center,span,-d*.393);
+   addBack(center,span,backZ);
   }
-  addBack(x,width,-d*.393);
+  addBack(x,width,backZ);
  }else if(corner){
   const rear=-d*.38,join=d*.025,front=d*.48;
   const left=-w*.403,right=w*.402,gap=Math.min(.72,w*.004),span=(right-left-2*gap)/3;
@@ -5180,8 +5204,8 @@ case'sofa':{
  }
  // Laterales apoyados en el bastidor. El retorno lleva su propio respaldo.
  for(const side of corner?[-1]:[-1,1]){
-  const ax=side*w*.446,armD=chaise?d*.40:corner?d*.40:d*.72;
-  const armZ=chaise?-d*.116:corner?-d*.17:-d*.025;
+  const ax=side*(chaise?chaise.armX:w*.446),armD=chaise?chaise.armDepth:corner?d*.40:d*.72;
+  const armZ=chaise?chaise.armZ:corner?-d*.17:-d*.025;
   tag(B(g,w*.106,h*.57,armD,ax,h*.365,armZ,frame,Math.min(7,w*.029)),'frame');
   tag(pad(g,ax,h*.60,armZ,w*.107,h*.12,armD*.97,upholstery),'arms');
   for(const end of [-1,1]){
@@ -7033,9 +7057,12 @@ function diningCollisionParts(it){
  return parts;
 }
 function furnitureCollisionParts(it){
- if(!isLCarousel(it))return diningCollisionParts(it)||terraceCollisionParts(it)||[it];
- const {w,d}=it,arm=cornerArm(it),angle=(it.r||0)*D,c=Math.cos(angle),s=Math.sin(angle);
+ const chaise=isChaiseSofa(it);
+ if(!chaise&&!isLCarousel(it))return diningCollisionParts(it)||terraceCollisionParts(it)||[it];
+ const angle=(it.r||0)*D,c=Math.cos(angle),s=Math.sin(angle);
  const part=(x,z,w,d)=>({...it,x:it.x+x*c-z*s,y:it.y+x*s+z*c,w,d});
+ if(chaise)return chaisePlanZones(it).map(({x,y,w,d})=>part(x,y,w,d));
+ const {w,d}=it,arm=cornerArm(it);
  return [part(0,(arm-d)/2,w,arm),part((arm-w)/2,arm/2,arm,d-arm)];
 }
 function canOverlapFloorRug(rug,item){
@@ -7055,7 +7082,7 @@ function fits(g,ignored){
  if(![w,h,d,e,g.x,g.y,g.r||0].every(Number.isFinite)||w<=0||h<=0||d<=0||e<0)return false;
  const A=cors(g);
  if(S.i.some(o=>{if(o.hid||o.id===g.id||ignored?.has(o.id))return false;if(g.rel&&g.rel.parentId==o.id||o.rel&&o.rel.parentId==g.id)return false;const ge=e,oe=+o.e||0;return ge<oe+(+o.h||0)-.01&&oe<ge+h-.01&&sat(A,cors(o))&&itemCollision(g,o)}))return false;
- const plan=isLCarousel(g)?furnitureCollisionParts(g).map(cors):[A];
+ const plan=isChaiseSofa(g)||isLCarousel(g)?furnitureCollisionParts(g).map(cors):[A];
  return !S.w.some(wall=>!ignored?.has(wall.id)&&e<(+wall.h||250)&&e+h>0&&plan.some(part=>sat(part,cors(wrect(wall)))))
 }
 function ghostCalc(wx,wy){if(!place)return;const g=ghost=Object.assign({},place);g.x=sn(wx);g.y=sn(wy);g.r=place.r||0;delete g.rel;
@@ -8002,6 +8029,7 @@ function traceFurniturePlan(ctx,it){
  ctx.lineTo(x,z);ctx.lineTo(x,d/2);ctx.lineTo(-w/2,d/2);ctx.closePath();
 }
 function insideFurniturePlan(it,x,z){
+ if(isChaiseSofa(it))return chaisePlanZones(it).some(zone=>Math.abs(x-zone.x)<=zone.w/2&&Math.abs(z-zone.y)<=zone.d/2);
  if(Math.abs(x)>=it.w/2||Math.abs(z)>=it.d/2)return false;
  if(!isLCarousel(it))return true;
  const arm=cornerArm(it);
