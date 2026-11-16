@@ -366,6 +366,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 </span><button id="bM" style="display:none">Cambiar a 3D</button><select id="sq" style="display:none"><option value="f">Vista rápida</option><option value="m" selected>3D con materiales</option><option value="q">Realista (sombras)</option></select>
 <span class="dd"><button id="bX" title="Exportar imagen">🖼 Imagen ▾</button><div class="ddm"><button id="bP2">Plano 2D (PNG)</button><button id="bP3">Captura 3D</button></div></span>
 <label><input type="checkbox" id="ck" checked> Ajuste</label>
+<label title="Mostrar la cuadrícula técnica del plano"><input type="checkbox" id="ckPlanGrid" checked> Cuadrícula</label>
 <label title="Elegir qué paredes ocultar o hacer transparentes"><input type="checkbox" id="ct"> 👁 Muros</label> <label title="Ocultar o mostrar todas las cotas del plano"><input type="checkbox" id="ckMeasures" checked> Medidas</label>
 <span id="v3" style="display:none"><label title="Mostrar el techo de las habitaciones"><input type="checkbox" id="ckc" checked> Techo</label> <button id="vT">Cenital</button><button id="vI">Isométrica</button><button id="vInterior" type="button">Interior</button><button id="vInteriorDetail" type="button" hidden>Detalle piloto</button> <button type="button" id="dayInterior" aria-pressed="false" title="Activa la vista Realista con luz de interior">Día interior</button><button type="button" id="sunsetInterior" aria-pressed="false" title="Reduce la luz exterior para apreciar las lámparas">Atardecer</button><button type="button" id="nightInterior" aria-pressed="false" title="Ver la escena con iluminación nocturna">Noche</button><button id="vW">Recorrer vivienda</button><button id="vO">Orbital</button> <label>Velocidad <input type="range" id="sp" min="1" max="8" value="3" style="width:55px"></label>
 <label>Dirección del sol <input type="range" id="sa" min="0" max="360" value="150" style="width:70px"></label><label>Altura del sol <input type="range" id="se" min="10" max="85" value="38" style="width:70px"></label></span>
@@ -1290,6 +1291,12 @@ function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerH
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
 /* ===== 2D ===== */
 const c2=$('#c2'),x2=c2.getContext('2d'),W2=(px,py)=>[(px-ox)/k,(py-oy)/k];
+const planGridControl=$('#ckPlanGrid');
+try{planGridControl.checked=localStorage.getItem('nuhio:plan-grid')!=='off'}catch{}
+planGridControl.onchange=()=>{
+ try{localStorage.setItem('nuhio:plan-grid',planGridControl.checked?'on':'off')}catch{}
+ draw();
+};
 function drawOpening2D(w,o){
  if(layerHidden('opening',o.id))return;
  const kind=openingKind(o),width=+o.wd,selected=planElementSelected('o',o.id);
@@ -1362,7 +1369,7 @@ function drawPlanRoomLabels(rooms,items){
  x2.restore();
 }
 const PLAN_STYLE=Object.freeze({
- background:'#fafafa',grid:'#e4e4e4',room:'rgba(61,123,224,.06)',selectedRoom:'rgba(61,123,224,.2)',
+ background:'#fafafa',grid:'#eaecef',room:'rgba(61,123,224,.06)',selectedRoom:'rgba(61,123,224,.2)',
  selection:'#176cc1',selectionWidth:2.2,wallDimension:'#647487',
  furnitureInk:'rgba(28,35,41,.34)',furnitureEdge:.8,furnitureRadius:.055,
  detailPx:23
@@ -1380,9 +1387,10 @@ function visiblePlanObjects(){
  }
  return {rugs,above:objects.concat(supported)};
 }
-function drawPlanBackground(width,height){
+function drawPlanBackground(width,height,showGrid){
  x2.fillStyle=PLAN_STYLE.background;
  x2.fillRect(0,0,width,height);
+ if(!showGrid)return;
  const step=50*k;
  x2.strokeStyle=PLAN_STYLE.grid;
  x2.lineWidth=1;
@@ -1665,7 +1673,7 @@ function draw(options){
  const width=c2.clientWidth,height=c2.clientHeight;
  if(c2.width!==width)c2.width=width;
  if(c2.height!==height)c2.height=height;
- drawPlanBackground(width,height);
+ drawPlanBackground(width,height,options?.showGrid??planGridControl.checked);
  const rooms=(S.rooms||[]).filter(room=>room.poly&&!layerHidden('floor',room.id));
  const {rugs,above}=visiblePlanObjects();
  x2.save();
@@ -7601,7 +7609,7 @@ const exportButtons=[$('#bP2'),$('#bP3')],imageMenu=$('#bX').nextElementSibling;
 const imageActions=[[$('#bReal'),'Generar render'],[$('#bFotoIA'),'Crear Foto IA'],[$('#bP3'),'Descargar captura 3D'],[$('#bP2'),'Descargar plano 2D (PNG)']]
  .map(([button,label])=>({button,label,original:button.textContent}));
 const nuhioOptions=$('#nuhioOptions');
-const desktopOptions=['#ck','#ct','#ckMeasures'].map(id=>$(id).closest('label'));
+const desktopOptions=['#ck','#ckPlanGrid','#ct','#ckMeasures'].map(id=>$(id).closest('label'));
 const desktopActions=[$('#tl'),$('#tlayers'),$('#tr')];
 const navTab=$('#nuhioNavTab'),navPin=$('#nuhioPin');
 let navPinned=true;
