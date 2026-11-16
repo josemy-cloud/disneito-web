@@ -246,7 +246,10 @@ body.editor-booting > #editorBoot{display:grid;place-content:center;justify-item
 #planGpuStage{position:absolute;inset:0;pointer-events:none}
 #planGpuStage[hidden]{display:none!important}
 #planGpuStage canvas{width:100%!important;height:100%!important;display:block;pointer-events:none}
-#planGpuStage:not([hidden])+canvas{background:transparent}
+#planGpuStage:not([hidden])+canvas,
+body:not(.ui-legacy) #view.view-dual #planGpuStage:not([hidden])+canvas{background:transparent;border:0}
+#view.view-dual #planGpuStage{bottom:auto;height:var(--dual-ratio)}
+body.desktop-workspace #view.view-dual #planGpuStage{right:auto;width:var(--dual-ratio);height:100%}
 
 </style><link rel="stylesheet" href="ui-redesign.css?v=11" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 <style>
@@ -536,9 +539,9 @@ if(draftAccount)try{
 }catch{}
 function commit(change){
  roomsUpdate();commitQ();
- const transform=change==='plan-transform'&&mode==='2d'&&!planGpuStage.hidden;
+ const transform=change==='plan-transform'&&!planGpuStage.hidden;
  if(transform)planTransformsDirty=true;
- refresh(transform);
+ refresh(transform,transform);
 }
 function loadS(s){editorHidden.clear();if(drag?.group||drag?.marquee)drag=null;S=migrate(JSON.parse(s));roomsUpdate();sel=null;refresh()}
 function undo(){if(H.length>1){F.push(H.pop());loadS(H[H.length-1]);persistEdit(JSON.stringify(S))}}
@@ -1253,7 +1256,7 @@ function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerH
    });
    appendMotionButton(P,e,motions,commitQ,true);
   }
-  if(hasItemLight(e))appendLightButton(P,e,()=>{if(mode!=='3d')setMode('3d');commit()});
+  if(hasItemLight(e))appendLightButton(P,e,()=>commitFixtureLight(e));
   if(hasUpholstery(e)){
    const labels={...SOFA_FABRICS,...(e.upholsteryImage?{custom:'Imagen personalizada'}:{})};
    sel2('Tapicería',Object.keys(labels),e.upholsteryImage?'custom':sofaFabric(e),v=>{if(v!=='custom'){delete e.upholsteryImage;e.upholstery=v}},labels);
@@ -1304,7 +1307,7 @@ function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerH
 const c2=$('#c2'),x2=c2.getContext('2d'),W2=(px,py)=>[(px-ox)/k,(py-oy)/k];
 const planGpuStage=$('#planGpuStage');
 const planMeshById=new Map();
-let planGpuFailed=false,planGpuFrame=0,planOrtho=null,planTransformsDirty=false,planContactsDirty=true;
+let planSplitRenderer=null,planSplitFailed=false,planGpuFailed=false,planGpuFrame=0,planOrtho=null,planTransformsDirty=false,planContactsDirty=true;
 const planGridControl=$('#ckPlanGrid');
 try{planGridControl.checked=localStorage.getItem('nuhio:plan-grid')!=='off'}catch{}
 planGridControl.onchange=()=>{
@@ -2928,14 +2931,15 @@ const fixtureColor=(it,fallback)=>Object.hasOwn(LIGHT_TONES,it.lightTone)?LIGHT_
 const hasAdjustableLight=it=>isLightingFixture(it)||(it.t==='mod'&&it.cfg?.k==='alto'&&!!it.cfg.led);
 const BUILD={
 ceilingSpot(g,it,mt){
- const radius=Math.min(it.w,it.d)/2,power=fixturePower(it)/100,warm='#ffe3b5';
+ const radius=Math.min(it.w,it.d)/2,warm='#ffe3b5';
  const mount=new T.Mesh(new T.CylinderGeometry(radius,radius,it.h*.8,32),mt);
  mount.position.y=it.h*.6;mount.userData.ceilingSpotVisual=true;g.add(mount);
  const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15));
- lens.position.y=it.h*.1;lens.material.toneMapped=!fixtureIsOn(it);lens.userData.ceilingSpotVisual=true;g.add(lens);
- if(!fixtureIsOn(it))return;
- const light=new T.SpotLight(fixtureColor(it,warm),5.5*power,750,it.wideBeam?.68:.42,.65,1);
- light.userData.fixtureShadow=true;
+ lens.position.y=it.h*.1;lens.userData.ceilingSpotVisual=true;g.add(lens);
+ lens.material.userData.fixtureEmission.toggleToneMapping=true;
+ syncFixtureEmission(lens.material,it);
+ const light=new T.SpotLight(warm,0,750,it.wideBeam?.68:.42,.65,1);
+ bindFixtureLight(light,it,warm,5.5);
  light.position.y=-.25;light.target.position.y=-200;
  g.add(light,light.target);
 },
@@ -3642,25 +3646,53 @@ function buildBedroomLamp(g,it,primary){
  applyLampLight(g,it,globe,shade);
  for(const side of [-1,1])bedroomTube(g,[0,low+shadeH*.66,0],[side*r*.67,low+shadeH*.66,0],.24,bulb);
 }
+function syncFixtureEmission(material,it){
+ const emission=material?.userData.fixtureEmission;
+ if(!emission)return;
+ const on=fixtureIsOn(it);
+ material.emissive.set(fixtureColor(it,emission.color));
+ material.emissiveIntensity=on?emission.intensity*fixturePower(it)/100:0;
+ if(emission.toggleToneMapping&&material.toneMapped===on){
+  material.toneMapped=!on;
+  material.needsUpdate=true;
+ }
+ if(emission.bulb){
+  if(on)material.userData.castsRenderShadow=false;
+  else delete material.userData.castsRenderShadow;
+ }
+}
+function bindFixtureEmission(material,it,color,intensity,bulb=false){
+ material.userData.fixtureEmission={color,intensity,bulb};
+ syncFixtureEmission(material,it);
+ return material;
+}
 function fixtureMaterial(it,color,intensity){
- return new T.MeshStandardMaterial({color,emissive:fixtureColor(it,color),emissiveIntensity:fixtureIsOn(it)?intensity*fixturePower(it)/100:0,roughness:.35});
+ return bindFixtureEmission(new T.MeshStandardMaterial({color,roughness:.35}),it,color,intensity);
+}
+function syncFixtureSource(light,it){
+ const {color,intensity}=light.userData.fixtureSource;
+ light.visible=fixtureIsOn(it);
+ light.intensity=light.visible?intensity*fixturePower(it)/100:0;
+ light.color.set(fixtureColor(it,color));
+}
+function bindFixtureLight(light,it,color,intensity){
+ light.userData.fixtureShadow=true;
+ light.userData.fixtureSource={color,intensity};
+ syncFixtureSource(light,it);
 }
 function addFixtureLight(g,it,color,intensity,distance,x,y,z){
- if(!it.lightOn)return;
- const light=new T.PointLight(fixtureColor(it,color),intensity*fixturePower(it)/100,distance,1);
- light.userData.fixtureShadow=true;
+ const light=new T.PointLight(color,0,distance,1);
+ bindFixtureLight(light,it,color,intensity);
  light.position.set(x,y,z);g.add(light);
 }
 function applyLampLight(g,it,bulb,shade){
- if(!it.lightOn)return;
- const warm=fixtureColor(it,'#ffe4b7'),power=fixturePower(it)/100;
+ const warm='#ffe4b7';
  bulb.material=bulb.material.clone();
- // La luz puntual se origina dentro de la bombilla.
- bulb.material.userData.castsRenderShadow=false;
- bulb.material.emissive.set(warm);bulb.material.emissiveIntensity=2.6*power;
- if(shade?.emissive){shade.emissive.set(warm);shade.emissiveIntensity=.18*power}
- const light=new T.PointLight(warm,1.35*power,320,1);
- light.name='Luz de lámpara';light.userData.fixtureShadow=true;
+ bindFixtureEmission(bulb.material,it,warm,2.6,true);
+ if(shade?.emissive)bindFixtureEmission(shade,it,warm,.18);
+ const light=new T.PointLight(warm,0,320,1);
+ light.name='Luz de lámpara';
+ bindFixtureLight(light,it,warm,1.35);
  light.position.copy(bulb.position);g.add(light);
 }
 
@@ -6651,10 +6683,11 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
 }
 function configureFixtureShadows(scene,coarse){
  const fixtures=[];
- scene.traverse(light=>{if(light.isLight&&light.userData.fixtureShadow)fixtures.push(light)});
+ scene.traverse(light=>{if(light.isLight&&light.userData.fixtureShadow){light.castShadow=false;fixtures.push(light)}});
  fixtures.sort((a,b)=>Number(b.isSpotLight===true)-Number(a.isSpotLight===true)||b.intensity-a.intensity);
  let spots=0,points=0;
  for(const light of fixtures){
+  if(!light.visible||light.intensity<=0)continue;
   // Una luz puntual necesita seis caras de sombra; se reserva un único mapa cúbico.
   if(light.isSpotLight){
    if(spots>=(coarse?2:4))continue;
@@ -6671,6 +6704,9 @@ function configureFixtureShadows(scene,coarse){
   shadow.camera.far=light.distance||750;
   shadow.camera.updateProjectionMatrix();
   shadow.normalBias=.30;shadow.bias=-.00018;shadow.radius=2;
+ }
+ for(const light of fixtures)if(!light.castShadow&&light.shadow.map){
+  light.shadow.map.dispose();light.shadow.map=null;
  }
 }
 function build3d(){if(!r3)return;roomsUpdate();
@@ -6909,7 +6945,7 @@ const walkInteract=$('#walkInteract');
 function activateWalkAction(){
  const action=walkAction();
  if(action?.motion){toggleMotion(action.motion);commitQ();draw()}
- else if(action?.item){action.item.lightOn=!fixtureIsOn(action.item);commit()}
+ else if(action?.item){action.item.lightOn=!fixtureIsOn(action.item);commitFixtureLight(action.item)}
 }
 walkInteract.onclick=()=>{if(walk)activateWalkAction()};
 function walkAction(){
@@ -6941,7 +6977,13 @@ function animate(){requestAnimationFrame(animate);
   else navigationHeld.clear();
  }
  walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return;
- MV.forEach(m=>stepMV(m));
+ let planMotion=false;
+ for(const motion of MV){
+  const before=motion.v;
+  stepMV(motion);
+  if(dualView&&Math.abs(motion.v-before)>.0005)planMotion=true;
+ }
+ if(planMotion)requestPlanGpu();
  if(walk&&now-lastWalkPick>=100){
   lastWalkPick=now;
   const interactive=!!walkAction();
@@ -6994,6 +7036,7 @@ function positionTouchModel(it){
  model.position.set(it.x,it.e,it.y);model.updateMatrixWorld(true);
  const visualVisible=syncCeilingSpotVisuals(model,it);
  for(const overlay of root.children)if(overlay.object===model){overlay.visible=visualVisible;overlay.update();}
+ if(dualView){planContactsDirty=true;draw()}
 }
 function finishItemTouch(cancel=false){
  const gesture=itemTouchDrag;
@@ -7098,7 +7141,7 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
  if(mv&&!it){toggleMotion(mv);commitQ();return}
  if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
 /* ===== Control general ===== */
-function refresh(light){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();draw();if(mode=='3d'||!light)build3d();props()}
+function refresh(light,planTransform=false){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();draw();if(!planTransform&&(mode=='3d'||!light))build3d();props()}
 const editorView=$('#view');
 const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';editorView.append(dualSplitter);
 dualSplitter.tabIndex=0;
@@ -7158,12 +7201,33 @@ dualSplitter.addEventListener('keydown',e=>{
 });
 $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
+function activePlanRenderer(){
+ return dualView?planSplitRenderer:r3;
+}
 function updatePlanGpuSurface(){
- const enabled=mode==='2d'&&r3&&!planGpuFailed;
+ if(dualView&&r3&&!planSplitRenderer&&!planSplitFailed){
+  // A second surface draws the same scene without moving the perspective canvas or copying pixels.
+  planSplitRenderer=createWebGLRenderer({antialias:true,powerPreference:'high-performance'});
+  planSplitFailed=!planSplitRenderer;
+  if(planSplitRenderer){
+   planSplitRenderer.outputEncoding=r3.outputEncoding;
+   planSplitRenderer.toneMapping=r3.toneMapping;
+   const surface=planSplitRenderer.domElement;
+   surface.addEventListener('webglcontextlost',event=>{event.preventDefault();planSplitFailed=true;if(dualView)draw()});
+   surface.addEventListener('webglcontextrestored',()=>{planSplitFailed=false;if(dualView)draw()});
+  }
+ }
+ const plan=activePlanRenderer();
+ const enabled=!!(plan&&(dualView?!planSplitFailed:mode==='2d'&&!planGpuFailed));
  planGpuStage.hidden=!enabled;
  if(r3){
-  const target=enabled?planGpuStage:d3;
+  const target=enabled&&!dualView?planGpuStage:d3;
   if(r3.domElement.parentNode!==target)target.append(r3.domElement);
+ }
+ if(planSplitRenderer){
+  const surface=planSplitRenderer.domElement;
+  if(enabled&&dualView){if(surface.parentNode!==planGpuStage)planGpuStage.append(surface)}
+  else surface.remove();
  }
  if(!enabled&&planGpuFrame){cancelAnimationFrame(planGpuFrame);planGpuFrame=0}
  return enabled;
@@ -7175,7 +7239,8 @@ function requestPlanGpu(){
   if(planGpuStage.hidden||RVo)return;
   try{renderPlanGpu()}catch(error){
    console.warn('Plano WebGL no disponible. Se conserva el dibujo Canvas.',error);
-   planGpuFailed=true;
+   if(dualView)planSplitFailed=true;
+   else planGpuFailed=true;
    draw();
   }
  });
@@ -7194,6 +7259,7 @@ function syncPlanGpuTransforms(){
   node.position.set(item.x,item.e||0,item.y);
   node.rotation.y=-(item.r||0)*D;
  }
+ for(const node of root.children)if(node.userData.editorOverlay&&node.object)node.update();
  planContactsDirty=true;
 }
 function updatePlanContacts(){
@@ -7222,13 +7288,14 @@ function planWallInMotion(id){
  return (drag.mv==='w'&&drag.e.id===id)||(drag.op&&drag.op.w==id);
 }
 function renderPlanGpu(){
+ const renderer=activePlanRenderer();
  const w=c2.clientWidth,h=c2.clientHeight;
  if(!w||!h)return;
- if(r3.getContext().isContextLost())throw Error('Contexto WebGL perdido.');
+ if(renderer.getContext().isContextLost())throw Error('Contexto WebGL perdido.');
  const ratio=Math.min(devicePixelRatio||1,1.25,Math.sqrt(1000000/(w*h)));
  const px=Math.max(1,Math.round(w*ratio)),py=Math.max(1,Math.round(h*ratio));
- if(r3.getPixelRatio()!==1)r3.setPixelRatio(1);
- if(r3.domElement.width!==px||r3.domElement.height!==py)r3.setSize(px,py,false);
+ if(renderer.getPixelRatio()!==1)renderer.setPixelRatio(1);
+ if(renderer.domElement.width!==px||renderer.domElement.height!==py)renderer.setSize(px,py,false);
  syncPlanGpuTransforms();
  updatePlanContacts();
  const camera=planOrtho||(planOrtho=new T.OrthographicCamera(-1,1,1,-1,1,6000));
@@ -7243,31 +7310,32 @@ function renderPlanGpu(){
  }
  if(editorHidden.size)root.traverse(node=>{if(node.isMesh&&layerMeshHidden(node))hide(node)});
  hide(realisticDetails);
- const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,fill:fill.intensity,rim:rim.intensity,shadows:r3.shadowMap.enabled,exposure:r3.toneMappingExposure};
+ const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,fill:fill.intensity,rim:rim.intensity,shadows:renderer.shadowMap.enabled,exposure:renderer.toneMappingExposure};
  try{
   // The overhead look uses soft contact and modest directional fill.
   sc.background=planGpuBackground;
   hemi.intensity=.72;sun.intensity=.36;fill.intensity=.08;rim.intensity=0;
-  r3.shadowMap.enabled=false;r3.toneMappingExposure=.88;
+  renderer.shadowMap.enabled=false;renderer.toneMappingExposure=.88;
   planContactGroup.visible=true;
-  r3.render(sc,camera);
+  renderer.render(sc,camera);
  }finally{
   planContactGroup.visible=false;
   for(const node of masked)node.visible=true;
   sc.background=before.bg;hemi.intensity=before.hemi;sun.intensity=before.sun;fill.intensity=before.fill;rim.intensity=before.rim;
-  r3.shadowMap.enabled=before.shadows;r3.toneMappingExposure=before.exposure;
+  renderer.shadowMap.enabled=before.shadows;renderer.toneMappingExposure=before.exposure;
  }
 }
 if(r3){
  r3.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();planGpuFailed=true;if(mode==='2d')draw()});
  r3.domElement.addEventListener('webglcontextrestored',()=>{planGpuFailed=false;if(mode==='2d')refresh()});
 }
-let startupOrbitPending=true;
+let startupOrbitPending=true,previousPlanSize=null;
 function setMode(m){
  if(m!=='2d'&&!requireSceneRenderer())return;
  startupOrbitPending=false;finishItemTouch(true);stopOrbit();
  if(walk)exitWalk();
  navigationHeld.clear();cameraModifiers.clear();
+ if(c2.clientWidth&&c2.clientHeight)previousPlanSize=[c2.clientWidth,c2.clientHeight];
  dualView=m==='dual';mode=dualView?'3d':m;
  const dual=dualView,showPlan=mode==='2d'||dual,showModel=mode==='3d';
  planMove.hidden=!showPlan;
@@ -7276,6 +7344,10 @@ function setMode(m){
  editorView.style.setProperty('--dual-ratio',(dualRatio*100)+'%');
  c2.style.display=showPlan?'block':'none';
  d3.style.display=showModel?'block':'none';
+ if(showPlan&&previousPlanSize){
+  ox+=(c2.clientWidth-previousPlanSize[0])/2;
+  oy+=(c2.clientHeight-previousPlanSize[1])/2;
+ }
  updatePlanGpuSurface();
  $('#v3').style.display=showModel?'inline':'none';
  $('#bM').textContent=mode==='2d'?'Cambiar a 3D':'Cambiar a 2D';
@@ -7409,7 +7481,7 @@ $('#bP2').onclick=()=>{
   try{
    renderPlanGpu();
    image=document.createElement('canvas');image.width=c2.width;image.height=c2.height;
-   const ctx=image.getContext('2d');ctx.drawImage(r3.domElement,0,0,image.width,image.height);ctx.drawImage(c2,0,0);
+   const ctx=image.getContext('2d');ctx.drawImage(activePlanRenderer().domElement,0,0,image.width,image.height);ctx.drawImage(c2,0,0);
   }catch{draw({technical:true})}
  }
  image.toBlob(b=>dl(URL.createObjectURL(b),S.nm+'-plano.png'));
@@ -7967,6 +8039,7 @@ function layerMeshHidden(mesh){
  return false;
 }
 function renderLayerViewport(){
+ if(dualView)syncPlanGpuTransforms();
  if(!editorHidden.size){r3.render(sc,cam);return}
  const hidden=[];
  const hide=node=>{if(node.visible){node.visible=false;hidden.push(node)}};
@@ -10717,6 +10790,18 @@ function appendMotionButton(panel,it,motions,save,show3D=false){
  };
  panel.append(button,' ');
 }
+function commitFixtureLight(it){
+ const group=planMeshById.get(it.id);
+ group?.traverse(node=>{
+  if(node.userData.fixtureSource)syncFixtureSource(node,it);
+  if(node.isMesh)for(const material of [].concat(node.material))syncFixtureEmission(material,it);
+ });
+ if(group&&(RVo||$('#sq').value==='q'))configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
+ commitQ();
+ requestPlanGpu();
+ props();
+ syncLightsDock(mode==='3d');
+}
 function appendLightButton(panel,it,save){
  const button=document.createElement('button');button.type='button';
  const update=()=>{button.textContent=fixtureIsOn(it)?'Apagar luz':'Encender luz';button.setAttribute('aria-pressed',String(fixtureIsOn(it)))};
@@ -10760,7 +10845,7 @@ function syncLightsDock(is3D){
  fixtures.forEach((it,index)=>{
   const group=document.createElement('fieldset'),legend=document.createElement('legend');
   legend.textContent=(index+1)+'. '+(it.n||'Lámpara');
-  group.append(legend);appendLightButton(group,it,commit);panel.append(group);
+  group.append(legend);appendLightButton(group,it,()=>commitFixtureLight(it));panel.append(group);
  });
  if(focusIndex>=0)panel.querySelectorAll('button,input,select')[focusIndex]?.focus({preventScroll:true});
  panel.scrollTop=scroll;
