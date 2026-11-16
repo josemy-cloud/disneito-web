@@ -8045,39 +8045,98 @@ function traceChaisePlan(ctx,zones){
  ctx.lineTo(left,armBack);
  ctx.closePath();
 }
-function drawPlanUpholstery(ctx,x,y,w,d,color,radius,zoom){
- const left=x-w/2,top=y-d/2;
+function tracePlanCushion(ctx,left,top,w,d,radius){
+ const right=left+w,bottom=top+d;
+ const r=Math.min(radius,w*.22,d*.22),bow=r*.23;
  ctx.beginPath();
- ctx.roundRect(left,top,w,d,Math.min(radius,w/2,d/2));
+ ctx.moveTo(left+r,top+bow);
+ ctx.quadraticCurveTo(left+w/2,top-bow,right-r,top+bow);
+ ctx.quadraticCurveTo(right-bow,top+bow,right-bow,top+r);
+ ctx.quadraticCurveTo(right+bow,top+d/2,right-bow,bottom-r);
+ ctx.quadraticCurveTo(right-bow,bottom-bow,right-r,bottom-bow);
+ ctx.quadraticCurveTo(left+w/2,bottom+bow,left+r,bottom-bow);
+ ctx.quadraticCurveTo(left+bow,bottom-bow,left+bow,bottom-r);
+ ctx.quadraticCurveTo(left-bow,top+d/2,left+bow,top+r);
+ ctx.quadraticCurveTo(left+bow,top+bow,left+r,top+bow);
+ ctx.closePath();
+}
+function drawPlanUpholstery(ctx,x,y,w,d,color,radius,detail,zoom){
+ const left=x-w/2,top=y-d/2;
+ tracePlanCushion(ctx,left,top,w,d,radius);
  ctx.fillStyle=color;
  ctx.fill();
- ctx.strokeStyle='rgba(30,25,22,.28)';
- ctx.lineWidth=.85/zoom;
+ // Compose neutral light over the configured upholstery color.
+ ctx.save();
+ ctx.translate(x,y);
+ ctx.scale(w,d);
+ const light=ctx.createRadialGradient(-.12,-.18,.03,0,0,.68);
+ light.addColorStop(0,'rgba(255,255,255,.14)');
+ light.addColorStop(.35,'rgba(255,255,255,.18)');
+ light.addColorStop(.70,'rgba(255,255,255,.05)');
+ light.addColorStop(1,'rgba(20,15,12,.20)');
+ ctx.fillStyle=light;
+ ctx.fill();
+ ctx.restore();
+
+ ctx.strokeStyle='rgba(25,20,18,.27)';
+ ctx.lineWidth=.8/zoom;
  ctx.stroke();
+ if(detail){
+  const inset=Math.min(w,d)*.047;
+  tracePlanCushion(ctx,left+inset,top+inset,w-2*inset,d-2*inset,radius);
+  ctx.strokeStyle='rgba(255,255,255,.26)';
+  ctx.lineWidth=.65/zoom;
+  ctx.stroke();
+ }
 }
-function drawChaisePlan(ctx,it,selected,zoom){
- const layout=chaiseLayout(it.w,it.d);
- const zones=chaisePlanZones(it,layout);
+function paintChaisePlan(ctx,it,layout,zones,zoom,detail){
  const {extension,seats,rear,front,shortFront,gap,backZ,backDepth,armX,armZ,armWidth,armDepth}=layout;
  const color=it.col||'#a88f78',parts=it.partColors||{};
  traceChaisePlan(ctx,zones);
  ctx.fillStyle=parts.frame||color;
  ctx.fill();
- ctx.fillStyle='rgba(0,0,0,.22)';
+ ctx.fillStyle='rgba(20,15,12,.26)';
  ctx.fill();
+ if(!detail)return;
 
- if(Math.min(it.w,it.d)*zoom>=36){
-  const radius=it.h*.19*.39;
-  drawPlanUpholstery(ctx,extension.x,(rear+front)/2,extension.width-gap,front-rear-gap,parts.seat||color,radius,zoom);
-  for(const [x,w] of seats)drawPlanUpholstery(ctx,x,(rear+shortFront)/2,w-gap,shortFront-rear,parts.seat||color,radius,zoom);
-  const backFront=backZ+backDepth/2,backEdge=zones[0].y-zones[0].d/2;
-  const backTop=Math.max(backEdge,backZ-backDepth/2);
-  for(const [x,w] of [[extension.x,extension.width],...seats]){
-   drawPlanUpholstery(ctx,x,(backTop+backFront)/2,w-gap,backFront-backTop,parts.back||color,radius,zoom);
-  }
-  for(const side of [-1,1])drawPlanUpholstery(ctx,side*armX,armZ,armWidth,armDepth*.97,parts.arms||color,radius,zoom);
+ const radius=it.h*.19*.54,seam=detail===2;
+ drawPlanUpholstery(ctx,extension.x,(rear+front)/2,extension.width-gap,front-rear-gap,parts.seat||color,radius,seam,zoom);
+ for(const [x,w] of seats)drawPlanUpholstery(ctx,x,(rear+shortFront)/2,w-gap,shortFront-rear,parts.seat||color,radius,seam,zoom);
+ const backFront=backZ+backDepth/2,backEdge=zones[0].y-zones[0].d/2;
+ const backTop=Math.max(backEdge,backZ-backDepth/2);
+ for(const [x,w] of [[extension.x,extension.width],...seats]){
+  drawPlanUpholstery(ctx,x,(backTop+backFront)/2,w-gap,backFront-backTop,parts.back||color,radius,seam,zoom);
  }
-
+ for(const side of [-1,1])drawPlanUpholstery(ctx,side*armX,armZ,armWidth,armDepth*.97,parts.arms||color,radius,seam,zoom);
+}
+const chaisePlanPaintCache=new Map();
+function drawChaisePlan(ctx,it,selected,zoom){
+ const layout=chaiseLayout(it.w,it.d),zones=chaisePlanZones(it,layout);
+ const screenDepth=Math.min(it.w,it.d)*zoom;
+ const detail=screenDepth>=110?2:screenDepth>=36?1:0;
+ if(detail){
+  // Cache only local paint. The live Canvas transform handles position and rotation.
+  const density=Math.min(window.devicePixelRatio||1,2);
+  const scale=Math.min(768/Math.max(it.w,it.d),2**Math.ceil(Math.log2(zoom*density)));
+  const {frame,seat,back,arms}=it.partColors||{};
+  const key=JSON.stringify([it.w,it.d,it.h,it.col,frame,seat,back,arms,detail,scale]);
+  let paint=chaisePlanPaintCache.get(key);
+  if(!paint){
+   const surface=document.createElement('canvas');
+   surface.width=Math.ceil(it.w*scale)+4;
+   surface.height=Math.ceil(it.d*scale)+4;
+   const brush=surface.getContext('2d');
+   brush.translate(surface.width/2,surface.height/2);
+   brush.scale(scale,scale);
+   paintChaisePlan(brush,it,layout,zones,scale/density,detail);
+   paint={surface,w:surface.width/scale,d:surface.height/scale};
+   if(chaisePlanPaintCache.size>=8)chaisePlanPaintCache.delete(chaisePlanPaintCache.keys().next().value);
+   chaisePlanPaintCache.set(key,paint);
+  }
+  ctx.drawImage(paint.surface,-paint.w/2,-paint.d/2,paint.w,paint.d);
+ }else{
+  paintChaisePlan(ctx,it,layout,zones,zoom,0);
+ }
  traceChaisePlan(ctx,zones);
  ctx.lineJoin='round';
  ctx.strokeStyle=selected?'#176cc1':'rgba(44,39,35,.74)';
