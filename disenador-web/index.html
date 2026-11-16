@@ -2132,8 +2132,22 @@ document.addEventListener('pointerdown',()=>cameraModifiers.clear(),true);
 window.addEventListener('blur',()=>cameraModifiers.clear());
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&walk){e.preventDefault();exitWalk();return}
- if(e.target.closest?.('.studio-panel,#layersPanel,#nuhioToolRow'))return;
  if(e.target.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))return;
+ if(e.key==='Escape'){
+  if(pvOpen){e.preventDefault();$('#pvx').click();return}
+  if(RVo||document.querySelector('dialog[open]')||$('#fotoIAModal')?.style.display==='flex')return;
+  const hadSelection=!!sel;
+  if(drag?.group){shiftPlanGroup(drag,0,0);drag=null}
+  if(drag?.marquee)drag=null;
+  sel=null;selPart=null;
+  ghost=null;place=null;measA=null;smode=false;
+  closePreview();cur=null;armed=null;tool='sel';buf='';
+  drawTools();libUI();hint();
+  if(hadSelection){e.preventDefault();refresh()}
+  else draw();
+  return;
+ }
+ if(e.target.closest?.('.studio-panel,#layersPanel,#nuhioToolRow'))return;
 
  if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();
  const key=e.key.toLowerCase();
@@ -2149,8 +2163,6 @@ document.addEventListener('keydown',e=>{
   if((key==='c'&&copyPlanSelection())||(key==='v'&&pastePlanSelection())){e.preventDefault();return}
  }
  if(e.ctrlKey&&e.key=='z'){undo();return}if(e.ctrlKey&&e.key=='y'){redo();return}
- if(e.key=='Escape'&&pvOpen){e.preventDefault();$('#pvx').click();return}
- if(e.key=='Escape'){if(drag?.group){shiftPlanGroup(drag,0,0);drag=null}if(drag?.marquee)drag=null;if(sel?.k==='group'){sel=null;refresh()}ghost=null;place=null;measA=null;smode=false;selPart=null;closePreview();exitWalk();cur=null;armed=null;tool='sel';buf='';drawTools();libUI();hint();draw()}
  if((e.key==='Delete'||e.key==='Backspace')&&sel&&!drag&&!e.target.isContentEditable){
   if(deletePlanSelection()){e.preventDefault();return}
   const el=get();if(!el||sel.k==='rooms')return;
