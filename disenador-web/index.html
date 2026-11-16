@@ -243,17 +243,16 @@ body.compact-workspace #mobileViews #mvDual{display:none}
 body.editor-booting{background:#e8eff9}
 body.editor-booting > :not(#editorBoot){visibility:hidden}
 body.editor-booting > #editorBoot{display:grid;place-content:center;justify-items:center;gap:12px;position:fixed;inset:0;background:#e8eff9;color:#132f50;text-align:center;padding:24px;z-index:1000}
-#realPlan{width:min(1120px,calc(100vw - 24px));height:min(820px,calc(100dvh - 24px));max-width:none;max-height:none;padding:0;border:1px solid #c6cfda;border-radius:12px;background:#f6f8fa;color:#273846;overflow:hidden}
-#realPlan[open]{display:flex;flex-direction:column}
-#realPlan::backdrop{background:#1b2538a6}
-#realPlan header{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#f7faff;border-bottom:1px solid #dce4ee}
-#realPlan header strong{margin-right:auto}
-#realPlan button{min-height:34px;padding:4px 10px;color:#254466;background:#fff;border:1px solid #c1cee0;border-radius:6px}
-#realPlan button:hover,#realPlan button:focus-visible{background:#e8f2ff}
-#realPlanStage{position:relative;flex:1;min-height:0;overflow:hidden}
-#realPlanCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#realPlanCanvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#realPlanCanvas[hidden]{display:none!important}
 #realPlanCanvas:active{cursor:grabbing}
-#realPlanStatus{position:absolute;bottom:8px;left:12px;margin:0;background:#f7faffdf;padding:4px 8px;border-radius:4px;pointer-events:none}
+#realPlanCanvas:focus-visible{outline:2px solid #176cc1;outline-offset:-2px}
+body.real-plan-view.compact-workspace #mobileBar{grid-template-columns:1fr}
+body.real-plan-view.compact-workspace #mobileBar button[hidden]{display:none!important}
+#realPlanStatus{position:absolute;top:12px;left:12px;margin:0;background:#f7faffed;color:#273846;padding:4px 8px;border-radius:4px;pointer-events:none}
+#realPlanStatus[hidden],#realPlanStatus:empty{display:none}
+body.real-plan-view #tools,body.real-plan-view #bMo,body.real-plan-view #openingType,body.real-plan-view .studio-step,
+body.real-plan-view label:has(:is(#ck,#ckPlanGrid,#ckMeasures,#ct)){display:none!important}
 </style><link rel="stylesheet" href="ui-redesign.css?v=11" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 <style>
 #bPbr{display:none!important}
@@ -416,6 +415,8 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
  </section>
 </div>
 <div id="view"><canvas id="c2"></canvas><div id="d3"></div>
+<canvas id="realPlanCanvas" tabindex="0" aria-label="Planta realista. Arrastra para desplazarte, usa la rueda o las teclas más y menos para acercar y alejar." hidden></canvas>
+<p id="realPlanStatus" role="status" hidden></p>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
 <button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><details id="lightsDock" hidden><summary>Luces</summary><div id="lightsList"></div></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido</button><button id="walkInteract" type="button" hidden disabled>Interactuar</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento"><span aria-hidden="true"></span></button>
@@ -425,15 +426,6 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <div class="side" id="pr" aria-label="Propiedades"></div></div>
 <div id="sb"><span id="editorStatus"></span><span id="editorHint"></span></div>
 <div id="cat"></div>
-<dialog id="realPlan" aria-labelledby="realPlanTitle">
- <header><strong id="realPlanTitle">Planta realista</strong>
-  <button id="realPlanFit" type="button">Encuadrar</button>
-  <button id="realPlanOut" type="button" aria-label="Alejar">−</button>
-  <button id="realPlanIn" type="button" aria-label="Acercar">+</button>
-  <button id="realPlanClose" type="button">Plano técnico</button>
- </header>
- <div id="realPlanStage"><canvas id="realPlanCanvas" aria-label="Presentación cenital del proyecto"></canvas><p id="realPlanStatus" role="status"></p></div>
-</dialog>
 <dialog id="pv" aria-labelledby="pvTitle"><div class="preview-head"><b id="pvTitle">Previsualización 3D</b><button id="pvx" aria-label="Cerrar previsualización">✕</button></div><div id="pvc"></div><div id="pvp"></div></dialog>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/build/index.module.js","three-mesh-bvh/":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/","three-gpu-pathtracer":"https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.23/src/index.js"}}</script>
 <script type="module">
@@ -818,7 +810,7 @@ function applyArmedFloor(floor){
  finishMaterialPlacement();
 }
 function finishMaterialPlacement(){armed=null;commit();libUI();hint()}
-function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?(armed.target==='wall'?'Toca una pared para aplicar el revestimiento. Esc cancela.':'Toca un suelo para aplicar el pavimento. Esc cancela.'):({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar elementos. Ctrl+C / Ctrl+V: copiar y pegar. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
+function hint(){$('#editorHint').textContent=mode==='realplan'?'Arrastra para desplazar. Rueda o pellizco para acercar. Clic para seleccionar.':armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?(armed.target==='wall'?'Toca una pared para aplicar el revestimiento. Esc cancela.':'Toca un suelo para aplicar el pavimento. Esc cancela.'):({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar elementos. Ctrl+C / Ctrl+V: copiar y pegar. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
 function createCustomFurniture(){
  const data={'Cocina modular':{key:'cocina',items:[['Mueble bajo a medida',60,87,60,true],['Mueble alto a medida',60,70,35,false],['Columna a medida',60,210,60,false]]},'Baño':{key:'baño',items:[['Mueble de lavabo',120,55,48,true],['Columna de baño',40,180,35,false],['Mueble auxiliar',60,80,35,false]]},'Dormitorio':{key:'dormitorio',items:[['Armario a medida',180,220,60,false],['Cómoda',100,90,45,true],['Mesita de noche',50,55,40,true]]},'Vestidor':{key:'vestidor',items:[['Módulo de vestidor',100,220,60,false],['Módulo zapatero',80,100,40,false],['Módulo de cajones',80,90,55,false]]},'Salón':{key:'salón',items:[['Mueble de televisión',180,50,42,true],['Aparador',140,85,45,true],['Librería',100,210,35,false],['Vitrina',80,190,40,false]]},'Recibidor':{key:'recibidor',items:[['Consola',100,85,35,true],['Zapatero',100,110,30,false],['Banco con almacenamiento',100,48,40,true]]},'Despacho':{key:'despacho',items:[
   ['Escritorio recto a medida',140,75,70,true,'desk','custom-despacho-escritorio'],
@@ -1225,6 +1217,11 @@ function furnitureSurfaces(it){
  return null;
 }
 function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerHTML='';const e=get();
+ if(mode==='realplan'){
+  const name=sel?.k==='group'?sel.ids.size+' elementos seleccionados':e?.n||e?.name||'Propiedades';
+  P.innerHTML='<h4>'+htmlText(name)+'</h4><small>Disponible para editar en Plano técnico o 3D.</small>';
+  return;
+ }
  if(sel?.k==='group'){
   P.innerHTML='<h4>Selección múltiple</h4><small>'+sel.ids.size+' elementos seleccionados. Arrastra para moverlos o usa Ctrl+C y Ctrl+V.</small>';
   return;
@@ -1691,6 +1688,7 @@ function drawPlanTools(rooms,items){
  if(drag&&drag.rm){x2.strokeStyle='#3d7be0';x2.lineWidth=2/k;x2.strokeRect(drag.x,drag.y,drag.cx-drag.x,drag.cy-drag.y)}
 }
 function draw(options){
+ if(mode==='realplan'){requestRealPlan();return}
  const width=c2.clientWidth,height=c2.clientHeight;
  if(c2.width!==width)c2.width=width;
  if(c2.height!==height)c2.height=height;
@@ -2103,6 +2101,10 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&walk){e.preventDefault();exitWalk();return}
  if(e.target.closest?.('.studio-panel,#layersPanel,#nuhioToolRow'))return;
  if(e.target.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))return;
+ if(mode==='realplan'){
+  if(e.key==='Escape'){e.preventDefault();setMode('2d')}
+  return;
+ }
  if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();
  const key=e.key.toLowerCase();
  if(!walk&&navigationKeys.has(key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&canNavigate3D()&&
@@ -6909,7 +6911,7 @@ function animate(){requestAnimationFrame(animate);
   if(canNavigate3D()&&!document.activeElement?.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])')){if(!walk)moveNavigationCamera(dt);}
   else navigationHeld.clear();
  }
- walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d'||$('#realPlan').open)return;
+ walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return;
  MV.forEach(m=>stepMV(m));
  if(walk&&now-lastWalkPick>=100){
   lastWalkPick=now;
@@ -7127,15 +7129,16 @@ dualSplitter.addEventListener('keydown',e=>{
 });
 $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
-const realPlan=$('#realPlan'),realPlanCanvas=$('#realPlanCanvas'),realPlanStatus=$('#realPlanStatus');
+const realPlanCanvas=$('#realPlanCanvas'),realPlanStatus=$('#realPlanStatus');
 const realPlanCtx=realPlanCanvas.getContext('2d');
-let realPlanCamera=null,realPlanFrame=0,realPlanDrag=null;
+const realPlanPointers=new Map();
+let realPlanCamera=null,realPlanFrame=0,realPlanDrag=null,realPlanMoved=false;
 let realPlanX=0,realPlanZ=0,realPlanScale=1,realPlanFitScale=1;
 
 function realPlanSize(){
  return {w:realPlanCanvas.clientWidth,h:realPlanCanvas.clientHeight};
 }
-function fitRealPlan(){
+function fitRealPlan(item=null,target=null){
  const {w,h}=realPlanSize();
  if(!w||!h)return;
  let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
@@ -7146,12 +7149,19 @@ function fitRealPlan(){
  realPlanX=(left+right)/2;realPlanZ=(top+bottom)/2;
  realPlanFitScale=Math.min(w/Math.max(160,right-left+78),h/Math.max(160,bottom-top+78));
  realPlanScale=realPlanFitScale;
+ const points=target?.points||(item?cors(item):null);
+ if(points?.length){
+  const bounds=new T.Box2().setFromPoints(points.map(([x,z])=>new T.Vector2(x,z)));
+  const center=bounds.getCenter(new T.Vector2()),size=bounds.getSize(new T.Vector2());
+  realPlanX=center.x;realPlanZ=center.y;
+  realPlanScale=Math.min(realPlanFitScale*6,w/(size.x+78),h/(size.y+78));
+ }
  requestRealPlan();
 }
 function requestRealPlan(){
- if($('#realPlan').open&&!realPlanFrame)realPlanFrame=requestAnimationFrame(()=>{
+ if(mode==='realplan'&&!realPlanFrame)realPlanFrame=requestAnimationFrame(()=>{
   realPlanFrame=0;
-  if(realPlan.open)try{renderRealPlan()}catch(error){
+  if(mode==='realplan')try{renderRealPlan()}catch(error){
    console.warn('No se pudo dibujar la planta realista.',error);
    realPlanStatus.textContent='Vista 3D no disponible. Puedes volver al plano técnico.';
   }
@@ -7207,9 +7217,11 @@ function renderRealPlan(){
  const hidden=[];
  const mask=node=>{if(node.visible){hidden.push(node);node.visible=false}};
  for(const node of root.children){
-  if(node.userData.ceil||node.userData.editorOverlay||node.userData.editorGround||
-   (node.userData.id!=null&&layerHidden('item',node.userData.id))||
-   (node.userData.fl&&node.userData.room!=null&&layerHidden('floor',node.userData.room)))mask(node);
+  if(node.userData.ceil||node.userData.editorOverlay||node.userData.editorGround)mask(node);
+ }
+ if(editorHidden.size){
+  root.traverse(node=>{if(node.isMesh&&layerMeshHidden(node))mask(node)});
+  for(const node of realisticDetails.children)if(layerHidden('item',node.userData.layerItem))mask(node);
  }
  const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,cast:sun.castShadow,shadows:r3.shadowMap.enabled,exposure:r3.toneMappingExposure};
  try{
@@ -7228,19 +7240,7 @@ function renderRealPlan(){
   r3.setPixelRatio(beforeRatio);r3.setSize(beforeSize.x,beforeSize.y,false);
  }
 }
-function openRealPlan(){
- if(!requireSceneRenderer()||realPlan.open)return;
- if(walk)exitWalk();
- realPlanStatus.textContent='Preparando planta…';
- realPlan.showModal();fitRealPlan();
-
-}
-$('#mvPlanReal').onclick=openRealPlan;
-$('#realPlanClose').onclick=()=>{realPlan.close();setMode('2d')};
-$('#realPlanFit').onclick=fitRealPlan;
-$('#realPlanOut').onclick=()=>zoomRealPlan(.82,0,0);
-$('#realPlanIn').onclick=()=>zoomRealPlan(1.22,0,0);
-realPlan.addEventListener('close',()=>{realPlanDrag=null});
+$('#mvPlanReal').onclick=()=>setMode('realplan');
 new ResizeObserver(requestRealPlan).observe(realPlanCanvas);
 realPlanCanvas.addEventListener('wheel',event=>{
  event.preventDefault();
@@ -7248,33 +7248,87 @@ realPlanCanvas.addEventListener('wheel',event=>{
  zoomRealPlan(Math.exp(-Math.max(-120,Math.min(120,event.deltaY))*.003),
   event.clientX-rect.left-rect.width/2,event.clientY-rect.top-rect.height/2);
 },{passive:false});
+function realPlanGesturePoint(){
+ const [first,second]=realPlanPointers.values();
+ if(!second)return {x:first.x,y:first.y,span:0};
+ return {x:(first.x+second.x)/2,y:(first.y+second.y)/2,span:Math.max(1,Math.hypot(first.x-second.x,first.y-second.y))};
+}
 realPlanCanvas.onpointerdown=event=>{
- if(event.button!==0||!event.isPrimary)return;
+ if(event.button!==0||realPlanPointers.size>=2)return;
+ if(!realPlanPointers.size)realPlanMoved=false;
+ if(event.pointerType==='mouse')realPlanCanvas.focus({preventScroll:true});
  realPlanCanvas.setPointerCapture(event.pointerId);
- realPlanDrag={x:event.clientX,y:event.clientY,worldX:realPlanX,worldZ:realPlanZ,moved:false};
+ realPlanPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+ realPlanDrag={...realPlanGesturePoint(),worldX:realPlanX,worldZ:realPlanZ,scale:realPlanScale};
+ if(realPlanPointers.size>1)realPlanMoved=true;
 };
 realPlanCanvas.onpointermove=event=>{
- if(!event.isPrimary||!realPlanDrag)return;
- const dx=event.clientX-realPlanDrag.x,dy=event.clientY-realPlanDrag.y;
- if(Math.hypot(dx,dy)>4)realPlanDrag.moved=true;
- if(!realPlanDrag.moved)return;
- realPlanX=realPlanDrag.worldX-dx/realPlanScale;realPlanZ=realPlanDrag.worldZ-dy/realPlanScale;
+ if(!realPlanPointers.has(event.pointerId))return;
+ realPlanPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+ const point=realPlanGesturePoint(),start=realPlanDrag;
+ if(!realPlanMoved&&Math.hypot(point.x-start.x,point.y-start.y)<4)return;
+ realPlanMoved=true;
+ const rect=realPlanCanvas.getBoundingClientRect();
+ const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height/2;
+ const target=start.span?start.scale*point.span/start.span:start.scale;
+ realPlanScale=Math.min(realPlanFitScale*6,Math.max(realPlanFitScale*.4,target));
+ realPlanX=start.worldX+(start.x-centerX)/start.scale-(point.x-centerX)/realPlanScale;
+ realPlanZ=start.worldZ+(start.y-centerY)/start.scale-(point.y-centerY)/realPlanScale;
  requestRealPlan();
 };
-realPlanCanvas.onpointerup=event=>{
- if(!event.isPrimary||!realPlanDrag)return;
- if(!realPlanDrag.moved){
+realPlanCanvas.onpointerup=realPlanCanvas.onpointercancel=event=>{
+ if(!realPlanPointers.delete(event.pointerId))return;
+ if(event.type==='pointerup'&&!realPlanMoved){
   const rect=realPlanCanvas.getBoundingClientRect();
   const x=realPlanX+(event.clientX-rect.left-rect.width/2)/realPlanScale;
   const z=realPlanZ+(event.clientY-rect.top-rect.height/2)/realPlanScale;
   const item=planFurnitureAt(x,z);
-  sel=item?{k:'i',id:item.id}:null;selPart=null;props();requestRealPlan();
+  sel=item?{k:'i',id:item.id}:null;selPart=null;
+  sbUpdate();props();updateLayerSelection();requestRealPlan();
  }
- realPlanDrag=null;
+ realPlanDrag=realPlanPointers.size
+  ?{...realPlanGesturePoint(),worldX:realPlanX,worldZ:realPlanZ,scale:realPlanScale}
+  :null;
 };
-realPlanCanvas.onpointercancel=()=>{realPlanDrag=null};
+realPlanCanvas.addEventListener('keydown',event=>{
+ if(!['+','=','-'].includes(event.key)||event.ctrlKey||event.metaKey)return;
+ event.preventDefault();
+ zoomRealPlan(event.key==='-'?.82:1.22,0,0);
+});
 let startupOrbitPending=true;
-function setMode(m){if(m!=='2d'&&!requireSceneRenderer())return;startupOrbitPending=false;finishItemTouch(true);stopOrbit();if(walk)exitWalk();navigationHeld.clear();cameraModifiers.clear();dualView=m=='dual';mode=dualView?'3d':m;const dual=dualView;planMove.hidden=mode!=='2d'&&!dual;$('#view').classList.toggle('view-dual',dual);$('#view').style.setProperty('--dual-ratio',(dualRatio*100)+'%');$('#c2').style.display=(mode=='2d'||dual)?'block':'none';d3.style.display=(mode=='3d'||dual)?'block':'none';$('#v3').style.display=mode=='3d'?'inline':'none';$('#bM').textContent=mode=='2d'?'Cambiar a 3D':'Cambiar a 2D';walk=false;if(oc)oc.enabled=true;if(mode=='3d'){resize();build3d()}else draw();if(dual)requestAnimationFrame(()=>{resize();draw()});modeUI();sbUpdate()}
+function setMode(m){
+ if(m!=='2d'&&!requireSceneRenderer())return;
+ startupOrbitPending=false;finishItemTouch(true);stopOrbit();
+ if(walk)exitWalk();
+ navigationHeld.clear();cameraModifiers.clear();
+ const enteringRealPlan=m==='realplan'&&mode!=='realplan';
+ const leavingRealPlan=mode==='realplan'&&m!=='realplan';
+ if(leavingRealPlan){
+  if(realPlanFrame)cancelAnimationFrame(realPlanFrame);
+  realPlanFrame=0;realPlanPointers.clear();realPlanDrag=null;
+ }
+ dualView=m==='dual';mode=dualView?'3d':m;
+ const dual=dualView,showPlan=mode==='2d'||dual,showModel=mode==='3d',showRealPlan=mode==='realplan';
+ planMove.hidden=!showPlan;
+
+ editorView.classList.toggle('view-dual',dual);
+ editorView.style.setProperty('--dual-ratio',(dualRatio*100)+'%');
+ c2.style.display=showPlan?'block':'none';
+ d3.style.display=showModel?'block':'none';
+ realPlanCanvas.hidden=realPlanStatus.hidden=!showRealPlan;
+ $('#v3').style.display=showModel?'inline':'none';
+ $('#bM').textContent=mode==='2d'?'Cambiar a 3D':'Cambiar a 2D';
+ walk=false;if(oc)oc.enabled=!showRealPlan;
+ modeUI();
+ if(enteringRealPlan||leavingRealPlan)props();
+ if(showModel){resize();build3d()}
+ else if(enteringRealPlan){
+  realPlanStatus.textContent='Preparando planta…';
+  fitRealPlan();
+ }else draw();
+ if(dual)requestAnimationFrame(()=>{resize();draw()});
+ hint();sbUpdate();
+}
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
 function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.fov=48;cam.updateProjectionMatrix();cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
 function showOrbit(rotate=true){
@@ -7792,9 +7846,10 @@ mobileContextButton.onclick=()=>setMobilePanel(mobileContext.classList.contains(
 mobileViews.addEventListener('click',e=>{if(e.target.closest('.view-mode'))setMobilePanel(null)});
 mobileCamera.addEventListener('click',e=>{if(e.target.closest('button'))setMobilePanel(null)});
 function updateMobileView(){
- const is3D=mode==='3d',label=is3D?({f:'3D rápida',m:'3D con materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
+ const is3D=mode==='3d',isRealPlan=mode==='realplan',label=isRealPlan?'Planta realista':is3D?({f:'3D rápida',m:'3D con materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
  mobileLabel(mobileViewButton,'view',label+' ▾');
  mobileViewButton.setAttribute('aria-label','Cambiar vista. Actual: '+label);
+ mobileContextButton.hidden=isRealPlan;
  mobileContext.classList.toggle('is-3d',is3D);
  mobileContext.querySelector('h2').textContent=is3D?'Cámara, luz y render':'Herramientas del plano';
  mobileLabel(mobileContextButton,is3D?'camera':'draw',is3D?'Cámara':'Dibujar');
@@ -10125,8 +10180,8 @@ let RE=null,rcv=null,renderRun=0;
  function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
-function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
- const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;syncLightsDock(m3);[['mv2',!m3&&!dualView],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b)b.classList.toggle('on',on)})}
+function modeUI(){const q=$('#sq').value,m3=mode=='3d',real=mode==='realplan';document.body.classList.toggle('real-plan-view',real);$('#libraryContent').inert=real;$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
+ const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;syncLightsDock(m3);[['mv2',mode==='2d'],['mvPlanReal',real],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b){b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))}})}
 function frameLayerEntry({kind,object}){
  if(kind==='item'&&!object.hid){frameProject(object);return}
  let points,y=0;
@@ -10146,6 +10201,7 @@ function frameLayerEntry({kind,object}){
  frameProject(null,{points,y,height});
 }
 function frameProject(item=null,target=null){
+ if(mode==='realplan'){fitRealPlan(item,target);return}
  if(!target&&!S.w.length&&!S.i.some(it=>!it.hid))return;
  if(mode==='2d'||dualView){
   const plan=new T.Box2();
@@ -10756,7 +10812,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(document.body.classList.contains('ui-legacy')?'Modo: ':'')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(mode==='realplan'?'PLANTA REALISTA • presentación':walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(document.body.classList.contains('ui-legacy')?'Modo: ':'')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{finishItemTouch(true);navigationHeld.clear();editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
