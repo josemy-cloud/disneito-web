@@ -243,16 +243,11 @@ body.compact-workspace #mobileViews #mvDual{display:none}
 body.editor-booting{background:#e8eff9}
 body.editor-booting > :not(#editorBoot){visibility:hidden}
 body.editor-booting > #editorBoot{display:grid;place-content:center;justify-items:center;gap:12px;position:fixed;inset:0;background:#e8eff9;color:#132f50;text-align:center;padding:24px;z-index:1000}
-#realPlanCanvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab}
-#realPlanCanvas[hidden]{display:none!important}
-#realPlanCanvas:active{cursor:grabbing}
-#realPlanCanvas:focus-visible{outline:2px solid #176cc1;outline-offset:-2px}
-body.real-plan-view.compact-workspace #mobileBar{grid-template-columns:1fr}
-body.real-plan-view.compact-workspace #mobileBar button[hidden]{display:none!important}
-#realPlanStatus{position:absolute;top:12px;left:12px;margin:0;background:#f7faffed;color:#273846;padding:4px 8px;border-radius:4px;pointer-events:none}
-#realPlanStatus[hidden],#realPlanStatus:empty{display:none}
-body.real-plan-view #tools,body.real-plan-view #bMo,body.real-plan-view #openingType,body.real-plan-view .studio-step,
-body.real-plan-view label:has(:is(#ck,#ckPlanGrid,#ckMeasures,#ct)){display:none!important}
+#planGpuStage{position:absolute;inset:0;pointer-events:none}
+#planGpuStage[hidden]{display:none!important}
+#planGpuStage canvas{width:100%!important;height:100%!important;display:block;pointer-events:none}
+#planGpuStage:not([hidden])+canvas{background:transparent}
+
 </style><link rel="stylesheet" href="ui-redesign.css?v=11" id="uiRedesignStylesheet"><link rel="stylesheet" href="/adaptive.css?v=4"><link rel="stylesheet" href="/scan-room.css">
 <style>
 #bPbr{display:none!important}
@@ -373,7 +368,6 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <button id="mvm" class="view-mode" title="3D con materiales · Texturas y acabados" aria-label="3D con materiales"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 9 4.8v8.8l-9 4.8-9-4.8V7.6zM12 12.5l9-4.9M12 12.5v8.7M12 12.5 3 7.6M7.5 10l9 4.8"/></svg><span>3D con materiales</span></button>
 <button id="mvq" class="view-mode" title="Vista realista · Iluminación y sombras" aria-label="Vista realista"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span>Realista</span></button>
 <button id="mvDual" class="view-mode" title="Mostrar el plano 2D y el modelo 3D simultáneamente. Arrastra la línea divisoria para cambiar el tamaño." aria-label="Vista doble 2D y 3D"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="2"/><path d="M3 11.5h18M12 11.5v9M7 7.5h3M7 15.5h3m5 0h3"/></svg><span>2D + 3D</span></button>
-<button id="mvPlanReal" class="view-mode" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM7 9h10v6H7z"/></svg><span>Planta realista</span></button>
 </span><button id="bM" style="display:none">Cambiar a 3D</button><select id="sq" style="display:none"><option value="f">Vista rápida</option><option value="m" selected>3D con materiales</option><option value="q">Realista (sombras)</option></select>
 <span class="dd"><button id="bX" title="Exportar imagen">🖼 Imagen ▾</button><div class="ddm"><button id="bP2">Plano 2D (PNG)</button><button id="bP3">Captura 3D</button></div></span>
 <label><input type="checkbox" id="ck" checked> Ajuste</label>
@@ -414,9 +408,7 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
   <button id="layersFit" type="button" disabled>Encuadrar</button>
  </section>
 </div>
-<div id="view"><canvas id="c2"></canvas><div id="d3"></div>
-<canvas id="realPlanCanvas" tabindex="0" aria-label="Planta realista. Arrastra para desplazarte, usa la rueda o las teclas más y menos para acercar y alejar." hidden></canvas>
-<p id="realPlanStatus" role="status" hidden></p>
+<div id="view"><div id="planGpuStage" aria-hidden="true" hidden></div><canvas id="c2"></canvas><div id="d3"></div>
 <button id="nuhioFullPlan" class="nuhio-view-label" type="button" title="Ampliar plano 2D">Plano 2D</button>
 <button id="nuhioFullModel" class="nuhio-view-label" type="button" title="Ampliar vista 3D">Vista 3D</button><div id="viewActions" role="group" aria-label="Controles del visor"><div id="nuhioModes" aria-label="Modos de vista"></div><details id="cameraDock" hidden><summary>Cámara y luz</summary></details><details id="lightsDock" hidden><summary>Luces</summary><div id="lightsList"></div></details><button id="fitProject" type="button">Encuadrar</button></div><select id="openingType" aria-label="Tipo de puerta o ventana" hidden></select><button id="planMove" type="button" aria-pressed="false">Desplazar plano</button><span id="walkAim" aria-hidden="true"><span>·</span><svg viewBox="0 0 24 24" fill="white" stroke="#17243b" stroke-width="1.3" stroke-linejoin="round"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 3-1 4-3 6v2h-7v-2c-2-1-3-3-4-5l-2-3a1.6 1.6 0 0 1 2.5-2z"/></svg></span><button id="walkExit" type="button">Salir del recorrido</button><button id="walkInteract" type="button" hidden disabled>Interactuar</button><div id="walkTouch">
 <button id="walkPad" type="button" aria-label="Joystick de desplazamiento"><span aria-hidden="true"></span></button>
@@ -542,7 +534,12 @@ if(draftAccount)try{
    localStorage.setItem('auto:owner',draftAccount);
  }
 }catch{}
-function commit(){roomsUpdate();commitQ();refresh()}
+function commit(change){
+ roomsUpdate();commitQ();
+ const transform=change==='plan-transform'&&mode==='2d'&&!planGpuStage.hidden;
+ if(transform)planTransformsDirty=true;
+ refresh(transform);
+}
 function loadS(s){editorHidden.clear();if(drag?.group||drag?.marquee)drag=null;S=migrate(JSON.parse(s));roomsUpdate();sel=null;refresh()}
 function undo(){if(H.length>1){F.push(H.pop());loadS(H[H.length-1]);persistEdit(JSON.stringify(S))}}
 function redo(){if(F.length){const s=F.pop();H.push(s);loadS(s);persistEdit(JSON.stringify(S))}}
@@ -810,7 +807,7 @@ function applyArmedFloor(floor){
  finishMaterialPlacement();
 }
 function finishMaterialPlacement(){armed=null;commit();libUI();hint()}
-function hint(){$('#editorHint').textContent=mode==='realplan'?'Arrastra para desplazar. Rueda o pellizco para acercar. Clic para seleccionar.':armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?(armed.target==='wall'?'Toca una pared para aplicar el revestimiento. Esc cancela.':'Toca un suelo para aplicar el pavimento. Esc cancela.'):({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar elementos. Ctrl+C / Ctrl+V: copiar y pegar. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
+function hint(){$('#editorHint').textContent=armed?.floor?'Losa activa. Toca un suelo para aplicarla. Esc para cancelar.':armed?(armed.target==='wall'?'Toca una pared para aplicar el revestimiento. Esc cancela.':'Toca un suelo para aplicar el pavimento. Esc cancela.'):({sel:'Clic: seleccionar/mover. Rueda: zoom. Botón derecho: desplazar. Supr: borrar. Mayús + clic: sumar o quitar elementos. Ctrl+C / Ctrl+V: copiar y pegar. Arrastra en un hueco para seleccionar con un recuadro.',wall:'Clic para empezar/continuar pared. Escribe una longitud (cm) + Enter. Doble clic/Esc: terminar',room:'Arrastra para dibujar una habitación',measure:'Clic en dos objetos o paredes para medir. Clic en la cota verde para fijar una separación exacta',door:'Elige el tipo de puerta y toca una pared para colocarla',win:'Elige el tipo de ventana y toca una pared para colocarla'}[tool]||'')}
 function createCustomFurniture(){
  const data={'Cocina modular':{key:'cocina',items:[['Mueble bajo a medida',60,87,60,true],['Mueble alto a medida',60,70,35,false],['Columna a medida',60,210,60,false]]},'Baño':{key:'baño',items:[['Mueble de lavabo',120,55,48,true],['Columna de baño',40,180,35,false],['Mueble auxiliar',60,80,35,false]]},'Dormitorio':{key:'dormitorio',items:[['Armario a medida',180,220,60,false],['Cómoda',100,90,45,true],['Mesita de noche',50,55,40,true]]},'Vestidor':{key:'vestidor',items:[['Módulo de vestidor',100,220,60,false],['Módulo zapatero',80,100,40,false],['Módulo de cajones',80,90,55,false]]},'Salón':{key:'salón',items:[['Mueble de televisión',180,50,42,true],['Aparador',140,85,45,true],['Librería',100,210,35,false],['Vitrina',80,190,40,false]]},'Recibidor':{key:'recibidor',items:[['Consola',100,85,35,true],['Zapatero',100,110,30,false],['Banco con almacenamiento',100,48,40,true]]},'Despacho':{key:'despacho',items:[
   ['Escritorio recto a medida',140,75,70,true,'desk','custom-despacho-escritorio'],
@@ -1199,7 +1196,7 @@ async function importSofaTexture(file,item){
 const sofaImageMaps=new Map();
 function sofaImageMap(data){
  if(!sofaImageMaps.has(data)){
-  const map=new T.TextureLoader().load(data,requestRealPlan);
+  const map=new T.TextureLoader().load(data,requestPlanGpu);
   map.wrapS=map.wrapT=T.RepeatWrapping;map.encoding=T.sRGBEncoding;map.anisotropy=8;
   if(sofaImageMaps.size>=12)sofaImageMaps.delete(sofaImageMaps.keys().next().value);
   sofaImageMaps.set(data,map);
@@ -1217,11 +1214,7 @@ function furnitureSurfaces(it){
  return null;
 }
 function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerHTML='';const e=get();
- if(mode==='realplan'){
-  const name=sel?.k==='group'?sel.ids.size+' elementos seleccionados':e?.n||e?.name||'Propiedades';
-  P.innerHTML='<h4>'+htmlText(name)+'</h4><small>Disponible para editar en Plano técnico o 3D.</small>';
-  return;
- }
+
  if(sel?.k==='group'){
   P.innerHTML='<h4>Selección múltiple</h4><small>'+sel.ids.size+' elementos seleccionados. Arrastra para moverlos o usa Ctrl+C y Ctrl+V.</small>';
   return;
@@ -1309,6 +1302,9 @@ function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerH
   btn('Duplicar',()=>{const c=JSON.parse(JSON.stringify(e));c.id=nid();delete c.rel;delete c.supportTop;c.x+=20;c.y+=20;S.i.push(c);sel={k:'i',id:c.id}});btn(e.lk?'Desbloquear':'Bloquear',()=>e.lk=!e.lk);btn(e.hid?'Mostrar':'Ocultar',()=>e.hid=!e.hid);btn('Copiar',()=>{copyPlanSelection();props()},false);if(clip)btn('Pegar',pastePlanSelection,false);btn('Eliminar',()=>{detachChildren(e);detachChild(e);S.i=S.i.filter(i=>i!=e);sel=null})}}
 /* ===== 2D ===== */
 const c2=$('#c2'),x2=c2.getContext('2d'),W2=(px,py)=>[(px-ox)/k,(py-oy)/k];
+const planGpuStage=$('#planGpuStage');
+const planMeshById=new Map();
+let planGpuFailed=false,planGpuFrame=0,planOrtho=null,planTransformsDirty=false,planContactsDirty=true;
 const planGridControl=$('#ckPlanGrid');
 try{planGridControl.checked=localStorage.getItem('nuhio:plan-grid')!=='off'}catch{}
 planGridControl.onchange=()=>{
@@ -1405,12 +1401,11 @@ function visiblePlanObjects(){
  }
  return {rugs,above:objects.concat(supported)};
 }
-function drawPlanBackground(width,height,showGrid){
- x2.fillStyle=PLAN_STYLE.background;
- x2.fillRect(0,0,width,height);
+function drawPlanBackground(width,height,showGrid,transparent=false){
+ if(!transparent){x2.fillStyle=PLAN_STYLE.background;x2.fillRect(0,0,width,height)}
  if(!showGrid)return;
  const step=50*k;
- x2.strokeStyle=PLAN_STYLE.grid;
+ x2.strokeStyle=transparent?'rgba(90,110,125,.16)':PLAN_STYLE.grid;
  x2.lineWidth=1;
  x2.beginPath();
  for(let x=ox%step;x<width;x+=step){x2.moveTo(x,0);x2.lineTo(x,height)}
@@ -1687,22 +1682,57 @@ function drawPlanTools(rooms,items){
  }
  if(drag&&drag.rm){x2.strokeStyle='#3d7be0';x2.lineWidth=2/k;x2.strokeRect(drag.x,drag.y,drag.cx-drag.x,drag.cy-drag.y)}
 }
+function drawPlanTechnicalOverlay(rooms,items){
+ x2.strokeStyle='#53606a';
+ x2.lineWidth=1/k;
+ for(const room of rooms){tracePlanRoom(room);x2.stroke()}
+ for(const wall of S.w){
+  if(wall.hid||layerHidden('wall',wall.id))continue;
+  const selected=planElementSelected('w',wall.id),moving=planWallInMotion(wall.id);
+  x2.strokeStyle=selected?PLAN_STYLE.selection:'#64727f';
+  x2.lineWidth=moving?wall.t:(selected?2.3:1.2)/k;
+  x2.beginPath();x2.moveTo(wall.x1,wall.y1);x2.lineTo(wall.x2,wall.y2);x2.stroke();
+ }
+ for(const opening of S.o){
+  const wall=S.w.find(w=>w.id==opening.w);
+  if(wall&&!wall.hid&&!layerHidden('wall',wall.id))drawOpening2D(wall,opening);
+ }
+ for(const it of items){
+  if(!planElementSelected('i',it.id))continue;
+  x2.save();x2.translate(it.x,it.y);x2.rotate(it.r*D);
+  traceFurniturePlan(x2,it);
+  x2.strokeStyle='#fff';x2.lineWidth=4/k;x2.stroke();
+  x2.strokeStyle=PLAN_STYLE.selection;x2.lineWidth=2/k;x2.stroke();
+  x2.restore();
+ }
+}
 function draw(options){
- if(mode==='realplan'){requestRealPlan();return}
  const width=c2.clientWidth,height=c2.clientHeight;
+ const gpu=updatePlanGpuSurface()&&!options?.technical;
  if(c2.width!==width)c2.width=width;
  if(c2.height!==height)c2.height=height;
- drawPlanBackground(width,height,options?.showGrid??planGridControl.checked);
  const rooms=(S.rooms||[]).filter(room=>room.poly&&!layerHidden('floor',room.id));
+ if(!gpu)drawPlanBackground(width,height,options?.showGrid??planGridControl.checked);
+ else{
+  x2.clearRect(0,0,width,height);
+  if(options?.showGrid??planGridControl.checked){
+   x2.save();x2.beginPath();x2.rect(0,0,width,height);
+   for(const room of rooms){room.poly.forEach(([x,y],i)=>i?x2.lineTo(ox+k*x,oy+k*y):x2.moveTo(ox+k*x,oy+k*y));x2.closePath()}
+   x2.clip('evenodd');drawPlanBackground(width,height,true,true);x2.restore();
+  }
+ }
  const {rugs,above}=visiblePlanObjects();
  x2.save();
  x2.translate(ox,oy);x2.scale(k,k);
- drawPlanRoomSurfaces(rooms);
- drawPlanFinishes(rooms,options?.floorPainter??paintPlanFloor);
- drawPlanArchitecture(options?.wallPainter);
- drawPlanObjects(rugs);
- drawPlanContactEffects(above,options?.contactShadow);
- drawPlanObjects(above);
+ if(gpu){
+  if(drag?.mv==='i'||drag?.group)planTransformsDirty=true;
+  drawPlanTechnicalOverlay(rooms,rugs.concat(above));requestPlanGpu();
+ }else{
+  drawPlanRoomSurfaces(rooms);
+  drawPlanFinishes(rooms,options?.floorPainter??paintPlanFloor);
+  drawPlanArchitecture(options?.wallPainter);
+  drawPlanObjects(rugs);drawPlanContactEffects(above,options?.contactShadow);drawPlanObjects(above);
+ }
  drawPlanTools(rooms,above);
  x2.restore();
 }
@@ -2003,9 +2033,9 @@ window.onmouseup=()=>{
    return;
   }
   for(const {it} of d.items)if(it.rel&&!d.ids.has(it.rel.parentId))updateChildOffset(it);
-  commit();hint();return;
+  commit(!d.walls.length&&!d.loose.length?'plan-transform':undefined);hint();return;
  }
- if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved&&d.mv=='i'&&!fits(d.e)){d.e.x=d.x0;d.e.y=d.y0;if(d.e.rel)updateChildOffset(d.e);syncSupportedChildren(d.e);refresh();hint('Movimiento cancelado: colisión física con pared u objeto')}else if(d.moved)commit();else refresh()};
+ if(d.rm&&Math.abs(d.cx-d.x)>20&&Math.abs(d.cy-d.y)>20){room(Math.min(d.x,d.cx),Math.min(d.y,d.cy),Math.abs(d.cx-d.x),Math.abs(d.cy-d.y));commit()}else if(d.moved&&d.mv=='i'&&!fits(d.e)){d.e.x=d.x0;d.e.y=d.y0;if(d.e.rel)updateChildOffset(d.e);syncSupportedChildren(d.e);refresh();hint('Movimiento cancelado: colisión física con pared u objeto')}else if(d.moved)commit(d.mv==='i'?'plan-transform':undefined);else refresh(true)};
 c2.onwheel=e=>{e.preventDefault();const r=c2.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,[wx,wy]=W2(mx,my);k=Math.max(.15,Math.min(4,k*(e.deltaY<0?1.1:.9)));ox=mx-wx*k;oy=my-wy*k;draw()};
 c2.ondblclick=()=>{cur=null;draw()};
 // A tap edits the active tool. A drag navigates unless it starts an explicit edit.
@@ -2101,10 +2131,7 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&walk){e.preventDefault();exitWalk();return}
  if(e.target.closest?.('.studio-panel,#layersPanel,#nuhioToolRow'))return;
  if(e.target.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])'))return;
- if(mode==='realplan'){
-  if(e.key==='Escape'){e.preventDefault();setMode('2d')}
-  return;
- }
+
  if(walk&&(e.key.startsWith('Arrow')||e.key==' '))e.preventDefault();
  const key=e.key.toLowerCase();
  if(!walk&&navigationKeys.has(key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&canNavigate3D()&&
@@ -2274,7 +2301,7 @@ function scanTextures(d,asset){
     if(role==='color'&&d[9]&&!tintWood)ctx.filter=d[9];
     ctx.drawImage(image,0,0,512,512);ctx.filter='none';
     if(tintWood)tintScannedWood(ctx,512,d[4]);
-    texture.needsUpdate=true;resolve(true);requestRealPlan();
+    texture.needsUpdate=true;resolve(true);requestPlanGpu();
    };
    image.onerror=()=>resolve(false);
    image.src=scanURL(asset,role);
@@ -2456,7 +2483,7 @@ function surfaceOptions(current,use='floor'){
 const TC={};
 function tex(m,sz,j,jc,img){const key=m+j+jc;if(!img&&TC[key])return TC[key].clone();const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),t=new T.CanvasTexture(c);t.encoding=T.sRGBEncoding;t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;
  const j2=Math.max(1,j/sz*256*2);
- if(img){const im=new Image();im.onload=()=>{x.drawImage(im,0,0,256,256);x.strokeStyle=jc;x.lineWidth=j2;x.strokeRect(0,0,256,256);t.needsUpdate=true;requestRealPlan()};im.src=img;return t}
+ if(img){const im=new Image();im.onload=()=>{x.drawImage(im,0,0,256,256);x.strokeStyle=jc;x.lineWidth=j2;x.strokeRect(0,0,256,256);t.needsUpdate=true;requestPlanGpu()};im.src=img;return t}
  x.fillStyle=MC[m]||'#ddd';x.fillRect(0,0,256,256);
  if(m=='madera')for(let i=0;i<4;i++){x.fillStyle='hsl(30,'+(35+i*5)+'%,'+(42+i*5)+'%)';x.fillRect(0,i*64,256,64);for(let n=0;n<25;n++){x.strokeStyle='rgba(60,30,10,.18)';x.beginPath();x.moveTo(0,i*64+Math.random()*64);x.lineTo(256,i*64+Math.random()*64);x.stroke()}x.fillStyle=jc;x.fillRect(0,i*64,256,j2/2)}
  else if(m=='mármol'){x.strokeStyle='rgba(110,110,125,.55)';for(let n=0;n<7;n++){x.beginPath();x.moveTo(Math.random()*256,0);x.bezierCurveTo(Math.random()*256,80,Math.random()*256,160,Math.random()*256,256);x.stroke()}}
@@ -6660,8 +6687,10 @@ function build3d(){if(!r3)return;roomsUpdate();
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
  S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);const visualVisible=syncCeilingSpotVisuals(g,it);if(visualVisible&&planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
  if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
- fitSunToProject();setSun();addRealisticDetails();requestRealPlan();
+ fitSunToProject();setSun();addRealisticDetails();rebuildPlanMeshIndex();requestPlanGpu();
 }
+const planContactGroup=new T.Group(),planGpuBackground=new T.Color('#edf0f2');
+planContactGroup.visible=false;sc.add(planContactGroup);
 const realisticDetails=new T.Group();
 sc.add(realisticDetails);
 let contactGeometry,contactMaterial;
@@ -7129,203 +7158,130 @@ dualSplitter.addEventListener('keydown',e=>{
 });
 $('#nuhioFullPlan').onclick=()=>setMode('2d');
 $('#nuhioFullModel').onclick=()=>setMode('3d');
-const realPlanCanvas=$('#realPlanCanvas'),realPlanStatus=$('#realPlanStatus');
-const realPlanCtx=realPlanCanvas.getContext('2d');
-const realPlanPointers=new Map();
-let realPlanCamera=null,realPlanFrame=0,realPlanDrag=null,realPlanMoved=false;
-let realPlanX=0,realPlanZ=0,realPlanScale=1,realPlanFitScale=1;
-
-function realPlanSize(){
- return {w:realPlanCanvas.clientWidth,h:realPlanCanvas.clientHeight};
-}
-function fitRealPlan(item=null,target=null){
- const {w,h}=realPlanSize();
- if(!w||!h)return;
- let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
- const include=(x,z)=>{left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,z);bottom=Math.max(bottom,z)};
- for(const wall of S.w){include(wall.x1,wall.y1);include(wall.x2,wall.y2)}
- for(const it of S.i)if(!it.hid&&!layerHidden('item',it.id))for(const [x,z] of cors(it))include(x,z);
- if(!Number.isFinite(left)){left=top=0;right=bottom=400}
- realPlanX=(left+right)/2;realPlanZ=(top+bottom)/2;
- realPlanFitScale=Math.min(w/Math.max(160,right-left+78),h/Math.max(160,bottom-top+78));
- realPlanScale=realPlanFitScale;
- const points=target?.points||(item?cors(item):null);
- if(points?.length){
-  const bounds=new T.Box2().setFromPoints(points.map(([x,z])=>new T.Vector2(x,z)));
-  const center=bounds.getCenter(new T.Vector2()),size=bounds.getSize(new T.Vector2());
-  realPlanX=center.x;realPlanZ=center.y;
-  realPlanScale=Math.min(realPlanFitScale*6,w/(size.x+78),h/(size.y+78));
+function updatePlanGpuSurface(){
+ const enabled=mode==='2d'&&r3&&!planGpuFailed;
+ planGpuStage.hidden=!enabled;
+ if(r3){
+  const target=enabled?planGpuStage:d3;
+  if(r3.domElement.parentNode!==target)target.append(r3.domElement);
  }
- requestRealPlan();
+ if(!enabled&&planGpuFrame){cancelAnimationFrame(planGpuFrame);planGpuFrame=0}
+ return enabled;
 }
-function requestRealPlan(){
- if(mode==='realplan'&&!realPlanFrame)realPlanFrame=requestAnimationFrame(()=>{
-  realPlanFrame=0;
-  if(mode==='realplan')try{renderRealPlan()}catch(error){
-   console.warn('No se pudo dibujar la planta realista.',error);
-   realPlanStatus.textContent='Vista 3D no disponible. Puedes volver al plano técnico.';
+function requestPlanGpu(){
+ if(planGpuStage.hidden||RVo||planGpuFrame)return;
+ planGpuFrame=requestAnimationFrame(()=>{
+  planGpuFrame=0;
+  if(planGpuStage.hidden||RVo)return;
+  try{renderPlanGpu()}catch(error){
+   console.warn('Plano WebGL no disponible. Se conserva el dibujo Canvas.',error);
+   planGpuFailed=true;
+   draw();
   }
  });
 }
-function zoomRealPlan(factor,x,y){
- const next=Math.min(realPlanFitScale*6,Math.max(realPlanFitScale*.4,realPlanScale*factor));
- realPlanX+=x*(1/realPlanScale-1/next);
- realPlanZ+=y*(1/realPlanScale-1/next);
- realPlanScale=next;requestRealPlan();
+function rebuildPlanMeshIndex(){
+ planMeshById.clear();
+ for(const node of root.children)if(node.userData.id!=null)planMeshById.set(node.userData.id,node);
+ planContactsDirty=true;
 }
-function drawRealPlanOverlay(ctx,w,h,ratio){
- ctx.save();
- ctx.setTransform(ratio*realPlanScale,0,0,ratio*realPlanScale,
-  ratio*(w/2-realPlanScale*realPlanX),ratio*(h/2-realPlanScale*realPlanZ));
- ctx.lineCap='round';ctx.lineJoin='round';
- ctx.strokeStyle='#4a5968';
- ctx.lineWidth=1.1/realPlanScale;
- for(const room of S.rooms||[]){
-  if(!room.poly||layerHidden('floor',room.id))continue;
-  ctx.beginPath();room.poly.forEach(([x,z],i)=>i?ctx.lineTo(x,z):ctx.moveTo(x,z));ctx.closePath();ctx.stroke();
+function syncPlanGpuTransforms(){
+ if(!planTransformsDirty)return;
+ planTransformsDirty=false;
+ for(const item of S.i){
+  const node=planMeshById.get(item.id);
+  if(!node)continue;
+  node.position.set(item.x,item.e||0,item.y);
+  node.rotation.y=-(item.r||0)*D;
  }
- for(const wall of S.w){
-  if(wall.hid||layerHidden('wall',wall.id))continue;
-  ctx.strokeStyle=planElementSelected('w',wall.id)?PLAN_STYLE.selection:wall.tr?'#9aa5af':'#64727f';
-  ctx.lineWidth=(planElementSelected('w',wall.id)?2.3:1.4)/realPlanScale;
-  ctx.beginPath();ctx.moveTo(wall.x1,wall.y1);ctx.lineTo(wall.x2,wall.y2);ctx.stroke();
-  for(const opening of S.o)if(opening.w==wall.id)drawOpening2D(wall,opening,ctx,realPlanScale);
- }
+ planContactsDirty=true;
+}
+function updatePlanContacts(){
+ if(!planContactsDirty)return;
+ planContactsDirty=false;
+ // Reuse both the existing feathered plane and its material for all footprints.
+ const material=contactShadowMaterial(),rugs=S.i.filter(it=>it.t==='alfombra'&&!it.hid&&!layerHidden('item',it.id));
+ let count=0;
  for(const it of S.i){
-  if(it.hid||layerHidden('item',it.id)||!planElementSelected('i',it.id))continue;
-  ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.r*D);
-  traceFurniturePlan(ctx,it);
-  ctx.strokeStyle='#fff';ctx.lineWidth=4/realPlanScale;ctx.stroke();
-  ctx.strokeStyle=PLAN_STYLE.selection;ctx.lineWidth=2/realPlanScale;ctx.stroke();ctx.restore();
+  if(count>=72||it.hid||it.rel||layerHidden('item',it.id)||it.t==='alfombra'||Math.abs(+it.e||0)>2)continue;
+  const rug=rugs.find(r=>pointInItem(r,it.x,it.y));
+  const patch=planContactGroup.children[count]||new T.Mesh(contactGeometry,material);
+  if(!patch.parent)planContactGroup.add(patch);
+  patch.visible=true;
+  patch.position.set(it.x,rug?(+rug.e||0)+(+rug.h||0)+.12:.12,it.y);
+  patch.rotation.y=-(it.r||0)*D;
+  patch.scale.set(it.w*.98,1,it.d*.98);
+  count++;
  }
- ctx.restore();
+ for(let i=count;i<planContactGroup.children.length;i++)planContactGroup.children[i].visible=false;
 }
-function renderRealPlan(){
- const {w,h}=realPlanSize();
+function planWallInMotion(id){
+ if(!drag)return false;
+ if(drag.ep)return S.w.some(w=>w.id===id&&((w.x1===drag.px&&w.y1===drag.py)||(w.x2===drag.px&&w.y2===drag.py)));
+ if(drag.group)return drag.walls.some(({w})=>w.id===id);
+ return (drag.mv==='w'&&drag.e.id===id)||(drag.op&&drag.op.w==id);
+}
+function renderPlanGpu(){
+ const w=c2.clientWidth,h=c2.clientHeight;
  if(!w||!h)return;
- const gl=r3.getContext();
- if(gl.isContextLost())throw Error('Contexto WebGL perdido.');
- const ratio=Math.min(window.devicePixelRatio||1,1.5,Math.sqrt(1100000/(w*h)));
- const px=Math.max(1,Math.floor(w*ratio)),py=Math.max(1,Math.floor(h*ratio));
- if(realPlanCanvas.width!==px)realPlanCanvas.width=px;
- if(realPlanCanvas.height!==py)realPlanCanvas.height=py;
- const cam=realPlanCamera||(realPlanCamera=new T.OrthographicCamera(-1,1,1,-1,1,6000));
- const halfW=w/(2*realPlanScale),halfH=h/(2*realPlanScale);
- Object.assign(cam,{left:-halfW,right:halfW,top:halfH,bottom:-halfH});
- cam.up.set(0,0,-1);cam.position.set(realPlanX,3200,realPlanZ);cam.lookAt(realPlanX,0,realPlanZ);cam.updateProjectionMatrix();
- const beforeSize=r3.getSize(new T.Vector2()),beforeRatio=r3.getPixelRatio();
- const hidden=[];
- const mask=node=>{if(node.visible){hidden.push(node);node.visible=false}};
+ if(r3.getContext().isContextLost())throw Error('Contexto WebGL perdido.');
+ const ratio=Math.min(devicePixelRatio||1,1.25,Math.sqrt(1000000/(w*h)));
+ const px=Math.max(1,Math.round(w*ratio)),py=Math.max(1,Math.round(h*ratio));
+ if(r3.getPixelRatio()!==1)r3.setPixelRatio(1);
+ if(r3.domElement.width!==px||r3.domElement.height!==py)r3.setSize(px,py,false);
+ syncPlanGpuTransforms();
+ updatePlanContacts();
+ const camera=planOrtho||(planOrtho=new T.OrthographicCamera(-1,1,1,-1,1,6000));
+ camera.left=-w/(2*k);camera.right=-camera.left;camera.top=h/(2*k);camera.bottom=-camera.top;
+ const x=(w/2-ox)/k,z=(h/2-oy)/k;
+ camera.up.set(0,0,-1);camera.position.set(x,3200,z);camera.lookAt(x,0,z);camera.updateProjectionMatrix();
+ const masked=[];
+ const hide=node=>{if(node.visible){node.visible=false;masked.push(node)}};
  for(const node of root.children){
-  if(node.userData.ceil||node.userData.editorOverlay||node.userData.editorGround)mask(node);
+  const d=node.userData;
+  if(d.ceil||d.editorOverlay||d.editorGround||d.fl&&d.room==null||d.wall!=null&&planWallInMotion(d.wall))hide(node);
  }
- if(editorHidden.size){
-  root.traverse(node=>{if(node.isMesh&&layerMeshHidden(node))mask(node)});
-  for(const node of realisticDetails.children)if(layerHidden('item',node.userData.layerItem))mask(node);
- }
- const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,cast:sun.castShadow,shadows:r3.shadowMap.enabled,exposure:r3.toneMappingExposure};
+ if(editorHidden.size)root.traverse(node=>{if(node.isMesh&&layerMeshHidden(node))hide(node)});
+ hide(realisticDetails);
+ const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,fill:fill.intensity,rim:rim.intensity,shadows:r3.shadowMap.enabled,exposure:r3.toneMappingExposure};
  try{
-  sc.background=new T.Color('#e9edf0');
-  if($('#sq').value!=='q'){
-   hemi.intensity=.55;sun.intensity=.78;sun.castShadow=true;r3.shadowMap.enabled=true;r3.toneMappingExposure=.94;
-  }
-  r3.setPixelRatio(1);r3.setSize(px,py,false);r3.render(sc,cam);
-  realPlanCtx.drawImage(r3.domElement,0,0,px,py);
-  drawRealPlanOverlay(realPlanCtx,w,h,Math.min(px/w,py/h));
-  realPlanStatus.textContent='';
+  // The overhead look uses soft contact and modest directional fill.
+  sc.background=planGpuBackground;
+  hemi.intensity=.72;sun.intensity=.36;fill.intensity=.08;rim.intensity=0;
+  r3.shadowMap.enabled=false;r3.toneMappingExposure=.88;
+  planContactGroup.visible=true;
+  r3.render(sc,camera);
  }finally{
-  for(const node of hidden)node.visible=true;
-  sc.background=before.bg;hemi.intensity=before.hemi;sun.intensity=before.sun;sun.castShadow=before.cast;
+  planContactGroup.visible=false;
+  for(const node of masked)node.visible=true;
+  sc.background=before.bg;hemi.intensity=before.hemi;sun.intensity=before.sun;fill.intensity=before.fill;rim.intensity=before.rim;
   r3.shadowMap.enabled=before.shadows;r3.toneMappingExposure=before.exposure;
-  r3.setPixelRatio(beforeRatio);r3.setSize(beforeSize.x,beforeSize.y,false);
  }
 }
-$('#mvPlanReal').onclick=()=>setMode('realplan');
-new ResizeObserver(requestRealPlan).observe(realPlanCanvas);
-realPlanCanvas.addEventListener('wheel',event=>{
- event.preventDefault();
- const rect=realPlanCanvas.getBoundingClientRect();
- zoomRealPlan(Math.exp(-Math.max(-120,Math.min(120,event.deltaY))*.003),
-  event.clientX-rect.left-rect.width/2,event.clientY-rect.top-rect.height/2);
-},{passive:false});
-function realPlanGesturePoint(){
- const [first,second]=realPlanPointers.values();
- if(!second)return {x:first.x,y:first.y,span:0};
- return {x:(first.x+second.x)/2,y:(first.y+second.y)/2,span:Math.max(1,Math.hypot(first.x-second.x,first.y-second.y))};
+if(r3){
+ r3.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();planGpuFailed=true;if(mode==='2d')draw()});
+ r3.domElement.addEventListener('webglcontextrestored',()=>{planGpuFailed=false;if(mode==='2d')refresh()});
 }
-realPlanCanvas.onpointerdown=event=>{
- if(event.button!==0||realPlanPointers.size>=2)return;
- if(!realPlanPointers.size)realPlanMoved=false;
- if(event.pointerType==='mouse')realPlanCanvas.focus({preventScroll:true});
- realPlanCanvas.setPointerCapture(event.pointerId);
- realPlanPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
- realPlanDrag={...realPlanGesturePoint(),worldX:realPlanX,worldZ:realPlanZ,scale:realPlanScale};
- if(realPlanPointers.size>1)realPlanMoved=true;
-};
-realPlanCanvas.onpointermove=event=>{
- if(!realPlanPointers.has(event.pointerId))return;
- realPlanPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
- const point=realPlanGesturePoint(),start=realPlanDrag;
- if(!realPlanMoved&&Math.hypot(point.x-start.x,point.y-start.y)<4)return;
- realPlanMoved=true;
- const rect=realPlanCanvas.getBoundingClientRect();
- const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height/2;
- const target=start.span?start.scale*point.span/start.span:start.scale;
- realPlanScale=Math.min(realPlanFitScale*6,Math.max(realPlanFitScale*.4,target));
- realPlanX=start.worldX+(start.x-centerX)/start.scale-(point.x-centerX)/realPlanScale;
- realPlanZ=start.worldZ+(start.y-centerY)/start.scale-(point.y-centerY)/realPlanScale;
- requestRealPlan();
-};
-realPlanCanvas.onpointerup=realPlanCanvas.onpointercancel=event=>{
- if(!realPlanPointers.delete(event.pointerId))return;
- if(event.type==='pointerup'&&!realPlanMoved){
-  const rect=realPlanCanvas.getBoundingClientRect();
-  const x=realPlanX+(event.clientX-rect.left-rect.width/2)/realPlanScale;
-  const z=realPlanZ+(event.clientY-rect.top-rect.height/2)/realPlanScale;
-  const item=planFurnitureAt(x,z);
-  sel=item?{k:'i',id:item.id}:null;selPart=null;
-  sbUpdate();props();updateLayerSelection();requestRealPlan();
- }
- realPlanDrag=realPlanPointers.size
-  ?{...realPlanGesturePoint(),worldX:realPlanX,worldZ:realPlanZ,scale:realPlanScale}
-  :null;
-};
-realPlanCanvas.addEventListener('keydown',event=>{
- if(!['+','=','-'].includes(event.key)||event.ctrlKey||event.metaKey)return;
- event.preventDefault();
- zoomRealPlan(event.key==='-'?.82:1.22,0,0);
-});
 let startupOrbitPending=true;
 function setMode(m){
  if(m!=='2d'&&!requireSceneRenderer())return;
  startupOrbitPending=false;finishItemTouch(true);stopOrbit();
  if(walk)exitWalk();
  navigationHeld.clear();cameraModifiers.clear();
- const enteringRealPlan=m==='realplan'&&mode!=='realplan';
- const leavingRealPlan=mode==='realplan'&&m!=='realplan';
- if(leavingRealPlan){
-  if(realPlanFrame)cancelAnimationFrame(realPlanFrame);
-  realPlanFrame=0;realPlanPointers.clear();realPlanDrag=null;
- }
  dualView=m==='dual';mode=dualView?'3d':m;
- const dual=dualView,showPlan=mode==='2d'||dual,showModel=mode==='3d',showRealPlan=mode==='realplan';
+ const dual=dualView,showPlan=mode==='2d'||dual,showModel=mode==='3d';
  planMove.hidden=!showPlan;
 
  editorView.classList.toggle('view-dual',dual);
  editorView.style.setProperty('--dual-ratio',(dualRatio*100)+'%');
  c2.style.display=showPlan?'block':'none';
  d3.style.display=showModel?'block':'none';
- realPlanCanvas.hidden=realPlanStatus.hidden=!showRealPlan;
+ updatePlanGpuSurface();
  $('#v3').style.display=showModel?'inline':'none';
  $('#bM').textContent=mode==='2d'?'Cambiar a 3D':'Cambiar a 2D';
- walk=false;if(oc)oc.enabled=!showRealPlan;
+ walk=false;if(oc)oc.enabled=true;
  modeUI();
- if(enteringRealPlan||leavingRealPlan)props();
- if(showModel){resize();build3d()}
- else if(enteringRealPlan){
-  realPlanStatus.textContent='Preparando planta…';
-  fitRealPlan();
- }else draw();
+ if(showModel){resize();build3d()}else draw();
  if(dual)requestAnimationFrame(()=>{resize();draw()});
  hint();sbUpdate();
 }
@@ -7446,7 +7402,19 @@ $('#fi').onchange=async e=>{
   libUI();
  }catch(error){alert('No se pudo importar el proyecto: '+error.message)}
 };
-$('#bP2').onclick=()=>{const w=mode;draw();c2.toBlob(b=>dl(URL.createObjectURL(b),S.nm+'-plano.png'))};
+$('#bP2').onclick=()=>{
+ draw();
+ let image=c2;
+ if(!planGpuStage.hidden){
+  try{
+   renderPlanGpu();
+   image=document.createElement('canvas');image.width=c2.width;image.height=c2.height;
+   const ctx=image.getContext('2d');ctx.drawImage(r3.domElement,0,0,image.width,image.height);ctx.drawImage(c2,0,0);
+  }catch{draw({technical:true})}
+ }
+ image.toBlob(b=>dl(URL.createObjectURL(b),S.nm+'-plano.png'));
+ if(image===c2&&!planGpuStage.hidden)draw();
+};
 $('#bP3').onclick=()=>{if(!requireSceneRenderer())return;if(mode!='3d')setMode('3d');r3.setPixelRatio(3);r3.render(sc,cam);r3.domElement.toBlob(b=>{dl(URL.createObjectURL(b),S.nm+'-3d-HD.png');setQ()})};
 
 /* ===== Foto IA: captura automática de la vista 3D y edición ===== */
@@ -7846,10 +7814,9 @@ mobileContextButton.onclick=()=>setMobilePanel(mobileContext.classList.contains(
 mobileViews.addEventListener('click',e=>{if(e.target.closest('.view-mode'))setMobilePanel(null)});
 mobileCamera.addEventListener('click',e=>{if(e.target.closest('button'))setMobilePanel(null)});
 function updateMobileView(){
- const is3D=mode==='3d',isRealPlan=mode==='realplan',label=isRealPlan?'Planta realista':is3D?({f:'3D rápida',m:'3D con materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
+ const is3D=mode==='3d',label=is3D?({f:'3D rápida',m:'3D con materiales',q:'Realista'}[$('#sq').value]||'3D'):'Plano 2D';
  mobileLabel(mobileViewButton,'view',label+' ▾');
  mobileViewButton.setAttribute('aria-label','Cambiar vista. Actual: '+label);
- mobileContextButton.hidden=isRealPlan;
  mobileContext.classList.toggle('is-3d',is3D);
  mobileContext.querySelector('h2').textContent=is3D?'Cámara, luz y render':'Herramientas del plano';
  mobileLabel(mobileContextButton,is3D?'camera':'draw',is3D?'Cámara':'Dibujar');
@@ -8021,7 +7988,7 @@ function layerEye(entries,label){
  button.dataset.eyeKey=entries.map(e=>e.key).join('|');
  button.onclick=()=>{
   for(const entry of entries)if(all)editorHidden.delete(entry.key);else editorHidden.add(entry.key);
-  draw();renderLayers();
+  planContactsDirty=true;draw();renderLayers();
   for(const eye of $('#layersTree').querySelectorAll('.layer-eye'))if(eye.dataset.eyeKey===button.dataset.eyeKey){eye.focus({preventScroll:true});break}
  };
  return button;
@@ -10180,8 +10147,8 @@ let RE=null,rcv=null,renderRun=0;
  function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
-function modeUI(){const q=$('#sq').value,m3=mode=='3d',real=mode==='realplan';document.body.classList.toggle('real-plan-view',real);$('#libraryContent').inert=real;$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
- const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;syncLightsDock(m3);[['mv2',mode==='2d'],['mvPlanReal',real],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b){b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))}})}
+function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
+ const dock=$('#cameraDock');dock.hidden=!m3;if(!m3)dock.open=false;syncLightsDock(m3);[['mv2',mode==='2d'],['mvf',m3&&q=='f'],['mvm',m3&&q=='m'],['mvq',m3&&q=='q'],['mvDual',dualView]].forEach(([id,on])=>{const b=$('#'+id);if(b){b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))}})}
 function frameLayerEntry({kind,object}){
  if(kind==='item'&&!object.hid){frameProject(object);return}
  let points,y=0;
@@ -10201,7 +10168,6 @@ function frameLayerEntry({kind,object}){
  frameProject(null,{points,y,height});
 }
 function frameProject(item=null,target=null){
- if(mode==='realplan'){fitRealPlan(item,target);return}
  if(!target&&!S.w.length&&!S.i.some(it=>!it.hid))return;
  if(mode==='2d'||dualView){
   const plan=new T.Box2();
@@ -10812,7 +10778,7 @@ function moveStep(it,K,shift,ctrl,st,f){const s=ctrl?1:st*(shift?5:1),r=[-f[1],f
  if(K=='ArrowUp'){it.x+=f[0]*s;it.y+=f[1]*s}else if(K=='ArrowDown'){it.x-=f[0]*s;it.y-=f[1]*s}else if(K=='ArrowRight'){it.x+=r[0]*s;it.y+=r[1]*s}else if(K=='ArrowLeft'){it.x-=r[0]*s;it.y-=r[1]*s}
  else if(K=='PageUp')it.e=(it.e||0)+s;else if(K=='PageDown')it.e=Math.max(0,(it.e||0)-s);
  else if(K=='q'||K=='Q')it.r=((it.r||0)-(ctrl?1:shift?45:5)+360)%360;else if(K=='e'||K=='E')it.r=((it.r||0)+(ctrl?1:shift?45:5))%360;else ok=false;return ok}
-function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(mode==='realplan'?'PLANTA REALISTA • presentación':walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(document.body.classList.contains('ui-legacy')?'Modo: ':'')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
+function sbUpdate(msg){const e=get(),el=$('#editorStatus');if(!el)return;el.innerHTML='<b style="color:'+(editMode?'#ffb74d':'#8fb4ff')+'">MODO '+(walk?'NAVEGACIÓN (recorrido) · Mayús sube, Ctrl baja':editMode?'EDICIÓN · las flechas mueven el objeto (MAYÚS ×5, CTRL 1 cm, AvPág/RePág altura, Q/E giro)':mode==='3d'?'NAVEGACIÓN · WASD o flechas · Mayús sube, Ctrl baja':'NAVEGACIÓN')+'</b> · '+(e&&sel.k=='i'?htmlText(e.n)+' · X '+R(e.x)+' Y '+R(e.y)+' Z '+R(e.e||0)+' · giro '+R(e.r)+'° · '+R(e.w)+'×'+R(e.d)+'×'+R(e.h)+' cm':sel?.k==='group'?sel.ids.size+' elementos seleccionados':'sin selección')+(msg?' · <span style="color:#ff8a80">'+htmlText(msg)+'</span>':'');const b=$('#bMo');b.textContent=(document.body.classList.contains('ui-legacy')?'Modo: ':'')+(editMode?'Edición':'Navegación');b.title=editMode?'Cambiar a navegación':'Cambiar a edición';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',String(editMode));b.style.background=editMode?'#c77d00':''}
 $('#bMo').onclick=()=>{finishItemTouch(true);navigationHeld.clear();editMode=!editMode;if(editMode&&walk)exitWalk();sbUpdate()};$('#bSt').onchange=e=>e.target.blur();
 document.addEventListener('keyup',e=>{if(mvDirty&&/^(Arrow|Page|q$|e$|Q$|E$)/.test(e.key)){mvDirty=false;commit()}});
 let CATALOG_MASTER=false, CATALOG_APPROVALS={};
