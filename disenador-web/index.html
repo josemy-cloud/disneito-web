@@ -1350,12 +1350,13 @@ function drawPlanRoomLabels(rooms,items){
    }
   }
   if(free)occupied.push({l:x-hw,r:x+hw,t:y-hd,b:y+hd});
-  x2.strokeStyle='rgba(250,250,250,.93)';x2.lineWidth=3/k;x2.lineJoin='round';
+  const floor=room.floor||S.fl,halo=!free||!!(floor.m||floor.pat||floor.observedColor);
+  x2.strokeStyle='rgba(250,250,250,.85)';x2.lineWidth=3/k;x2.lineJoin='round';
   x2.font='bold '+(14/k)+'px Arial';
-  if(!free)x2.strokeText(room.name,x,y-3/k);
+  if(halo)x2.strokeText(room.name,x,y-3/k);
   x2.fillText(room.name,x,y-3/k);
   x2.font=(12/k)+'px Arial';
-  if(!free)x2.strokeText(area,x,y+13/k);
+  if(halo)x2.strokeText(area,x,y+13/k);
   x2.fillText(area,x,y+13/k);
  }
  x2.restore();
@@ -1406,21 +1407,153 @@ function drawPlanRoomSurfaces(rooms){
 function planSurfaceFinish(floor,fallbackColor=null,fallbackScale=60){
  const id=(floor.pat?floor.base:floor.m)||null;
  const definition=floorDefinition(floor),asset=definition&&scanAsset(definition);
- const scale=definition?.[8]||floor.sz||fallbackScale;
+ const scale=+definition?.[8]||+floor.sz||fallbackScale;
  const imported=id?.match(/^img(\d+)$/);
  return {
-  id, color:floor.surfaceTint?.base||floor.observedColor||definition?.[4]||fallbackColor,
+  id, definition, color:floor.surfaceTint?.base||floor.observedColor||definition?.[4]||(floor.pat&&/^#[0-9a-f]{6}$/i.test(floor.base)?floor.base:fallbackColor),
   texture:asset?scanURL(asset,'color'):imported?S.cm?.[+imported[1]]||null:null,
   widthCm:floor.pat?floor.tw||60:scale,
   depthCm:floor.pat?floor.th||60:scale,
-  angle:floor.pat?floor.rot||0:floor.r||0,
+  angle:+(floor.pat?floor.rot:floor.r)||0,
   repeat:'repeat',pattern:floor.pat||null,
   jointCm:floor.j??.3,jointColor:floor.jc||null,
   opacity:floor.opacity??1,finish:floor.fin||null,tint:floor.surfaceTint||null
  };
 }
+function planFloorCached(cache,key,limit,create){
+ if(cache.has(key)){
+  const value=cache.get(key);
+  cache.delete(key);cache.set(key,value);
+  return value;
+ }
+ const value=create();
+ if(cache.size>=limit)cache.delete(cache.keys().next().value);
+ cache.set(key,value);
+ return value;
+}
+const planFloorSources=new Map(),planFloorPatterns=new Map();
+let planFloorRedraw=0,planFloorFrame=0;
+function queuePlanFloorDraw(){
+ if(!planFloorRedraw)planFloorRedraw=requestAnimationFrame(()=>{
+  planFloorRedraw=0;
+  draw();
+ });
+}
+function planFloorSource(finish){
+ const def=finish.definition,tint=finish.tint;
+ const legacy=!finish.texture&&!def&&!finish.pattern&&finish.id&&!finish.id.startsWith('pbr:')&&!finish.id.startsWith('img');
+ if(!finish.texture&&!def&&!legacy)return null;
+ const key=JSON.stringify([finish.texture||def||finish.id,def?.[9],def?.[4],tint,legacy?finish.jointCm:null,legacy?finish.jointColor:null]);
+ const limit=32;
+ if(!planFloorSources.has(key)&&planFloorSources.size>=limit&&planFloorSources.values().next().value.frame>=planFloorFrame-1)return null;
+ const source=planFloorCached(planFloorSources,key,limit,()=>{
+  const entry={key,image:null,frame:planFloorFrame};
+  if(!finish.texture){
+   const build=()=>{
+    if(planFloorSources.get(key)!==entry)return;
+    if(def){
+     const maps=pbrTex(def);
+     entry.image=(tint?surfaceTintTexture({surfaceTint:tint},def)?.image:null)||maps.thumb;
+    }else{
+     const texture=tex(finish.id,finish.widthCm,finish.jointCm,finish.jointColor||'#aaa');
+     entry.image=texture.image;
+     texture.dispose();
+    }
+    queuePlanFloorDraw();
+   };
+   if('requestIdleCallback' in window)requestIdleCallback(build,{timeout:800});
+   else setTimeout(build,0);
+   return entry;
+  }
+  const image=new Image();
+  image.onload=()=>{
+   if(planFloorSources.get(key)!==entry)return;
+   const ratio=512/Math.max(image.naturalWidth,image.naturalHeight);
+   const surface=document.createElement('canvas');
+   surface.width=Math.max(1,Math.round(image.naturalWidth*ratio));
+   surface.height=Math.max(1,Math.round(image.naturalHeight*ratio));
+   const brush=surface.getContext('2d');
+   if(def?.[9]&&def[9]!=='wood-tone')brush.filter=def[9];
+   brush.drawImage(image,0,0,surface.width,surface.height);
+   brush.filter='none';
+   if(def?.[9]==='wood-tone'&&surface.width===surface.height)tintScannedWood(brush,surface.width,def[4]);
+   if(tint&&def&&surface.width===512&&surface.height===512)tintDiningGrain(brush,tint.base||def[4],tint.accent||'#64594c',Math.max(0,Math.min(100,+tint.strength||0)));
+   entry.image=surface;
+   queuePlanFloorDraw();
+  };
+  image.onerror=()=>{entry.failed=true};
+  image.src=finish.texture;
+  return entry;
+ });
+ source.frame=planFloorFrame;
+ return source;
+}
+function planFloorTilePattern(ctx,finish,source){
+ const tw=Math.max(.1,finish.widthCm),th=Math.max(.1,finish.depthCm),j=Math.max(0,+finish.jointCm||0);
+ const grid=tilePolys(finish.pattern,tw,th,j);
+ const surface=document.createElement('canvas');
+ const density=Math.min(4,640/Math.max(grid.cw,grid.ch));
+ surface.width=Math.max(2,Math.round(grid.cw*density));
+ surface.height=Math.max(2,Math.round(grid.ch*density));
+ const brush=surface.getContext('2d');
+ brush.scale(surface.width/grid.cw,surface.height/grid.ch);
+ brush.fillStyle=finish.jointColor||'#ccc9c2';
+ brush.fillRect(0,0,grid.cw,grid.ch);
+ const material=source?brush.createPattern(source,'repeat'):null;
+ if(material){
+  const repeat=finish.definition?.[8]||Math.max(tw,th);
+  // Sample the middle of the albedo when the configured repeat cell is smaller.
+  const x=Math.max(0,(repeat-grid.cw)/2),y=Math.max(0,(repeat-grid.ch)/2);
+  material.setTransform(new DOMMatrix().translate(-x,-y).scale(repeat/Math.max(source.width,source.height)));
+ }
+ brush.beginPath();
+ for(let col=-1;col<=1;col++)for(let row=-1;row<=1;row++){
+  for(const poly of grid.p){
+   poly.forEach(([x,y],i)=>{
+    const u=x+col*grid.cw,v=y+row*grid.ch;
+    if(i)brush.lineTo(u,v);else brush.moveTo(u,v);
+   });
+   brush.closePath();
+  }
+ }
+ brush.fillStyle=material||finish.color||'#dedbd4';brush.fill();
+ if(j){
+  brush.lineWidth=j;brush.lineJoin='miter';brush.strokeStyle=finish.jointColor||'#ccc9c2';brush.stroke();
+ }
+ const pattern=ctx.createPattern(surface,'repeat');
+ const angle=-(finish.angle+(finish.pattern==='diagonal'?45:0));
+ pattern.setTransform(new DOMMatrix().rotate(angle).scale(grid.cw/surface.width,grid.ch/surface.height));
+ return pattern;
+}
+function paintPlanFloor(ctx,finish,room,zoom){
+ if(!finish.id&&!finish.pattern&&!finish.color)return;
+ const source=planFloorSource(finish);
+ const image=source?.image;
+ const lowDetail=Math.min(finish.widthCm,finish.depthCm)*zoom<3;
+ let fill=finish.color||'#dedbd4';
+ if(!lowDetail&&(image||finish.pattern)){
+  const key=JSON.stringify([source?.key,!!image,finish.widthCm,finish.depthCm,finish.angle,finish.pattern,finish.jointCm,finish.jointColor,finish.color]);
+  fill=planFloorCached(planFloorPatterns,key,32,()=>{
+   if(finish.pattern)return planFloorTilePattern(ctx,finish,image);
+   const pattern=ctx.createPattern(image,'repeat');
+   const scale=finish.widthCm/Math.max(image.width,image.height);
+   pattern.setTransform(new DOMMatrix().rotate(-finish.angle).scale(scale));
+   return pattern;
+  });
+ }
+ let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+ for(const [x,y] of room.poly){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y)}
+ ctx.globalAlpha=Math.max(0,Math.min(1,finish.opacity));
+ ctx.fillStyle=fill;
+ ctx.fillRect(left,top,right-left,bottom-top);
+ if(sel?.k==='rooms'&&sel.id===room.id){
+  ctx.globalAlpha=1;ctx.fillStyle=PLAN_STYLE.selectedRoom;
+  ctx.fillRect(left,top,right-left,bottom-top);
+ }
+}
 function drawPlanFinishes(rooms,paint){
  if(typeof paint!=='function')return;
+ planFloorFrame++;
  for(const room of rooms){
   x2.save();
   tracePlanRoom(room);
@@ -1538,7 +1671,7 @@ function draw(options){
  x2.save();
  x2.translate(ox,oy);x2.scale(k,k);
  drawPlanRoomSurfaces(rooms);
- drawPlanFinishes(rooms,options?.floorPainter);
+ drawPlanFinishes(rooms,options?.floorPainter??paintPlanFloor);
  drawPlanArchitecture(options?.wallPainter);
  drawPlanObjects(rugs);
  drawPlanContactEffects(above,options?.contactShadow);
