@@ -1307,6 +1307,7 @@ function props(syncLayers=true){if(syncLayers)syncLayersFromSelection();P.innerH
 const c2=$('#c2'),x2=c2.getContext('2d'),W2=(px,py)=>[(px-ox)/k,(py-oy)/k];
 const planGpuStage=$('#planGpuStage');
 const planMeshById=new Map();
+let planFootprints=new Map();
 let planSplitRenderer=null,planSplitFailed=false,planGpuFailed=false,planGpuFrame=0,planOrtho=null,planTransformsDirty=false,planContactsDirty=true;
 const planGridControl=$('#ckPlanGrid');
 try{planGridControl.checked=localStorage.getItem('nuhio:plan-grid')!=='off'}catch{}
@@ -1870,13 +1871,13 @@ function pastePlanSelection(){
  $('#editorHint').textContent='Selección pegada.';
  return true;
 }
-function planFurnitureAt(x,y){
+function planFurnitureAt(x,y,touch=false){
  let hit=null,layer=-1;
  for(let n=S.i.length-1;n>=0;n--){
   const it=S.i[n],rank=planObjectLayer(it);
   if(rank<=layer||it.hid||layerHidden('item',it.id))continue;
   const dx=x-it.x,dy=y-it.y,c=Math.cos(-it.r*D),s=Math.sin(-it.r*D);
-  if(insideFurniturePlan(it,dx*c-dy*s,dx*s+dy*c)){
+  if(insideFurniturePlan(it,dx*c-dy*s,dx*s+dy*c,touch)){
    if(rank===2)return it;
    hit=it;layer=rank;
   }
@@ -1962,7 +1963,7 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
  }
  if(tool=='place'&&place){ghostCalc(wx,wy);if(ghost.ok){const o=JSON.parse(JSON.stringify(ghost));o.id=nid();delete o.ok;o.r=Math.round(o.r*100)/100;o.op=[];S.i.push(o);if(o.rel){const p=S.i.find(x=>x.id==o.rel.parentId);if(p)updateSupportTop(p)}sel={k:'i',id:o.id};ghost=null;tool='sel';drawTools();hint();commit()}return}
  // seleccionar
- const item=planFurnitureAt(wx,wy);
+ const item=planFurnitureAt(wx,wy,!!e.touch);
  let hit=item?{k:'i',id:item.id,o:item}:planWallAt(wx,wy);
  if(tool==='sel'&&!armed&&!wallVis&&hit){
   if(e.shiftKey){
@@ -2058,7 +2059,7 @@ function pressPlan(t){c2.onmousedown({clientX:t.clientX,clientY:t.clientY,button
 function canDragSelectedFurniture(t){
   if(armed||wallVis)return false;
   const r=c2.getBoundingClientRect();
-  const item=planFurnitureAt(...W2(t.clientX-r.left,t.clientY-r.top));
+  const item=planFurnitureAt(...W2(t.clientX-r.left,t.clientY-r.top),true);
   return !!item&&!item.lk&&planElementSelected('i',item.id);
 }
 c2.addEventListener('touchstart',e=>{
@@ -7153,7 +7154,7 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
  if(mv&&!it){toggleMotion(mv);commitQ();return}
  if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
 /* ===== Control general ===== */
-function refresh(light,planTransform=false){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();draw();if(!planTransform&&(mode=='3d'||!light))build3d();props()}
+function refresh(light,planTransform=false){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();if(!planTransform&&(mode=='3d'||!light))build3d();draw();props()}
 const editorView=$('#view');
 const dualSplitter=document.createElement('div');dualSplitter.id='dualSplitter';editorView.append(dualSplitter);
 dualSplitter.tabIndex=0;
@@ -7260,6 +7261,21 @@ function requestPlanGpu(){
 function rebuildPlanMeshIndex(){
  planMeshById.clear();
  for(const node of root.children)if(node.userData.id!=null)planMeshById.set(node.userData.id,node);
+ const previous=new Map([...planFootprints.values()].map(entry=>[entry.key,entry.shape]));
+ const shapes=new Map();
+ planFootprints=new Map();
+ for(const item of S.i){
+  const model=planMeshById.get(item.id);
+  if(!model||isChaiseSofa(item)||isLCarousel(item))continue;
+  const key=furnitureShapeKey(item);
+  let shape=shapes.get(key);
+  if(!shape){
+   shape=previous.get(key);
+   if(!shape?.bounds)shape={bounds:furnitureProjectionBounds(model),footprint:undefined};
+   shapes.set(key,shape);
+  }
+  planFootprints.set(item.id,{item,model,key,shape});
+ }
  planContactsDirty=true;
 }
 function syncPlanGpuTransforms(){
@@ -7644,7 +7660,7 @@ const cors=i=>{const c=Math.cos(i.r*D),s=Math.sin(i.r*D);return[[-1,-1],[1,-1],[
 const sat=(A,B)=>{for(const P of[A,B])for(let n=0;n<4;n++){const p=P[n],q=P[(n+1)%4],ax=q[1]-p[1],ay=p[0]-q[0];let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;A.forEach(v=>{const d=v[0]*ax+v[1]*ay;a0=Math.min(a0,d);a1=Math.max(a1,d)});B.forEach(v=>{const d=v[0]*ax+v[1]*ay;b0=Math.min(b0,d);b1=Math.max(b1,d)});if(a1<=b0+.01||b1<=a0+.01)return false}return true};
 const wrect=w=>({x:(w.x1+w.x2)/2,y:(w.y1+w.y2)/2,w:len(w),d:w.t,r:Math.atan2(w.y2-w.y1,w.x2-w.x1)/D});
 function isSurfaceAccessory(it){return !!(it&&(it.role=='surface-accessory'||['fregadero','griferia','planta','lampara'].includes(it.t)))}
-function pointInItem(it,x,y){const dx=x-it.x,dy=y-it.y,c=Math.cos(-(it.r||0)*D),s=Math.sin(-(it.r||0)*D),lx=dx*c-dy*s,ly=dx*s+dy*c;return insideFurniturePlan(it,lx,ly)&&(!isOfficeCornerDesk(it)||lx>=it.w*.16||ly<=it.d*.03)}
+function pointInItem(it,x,y){const dx=x-it.x,dy=y-it.y,c=Math.cos(-(it.r||0)*D),s=Math.sin(-(it.r||0)*D),lx=dx*c-dy*s,ly=dx*s+dy*c;return insideSupportPlan(it,lx,ly)&&(!isOfficeCornerDesk(it)||lx>=it.w*.16||ly<=it.d*.03)}
 function supportableParent(it){return !!(it&&it.id!=null&&!(it.t==='roomObject'&&it.role==='surface-accessory')&&!['sofa','cama','inodoro','alfombra','planta','lampara','model'].includes(it.t))}
 function supportHeight(parent){return (+parent.e||0)+(+parent.h||0)+(isOfficeItem(parent)&&parent.shape==='desk'&&!parent.supportTop?0:1.8)}
 function attachToSurface(child,parent){if(!child||!parent||parent.id==null||child.id==parent.id)return false;const a=(parent.r||0)*D,c=Math.cos(a),s=Math.sin(a),dx=child.x-parent.x,dy=child.y-parent.y;child.rel={type:'surface',parentId:parent.id,dx:dx*c+dy*s,dy:-dx*s+dy*c,dr:(child.r||0)-(parent.r||0),dz:0};child.e=supportHeight(parent);updateSupportTop(parent);return true}
@@ -8678,29 +8694,18 @@ LAY['torre']=(g,it,c,Mx,y0,H,iw)=>{let y=y0+2;(c.slots||[]).forEach((s,i)=>{cons
 function tagp(o,t,i,it){o.userData.part={t,i};if(it&&selPart&&selPart.id==it.id&&selPart.t==t&&selPart.i==i)HL.push(o);return o}
 function isLCarousel(it){return it.t==='mod'&&it.cfg?.k==='base'&&it.cfg.lay==='esquina carrusel'&&it.cfg.cornerL===true}
 function cornerArm(it){return Math.min(60,Math.min(it.w,it.d)*.62)}
-function traceChaisePlan(ctx,zones){
+function chaisePlanRing(zones){
  const [extension,short,leftArm,rightArm]=zones;
  const left=extension.x-extension.w/2,step=extension.x+extension.w/2;
  const right=short.x+short.w/2,back=short.y-short.d/2;
  const shortFront=short.y+short.d/2,front=extension.y+extension.d/2;
  const armBack=leftArm.y-leftArm.d/2,armFront=leftArm.y+leftArm.d/2;
  const leftEdge=leftArm.x-leftArm.w/2,rightEdge=rightArm.x+rightArm.w/2;
- ctx.beginPath();
- ctx.moveTo(left,back);
- ctx.lineTo(right,back);
- ctx.lineTo(right,armBack);
- ctx.lineTo(rightEdge,armBack);
- ctx.lineTo(rightEdge,armFront);
- ctx.lineTo(right,armFront);
- ctx.lineTo(right,shortFront);
- ctx.lineTo(step,shortFront);
- ctx.lineTo(step,front);
- ctx.lineTo(left,front);
- ctx.lineTo(left,armFront);
- ctx.lineTo(leftEdge,armFront);
- ctx.lineTo(leftEdge,armBack);
- ctx.lineTo(left,armBack);
- ctx.closePath();
+ return [[left,back],[right,back],[right,armBack],[rightEdge,armBack],[rightEdge,armFront],[right,armFront],[right,shortFront],
+  [step,shortFront],[step,front],[left,front],[left,armFront],[leftEdge,armFront],[leftEdge,armBack],[left,armBack]];
+}
+function traceChaisePlan(ctx,zones){
+ ctx.beginPath();tracePlanRing(ctx,chaisePlanRing(zones));
 }
 function tracePlanCushion(ctx,left,top,w,d,radius){
  const right=left+w,bottom=top+d;
@@ -9098,16 +9103,167 @@ function drawCatalogFurniturePlan(ctx,it,selected,zoom){
  }
  return true;
 }
-function traceFurniturePlan(ctx,it){
- if(isChaiseSofa(it)){traceChaisePlan(ctx,chaisePlanZones(it));return}
- const {w,d}=it;
- ctx.beginPath();
- if(!isLCarousel(it)){ctx.rect(-w/2,-d/2,w,d);return}
- const arm=cornerArm(it),x=arm-w/2,z=arm-d/2;
- ctx.moveTo(-w/2,-d/2);ctx.lineTo(w/2,-d/2);ctx.lineTo(w/2,z);
- ctx.lineTo(x,z);ctx.lineTo(x,d/2);ctx.lineTo(-w/2,d/2);ctx.closePath();
+function tracePlanRing(ctx,ring){
+ ctx.moveTo(...ring[0]);
+ for(let i=1;i<ring.length;i++)ctx.lineTo(...ring[i]);
+ ctx.closePath();
 }
-function insideFurniturePlan(it,x,z){
+function explicitFurnitureRing(it){
+ if(isChaiseSofa(it))return chaisePlanRing(chaisePlanZones(it));
+ if(!isLCarousel(it))return null;
+ const w=it.w/2,d=it.d/2,arm=cornerArm(it);
+ return [[-w,-d],[w,-d],[w,arm-d],[arm-w,arm-d],[arm-w,d],[-w,d]];
+}
+function furnitureShapeKey(it){
+ const {id,x,y,r,e,col,lk,hid,rel,lightOn,lightPower,lightTone,...shape}=it;
+ return JSON.stringify(shape);
+}
+function simplifyPlanChain(points,first,last,keep){
+ const stack=[[first,last]];
+ while(stack.length){
+  const [from,to]=stack.pop();
+  let best=1.25,index=-1;
+  for(let i=from+1;i<to;i++){
+   const distance=psd(points[i],points[from],points[to]).d;
+   if(distance>best){best=distance;index=i}
+  }
+  if(index>=0){keep.add(index);stack.push([from,index],[index,to])}
+ }
+}
+function planMaskRings(pixels,width,height){
+ const stride=width+1,edges=new Uint8Array(stride*(height+1));
+ const filled=(x,y)=>x>=0&&x<width&&y>=0&&y<height&&pixels[(y*width+x)*4+3]>=96;
+ for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+  if(!filled(x,y))continue;
+  const p=y*stride+x;
+  if(!filled(x,y-1))edges[p]|=1;
+  if(!filled(x+1,y))edges[p+1]|=2;
+  if(!filled(x,y+1))edges[p+stride+1]|=4;
+  if(!filled(x-1,y))edges[p+stride]|=8;
+ }
+ const step=[1,stride,-1,-stride],rings=[];
+ for(let start=0;start<edges.length;start++)while(edges[start]){
+  const points=[];
+  let p=start,direction=edges[p]&1?0:edges[p]&2?1:edges[p]&4?2:3;
+  do{
+   points.push([p%stride,Math.floor(p/stride)]);
+   edges[p]&=~(1<<direction);
+   p+=step[direction];
+   // Keep the filled cell to the right at diagonal contacts.
+   const right=(direction+1)%4;
+   if(edges[p]&(1<<right))direction=right;
+   else if(!(edges[p]&(1<<direction)))direction=(direction+3)%4;
+  }while(p!==start&&edges[p]);
+  if(p!==start||points.length<4)continue;
+  const middle=Math.floor(points.length/2),keep=new Set([0,middle]);
+  points.push(points[0]);
+  simplifyPlanChain(points,0,middle,keep);
+  simplifyPlanChain(points,middle,points.length-1,keep);
+  const ring=points.filter((_,i)=>keep.has(i));
+  if(ring.length>=3)rings.push(ring);
+ }
+ return rings;
+}
+function forEachPlanProjectionMesh(model,visit){
+ // Model-local coordinates match Canvas after the item's translation and rotation.
+ model.updateWorldMatrix(true,true);
+ const inverse=new T.Matrix4().copy(model.matrixWorld).invert();
+ const matrix=new T.Matrix4(),instance=new T.Matrix4();
+ model.traverseVisible(mesh=>{
+  const geometry=mesh.geometry,position=geometry?.attributes.position;
+  if(!mesh.isMesh||!position||![].concat(mesh.material).some(m=>m?.visible!==false&&m?.opacity!==0))return;
+  const transform=new T.Matrix4().multiplyMatrices(inverse,mesh.matrixWorld);
+  for(let copy=0;copy<(mesh.isInstancedMesh?mesh.count:1);copy++){
+   matrix.copy(transform);
+   if(mesh.isInstancedMesh){mesh.getMatrixAt(copy,instance);matrix.multiply(instance)}
+   visit(geometry,position,matrix);
+  }
+ });
+}
+function furnitureProjectionBounds(model){
+ const bounds=new T.Box3(),transformed=new T.Box3();
+ forEachPlanProjectionMesh(model,(geometry,position,matrix)=>{
+  if(!geometry.boundingBox)geometry.computeBoundingBox();
+  bounds.union(transformed.copy(geometry.boundingBox).applyMatrix4(matrix));
+ });
+ return bounds.isEmpty()?null:{left:bounds.min.x,right:bounds.max.x,top:bounds.min.z,bottom:bounds.max.z};
+}
+let furnitureMaskContext=null;
+function projectFurnitureFootprint(model){
+ const point=new T.Vector3(),meshes=[];
+ let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+ forEachPlanProjectionMesh(model,(geometry,position,matrix)=>{
+  const points=new Float32Array(position.count*2);
+  for(let i=0;i<position.count;i++){
+   point.fromBufferAttribute(position,i).applyMatrix4(matrix);
+   const {x,z}=point;
+   if(!Number.isFinite(x)||!Number.isFinite(z))return;
+   points[i*2]=x;points[i*2+1]=z;
+   left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,z);bottom=Math.max(bottom,z);
+  }
+  meshes.push({points,index:geometry.index});
+ });
+ const extent=Math.max(right-left,bottom-top);
+ if(!(extent>0))return null;
+ const scale=192/extent,width=Math.ceil((right-left)*scale)+4,height=Math.ceil((bottom-top)*scale)+4;
+ furnitureMaskContext||=document.createElement('canvas').getContext('2d',{willReadFrequently:true});
+ const ctx=furnitureMaskContext;
+ if(!ctx)return null;
+ ctx.canvas.width=width;ctx.canvas.height=height;
+ ctx.setTransform(scale,0,0,scale,2-left*scale,2-top*scale);
+ for(const {points,index} of meshes){
+  const count=index?index.count:points.length/2;
+  ctx.beginPath();
+  for(let i=0;i+2<count;i+=3){
+   const a=(index?index.getX(i):i)*2,b=(index?index.getX(i+1):i+1)*2,c=(index?index.getX(i+2):i+2)*2;
+   const ax=points[a],az=points[a+1],bx=points[b],bz=points[b+1],cx=points[c],cz=points[c+1];
+   const area=(bx-ax)*(cz-az)-(bz-az)*(cx-ax);
+   if(Math.abs(area)<1e-8)continue;
+   // Consistent winding makes the Canvas fill the union of projected triangles.
+   ctx.moveTo(ax,az);
+   ctx.lineTo(area>0?bx:cx,area>0?bz:cz);
+   ctx.lineTo(area>0?cx:bx,area>0?cz:bz);
+   ctx.closePath();
+  }
+  ctx.fill();
+ }
+ const rings=planMaskRings(ctx.getImageData(0,0,width,height).data,width,height)
+  .map(ring=>ring.map(([x,z])=>[left+(x-2)/scale,top+(z-2)/scale]));
+ return rings.length?{rings,left,top,right,bottom}:null;
+}
+function traceFurniturePlan(ctx,it){
+ const explicit=explicitFurnitureRing(it);
+ const footprint=explicit?null:furnitureFootprint(it);
+ ctx.beginPath();
+ if(explicit)tracePlanRing(ctx,explicit);
+ else if(footprint)for(const ring of footprint.rings)tracePlanRing(ctx,ring);
+ else ctx.rect(-it.w/2,-it.d/2,it.w,it.d);
+}
+function furnitureFootprint(it){
+ const entry=planFootprints.get(it.id);
+ if(!entry||entry.item!==it)return null;
+ if(entry.shape.footprint===undefined)entry.shape.footprint=projectFurnitureFootprint(entry.model);
+ return entry.shape.footprint;
+}
+function insideFurniturePlan(it,x,z,touch=false){
+ const explicit=explicitFurnitureRing(it);
+ if(explicit)return inPoly(x,z,explicit);
+ const entry=planFootprints.get(it.id);
+ const padding=touch&&Math.min(it.w,it.d)*k<=32?Math.min(8,4/k):0;
+ // The conservative bounds keep clicks away from unrelated meshes cheap.
+ const bounds=entry?.shape.bounds;
+ if(bounds&&(x<bounds.left-padding||x>bounds.right+padding||z<bounds.top-padding||z>bounds.bottom+padding))return false;
+ const footprint=furnitureFootprint(it);
+ if(!footprint)return Math.abs(x)<=it.w/2+padding&&Math.abs(z)<=it.d/2+padding;
+ const {rings,left,top,right,bottom}=footprint;
+ if(x<left-padding||x>right+padding||z<top-padding||z>bottom+padding)return false;
+ let inside=false;
+ for(const ring of rings)if(inPoly(x,z,ring))inside=!inside;
+ if(inside||!padding)return inside;
+ return rings.some(ring=>ring.some((p,i)=>psd([x,z],p,ring[(i+1)%ring.length]).d<=padding));
+}
+
+function insideSupportPlan(it,x,z){
  if(isChaiseSofa(it))return chaisePlanZones(it).some(zone=>Math.abs(x-zone.x)<=zone.w/2&&Math.abs(z-zone.y)<=zone.d/2);
  if(Math.abs(x)>=it.w/2||Math.abs(z)>=it.d/2)return false;
  if(!isLCarousel(it))return true;
