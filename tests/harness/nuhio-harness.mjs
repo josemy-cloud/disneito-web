@@ -34,10 +34,12 @@ export async function abrirEditor(browser, { baseDir = root } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 }, acceptDownloads: false });
   const bloqueadas = [];
   const errores = [];
+  const peticiones = [];
   await ctx.route('**/*', route => {
     const u = new URL(route.request().url());
     if (u.hostname !== 'nuhio.test') { bloqueadas.push(u.href); return route.abort(); }
     const p = u.pathname;
+    peticiones.push(p);
     const js = body => route.fulfill({ status: 200, contentType: 'text/javascript', body });
     if (p === '/') return route.fulfill({ status: 200, contentType: 'text/html', body: html });
     if (p === '/auth.js') return js(authStub);
@@ -52,5 +54,5 @@ export async function abrirEditor(browser, { baseDir = root } = {}) {
   page.on('pageerror', e => errores.push(String(e)));
   page.on('dialog', d => { errores.push('dialog:' + d.message()); d.dismiss(); });
   await page.goto('https://nuhio.test/', { waitUntil: 'load' });
-  return { ctx, page, bloqueadas, errores };
+  return { ctx, page, bloqueadas, errores, peticiones };
 }

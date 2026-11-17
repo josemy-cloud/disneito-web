@@ -6,3 +6,6 @@
 **/*.key
 **/*.bat
 **/pruebas-local/**
+# Documentos internos de trabajo (inventario/auditoría de modelos 3D): ni el editor ni el Worker los usan.
+/inventario-modelos-3d.json
+/auditoria-biblioteca-modelos-3d.json
