@@ -2979,7 +2979,7 @@ ceilingSpot(g,it,mt){
  lens.position.y=it.h*.1;lens.userData.ceilingSpotVisual=true;g.add(lens);
  lens.material.userData.fixtureEmission.toggleToneMapping=true;
  syncFixtureEmission(lens.material,it);
- const light=new T.SpotLight(warm,0,750,it.wideBeam?.68:.42,.65,1);
+ const light=new T.SpotLight(warm,0,750,it.wideBeam?.68:.42,.88,1);
  bindFixtureLight(light,it,warm,5.5);
  light.position.y=-.25;light.target.position.y=-200;
  g.add(light,light.target);
@@ -3684,7 +3684,7 @@ function buildBedroomLamp(g,it,primary){
  const profile=[[r*.94,low],[r,low+shadeH*.043],[r*.65,h-shadeH*.032],[r*.61,h],[r*.58,h-shadeH*.026],[r*.93,low+shadeH*.049],[r*.91,low]].map(([x,y])=>new T.Vector2(x,y));
  const shell=new T.Mesh(new T.LatheGeometry(profile,72),shade);shell.castShadow=true;g.add(shell);
  const globe=new T.Mesh(new T.SphereGeometry(Math.min(3,r*.18),24,16),bulb);globe.position.y=low+shadeH*.468;g.add(globe);
- applyLampLight(g,it,globe,shade);
+ applyLampLight(g,it,globe,shade,low);
  for(const side of [-1,1])bedroomTube(g,[0,low+shadeH*.66,0],[side*r*.67,low+shadeH*.66,0],.24,bulb);
 }
 function syncFixtureEmission(material,it){
@@ -3718,7 +3718,7 @@ function syncFixtureSource(light,it){
 }
 function bindFixtureLight(light,it,color,intensity){
  light.userData.fixtureShadow=true;
- light.userData.fixtureSource={color,intensity};
+ light.userData.fixtureSource={color,intensity,distance:light.distance};
  syncFixtureSource(light,it);
 }
 function addFixtureLight(g,it,color,intensity,distance,x,y,z){
@@ -3726,15 +3726,20 @@ function addFixtureLight(g,it,color,intensity,distance,x,y,z){
  bindFixtureLight(light,it,color,intensity);
  light.position.set(x,y,z);g.add(light);
 }
-function applyLampLight(g,it,bulb,shade){
+function applyLampLight(g,it,bulb,shade,aperture){
  const warm='#ffe4b7';
  bulb.material=bulb.material.clone();
  bindFixtureEmission(bulb.material,it,warm,2.6,true);
  if(shade?.emissive)bindFixtureEmission(shade,it,warm,.18);
- const light=new T.PointLight(warm,0,320,1);
+ // Emit through the open underside of the shade, where the opaque shell ends.
+ const light=new T.SpotLight(warm,0,320,.92,.94,1);
  light.name='Luz de lámpara';
- bindFixtureLight(light,it,warm,1.35);
- light.position.copy(bulb.position);g.add(light);
+ bindFixtureLight(light,it,warm,1.6);
+ light.position.copy(bulb.position);
+ light.position.y=Math.min(light.position.y,aperture)-.6;
+ light.target.position.copy(light.position);
+ light.target.position.y-=120;
+ g.add(light,light.target);
 }
 
 function buildDressingShoeRack(g,it,primary){
@@ -3984,7 +3989,7 @@ function buildLivingLamp(g,it,primary){
  mount.position.y=mountY+1;g.add(mount);
  bedroomTube(g,[0,mountY+(hanging?0:2),0],[0,socketY,0],hanging?.55:1.15,body);
  bedroomTube(g,[0,socketY,0],[0,bulb.position.y,0],r*.10,body);
- applyLampLight(g,it,bulb,shade);
+ applyLampLight(g,it,bulb,shade,bottom);
 }
 
 function buildHallConsole(g,it,primary){
@@ -6219,7 +6224,7 @@ case'lamp':{
  const rim=new T.Mesh(new T.TorusGeometry(w*.46,Math.max(.6,w*.009),10,64),metal);rim.position.y=sh.position.y;g.add(rim);
  const socket=new T.Mesh(new T.CylinderGeometry(Math.max(2,w*.055),Math.max(2,w*.07),h*.055,24),dark);socket.position.y=sh.position.y-h*.045;g.add(socket);
  const globe=new T.Mesh(new T.SphereGeometry(1,32,20),bulb);globe.scale.set(w*.105,h*.07,w*.105);globe.position.y=sh.position.y-h*.12;g.add(globe);
- applyLampLight(g,it,globe,shade);
+ applyLampLight(g,it,globe,shade,sh.position.y);
  if(floor){for(const a of [-1,1]){tube([0,h*.05,0],[a*w*.34,2,a*d*.34],2,metal)}}
  if(table){const neck=new T.Mesh(new T.CylinderGeometry(2.5,3.5,h*.12,20),metal);neck.position.y=h*.61;g.add(neck)}
  if(hanging){for(let k=0;k<3;k++){const a=k*Math.PI*2/3;tube([Math.cos(a)*w*.12,h*.72,Math.sin(a)*d*.12],[Math.cos(a)*w*.4,h*.91,Math.sin(a)*d*.4],.8,metal)}}
@@ -6722,32 +6727,45 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
   mesh.castShadow=true;mesh.receiveShadow=true;
  });
 }
-function configureFixtureShadows(scene,coarse,preferSpots=false){
+function limitUnshadowedFixture(light){
+ const p=light.getWorldPosition(new T.Vector3());
+ if(!ceilingSpotRoom(p.x,p.z))return;
+ let reach=Math.min(light.distance,Math.max(.1,p.y));
+ for(const wall of S.w){
+  if(wall.hid||wall.tr||layerHidden('wall',wall.id))continue;
+  reach=Math.min(reach,Math.max(.1,segd(wall,p.x,p.z).d-(+wall.t||10)/2));
+ }
+ const room=ceilingSpotRoom(p.x,p.z);
+ if(light.isPointLight&&roomCeilingVisible(room))reach=Math.min(reach,Math.max(.1,(+room.ceil.h||250)-p.y));
+ light.distance=reach;
+}
+function configureFixtureShadows(scene,coarse){
  const fixtures=[];
- scene.traverse(light=>{if(light.isLight&&light.userData.fixtureShadow){light.castShadow=false;fixtures.push(light)}});
+ scene.traverse(light=>{if(light.isLight&&light.userData.fixtureShadow)fixtures.push(light)});
  fixtures.sort((a,b)=>Number(b.isSpotLight===true)-Number(a.isSpotLight===true)||b.intensity-a.intensity);
  let spots=0,points=0;
  for(const light of fixtures){
-  if(!light.visible||light.intensity<=0)continue;
-  // Una luz puntual necesita seis caras de sombra; se reserva un único mapa cúbico.
-  if(light.isSpotLight){
-   if(spots>=(coarse?2:4))continue;
-   spots++;
-  }else{
-   if(!light.isPointLight||points||((coarse||preferSpots)&&spots))continue;
-   points++;
+  const wasShadowed=light.castShadow;
+  light.castShadow=false;
+  light.distance=light.userData.fixtureSource.distance;
+  if(light.visible&&light.intensity>0){
+   if(light.isSpotLight&&spots<(coarse?5:6)){light.castShadow=true;spots++}
+   if(light.isPointLight&&points<(coarse?0:1)){light.castShadow=true;points++}
+   if(!light.castShadow)limitUnshadowedFixture(light);
   }
-  light.castShadow=true;
   const shadow=light.shadow;
+  if(!light.castShadow){
+   if(shadow.map){shadow.map.dispose();shadow.map=null}
+   continue;
+  }
   const size=light.isPointLight||coarse?256:512;
   shadow.mapSize.set(size,size);
-  shadow.camera.near=2;
+  shadow.camera.near=light.isSpotLight?1:2;
   shadow.camera.far=light.distance||750;
   shadow.camera.updateProjectionMatrix();
-  shadow.normalBias=.30;shadow.bias=-.00018;shadow.radius=2;
- }
- for(const light of fixtures)if(!light.castShadow&&light.shadow.map){
-  light.shadow.map.dispose();light.shadow.map=null;
+  shadow.normalBias=.24;shadow.bias=-.00012;shadow.radius=2;
+  shadow.autoUpdate=RVo;
+  if(!wasShadowed||!shadow.map)shadow.needsUpdate=true;
  }
 }
 function build3d(){if(!r3)return;roomsUpdate();
@@ -6763,7 +6781,7 @@ function build3d(){if(!r3)return;roomsUpdate();
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),floorMaterial(S.fl,fw,fd,[fw/2,fd/2]));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
  S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);const visualVisible=syncCeilingSpotVisuals(g,it);if(visualVisible&&planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
- if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches,!RVo);
+ if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
  fitSunToProject();setSun();addRealisticDetails();rebuildPlanMeshIndex();requestPlanGpu();
 }
 const planContactGroup=new T.Group(),planGpuBackground=new T.Color('#edf0f2');
@@ -6905,7 +6923,8 @@ function pilotExteriorFor(window){
  pilotExterior.rotation.y=Math.atan2(-window.nx,-window.nz);
  return pilotExterior;
 }
-function invalidateWindowShadow(){
+function invalidateInteriorShadows(){
+ root.traverse(node=>{if(node.userData.fixtureShadow&&node.castShadow)node.shadow.needsUpdate=true});
  for(const object of realisticDetails.children)if(object.isSpotLight&&object.castShadow)object.shadow.needsUpdate=true;
 }
 function addRealisticDetails(){
@@ -7039,7 +7058,7 @@ function animate(){requestAnimationFrame(animate);
   if(Math.abs(motion.v-before)>.0005)sceneMotion=true;
  }
  if(sceneMotion){
-  invalidateWindowShadow();
+  invalidateInteriorShadows();
   if(dualView)requestPlanGpu();
  }
  if(walk&&now-lastWalkPick>=100){
@@ -7089,7 +7108,7 @@ function pickEditor3D(raycaster){
  });
 }
 function positionTouchModel(it){
- invalidateWindowShadow();
+ invalidateInteriorShadows();
  const model=root.children.find(o=>o.userData.id===it.id);
  if(!model)return;
  model.position.set(it.x,it.e,it.y);model.updateMatrixWorld(true);
@@ -7327,7 +7346,7 @@ function rebuildPlanMeshIndex(){
 function syncPlanGpuTransforms(){
  if(!planTransformsDirty)return;
  planTransformsDirty=false;
- invalidateWindowShadow();
+ invalidateInteriorShadows();
  for(const item of S.i){
   const node=planMeshById.get(item.id);
   if(!node)continue;
@@ -8119,7 +8138,7 @@ function renderLayerViewport(){
  const windowShadowLayers=editorHidden.size?[...editorHidden].join('|'):'';
  if(windowShadowLayers!==previousWindowShadowLayers){
   previousWindowShadowLayers=windowShadowLayers;
-  invalidateWindowShadow();
+  invalidateInteriorShadows();
  }
  if(!editorHidden.size){r3.render(sc,cam);return}
  const hidden=[];
@@ -11023,7 +11042,7 @@ function commitFixtureLight(it){
   if(node.userData.fixtureSource)syncFixtureSource(node,it);
   if(node.isMesh)for(const material of [].concat(node.material))syncFixtureEmission(material,it);
  });
- if(group&&(RVo||$('#sq').value==='q'))configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches,!RVo);
+ if(group&&(RVo||$('#sq').value==='q'))configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
  commitQ();
  requestPlanGpu();
  props();
