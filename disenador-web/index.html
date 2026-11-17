@@ -2633,8 +2633,10 @@ function setSun(){
  sun.target.position.copy(sunTarget);
  const direct=.57+Math.sin(e)*.40,q=$('#sq').value,day=!RVo&&dayInteriorActive();
  // La vista Realista equilibra el sol con luz difusa para evitar contrastes duros.
- sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(eveningInteriorActive('night')?0:eveningInteriorActive('sunset')?.14:day?.76:.68):direct;
- sun.shadow.radius=day?5.5:4;
+ const sunset=eveningInteriorActive('sunset'),night=eveningInteriorActive('night');
+ sun.color.set(sunset?'#ffbc83':'#fff5e8');
+ sun.intensity=RVo?direct:q==='m'?0:q==='q'?direct*(night?0:sunset?.46:day?.93:.78):direct;
+ sun.shadow.radius=q==='q'&&!RVo?(sunset?6:4):4;
  fill.position.set(sunC.x-900,1100,sunC.z+650);
  rim.position.set(sunC.x+700,850,sunC.z-900);
  const camera=sun.shadow.camera;
@@ -2657,15 +2659,15 @@ function applyViewportLook(){
  $('#dayInterior').setAttribute('aria-pressed',String(day));
  r3.shadowMap.enabled=realistic;sun.castShadow=realistic&&!night;
  sc.environment=null;
- if(realistic)setSunShadowSize(2048);
- r3.toneMappingExposure=night?1:sunset?.96:day?1.03:realistic?1.00:materials?1.01:.88;
+ if(realistic)setSunShadowSize(matchMedia('(pointer:coarse)').matches?1024:2048);
+ r3.toneMappingExposure=night?1.16:sunset?1.04:day?1.04:realistic?1.00:materials?1.01:.88;
  r3.setPixelRatio(previewPixelRatio(d3.clientWidth,d3.clientHeight));
  hemi.color.set(night?'#c6d6f0':sunset?'#dbe3f4':day?'#f3f5f7':'#fafcff');
  hemi.groundColor.set(day?'#b6a797':'#8b8276');
- const salon=S.i.some(it=>!it.hid&&isChaiseSofa(it));
- hemi.intensity=night?.10:sunset?.25:day?(salon?.40:.48):realistic?(salon?.54:.82):materials?.95:.55;
- fill.intensity=night?0:sunset?.035:day?.07:realistic?.22:materials?0:.20;
- rim.intensity=night?0:sunset?.02:day?.03:realistic?.07:materials?0:.12;
+ // A restrained diffuse floor keeps depth and lets windows and fixtures shape the room.
+ hemi.intensity=night?.11:sunset?.19:day?.34:realistic?.53:materials?.95:.55;
+ fill.intensity=realistic?(night||sunset?0:day?.025:.07):materials?0:.20;
+ rim.intensity=realistic?0:materials?0:.12;
 }
 function setQ(){
  if(!r3)return;
@@ -6720,7 +6722,7 @@ default:console.warn('Subtipo geométrico sin reconstrucción específica; se om
   mesh.castShadow=true;mesh.receiveShadow=true;
  });
 }
-function configureFixtureShadows(scene,coarse){
+function configureFixtureShadows(scene,coarse,preferSpots=false){
  const fixtures=[];
  scene.traverse(light=>{if(light.isLight&&light.userData.fixtureShadow){light.castShadow=false;fixtures.push(light)}});
  fixtures.sort((a,b)=>Number(b.isSpotLight===true)-Number(a.isSpotLight===true)||b.intensity-a.intensity);
@@ -6732,7 +6734,7 @@ function configureFixtureShadows(scene,coarse){
    if(spots>=(coarse?2:4))continue;
    spots++;
   }else{
-   if(!light.isPointLight||points||(coarse&&spots))continue;
+   if(!light.isPointLight||points||((coarse||preferSpots)&&spots))continue;
    points++;
   }
   light.castShadow=true;
@@ -6761,7 +6763,7 @@ function build3d(){if(!r3)return;roomsUpdate();
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),floorMaterial(S.fl,fw,fd,[fw/2,fd/2]));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
  S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);const visualVisible=syncCeilingSpotVisuals(g,it);if(visualVisible&&planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
- if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
+ if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches,!RVo);
  fitSunToProject();setSun();addRealisticDetails();rebuildPlanMeshIndex();requestPlanGpu();
 }
 const planContactGroup=new T.Group(),planGpuBackground=new T.Color('#edf0f2');
@@ -6801,7 +6803,7 @@ function windowFillSpecs(walls,openings,rooms){
   const left=inside(1),right=inside(-1);
   if(left===right)continue;
   const side=left?1:-1;
-  windows.push({x:x-dz*offset*side,z:z+dx*offset*side,y:+s+h*.57,nx:-dz*side,nz:dx*side,area:wd*h,width:+wd,groundDoor:ty==='d'&&+s<=5,wallOffset:offset});
+  windows.push({opening:opening.id,wall:wall.id,x:x-dz*offset*side,z:z+dx*offset*side,y:+s+h*.57,nx:-dz*side,nz:dx*side,area:wd*h,width:+wd,groundDoor:ty==='d'&&+s<=5,wallOffset:offset});
  }
  return windows.sort((a,b)=>b.area-a.area);
 }
@@ -6903,7 +6905,11 @@ function pilotExteriorFor(window){
  pilotExterior.rotation.y=Math.atan2(-window.nx,-window.nz);
  return pilotExterior;
 }
+function invalidateWindowShadow(){
+ for(const object of realisticDetails.children)if(object.isSpotLight&&object.castShadow)object.shadow.needsUpdate=true;
+}
 function addRealisticDetails(){
+ for(const object of realisticDetails.children)if(object.userData.windowOpening!=null)object.shadow.map?.dispose();
  realisticDetails.clear();
  if(RVo)return;
  const sunset=eveningInteriorActive('sunset'),night=eveningInteriorActive('night');
@@ -6919,14 +6925,24 @@ function addRealisticDetails(){
   realisticDetails.add(pilotExteriorFor(exterior));
  }
  for(const [index,window] of windows.slice(0,night?0:coarse?1:2).entries()){
-  const salon=rooms.some(room=>inPoly(window.x,window.z,room.poly)&&S.i.some(it=>!it.hid&&isChaiseSofa(it)&&inPoly(it.x,it.y,room.poly)));
-  const strength=sunset?Math.min(.15,.06+window.area/320000):day&&index===0
-   ?Math.min(salon?.83:.78,(salon?.42:.40)+window.area/(salon?155000:170000))
-   :Math.min(salon?.56:.42,(salon?.23:.16)+window.area/(salon?110000:120000));
-  const light=new T.SpotLight(sunset?'#ffe1bb':day?'#f5f7ff':'#fff1df',strength,day?620:520,day?.98:.86,day?.88:.75,1.15);
+  const strength=(sunset?.36:day?.86:.70)*Math.min(1.25,Math.sqrt(window.area/26000))*(index===0?1:.55);
+  const light=new T.SpotLight(sunset?'#c8d7ff':'#eef5ff',strength,day?650:530,.96,.9,1.15);
   light.position.set(window.x,window.y,window.z);
-  const reach=salon?220:240;
-  light.target.position.set(window.x+window.nx*reach,salon?65:40,window.z+window.nz*reach);
+  light.target.position.set(window.x+window.nx*220,40,window.z+window.nz*220);
+  light.userData.windowOpening=window.opening;
+  light.userData.windowWall=window.wall;
+  // One bounded shadow map approximates the occlusion of the dominant opening.
+  if(index===0&&!coarse){
+   light.castShadow=true;
+   light.shadow.mapSize.set(1024,1024);
+   light.shadow.camera.near=8;
+   light.shadow.camera.far=light.distance;
+   light.shadow.normalBias=.55;
+   light.shadow.bias=-.00012;
+   light.shadow.radius=5;
+   light.shadow.autoUpdate=false;
+   light.shadow.needsUpdate=true;
+  }
   realisticDetails.add(light,light.target);
  }
  const rugs=S.i.filter(it=>it.t==='alfombra'&&!it.hid&&!(+it.e>2));
@@ -7016,13 +7032,16 @@ function animate(){requestAnimationFrame(animate);
   else navigationHeld.clear();
  }
  walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return;
- let planMotion=false;
+ let sceneMotion=false;
  for(const motion of MV){
   const before=motion.v;
   stepMV(motion);
-  if(dualView&&Math.abs(motion.v-before)>.0005)planMotion=true;
+  if(Math.abs(motion.v-before)>.0005)sceneMotion=true;
  }
- if(planMotion)requestPlanGpu();
+ if(sceneMotion){
+  invalidateWindowShadow();
+  if(dualView)requestPlanGpu();
+ }
  if(walk&&now-lastWalkPick>=100){
   lastWalkPick=now;
   const interactive=!!walkAction();
@@ -7070,6 +7089,7 @@ function pickEditor3D(raycaster){
  });
 }
 function positionTouchModel(it){
+ invalidateWindowShadow();
  const model=root.children.find(o=>o.userData.id===it.id);
  if(!model)return;
  model.position.set(it.x,it.e,it.y);model.updateMatrixWorld(true);
@@ -7307,6 +7327,7 @@ function rebuildPlanMeshIndex(){
 function syncPlanGpuTransforms(){
  if(!planTransformsDirty)return;
  planTransformsDirty=false;
+ invalidateWindowShadow();
  for(const item of S.i){
   const node=planMeshById.get(item.id);
   if(!node)continue;
@@ -7364,18 +7385,18 @@ function renderPlanGpu(){
  }
  if(editorHidden.size)root.traverse(node=>{if(node.isMesh&&layerMeshHidden(node))hide(node)});
  hide(realisticDetails);
- const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,fill:fill.intensity,rim:rim.intensity,shadows:renderer.shadowMap.enabled,exposure:renderer.toneMappingExposure};
+ const before={bg:sc.background,hemi:hemi.intensity,sun:sun.intensity,sunColor:sun.color.getHex(),fill:fill.intensity,rim:rim.intensity,shadows:renderer.shadowMap.enabled,exposure:renderer.toneMappingExposure};
  try{
   // The overhead look uses soft contact and modest directional fill.
   sc.background=planGpuBackground;
-  hemi.intensity=.72;sun.intensity=.36;fill.intensity=.08;rim.intensity=0;
+  hemi.intensity=.72;sun.intensity=.36;sun.color.set(0xfff5e8);fill.intensity=.08;rim.intensity=0;
   renderer.shadowMap.enabled=false;renderer.toneMappingExposure=.88;
   planContactGroup.visible=true;
   renderer.render(sc,camera);
  }finally{
   planContactGroup.visible=false;
   for(const node of masked)node.visible=true;
-  sc.background=before.bg;hemi.intensity=before.hemi;sun.intensity=before.sun;fill.intensity=before.fill;rim.intensity=before.rim;
+  sc.background=before.bg;hemi.intensity=before.hemi;sun.intensity=before.sun;sun.color.set(before.sunColor);fill.intensity=before.fill;rim.intensity=before.rim;
   renderer.shadowMap.enabled=before.shadows;renderer.toneMappingExposure=before.exposure;
  }
 }
@@ -8092,15 +8113,24 @@ function layerMeshHidden(mesh){
  }
  return false;
 }
+let previousWindowShadowLayers='';
 function renderLayerViewport(){
  if(dualView)syncPlanGpuTransforms();
+ const windowShadowLayers=editorHidden.size?[...editorHidden].join('|'):'';
+ if(windowShadowLayers!==previousWindowShadowLayers){
+  previousWindowShadowLayers=windowShadowLayers;
+  invalidateWindowShadow();
+ }
  if(!editorHidden.size){r3.render(sc,cam);return}
  const hidden=[];
  const hide=node=>{if(node.visible){node.visible=false;hidden.push(node)}};
  root.traverse(node=>{
   if((node.isMesh&&layerMeshHidden(node))||(node.userData.editorOverlay&&node.object&&layerMeshHidden(node.object)))hide(node);
  });
- for(const node of realisticDetails.children)if(layerHidden('item',node.userData.layerItem))hide(node);
+ for(const node of realisticDetails.children){
+  const {layerItem,windowOpening,windowWall}=node.userData;
+  if(layerHidden('item',layerItem)||layerHidden('opening',windowOpening)||layerHidden('wall',windowWall))hide(node);
+ }
  try{r3.render(sc,cam)}finally{for(const node of hidden)node.visible=true}
 }
 function layerEye(entries,label){
@@ -10993,7 +11023,7 @@ function commitFixtureLight(it){
   if(node.userData.fixtureSource)syncFixtureSource(node,it);
   if(node.isMesh)for(const material of [].concat(node.material))syncFixtureEmission(material,it);
  });
- if(group&&(RVo||$('#sq').value==='q'))configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
+ if(group&&(RVo||$('#sq').value==='q'))configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches,!RVo);
  commitQ();
  requestPlanGpu();
  props();
