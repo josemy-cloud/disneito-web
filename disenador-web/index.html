@@ -1397,13 +1397,17 @@ function planObjectLayer(it){
  return it.rel?.parentId!=null?2:1;
 }
 function visiblePlanObjects(){
- const rugs=[],objects=[],supported=[];
+ const rugs=[],objects=[],supported=[],spots=[];
  for(const it of S.i){
   if(it.hid||layerHidden('item',it.id))continue;
+  if(it.t==='ceilingSpot'){
+   if(ceilingSpotPickVisible(it))spots.push(it);
+   continue;
+  }
   const layer=planObjectLayer(it);
   (layer===0?rugs:layer===2?supported:objects).push(it);
  }
- return {rugs,above:objects.concat(supported)};
+ return {rugs,above:objects.concat(supported,spots)};
 }
 function drawPlanBackground(width,height,showGrid,transparent=false){
  if(!transparent){x2.fillStyle=PLAN_STYLE.background;x2.fillRect(0,0,width,height)}
@@ -1872,17 +1876,33 @@ function pastePlanSelection(){
  return true;
 }
 function planFurnitureAt(x,y,touch=false){
- let hit=null,layer=-1;
+ let hit=null,layer=-1,spot=null,nearSpot=null;
+ let spotHeight=-Infinity,spotDistance=Infinity,nearDistance=Infinity;
+ const padding=Math.min(5,(touch?3:1)/k);
  for(let n=S.i.length-1;n>=0;n--){
-  const it=S.i[n],rank=planObjectLayer(it);
-  if(rank<=layer||it.hid||layerHidden('item',it.id))continue;
-  const dx=x-it.x,dy=y-it.y,c=Math.cos(-it.r*D),s=Math.sin(-it.r*D);
-  if(insideFurniturePlan(it,dx*c-dy*s,dx*s+dy*c,touch)){
-   if(rank===2)return it;
-   hit=it;layer=rank;
+  const it=S.i[n];
+  if(it.hid||layerHidden('item',it.id))continue;
+  const dx=x-it.x,dy=y-it.y;
+  if(it.t==='ceilingSpot'){
+   const radius=ceilingSpotRadius(it),distance=Math.hypot(dx,dy);
+   if(distance>radius+padding||!ceilingSpotPickVisible(it))continue;
+   const height=(+it.e||0)+(+it.h||0);
+   if(distance<=radius){
+    if(height>spotHeight||(height===spotHeight&&distance<spotDistance)){
+     spot=it;spotHeight=height;spotDistance=distance;
+    }
+   }else if(distance-radius<nearDistance){
+    nearSpot=it;nearDistance=distance-radius;
+   }
+   continue;
   }
+  const rank=planObjectLayer(it);
+  if(rank<=layer)continue;
+  const c=Math.cos(-it.r*D),s=Math.sin(-it.r*D);
+  if(insideFurniturePlan(it,dx*c-dy*s,dx*s+dy*c,touch)){hit=it;layer=rank}
  }
- return hit;
+ // A direct hit on the projected mount wins. Its extra hit area never steals a furniture hit.
+ return spot||hit||nearSpot;
 }
 function startPlanGroupDrag(x,y){
  const ids=planSelectionIds();
@@ -2724,10 +2744,16 @@ function syncWallH(R){S.w.forEach(w=>{if((R.walls||[]).includes(w.id)){let h=0;S
 /*ROOMS_END*/
 const ceilOn=()=>RVo?rvCeil==='full':showCeil;
 const roomCeilingVisible=room=>Boolean(room.ceil&&room.ceil.on!==false&&ceilOn());
+const ceilingSpotRadius=it=>Math.min(it.w,it.d)/2;
+const ceilingSpotRoom=(x,y)=>(S.rooms||[]).find(room=>room.poly&&inPoly(x,y,room.poly));
+const ceilingSpotCeilingVisible=room=>room?roomCeilingVisible(room):ceilOn();
+function ceilingSpotPickVisible(it){
+ const room=ceilingSpotRoom(it.x,it.y);
+ return ceilingSpotCeilingVisible(room)&&(!room||!layerHidden('ceiling',room.id));
+}
 function syncCeilingSpotVisuals(group,it){
  if(it.t!=='ceilingSpot')return true;
- const room=(S.rooms||[]).find(r=>r.poly&&inPoly(it.x,it.y,r.poly));
- const visible=room?roomCeilingVisible(room):ceilOn();
+ const visible=ceilingSpotCeilingVisible(ceilingSpotRoom(it.x,it.y));
  group.children.forEach(child=>{if(child.userData.ceilingSpotVisual)child.visible=visible});
  return visible;
 }
@@ -2944,7 +2970,7 @@ const fixtureColor=(it,fallback)=>Object.hasOwn(LIGHT_TONES,it.lightTone)?LIGHT_
 const hasAdjustableLight=it=>isLightingFixture(it)||(it.t==='mod'&&it.cfg?.k==='alto'&&!!it.cfg.led);
 const BUILD={
 ceilingSpot(g,it,mt){
- const radius=Math.min(it.w,it.d)/2,warm='#ffe3b5';
+ const radius=ceilingSpotRadius(it),warm='#ffe3b5';
  const mount=new T.Mesh(new T.CylinderGeometry(radius,radius,it.h*.8,32),mt);
  mount.position.y=it.h*.6;mount.userData.ceilingSpotVisual=true;g.add(mount);
  const lens=new T.Mesh(new T.CylinderGeometry(radius*.8,radius*.8,it.h*.2,32),fixtureMaterial(it,warm,15));
@@ -8057,7 +8083,7 @@ function layerMeshHidden(mesh){
   if(d.id!=null){
    if(layerHidden('item',d.id))return true;
    if(mesh.userData.ceilingSpotVisual&&[...editorHidden].some(key=>key.startsWith('ceiling:'))){
-    const room=S.rooms.find(r=>r.poly&&inPoly(node.position.x,node.position.z,r.poly));
+    const room=ceilingSpotRoom(node.position.x,node.position.z);
     return room&&layerHidden('ceiling',room.id);
    }
    return false;
@@ -9232,6 +9258,9 @@ function projectFurnitureFootprint(model){
  return rings.length?{rings,left,top,right,bottom}:null;
 }
 function traceFurniturePlan(ctx,it){
+ if(it.t==='ceilingSpot'){
+  ctx.beginPath();ctx.arc(0,0,ceilingSpotRadius(it),0,2*Math.PI);return;
+ }
  const explicit=explicitFurnitureRing(it);
  const footprint=explicit?null:furnitureFootprint(it);
  ctx.beginPath();
