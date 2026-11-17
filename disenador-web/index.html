@@ -10043,7 +10043,7 @@ function patUI(o,simple){const nm=id=>(pbrDef(id)||[])[1];if(simple){
  if(o.pat=='espiga'||o.pat=='punta hungría'){const a=Math.max(o.tw||60,o.th||60)+(o.j||.3),b=Math.min(o.tw||60,o.th||60)+(o.j||.3);if(o.pat=='espiga'&&Math.abs(a/b-Math.round(a/b))>.02)P.insertAdjacentHTML('beforeend','<small style="color:#f90">⚠ La espiga exige largo = nº entero × ancho (con junta); se redondea a '+Math.round(a/b)+'.</small>')}}
 function rvUI(e){S.rv=S.rv||[];const Z=S.rv.filter(z=>z.w==e.id),L=Math.round(len(e));P.insertAdjacentHTML('beforeend','<h4>Revestimientos por zonas ('+Z.length+')</h4>');
  Z.forEach((z,i)=>{P.insertAdjacentHTML('beforeend','<b>Zona '+(i+1)+'</b>');sel2('Cara',['frontal','trasera'],z.side<0?'trasera':'frontal',v=>z.side=v=='trasera'?-1:1);row('Desde (cm del inicio)',z.x0,v=>z.x0=v);row('Hasta (cm)',z.x1,v=>z.x1=v);row('Altura inferior (cm)',z.y0,v=>z.y0=v);row('Altura superior (cm)',z.y1,v=>z.y1=v);
-  if(Math.min(z.x0,z.x1)<0||Math.max(z.x0,z.x1)>L||Math.min(z.y0,z.y1)<0||Math.max(z.y0,z.y1)>e.h)P.insertAdjacentHTML('beforeend','<small style="color:#f55">⚠ La zona sale de la pared ('+L+'×'+e.h+' cm): se recorta al dibujar.</small>');patUI(z);btn('✕ Eliminar zona '+(i+1),()=>S.rv=S.rv.filter(q=>q!=z))});
+  if(Math.min(z.x0,z.x1)<0||Math.max(z.x0,z.x1)>L||Math.min(z.y0,z.y1)<0||Math.max(z.y0,z.y1)>e.h)P.insertAdjacentHTML('beforeend','<small style="color:#f55">⚠ La zona sale de la pared ('+htmlText(L)+'×'+htmlText(e.h)+' cm): se recorta al dibujar.</small>');patUI(z);btn('✕ Eliminar zona '+(i+1),()=>S.rv=S.rv.filter(q=>q!=z))});
  btn('+ Zona de revestimiento',()=>S.rv.push({w:e.id,side:1,x0:0,x1:L,y0:0,y1:e.h,pat:'recta',tw:30,th:60,j:.3,jc:'#cccccc',base:'#e9e6df',fin:'brillante'}))}
 /* ===== Mis proyectos: guardado automático, versiones y exportación. Almacén en Supabase con recuperación de proyectos locales ===== */
 const PDBo=()=>new Promise((ok,ko)=>{const r=indexedDB.open('proyectos',1);r.onupgradeneeded=()=>r.result.createObjectStore('p',{keyPath:'id'});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
@@ -10098,9 +10098,18 @@ function readProjectImport(text){
  const project=wrapped&&typeof file.data==='string'?JSON.parse(file.data):wrapped?file.data:file;
  const isRecord=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
  if(!isRecord(project)||!['w','o','i'].some(key=>Array.isArray(project[key]))||
-    ['w','o','i','cm','ms','rooms'].some(key=>project[key]!=null&&
+    ['w','o','i','cm','ms','rooms','rv'].some(key=>project[key]!=null&&
       (!Array.isArray(project[key])||!project[key].every(isRecord)))){
   throw new Error('Archivo de proyecto no válido.');
+ }
+ /* Campos numéricos de paredes y zonas de revestimiento: solo números finitos (o cadenas numéricas, que se normalizan).
+    Cualquier otro valor se rechaza para que un archivo manipulado no pueda inyectar texto en la interfaz. */
+ const numericFields={w:['x1','y1','x2','y2','t','h'],rv:['x0','x1','y0','y1']};
+ for(const [key,fields] of Object.entries(numericFields))for(const item of project[key]||[])for(const field of fields){
+  const raw=item[field];if(raw==null)continue;
+  const number=typeof raw==='number'?raw:typeof raw==='string'&&raw.trim()!==''?Number(raw):NaN;
+  if(!Number.isFinite(number))throw new Error('Archivo de proyecto no válido.');
+  item[field]=number;
  }
  const name=typeof file.name==='string'&&wrapped?file.name.trim():'';
  const title=typeof project.nm==='string'?project.nm.trim():'';
