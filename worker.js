@@ -15,11 +15,26 @@ function sessionCookie(request) {
     .find(part => part.startsWith(SESSION_COOKIE + "="))?.slice(SESSION_COOKIE.length + 1) || "";
 }
 
-function sessionResponse(value, clear = false) {
+// Browsers drop cookies whose name plus value exceed 4096 characters; keep a margin.
+const SESSION_COOKIE_MAX_CHARS = 4000;
+const SESSION_COOKIE_MAX_AGE = 24 * 60 * 60;
+
+// Lifetime only: the token has already been validated with Supabase before this is used.
+function tokenSecondsLeft(token) {
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const exp = JSON.parse(atob(payload + "=".repeat((4 - payload.length % 4) % 4))).exp;
+    return Number.isFinite(exp) ? Math.floor(exp - Date.now() / 1000) : null;
+  } catch {
+    return null;
+  }
+}
+
+function sessionResponse(value, clear = false, maxAge = null) {
   return new Response(null, { status: 204, headers: {
     ...NO_STORE,
     "Set-Cookie": SESSION_COOKIE + "=" + value + "; Path=/; Secure; HttpOnly; SameSite=Lax" +
-      (clear ? "; Max-Age=0" : "")
+      (clear ? "; Max-Age=0" : maxAge == null ? "" : "; Max-Age=" + maxAge)
   } });
 }
 
@@ -164,6 +179,13 @@ export default {
       if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) {
         return Response.json({ error: "La sesión de la cuenta no es válida." }, { status: 401, headers: NO_STORE });
       }
+      // A larger cookie would be silently discarded by the browser after a 204.
+      if (SESSION_COOKIE.length + 1 + token.length > SESSION_COOKIE_MAX_CHARS) {
+        return Response.json({
+          error: "La sesión es demasiado grande para guardarse en una cookie.",
+          code: "session_too_large"
+        }, { status: 413, headers: NO_STORE });
+      }
       try {
         if (!await getSupabaseUser(token)) {
           return Response.json({ error: "Supabase rechazó la sesión. Vuelve a iniciar sesión." }, { status: 401, headers: NO_STORE });
@@ -171,7 +193,12 @@ export default {
       } catch {
         return Response.json({ error: "Cloudflare no pudo verificar la sesión con Supabase. Inténtalo en unos segundos." }, { status: 503, headers: NO_STORE });
       }
-      return sessionResponse(token);
+      // The cookie must not outlive the token it carries.
+      const secondsLeft = tokenSecondsLeft(token);
+      if (secondsLeft != null && secondsLeft <= 0) {
+        return Response.json({ error: "La sesión ha caducado. Vuelve a iniciar sesión." }, { status: 401, headers: NO_STORE });
+      }
+      return sessionResponse(token, false, Math.min(secondsLeft ?? 3600, SESSION_COOKIE_MAX_AGE));
     }
 
     if (url.pathname === "/api/editor") {
