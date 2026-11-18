@@ -21,7 +21,7 @@ async function sbRecover(email){
  return sbAuth('recover?redirect_to='+encodeURIComponent(redirectTo),{email:validatedAuthEmail(email)});
 }
 var sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
-async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para continuar.');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token},signal);signal?.throwIfAborted();sesSave(sesFrom(j))}return SES.access_token}
+async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para continuar.');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token},signal);signal?.throwIfAborted();sesSave(sesFrom(j));sessionRenewed()}return SES.access_token}
 
 async function enterEditor(signal=AbortSignal.timeout(12000)){
   const token=await sbTok(signal);
@@ -45,9 +45,114 @@ async function enterEditor(signal=AbortSignal.timeout(12000)){
   document.open();
   document.write(html);
   document.close();
+  // After document.open(): requests started earlier would be aborted together with the old document.
+  SESSION_SYNC=syncSessionCookie().catch(()=>'error');
+}
+/* ===== Session cookie and profile photos outside the JWT =====
+   The Worker protects its routes with the HttpOnly cookie __Host-disenito-session, which carries the
+   Supabase access_token. Browsers drop cookies above 4096 characters, so the token must stay small:
+   profile photos live in the private Storage bucket "avatars" and user_metadata only keeps avatar_path.
+   Declared with var/function because auth.js runs again inside the editor after document.write. */
+var SESSION_COOKIE_LIMIT=4000,SESSION_SYNC=null,SESSION_REFRESH_TIMER=0;
+var AVATAR_BUCKET='avatars',AVATAR_MIGRATION=null,AVATAR_MIGRATION_TRIES=0,AVATAR_OBJECT_URL='';
+function sessionCookieFits(token){return('__Host-disenito-session='+token).length<=SESSION_COOKIE_LIMIT}
+function sessionRenewed(){SESSION_SYNC=syncSessionCookie().catch(()=>'error')}
+async function syncSessionCookie(){
+ if(!SES||!SES.access_token)return 'sin-sesion';
+ const token=await sbTok();
+ scheduleSessionRefresh();
+ // Never send a token whose cookie would be discarded: shrink it by moving the photo out of the JWT.
+ if(!sessionCookieFits(token)){migrateAvatar().catch(()=>{});return 'demasiado-grande'}
+ const r=await fetch('/api/sesion',{method:'POST',cache:'no-store',headers:{Authorization:'Bearer '+token}});
+ if(r.status===413){migrateAvatar().catch(()=>{});return 'demasiado-grande'}
+ return r.ok?'ok':'error-'+r.status;
+}
+// Renew the token shortly before it expires; renewal also renews the cookie (Max-Age = token lifetime).
+function scheduleSessionRefresh(){
+ clearTimeout(SESSION_REFRESH_TIMER);
+ if(!SES||!Number.isFinite(SES.expires_at))return;
+ const wait=Math.min(Math.max(5000,(SES.expires_at-50)*1e3-Date.now()),2147483647);
+ SESSION_REFRESH_TIMER=setTimeout(()=>{sbTok().catch(()=>{})},wait);
+}
+async function refreshSessionNow(){
+ const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token});
+ sesSave(sesFrom(j));sessionRenewed();await SESSION_SYNC;return SES;
+}
+async function sbUser(method,body){const token=await sbTok();const r=await fetch(SBU+'/auth/v1/user',{method,headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo actualizar la cuenta ('+r.status+')');return j}
+// Resend the current metadata with the change applied. A null value removes the key in Supabase Auth.
+async function updateUserMetadata(patch){const fresh=await sbUser('GET');return sbUser('PUT',{data:{...(fresh.user_metadata||{}),...patch}})}
+function avatarURL(kind,path){return SBU+'/storage/v1/object/'+(kind?kind+'/':'')+AVATAR_BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/')}
+async function storageFetch(method,url,body,headers={}){const token=await sbTok();return fetch(url,{method,cache:'no-store',headers:{apikey:SBK,Authorization:'Bearer '+token,...headers},body})}
+async function sha256Hex(buffer){return[...new Uint8Array(await crypto.subtle.digest('SHA-256',buffer))].map(b=>b.toString(16).padStart(2,'0')).join('')}
+// Upload, then download it again with the user's own session and compare hashes before trusting it.
+async function uploadAvatarVerified(path,blob){
+ const expected=await sha256Hex(await blob.arrayBuffer());let last=null;
+ for(let attempt=0;attempt<3;attempt++){
+  if(attempt)await new Promise(ok=>setTimeout(ok,400*2**attempt));
+  try{
+   const up=await storageFetch('POST',avatarURL('',path),blob,{'Content-Type':blob.type,'x-upsert':'true'});
+   if(!up.ok){last=new Error('No se pudo subir la foto ('+up.status+').');if(up.status<500&&up.status!==429)break;continue}
+   const back=await storageFetch('GET',avatarURL('authenticated',path));
+   if(back.ok&&await sha256Hex(await back.arrayBuffer())===expected)return;
+   last=new Error('La foto guardada no coincide con la original.');
+  }catch(error){last=error}
+ }
+ // Nothing references this object yet, so removing it cannot lose data.
+ await storageFetch('DELETE',avatarURL('',path)).catch(()=>{});
+ throw last||new Error('No se pudo subir la foto.');
+}
+async function setAvatar(user,blob,{migration=false}={}){
+ const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[blob.type];
+ if(!ext||!user||!user.id)throw new Error('Formato de foto no admitido.');
+ if(blob.size>512*1024)throw new Error('La foto es demasiado grande.');
+ const previous=(user.user_metadata||{}).avatar_path;
+ // Retries of the migration overwrite the same object instead of leaving copies behind.
+ const path=user.id+'/'+(migration?'avatar-migrado':'avatar-'+Date.now())+'.'+ext;
+ await uploadAvatarVerified(path,blob);
+ // Only with a verified copy is the embedded image removed from the JWT.
+ const updated=await updateUserMetadata({avatar_path:path,avatar_data:null});
+ const meta=updated.user_metadata||{};
+ if(meta.avatar_path!==path||meta.avatar_data)throw new Error('Supabase no confirmó el cambio de foto.');
+ if(previous&&previous!==path&&previous.startsWith(user.id+'/'))await storageFetch('DELETE',avatarURL('',previous)).catch(()=>{});
+ await refreshSessionNow();
+ return updated;
+}
+function dataURLToBlob(url){
+ const m=/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/.exec(url||'');if(!m)return null;
+ const bin=atob(m[2].replace(/\s/g,'')),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+ return new Blob([bytes],{type:m[1]});
+}
+// Move a photo embedded in user_metadata.avatar_data to Storage. The original stays until the copy is verified.
+function migrateAvatar(){
+ if(AVATAR_MIGRATION)return AVATAR_MIGRATION;
+ if(++AVATAR_MIGRATION_TRIES>3)return Promise.resolve('reintentos-agotados');
+ AVATAR_MIGRATION=(async()=>{
+  const user=await sbUser('GET'),meta=user.user_metadata||{};
+  if(!meta.avatar_data){
+   // Already migrated (for example on another device): only this token is stale.
+   if(!sessionCookieFits(SES.access_token))await refreshSessionNow();
+   return 'sin-foto-incrustada';
+  }
+  const blob=dataURLToBlob(meta.avatar_data);
+  if(!blob)return 'formato-no-admitido';
+  await setAvatar(user,blob,{migration:true});
+  return 'migrada';
+ })().finally(()=>{AVATAR_MIGRATION=null});
+ return AVATAR_MIGRATION;
+}
+// Private photo: downloaded with the session and shown as a local blob:, never through a public URL.
+async function avatarSource(meta){
+ if(meta.avatar_path){
+  try{
+   const r=await storageFetch('GET',avatarURL('authenticated',meta.avatar_path));
+   if(r.ok){if(AVATAR_OBJECT_URL)URL.revokeObjectURL(AVATAR_OBJECT_URL);AVATAR_OBJECT_URL=URL.createObjectURL(await r.blob());return AVATAR_OBJECT_URL}
+  }catch(error){}
+ }
+ return meta.avatar_data||meta.avatar_url||'';
 }
 async function leaveEditor(){
   const token=SES?.access_token;
+  clearTimeout(SESSION_REFRESH_TIMER);
   sesSave(null);
   try{localStorage.removeItem('curProj')}catch{}
   const response=await fetch('/api/sesion',{method:'DELETE',signal:AbortSignal.timeout(9000),headers:token?{Authorization:'Bearer '+token}:{}});
@@ -76,7 +181,7 @@ async function accountPanel({entry=false}={}){
   head.replaceChildren(intro,close);
  }box.append(head);
  const content=document.createElement('div');if(entry)content.style.cssText='max-width:720px;margin:18px auto';else content.className='studio-panel-body';box.append(content);if(!entry)box.showModal();
- const authFetch=async(method,body)=>{const token=await sbTok();const r=await fetch(SBU+'/auth/v1/user',{method,headers:{apikey:SBK,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'No se pudo actualizar la cuenta ('+r.status+')');return j};
+ const authFetch=sbUser;
  const recoveryParams=new URLSearchParams(window.location.hash.replace(/^#/,''));
  const drawPasswordReset=(token)=>{
   content.innerHTML='<p style="color:#b9c4d4">Introduce tu nueva contraseña. El enlace de recuperación solo puede utilizarse una vez.</p>';
@@ -176,7 +281,9 @@ async function accountPanel({entry=false}={}){
   let u;try{u=await authFetch('GET')}catch(e){content.innerHTML='';content.append(document.createTextNode('No se ha podido validar la sesión. '+e.message+' '),btn('Volver al inicio de sesión',leaveEditor));return}
   await catalogLoadPermissions();
   libUI();
-  const meta=u.user_metadata||{},avatar=meta.avatar_data||meta.avatar_url||'';
+  const meta=u.user_metadata||{},avatar=await avatarSource(meta);
+  // Legacy photo embedded in the JWT: migrate it in the background; the original is kept until verified.
+  if(meta.avatar_data)migrateAvatar().catch(()=>{});
   content.innerHTML='';
   const profile=document.createElement('div');profile.className='studio-profile';
   const img=document.createElement('img');img.alt='Foto de perfil';if(avatar)img.src=avatar;
@@ -189,11 +296,13 @@ async function accountPanel({entry=false}={}){
   const photo=document.createElement('input');photo.type='file';photo.accept='image/*';photo.style.display='none';content.append(photo);
   const photoActions=document.createElement('div');photoActions.className='studio-actions';
   photoActions.append(btn(avatar?'Cambiar foto':'Añadir foto',()=>photo.click()));
-  if(avatar)photoActions.append(btn('Eliminar foto',async()=>{const m={...meta};delete m.avatar_data;delete m.avatar_url;await authFetch('PUT',{data:m});await drawProfile()}));
+  // null removes the key in Supabase Auth (deleting it from the object is not enough: metadata is merged).
+  if(avatar)photoActions.append(btn('Eliminar foto',async()=>{await updateUserMetadata({avatar_path:null,avatar_data:null,avatar_url:null});if(meta.avatar_path&&meta.avatar_path.startsWith(u.id+'/'))await storageFetch('DELETE',avatarURL('',meta.avatar_path)).catch(()=>{});await refreshSessionNow();await drawProfile()}));
   info.append(photoActions);
-  photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',.78))};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await authFetch('PUT',{data:{...meta,avatar_data:data}});await drawProfile()};
+  photo.onchange=async()=>{const f=photo.files&&photo.files[0];if(!f)return;if(!f.type.startsWith('image/'))throw new Error('Selecciona una imagen.');const data=await new Promise((ok,ko)=>{const im=new Image(),url=URL.createObjectURL(f);im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);c.toBlob(b=>b?ok(b):ko(new Error('No se pudo preparar la imagen.')),'image/jpeg',.78)};im.onerror=()=>ko(new Error('No se pudo leer la imagen.'));im.src=url});await setAvatar(u,data);await drawProfile()};
   const footer=document.createElement('footer');footer.className='studio-actions studio-account-footer';
-  footer.append(btn('Guardar cambios',async()=>{const data={...meta,full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value){validateNewPassword(pass.input.value);body.password=pass.input.value;}if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
+  // Fresh metadata: the copy read when the panel opened may still hold a photo migrated since then.
+  footer.append(btn('Guardar cambios',async()=>{const data={...((await authFetch('GET')).user_metadata||{}),full_name:name.input.value.trim()};const body={data};if(email.input.value.trim()&&email.input.value.trim()!==u.email)body.email=email.input.value.trim();if(pass.input.value){validateNewPassword(pass.input.value);body.password=pass.input.value;}if(!body.email&&!body.password&&data.full_name===(meta.full_name||'')){alert('No hay cambios que guardar.');return}await authFetch('PUT',body);if(body.email)alert('Solicitud de cambio de correo enviada. Confirma el nuevo correo si Supabase lo solicita.');else alert('Datos de la cuenta actualizados.');await drawProfile()}));
   footer.firstElementChild.className='studio-primary';
   const logout=btn('Cerrar sesión',leaveEditor);logout.className='studio-danger';footer.append(logout);
   const note=document.createElement('p');note.className='studio-muted';note.textContent='Si cambias el correo, es posible que tengas que confirmar la nueva dirección.';fields.append(note);
