@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, copyFileSync, readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve, dirname, relative } from 'node:path';
+import { join, resolve, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, abrirEditor } from './harness/nuhio-harness.mjs';
 
@@ -55,10 +55,13 @@ test('se conservan las reglas de seguridad originales', () => {
 
 test('ningún código ni documento versionado referencia los documentos internos', () => {
   const tocados = [];
+  // Solo archivos versionados: material local sin seguimiento (p. ej. parches o notas de auditoría) no cuenta.
+  const versionados = new Set(execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', maxBuffer: 64 << 20 }).split('\0').filter(Boolean));
   const visita = d => { for (const n of readdirSync(d)) {
     if (['.git', 'node_modules', 'tests', 'vendor'].includes(n)) continue;
     const p = join(d, n), st = statSync(p);
     if (st.isDirectory()) { visita(p); continue; }
+    if (!versionados.has(relative(root, p).split(sep).join('/'))) continue;
     if (INTERNOS.includes(n) || n === '.assetsignore' || st.size > 5_000_000) continue;
     if (!/\.(m?js|html|css|json|md|jsonc|toml|sql|txt)$/.test(n)) continue;
     const txt = readFileSync(p, 'utf8');
