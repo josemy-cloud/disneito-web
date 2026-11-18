@@ -175,7 +175,7 @@ test('migración con fallos de Storage: conserva la foto original, no deja copia
   await s.ctx.close();
 });
 
-test('migración con una copia corrupta: la detecta por hash, reintenta y, si persiste, borra la copia y conserva la original', async () => {
+test('migración con una copia corrupta: la detecta por hash, reintenta y, si persiste, conserva la original sin referenciar la copia', async () => {
   conFoto('foto-corrupta-1');
   supa.fallos.corromper = 1;                                   // falla el primer intento, el segundo es correcto
   const a = await abrirReal(browser, { sesion: emitirSesion('foto-corrupta-1') });
@@ -190,8 +190,156 @@ test('migración con una copia corrupta: la detecta por hash, reintenta y, si pe
   await entrarAlEditor(b.page);
   await migracionTerminada(b.page);
   assert.equal(supa.fallos.corromper, 0, 'las 3 copias salieron corruptas');
-  assert.equal(supa.usuarios.get('foto-corrupta-2').user_metadata.avatar_data, FOTO_INCRUSTADA);
-  assert.deepEqual(objetosDe('foto-corrupta-2'), [], 'la copia defectuosa se elimina');
+  const m = supa.usuarios.get('foto-corrupta-2').user_metadata;
+  assert.equal(m.avatar_data, FOTO_INCRUSTADA);
+  assert.equal('avatar_path' in m, false, 'la copia defectuosa no se referencia');
+  // La ruta compartida de migración nunca se borra: otro dispositivo podría haberla verificado y referenciado ya.
+  assert.ok(!estadoSupabase.reqs.some(r => r.startsWith('DELETE ') && r.includes('avatar-migrado')));
+  supa.fallos.corromper = 0;
+  assert.equal(await b.page.evaluate(() => migrateAvatar()), 'migrada', 'el reintento sobrescribe la copia');
+  assert.ok(supa.objetos.get('foto-corrupta-2/avatar-migrado.jpg').bytes.equals(BYTES_FOTO));
+  await b.ctx.close();
+});
+
+test('carrera entre dos dispositivos: si uno falla al verificar, no borra la copia que el otro ya ha referenciado', async () => {
+  conFoto();
+  const u = supa.usuarios.get('usuario-con-foto');
+  // Dispositivo 1 ya subió y verificó la copia y está a punto de apuntar avatar_path a ella.
+  supa.objetos.set('usuario-con-foto/avatar-migrado.jpg', { bytes: BYTES_FOTO, tipo: 'image/jpeg', dueño: u.id });
+  // Dispositivo 2 migra a la vez y se queda sin conexión en sus 3 intentos de subida.
+  supa.fallos.red = 3;
+  const s = await abrirReal(browser, { sesion: emitirSesion('usuario-con-foto') });
+  await entrarAlEditor(s.page);
+  await migracionTerminada(s.page);
+  assert.equal(supa.fallos.red, 0, 'el dispositivo 2 agotó sus intentos');
+  assert.ok(!estadoSupabase.reqs.some(r => r.startsWith('DELETE ') && r.includes('avatar-migrado')), 'no borra la ruta compartida');
+  // El dispositivo 1 completa su cambio de metadatos: la foto referenciada existe e íntegra.
+  u.user_metadata = { full_name: 'Ana Prueba', avatar_path: 'usuario-con-foto/avatar-migrado.jpg' };
+  assert.ok(supa.objetos.get('usuario-con-foto/avatar-migrado.jpg').bytes.equals(BYTES_FOTO));
+  await s.ctx.close();
+});
+
+test('corte de conexión durante la subida: se reintenta y la migración termina', async () => {
+  conFoto();
+  supa.fallos.red = 2;
+  const s = await abrirReal(browser, { sesion: emitirSesion('usuario-con-foto') });
+  await entrarAlEditor(s.page);
+  await esperar(() => cookieSesion(s.ctx), 15000);
+  assert.equal(supa.fallos.red, 0);
+  assert.equal('avatar_data' in supa.usuarios.get('usuario-con-foto').user_metadata, false);
+  assert.ok(supa.objetos.get('usuario-con-foto/avatar-migrado.jpg').bytes.equals(BYTES_FOTO));
+  await s.ctx.close();
+});
+
+test('respuesta perdida tras aplicar los metadatos: estado coherente sin pérdida y el siguiente intento solo renueva el token', async () => {
+  conFoto();
+  supa.fallos.respuestaPerdida = 1;
+  const s = await abrirReal(browser, { sesion: emitirSesion('usuario-con-foto') });
+  await entrarAlEditor(s.page);
+  await migracionTerminada(s.page);
+  const m = supa.usuarios.get('usuario-con-foto').user_metadata;
+  assert.equal('avatar_data' in m, false, 'Supabase aplicó el cambio');
+  assert.equal(m.avatar_path, 'usuario-con-foto/avatar-migrado.jpg');
+  assert.ok(supa.objetos.get(m.avatar_path).bytes.equals(BYTES_FOTO), 'la foto referenciada existe e íntegra');
+  assert.equal(await cookieSesion(s.ctx), null, 'el cliente no lo sabe todavía');
+  const subidasAntes = estadoSupabase.reqs.filter(r => r.startsWith('POST /storage/')).length;
+  assert.equal(await s.page.evaluate(() => migrateAvatar()), 'sin-foto-incrustada');
+  assert.equal(estadoSupabase.reqs.filter(r => r.startsWith('POST /storage/')).length, subidasAntes, 'no vuelve a subir');
+  assert.ok(await esperar(() => cookieSesion(s.ctx)));
+  await s.ctx.close();
+});
+
+test('varias pestañas: la que se quedó atrás adopta la sesión renovada en lugar de reutilizar un refresh token rotado', async () => {
+  supa.intervaloReutilizacion = 0;                             // pestaña en segundo plano que despierta tarde
+  const s = await abrirReal(browser, { sesion: emitirSesion(USER.id) });
+  await entrarAlEditor(s.page);
+  const b = await s.ctx.newPage();
+  await entrarAlEditor(b);
+  const viejaB = await b.evaluate(() => { window.__sinRecargar = true; return JSON.stringify(SES); });
+  await s.page.evaluate(async () => { SES.expires_at = Math.floor(Date.now() / 1e3) + 30; await sbTok(); await SESSION_SYNC; });
+  const nueva = await tokenActual(s.page);
+  await esperar(async () => (await tokenActual(b)) === nueva, 3000);   // evento storage
+  await new Promise(r => setTimeout(r, 500));
+  assert.equal(await b.evaluate(() => window.__sinRecargar), true, 'renovar en otra pestaña no recarga esta (antes se veía un cierre de sesión momentáneo)');
+  // Aunque B no hubiera recibido el evento (copia antigua en memoria), sbTok adopta la guardada sin renovar.
+  await b.evaluate(v => { SES = JSON.parse(v); SES.expires_at = Math.floor(Date.now() / 1e3) + 30; }, viejaB);
+  assert.equal(await b.evaluate(() => sbTok()), nueva);
+  assert.equal(supa.reutilizaciones, 0, 'ningún refresh token reutilizado: la sesión no se revoca');
+  assert.equal(await estado(b, '/inventario-modelos-3d.json'), 404);
+  assert.equal(await estado(s.page, '/index.html'), 200);
+  await s.ctx.close();
+});
+
+test('varias pestañas: dos renovaciones simultáneas hacen una sola petición de renovación', async () => {
+  supa.intervaloReutilizacion = 0;
+  const s = await abrirReal(browser, { sesion: emitirSesion(USER.id) });
+  await entrarAlEditor(s.page);
+  const b = await s.ctx.newPage();
+  await entrarAlEditor(b);
+  const n0 = estadoSupabase.reqs.filter(r => r.includes('grant_type=refresh_token')).length;
+  await Promise.all([s.page, b].map(p => p.evaluate(() => { SES.expires_at = Math.floor(Date.now() / 1e3) + 30; })));
+  const [ta, tb] = await Promise.all([s.page, b].map(p => p.evaluate(() => sbTok())));
+  assert.equal(ta, tb);
+  assert.equal(estadoSupabase.reqs.filter(r => r.includes('grant_type=refresh_token')).length - n0, 1);
+  assert.equal(supa.reutilizaciones, 0);
+  await s.ctx.close();
+});
+
+test('varias pestañas: cerrar sesión en una termina la sesión de las demás', async () => {
+  const s = await abrirReal(browser, { sesion: emitirSesion(USER.id) });
+  await entrarAlEditor(s.page);
+  const b = await s.ctx.newPage();
+  await entrarAlEditor(b);
+  await Promise.all([s.page.waitForURL('**/acceso'), s.page.evaluate(() => leaveEditor())]);
+  // El editor de la otra pestaña recarga al ver la sesión borrada: /editor → 302 → /acceso (formulario).
+  await b.waitForURL('**/acceso', { timeout: 8000 });
+  await b.waitForSelector('input[name=password]');
+  assert.equal(await b.evaluate(() => SES), null);
+  assert.equal(await cookieSesion(s.ctx), null);
+  assert.equal(await estado(b, '/index.html'), 'redirect');
+  await s.ctx.close();
+});
+
+test('reversión del código: con el auth.js anterior, las cuentas ya migradas y las no migradas siguen entrando', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const anterior = execFileSync('git', ['show', 'desarrollo-cloudflare:disenador-web/auth.js'], { encoding: 'utf8' });
+  assert.ok(!anterior.includes('syncSessionCookie'), 'es la versión anterior');
+  crearUsuario('migrado', { user_metadata: { full_name: 'Migrado', avatar_path: 'migrado/avatar-migrado.jpg' } });
+  supa.objetos.set('migrado/avatar-migrado.jpg', { bytes: BYTES_FOTO, tipo: 'image/jpeg', dueño: 'migrado' });
+  conFoto('sin-migrar');
+  for (const id of ['migrado', 'sin-migrar']) {
+    const s = await abrirReal(browser, { sesion: emitirSesion(id), sustituir: { '/auth.js': anterior } });
+    await entrarAlEditor(s.page);
+    assert.equal(await s.page.evaluate(() => typeof syncSessionCookie), 'undefined', 'se usa el código anterior');
+    await s.page.evaluate(() => accountPanel());
+    await s.page.waitForSelector('#accountBox .studio-profile');
+    const tieneFoto = await s.page.evaluate(() => !!document.querySelector('#accountBox img[alt="Foto de perfil"]'));
+    assert.equal(tieneFoto, id === 'sin-migrar', 'migrado: iniciales; sin migrar: su foto como antes');
+    assert.deepEqual(errores(s), [], id);
+    await s.ctx.close();
+  }
+  assert.ok(supa.objetos.has('migrado/avatar-migrado.jpg'), 'la foto migrada se conserva');
+});
+
+test('SQL revertido con el código nuevo desplegado: nadie queda bloqueado y no se pierde ninguna foto', async () => {
+  crearUsuario('migrado', { user_metadata: { full_name: 'Migrado', avatar_path: 'migrado/avatar-migrado.jpg' } });
+  supa.objetos.set('migrado/avatar-migrado.jpg', { bytes: BYTES_FOTO, tipo: 'image/jpeg', dueño: 'migrado' });
+  conFoto('sin-migrar');
+  supa.storageBloqueado = true;
+  const a = await abrirReal(browser, { sesion: emitirSesion('migrado') });
+  await entrarAlEditor(a.page);
+  assert.ok(await esperar(() => cookieSesion(a.ctx)), 'token pequeño: cookie normal');
+  await a.page.evaluate(() => accountPanel());
+  await a.page.waitForSelector('#accountBox .studio-profile');
+  assert.equal(await a.page.evaluate(() => !!document.querySelector('#accountBox img[alt="Foto de perfil"]')), false, 'iniciales');
+  assert.deepEqual(errores(a), []);
+  await a.ctx.close();
+  const b = await abrirReal(browser, { sesion: emitirSesion('sin-migrar') });
+  await entrarAlEditor(b.page);
+  await migracionTerminada(b.page);
+  assert.equal(supa.usuarios.get('sin-migrar').user_metadata.avatar_data, FOTO_INCRUSTADA, 'foto original intacta');
+  assert.equal(await b.page.evaluate(() => typeof S === 'object'), true, 'el editor funciona (Bearer)');
+  assert.ok(supa.objetos.has('migrado/avatar-migrado.jpg'));
   await b.ctx.close();
 });
 

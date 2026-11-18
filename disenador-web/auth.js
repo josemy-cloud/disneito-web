@@ -2,7 +2,9 @@ var SBU='https://aqfqwvzbsbjrixzgxtro.supabase.co',SBK='eyJhbGciOiJIUzI1NiIsInR5
 var SES,REMEMBER_SESSION;
 if(typeof SES==='undefined'){SES=null;REMEMBER_SESSION=true;try{const savedLocal=localStorage.getItem('sbSes');if(savedLocal){SES=JSON.parse(savedLocal);REMEMBER_SESSION=true}else{const savedTab=sessionStorage.getItem('sbSes');if(savedTab){SES=JSON.parse(savedTab);REMEMBER_SESSION=false}}}catch(e){}
 }
-var sesSave=x=>{SES=x;try{localStorage.removeItem('sbSes');sessionStorage.removeItem('sbSes');if(x)(REMEMBER_SESSION?localStorage:sessionStorage).setItem('sbSes',JSON.stringify(x))}catch(e){}};
+// Overwrite in place: removing first would make other tabs see an empty session for a moment (the editor
+// reloads on that signal, which means sign-out) every time the token is renewed.
+var sesSave=x=>{SES=x;try{const keep=x?(REMEMBER_SESSION?localStorage:sessionStorage):null;for(const store of[localStorage,sessionStorage])if(store!==keep)store.removeItem('sbSes');if(keep)keep.setItem('sbSes',JSON.stringify(x))}catch(e){}};
 async function sbAuth(path,body,signal=AbortSignal.timeout(10000)){const r=await fetch(SBU+'/auth/v1/'+path,{signal,method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
 const authPasswordMinLength=8;
 const authPasswordRequirements='Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo (por ejemplo, !).';
@@ -21,7 +23,18 @@ async function sbRecover(email){
  return sbAuth('recover?redirect_to='+encodeURIComponent(redirectTo),{email:validatedAuthEmail(email)});
 }
 var sesFrom=j=>({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1e3)+(j.expires_in||3600),email:(j.user&&j.user.email)||(SES&&SES.email)});
-async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para continuar.');if(SES.expires_at-60<Date.now()/1e3){const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token},signal);signal?.throwIfAborted();sesSave(sesFrom(j));sessionRenewed()}return SES.access_token}
+// Tabs share the stored session but keep their own copy in memory. Supabase rotates refresh tokens and may
+// revoke the whole session when a rotated one is reused, so adopt the newest stored session first and let
+// only one tab refresh at a time.
+function adoptStoredSession(){try{const raw=(REMEMBER_SESSION?localStorage:sessionStorage).getItem('sbSes'),s=raw&&JSON.parse(raw);if(s&&s.access_token&&s.refresh_token&&s.refresh_token!==SES.refresh_token&&s.expires_at>=SES.expires_at)SES=s}catch(e){}}
+async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para continuar.');if(SES.expires_at-60<Date.now()/1e3){
+ const renew=async()=>{if(!SES)throw new Error('Inicia sesión para continuar.');adoptStoredSession();if(SES.expires_at-60>=Date.now()/1e3)return;const j=await sbAuth('token?grant_type=refresh_token',{refresh_token:SES.refresh_token},signal);signal?.throwIfAborted();sesSave(sesFrom(j));sessionRenewed()};
+ if(navigator.locks)await navigator.locks.request('nuhio-sesion',{signal},renew);else await renew();
+}if(!SES)throw new Error('Inicia sesión para continuar.');return SES.access_token}
+// Keep other tabs in step: a renewal elsewhere is adopted and a sign-out elsewhere ends this tab's session.
+// Named function: document.open() erases window listeners, so enterEditor registers it again (duplicates are ignored).
+function onSessionStorage(e){if(e.key!=='sbSes'&&e.key!==null||!REMEMBER_SESSION)return;try{const raw=localStorage.getItem('sbSes'),s=raw&&JSON.parse(raw);if(!s){SES=null;clearTimeout(SESSION_REFRESH_TIMER);return}if(!SES||s.expires_at>=SES.expires_at){SES=s;scheduleSessionRefresh()}}catch(err){}}
+if(typeof window!=='undefined')window.addEventListener('storage',onSessionStorage);
 
 async function enterEditor(signal=AbortSignal.timeout(12000)){
   const token=await sbTok(signal);
@@ -45,7 +58,9 @@ async function enterEditor(signal=AbortSignal.timeout(12000)){
   document.open();
   document.write(html);
   document.close();
-  // After document.open(): requests started earlier would be aborted together with the old document.
+  // After document.open(): requests started earlier would be aborted together with the old document,
+  // and window listeners registered earlier have been erased.
+  window.addEventListener('storage',onSessionStorage);
   SESSION_SYNC=syncSessionCookie().catch(()=>'error');
 }
 /* ===== Session cookie and profile photos outside the JWT =====
@@ -85,7 +100,7 @@ function avatarURL(kind,path){return SBU+'/storage/v1/object/'+(kind?kind+'/':''
 async function storageFetch(method,url,body,headers={}){const token=await sbTok();return fetch(url,{method,cache:'no-store',headers:{apikey:SBK,Authorization:'Bearer '+token,...headers},body})}
 async function sha256Hex(buffer){return[...new Uint8Array(await crypto.subtle.digest('SHA-256',buffer))].map(b=>b.toString(16).padStart(2,'0')).join('')}
 // Upload, then download it again with the user's own session and compare hashes before trusting it.
-async function uploadAvatarVerified(path,blob){
+async function uploadAvatarVerified(path,blob,{removeOnFailure=true}={}){
  const expected=await sha256Hex(await blob.arrayBuffer());let last=null;
  for(let attempt=0;attempt<3;attempt++){
   if(attempt)await new Promise(ok=>setTimeout(ok,400*2**attempt));
@@ -97,8 +112,9 @@ async function uploadAvatarVerified(path,blob){
    last=new Error('La foto guardada no coincide con la original.');
   }catch(error){last=error}
  }
- // Nothing references this object yet, so removing it cannot lose data.
- await storageFetch('DELETE',avatarURL('',path)).catch(()=>{});
+ // A unique path is referenced by nobody yet, so removing it cannot lose data. The shared migration path
+ // is kept: another device may have just verified it and pointed avatar_path to it; a retry overwrites it.
+ if(removeOnFailure)await storageFetch('DELETE',avatarURL('',path)).catch(()=>{});
  throw last||new Error('No se pudo subir la foto.');
 }
 async function setAvatar(user,blob,{migration=false}={}){
@@ -108,7 +124,7 @@ async function setAvatar(user,blob,{migration=false}={}){
  const previous=(user.user_metadata||{}).avatar_path;
  // Retries of the migration overwrite the same object instead of leaving copies behind.
  const path=user.id+'/'+(migration?'avatar-migrado':'avatar-'+Date.now())+'.'+ext;
- await uploadAvatarVerified(path,blob);
+ await uploadAvatarVerified(path,blob,{removeOnFailure:!migration});
  // Only with a verified copy is the embedded image removed from the JWT.
  const updated=await updateUserMetadata({avatar_path:path,avatar_data:null});
  const meta=updated.user_metadata||{};
