@@ -56,23 +56,115 @@ const worker = (await import(pathToFileURL(join(root, 'worker.js')).href)).defau
 export const llamarWorker = (ruta, { cookie = '', method = 'GET', headers = {} } = {}) => worker.fetch(new Request('https://nuhio.test' + ruta, { method, redirect: 'manual', headers: { ...(cookie ? { Cookie: '__Host-disenito-session=' + cookie } : {}), ...headers } }), env);
 export const estadoSupabase = { proyectos: new Map(), reqs: [] };
 
+// ---- Supabase simulado (Auth + Storage + REST), con el comportamiento documentado que usa NuHio ----
+//  * Auth: el access_token es un JWT que COPIA user_metadata (como Supabase), caduca (exp) y se puede revocar.
+//    PUT /auth/v1/user fusiona `data` con user_metadata y una clave con null se elimina (semántica de GoTrue).
+//  * Storage: bucket privado `avatars` con las mismas reglas que las políticas RLS de
+//    supabase/migrations/20261118120000_avatars_privados.sql: solo `authenticated`, solo "<uid>/…".
+//  * `supa.fallos` inyecta errores (subida, copia corrupta, actualización de metadatos) para probar la migración.
+const PASSWORD_PRUEBA = 'Prueba-Local-1';
+export const supa = { usuarios: new Map(), tokens: new Map(), refresh: new Map(), objetos: new Map(), fallos: {}, n: 0 };
+export function reiniciarSupabase() {
+  supa.usuarios = new Map([[USER.id, { ...USER, password: PASSWORD_PRUEBA, user_metadata: {} }]]);
+  supa.tokens = new Map([[FAKE_JWT, { userId: USER.id, exp: null }]]);
+  supa.refresh = new Map([['r', USER.id]]);
+  supa.objetos = new Map();
+  supa.fallos = { subida: 0, corromper: 0, metadatos: 0 };
+}
+reiniciarSupabase();
+export function crearUsuario(id, { email = id + '@local.invalid', user_metadata = {} } = {}) {
+  supa.usuarios.set(id, { id, email, password: PASSWORD_PRUEBA, user_metadata: structuredClone(user_metadata) });
+  return supa.usuarios.get(id);
+}
+// Emite una sesión como /auth/v1/token: el JWT lleva user_metadata en el momento de emitirse.
+export function emitirSesion(userId, { expiraEn = 3600 } = {}) {
+  const u = supa.usuarios.get(userId), exp = Math.floor(Date.now() / 1e3) + expiraEn;
+  const payload = { sub: u.id, email: u.email, exp, iat: exp - expiraEn, role: 'authenticated', aud: 'authenticated', session_id: 's' + (++supa.n), user_metadata: u.user_metadata, app_metadata: { provider: 'email' } };
+  const access_token = `${b64({ alg: 'ES256', typ: 'JWT' })}.${b64(payload)}.firma${supa.n}`;
+  const refresh_token = 'refresh-' + supa.n;
+  supa.tokens.set(access_token, { userId, exp });
+  supa.refresh.set(refresh_token, userId);
+  return { access_token, refresh_token, expires_in: expiraEn, expires_at: exp, token_type: 'bearer', user: publico(u) };
+}
+const publico = u => ({ id: u.id, email: u.email, aud: 'authenticated', role: 'authenticated', user_metadata: structuredClone(u.user_metadata), app_metadata: { provider: 'email' } });
+function usuarioDeToken(headers) {
+  const auth = headers.authorization || headers.Authorization || '';
+  const rec = supa.tokens.get(auth.replace(/^Bearer\s+/i, ''));
+  if (!rec || rec.revocado || (rec.exp && rec.exp * 1e3 < Date.now())) return null;
+  return supa.usuarios.get(rec.userId) || null;
+}
+const texto = body => body == null ? '' : Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
+const AVATAR_TIPOS = ['image/jpeg', 'image/png', 'image/webp'];
+
 function supabase(method, url, headers, body) {
   estadoSupabase.reqs.push(method + ' ' + url.pathname + url.search);
-  const ok = (headers.authorization || headers.Authorization) === 'Bearer ' + FAKE_JWT;
   const json = (status, data) => ({ status, body: data === undefined ? '' : JSON.stringify(data), contentType: 'application/json' });
-  if (url.pathname === '/auth/v1/user') return ok ? json(200, { ...USER, user_metadata: {} }) : json(401, { msg: 'no' });
-  if (!ok) return json(401, { message: 'JWT inválido' });
-  if (url.pathname === '/rest/v1/proyectos') {
+  const p = url.pathname;
+  if (p === '/auth/v1/token') {
+    const datos = JSON.parse(texto(body) || '{}'), tipo = url.searchParams.get('grant_type');
+    if (tipo === 'refresh_token') {
+      const id = supa.refresh.get(datos.refresh_token);
+      if (!id) return json(400, { error_description: 'Invalid Refresh Token' });
+      supa.refresh.delete(datos.refresh_token);                     // rotación como en Supabase
+      return json(200, emitirSesion(id));
+    }
+    if (tipo === 'password') {
+      const u = [...supa.usuarios.values()].find(x => x.email === datos.email && x.password === datos.password);
+      return u ? json(200, emitirSesion(u.id)) : json(400, { error_description: 'Invalid login credentials' });
+    }
+    return json(400, { error_description: 'grant_type no simulado' });
+  }
+  const user = usuarioDeToken(headers);
+  if (p === '/auth/v1/logout') { const t = (headers.authorization || '').replace(/^Bearer\s+/i, ''); if (supa.tokens.has(t)) supa.tokens.get(t).revocado = true; return json(204); }
+  if (p === '/auth/v1/user') {
+    if (!user) return json(401, { msg: 'JWT inválido o caducado' });
+    if (method === 'GET') return json(200, publico(user));
+    if (method === 'PUT') {
+      if (supa.fallos.metadatos > 0) { supa.fallos.metadatos--; return json(500, { msg: 'Fallo simulado al actualizar metadatos' }); }
+      const datos = JSON.parse(texto(body) || '{}');
+      for (const [k, v] of Object.entries(datos.data || {})) v === null ? delete user.user_metadata[k] : user.user_metadata[k] = v;
+      if (datos.email) user.email = datos.email;
+      return json(200, publico(user));
+    }
+  }
+  const st = /^\/storage\/v1\/object\/(?:(authenticated|public|sign)\/)?([^/]+)\/(.+)$/.exec(p);
+  if (st) {
+    const [, modo, bucket, ruta] = st, clave = decodeURIComponent(ruta);
+    if (bucket !== 'avatars') return json(400, { statusCode: '404', error: 'Bucket not found' });
+    if (modo === 'public') return json(400, { statusCode: '404', error: 'Bucket not found', message: 'El bucket es privado' });
+    if (!user) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'anon no tiene políticas en avatars' });
+    if (clave.split('/')[0] !== user.id) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+    if ((method === 'POST' || method === 'PUT') && !modo) {
+      if (supa.fallos.subida > 0) { supa.fallos.subida--; return json(500, { error: 'Fallo simulado de Storage' }); }
+      const tipo = headers['content-type'] || '';
+      if (!AVATAR_TIPOS.includes(tipo)) return json(400, { statusCode: '415', error: 'invalid_mime_type' });
+      const bytes = Buffer.isBuffer(body) ? body : Buffer.from(texto(body));
+      if (bytes.length > 524288) return json(400, { statusCode: '413', error: 'Payload too large' });
+      if (supa.objetos.has(clave) && headers['x-upsert'] !== 'true') return json(400, { statusCode: '409', error: 'Duplicate' });
+      let guardado = bytes;
+      if (supa.fallos.corromper > 0) { supa.fallos.corromper--; guardado = Buffer.concat([bytes.subarray(0, Math.max(0, bytes.length - 1)), Buffer.from([0])]); }
+      supa.objetos.set(clave, { bytes: guardado, tipo, dueño: user.id });
+      return json(200, { Key: 'avatars/' + clave });
+    }
+    if (method === 'GET' && (modo === 'authenticated' || !modo)) {
+      const o = supa.objetos.get(clave);
+      return o ? { status: 200, body: o.bytes, contentType: o.tipo } : json(400, { statusCode: '404', error: 'not_found' });
+    }
+    if (method === 'DELETE' && !modo) { supa.objetos.delete(clave); return json(200, [{ name: clave }]); }
+    return json(400, { error: 'operación de Storage no simulada' });
+  }
+  if (!user) return json(401, { message: 'JWT inválido' });
+  if (p === '/rest/v1/proyectos') {
     if (method === 'GET') {
       const id = /^eq\.(.*)$/.exec(url.searchParams.get('id') || '')?.[1];
       if (id) return json(200, estadoSupabase.proyectos.has(id) ? [estadoSupabase.proyectos.get(id)] : []);
       return json(200, [...estadoSupabase.proyectos.values()].map(({ id, name, updated }) => ({ id, name, updated })));
     }
-    if (method === 'POST') { const r = JSON.parse(body); estadoSupabase.proyectos.set(r.id, r); return json(204); }
+    if (method === 'POST') { const r = JSON.parse(texto(body)); estadoSupabase.proyectos.set(r.id, r); return json(204); }
     if (method === 'DELETE') { const id = /^eq\.(.*)$/.exec(url.searchParams.get('id') || '')?.[1]; estadoSupabase.proyectos.delete(id); return json(204); }
   }
-  if (url.pathname === '/rest/v1/rpc/foto_ia_estadisticas') return json(200, { hoy: 0, limite: 2, disponibles: 2, fecha: '2026-11-18' });
-  return json(404, { message: 'no simulado: ' + url.pathname });
+  if (p === '/rest/v1/rpc/foto_ia_estadisticas') return json(200, { hoy: 0, limite: 2, disponibles: 2, fecha: '2026-11-18' });
+  return json(404, { message: 'no simulado: ' + p });
 }
 // fetch de Node (lo usa worker.js para validar la sesión) → mismo Supabase falso
 const realFetch = globalThis.fetch;
@@ -85,6 +177,7 @@ globalThis.fetch = async (input, init = {}) => {
 };
 
 export async function abrirReal(browser, { sesion = true, guardado = {}, post = null } = {}) {
+  // sesion: true (usuario de prueba con FAKE_JWT), false (sin sesión) u objeto devuelto por emitirSesion().
   // post(pathname, headers, bodyBuffer) -> { headers, body }: permite a las pruebas de CSP añadir cabeceras/nonces SIN tocar el código del repositorio.
   estadoSupabase.proyectos = new Map(Object.entries(guardado)); estadoSupabase.reqs = [];
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 }, acceptDownloads: true });
@@ -94,7 +187,7 @@ export async function abrirReal(browser, { sesion = true, guardado = {}, post = 
     const req = route.request(), u = new URL(req.url());
     if (u.hostname === SUPABASE_HOST) {
       if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-      const r = supabase(req.method(), u, req.headers(), req.postData());
+      const r = supabase(req.method(), u, req.headers(), req.postDataBuffer());
       return route.fulfill({ status: r.status, body: r.body, contentType: r.contentType, headers: cors });
     }
     if (u.hostname !== 'nuhio.test') { bloqueadas.push(u.href); return route.abort(); }
@@ -110,7 +203,9 @@ export async function abrirReal(browser, { sesion = true, guardado = {}, post = 
     if (post) ({ headers, body } = post(u.pathname, headers, body, res.status));
     return route.fulfill({ status: res.status, headers, body });
   });
-  if (sesion) await ctx.addInitScript(jwt => { try { if (!localStorage.getItem('sbSes')) localStorage.setItem('sbSes', JSON.stringify({ access_token: jwt, refresh_token: 'r', expires_at: Math.floor(Date.now() / 1e3) + 36000, email: 'prueba@local.invalid' })); } catch {} }, FAKE_JWT);
+  const ses = sesion === true ? { access_token: FAKE_JWT, refresh_token: 'r', expires_at: Math.floor(Date.now() / 1e3) + 36000, email: USER.email } : sesion ? { access_token: sesion.access_token, refresh_token: sesion.refresh_token, expires_at: sesion.expires_at, email: sesion.user?.email || '' } : null;
+  // Una sola inyección por contexto: tras un cierre de sesión no se vuelve a poner la sesión.
+  if (ses) await ctx.addInitScript(s => { try { if (!localStorage.getItem('__sesionInyectada')) { localStorage.setItem('__sesionInyectada', '1'); localStorage.setItem('sbSes', JSON.stringify(s)); } } catch {} }, ses);
   await ctx.addInitScript(() => { window.__CANARIO = 0; });
   const page = await ctx.newPage();
   page.on('pageerror', e => errores.push(String(e)));
