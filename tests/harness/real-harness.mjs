@@ -63,13 +63,21 @@ export const estadoSupabase = { proyectos: new Map(), reqs: [] };
 //    supabase/migrations/20261118120000_avatars_privados.sql: solo `authenticated`, solo "<uid>/…".
 //  * `supa.fallos` inyecta errores (subida, copia corrupta, actualización de metadatos) para probar la migración.
 const PASSWORD_PRUEBA = 'Prueba-Local-1';
-export const supa = { usuarios: new Map(), tokens: new Map(), refresh: new Map(), objetos: new Map(), fallos: {}, n: 0 };
+//  * Rotación de refresh tokens con detección de reutilización: dentro de `intervaloReutilizacion` segundos se
+//    devuelve la misma sesión hija; después, Supabase revoca la sesión entera (aquí, todas las del usuario).
+//  * `fallos.red` corta la conexión de una subida; `fallos.respuestaPerdida` aplica el cambio de metadatos y
+//    corta la conexión antes de responder (el cliente no sabe si se aplicó).
+export const supa = { usuarios: new Map(), tokens: new Map(), refresh: new Map(), usados: new Map(), objetos: new Map(), fallos: {}, intervaloReutilizacion: 10, n: 0 };
 export function reiniciarSupabase() {
   supa.usuarios = new Map([[USER.id, { ...USER, password: PASSWORD_PRUEBA, user_metadata: {} }]]);
   supa.tokens = new Map([[FAKE_JWT, { userId: USER.id, exp: null }]]);
   supa.refresh = new Map([['r', USER.id]]);
+  supa.usados = new Map();
+  supa.intervaloReutilizacion = 10;
+  supa.storageBloqueado = false;
+  supa.reutilizaciones = 0;
   supa.objetos = new Map();
-  supa.fallos = { subida: 0, corromper: 0, metadatos: 0 };
+  supa.fallos = { subida: 0, corromper: 0, metadatos: 0, red: 0, respuestaPerdida: 0 };
 }
 reiniciarSupabase();
 export function crearUsuario(id, { email = id + '@local.invalid', user_metadata = {} } = {}) {
@@ -104,9 +112,20 @@ function supabase(method, url, headers, body) {
     const datos = JSON.parse(texto(body) || '{}'), tipo = url.searchParams.get('grant_type');
     if (tipo === 'refresh_token') {
       const id = supa.refresh.get(datos.refresh_token);
-      if (!id) return json(400, { error_description: 'Invalid Refresh Token' });
+      if (!id) {
+        const usado = supa.usados.get(datos.refresh_token);
+        if (!usado) return json(400, { error_description: 'Invalid Refresh Token: Refresh Token Not Found' });
+        if (Date.now() - usado.en <= supa.intervaloReutilizacion * 1e3) return json(200, usado.hija);
+        // Reutilización fuera del margen: se revoca la sesión entera.
+        for (const rec of supa.tokens.values()) if (rec.userId === usado.userId) rec.revocado = true;
+        for (const [r, uid] of supa.refresh) if (uid === usado.userId) supa.refresh.delete(r);
+        supa.reutilizaciones = (supa.reutilizaciones || 0) + 1;
+        return json(400, { error_description: 'Invalid Refresh Token: Already Used' });
+      }
       supa.refresh.delete(datos.refresh_token);                     // rotación como en Supabase
-      return json(200, emitirSesion(id));
+      const hija = emitirSesion(id);
+      supa.usados.set(datos.refresh_token, { userId: id, hija, en: Date.now() });
+      return json(200, hija);
     }
     if (tipo === 'password') {
       const u = [...supa.usuarios.values()].find(x => x.email === datos.email && x.password === datos.password);
@@ -124,6 +143,7 @@ function supabase(method, url, headers, body) {
       const datos = JSON.parse(texto(body) || '{}');
       for (const [k, v] of Object.entries(datos.data || {})) v === null ? delete user.user_metadata[k] : user.user_metadata[k] = v;
       if (datos.email) user.email = datos.email;
+      if (supa.fallos.respuestaPerdida > 0) { supa.fallos.respuestaPerdida--; return { abortar: true }; }
       return json(200, publico(user));
     }
   }
@@ -132,9 +152,12 @@ function supabase(method, url, headers, body) {
     const [, modo, bucket, ruta] = st, clave = decodeURIComponent(ruta);
     if (bucket !== 'avatars') return json(400, { statusCode: '404', error: 'Bucket not found' });
     if (modo === 'public') return json(400, { statusCode: '404', error: 'Bucket not found', message: 'El bucket es privado' });
+    // SQL revertido (sin políticas permisivas): ningún usuario puede leer ni escribir.
+    if (supa.storageBloqueado) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'sin políticas (migración revertida)' });
     if (!user) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'anon no tiene políticas en avatars' });
     if (clave.split('/')[0] !== user.id) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
     if ((method === 'POST' || method === 'PUT') && !modo) {
+      if (supa.fallos.red > 0) { supa.fallos.red--; return { abortar: true }; }
       if (supa.fallos.subida > 0) { supa.fallos.subida--; return json(500, { error: 'Fallo simulado de Storage' }); }
       const tipo = headers['content-type'] || '';
       if (!AVATAR_TIPOS.includes(tipo)) return json(400, { statusCode: '415', error: 'invalid_mime_type' });
@@ -173,31 +196,42 @@ globalThis.fetch = async (input, init = {}) => {
   if (url.hostname !== SUPABASE_HOST) throw new Error('Red bloqueada en pruebas: ' + url.href);
   const h = Object.fromEntries(new Headers(init.headers || {}));
   const r = supabase(init.method || 'GET', url, h, init.body);
+  if (r.abortar) throw new TypeError('fetch failed (corte simulado)');
   return new Response(r.status === 204 ? null : r.body, { status: r.status, headers: { 'Content-Type': r.contentType } });
 };
 
-export async function abrirReal(browser, { sesion = true, guardado = {}, post = null } = {}) {
+export async function abrirReal(browser, { sesion = true, guardado = {}, post = null, sustituir = {} } = {}) {
+  // sustituir: { '/auth.js': 'contenido' } sirve otra versión de un asset (p. ej. el auth.js anterior, para probar la reversión).
   // sesion: true (usuario de prueba con FAKE_JWT), false (sin sesión) u objeto devuelto por emitirSesion().
   // post(pathname, headers, bodyBuffer) -> { headers, body }: permite a las pruebas de CSP añadir cabeceras/nonces SIN tocar el código del repositorio.
   estadoSupabase.proyectos = new Map(Object.entries(guardado)); estadoSupabase.reqs = [];
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 }, acceptDownloads: true });
-  const bloqueadas = [], errores = [], peticiones = [];
+  const bloqueadas = [], errores = [], peticiones = [], redirecciones = [];
   const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
   await ctx.route('**/*', async route => {
     const req = route.request(), u = new URL(req.url());
     if (u.hostname === SUPABASE_HOST) {
       if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
       const r = supabase(req.method(), u, req.headers(), req.postDataBuffer());
+      if (r.abortar) return route.abort('connectionreset');
       return route.fulfill({ status: r.status, body: r.body, contentType: r.contentType, headers: cors });
     }
     if (u.hostname !== 'nuhio.test') { bloqueadas.push(u.href); return route.abort(); }
     peticiones.push(u.pathname);
+    if (u.pathname in sustituir) return route.fulfill({ status: 200, contentType: TYPES[extname(u.pathname)] || 'text/plain', body: sustituir[u.pathname] });
     let res;
     if (workerFirst(u.pathname)) {
       const hdr = new Headers(req.headers()); const body = ['GET', 'HEAD'].includes(req.method()) ? undefined : req.postDataBuffer();
       const cookies = await ctx.cookies('https://nuhio.test'); if (cookies.length) hdr.set('Cookie', cookies.map(c => c.name + '=' + c.value).join('; '));
       res = await worker.fetch(new Request(u.href, { method: req.method(), headers: hdr, body, redirect: 'manual' }), env);
     } else res = assetFetch(u.pathname);
+    // Playwright no intercepta el destino de un 3xx simulado; en navegaciones se emula la redirección en el
+    // cliente (location.replace, sin entrada en el historial) y queda registrada en `redirecciones`.
+    const destino = res.headers.get('location');
+    if (req.isNavigationRequest() && res.status >= 300 && res.status < 400 && destino) {
+      redirecciones.push(u.pathname + ' ' + res.status + ' ' + destino);
+      return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><script>location.replace(' + JSON.stringify(destino) + ')</script>' });
+    }
     let headers = Object.fromEntries(res.headers); delete headers['content-length'];
     let body = Buffer.from(await res.arrayBuffer());
     if (post) ({ headers, body } = post(u.pathname, headers, body, res.status));
@@ -210,7 +244,7 @@ export async function abrirReal(browser, { sesion = true, guardado = {}, post = 
   const page = await ctx.newPage();
   page.on('pageerror', e => errores.push(String(e)));
   page.on('dialog', d => { errores.push('dialog:' + d.message()); d.dismiss(); });
-  return { ctx, page, bloqueadas, errores, peticiones };
+  return { ctx, page, bloqueadas, errores, peticiones, redirecciones };
 }
 export async function entrarAlEditor(page) {
   await page.goto('https://nuhio.test/acceso', { waitUntil: 'load' });
