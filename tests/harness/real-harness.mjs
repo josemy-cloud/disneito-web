@@ -208,7 +208,9 @@ export async function abrirReal(browser, { sesion = true, guardado = {}, post = 
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 }, acceptDownloads: true });
   const bloqueadas = [], errores = [], peticiones = [], redirecciones = [];
   const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
-  await ctx.route('**/*', async route => {
+  // Una petición en curso cuando la prueba ya cerró el contexto no es un fallo: se ignora ese caso.
+  await ctx.route('**/*', route => atender(route).catch(e => { if (!/has been closed|Target closed|Route is already handled/.test(String(e))) throw e; }));
+  async function atender(route) {
     const req = route.request(), u = new URL(req.url());
     if (u.hostname === SUPABASE_HOST) {
       if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
@@ -236,7 +238,7 @@ export async function abrirReal(browser, { sesion = true, guardado = {}, post = 
     let body = Buffer.from(await res.arrayBuffer());
     if (post) ({ headers, body } = post(u.pathname, headers, body, res.status));
     return route.fulfill({ status: res.status, headers, body });
-  });
+  }
   const ses = sesion === true ? { access_token: FAKE_JWT, refresh_token: 'r', expires_at: Math.floor(Date.now() / 1e3) + 36000, email: USER.email } : sesion ? { access_token: sesion.access_token, refresh_token: sesion.refresh_token, expires_at: sesion.expires_at, email: sesion.user?.email || '' } : null;
   // Una sola inyección por contexto: tras un cierre de sesión no se vuelve a poner la sesión.
   if (ses) await ctx.addInitScript(s => { try { if (!localStorage.getItem('__sesionInyectada')) { localStorage.setItem('__sesionInyectada', '1'); localStorage.setItem('sbSes', JSON.stringify(s)); } } catch {} }, ses);

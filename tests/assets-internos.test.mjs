@@ -63,6 +63,8 @@ test('ningún código ni documento versionado referencia los documentos internos
     if (st.isDirectory()) { visita(p); continue; }
     if (!versionados.has(relative(root, p).split(sep).join('/'))) continue;
     if (INTERNOS.includes(n) || n === '.assetsignore' || st.size > 5_000_000) continue;
+    // Única excepción explícita: la guía de verificación los nombra para comprobar que dan 404.
+    if (relative(root, p).split(sep).join('/') === 'docs/supabase-avatars-validacion.md') continue;
     if (!/\.(m?js|html|css|json|md|jsonc|toml|sql|txt)$/.test(n)) continue;
     const txt = readFileSync(p, 'utf8');
     if (INTERNOS.some(f => txt.includes(f))) tocados.push(relative(root, p));
