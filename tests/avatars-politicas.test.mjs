@@ -58,17 +58,23 @@ test('la migración es idempotente y solo crea o sustituye objetos propios de av
   const creadas = [...sql.matchAll(/create policy "([^"]+)"/g)].map(m => m[1]);
   const borradas = [...sql.matchAll(/drop policy if exists "([^"]+)"/g)].map(m => m[1]);
   assert.equal(creadas.length, 5);
-  assert.deepEqual([...borradas].sort(), [...creadas].sort());
+  // Además retira el bloqueo que deja la reversión, para poder volver a migrar.
+  assert.deepEqual([...borradas].sort(), [...creadas, 'avatars: bloqueo tras la reversión (restrictiva)'].sort());
   assert.match(sql, /^begin;/m); assert.match(sql, /^commit;/m);
 });
 
-test('la reversión no borra fotos, retira las permisivas y mantiene la restrictiva mientras exista el bucket', () => {
+test('la reversión no borra fotos, retira las permisivas y bloquea todo avatars mientras exista el bucket', () => {
   for (const p of permisivas) assert.ok(down.includes(`drop policy if exists "${p.nombre}" on storage.objects;`), p.nombre);
   assert.doesNotMatch(down, /delete from storage\.objects|truncate|update storage/i);
+  const d = espacios(down);
   // El bucket solo se borra vacío, y un fallo (trigger de protección de storage) no deshace el resto.
-  assert.match(espacios(down), /begin delete from storage\.buckets b where b\.id = 'avatars' and not exists \(select 1 from storage\.objects o where o\.bucket_id = 'avatars'\); exception when others then raise notice/);
-  assert.match(espacios(down), /if not exists \(select 1 from storage\.buckets where id = 'avatars'\) then drop policy if exists "avatars: solo la carpeta propia \(restrictiva\)" on storage\.objects; end if;/);
-  assert.equal((down.match(/restrictiva\)" on storage\.objects/g) || []).length, 1, 'no se retira en ningún otro sitio');
+  assert.match(d, /begin delete from storage\.buckets b where b\.id = 'avatars' and not exists \(select 1 from storage\.objects o where o\.bucket_id = 'avatars'\); exception when others then raise notice/);
+  // Con el bucket: bloqueo total RESTRICTIVE para todos los roles (ninguna permisiva futura lo abre).
+  assert.match(d, /if exists \(select 1 from storage\.buckets where id = 'avatars'\) then drop policy if exists "avatars: bloqueo tras la reversión \(restrictiva\)" on storage\.objects; create policy "avatars: bloqueo tras la reversión \(restrictiva\)" on storage\.objects as restrictive for all to public using \(bucket_id <> 'avatars'\) with check \(bucket_id <> 'avatars'\);/);
+  assert.match(d, /raise warning 'El bucket "avatars" es PÚBLICO/);
+  // Sin el bucket: se retiran las dos restrictivas, y en ningún otro caso.
+  assert.match(d, /else drop policy if exists "avatars: bloqueo tras la reversión \(restrictiva\)" on storage\.objects; drop policy if exists "avatars: solo la carpeta propia \(restrictiva\)" on storage\.objects; end if;/);
+  assert.equal((down.match(/carpeta propia \(restrictiva\)" on storage\.objects/g) || []).length, 1);
 });
 
 test('auth.js no vuelve a incrustar fotos en el JWT ni usa URLs públicas o firmadas', () => {

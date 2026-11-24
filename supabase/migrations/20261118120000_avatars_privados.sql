@@ -43,6 +43,9 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('avatars', 'avatars', false, 524288, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do nothing;
 
+-- Si se aplicó la reversión, esta política bloquea todo el bucket. Volver a migrar la retira.
+drop policy if exists "avatars: bloqueo tras la reversión (restrictiva)" on storage.objects;
+
 drop policy if exists "avatars: solo la carpeta propia (restrictiva)" on storage.objects;
 create policy "avatars: solo la carpeta propia (restrictiva)"
   on storage.objects as restrictive for all to public
