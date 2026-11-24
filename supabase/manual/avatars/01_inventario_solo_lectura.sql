@@ -2,6 +2,7 @@
 -- No modifica nada ni muestra las imágenes: solo tamaños, formato y huellas (MD5 y SHA-256) de los bytes
 -- decodificados. Guarda el resultado: es la referencia para comprobar la integridad después de migrar.
 -- Ejecútalo en el SQL Editor de Supabase. No forma parte de supabase/migrations.
+-- Solo cuenta las fotos reales: avatar_data debe ser un texto. Una clave con valor JSON null no es una foto.
 
 select
   u.id                                                                      as user_id,
@@ -15,7 +16,7 @@ select
   length(u.raw_user_meta_data::text)                                        as caracteres_user_metadata,
   u.raw_user_meta_data ? 'avatar_path'                                      as ya_tiene_avatar_path
 from auth.users u
-where u.raw_user_meta_data ? 'avatar_data'
+where jsonb_typeof(u.raw_user_meta_data->'avatar_data') = 'string'
 order by u.created_at;
 
 -- Esperado ahora: 2 filas, formato_migrable = true y ya_tiene_avatar_path = false.
