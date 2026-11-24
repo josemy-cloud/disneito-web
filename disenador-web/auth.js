@@ -62,6 +62,7 @@ async function enterEditor(signal=AbortSignal.timeout(12000)){
   // and window listeners registered earlier have been erased.
   window.addEventListener('storage',onSessionStorage);
   SESSION_SYNC=syncSessionCookie().catch(()=>'error');
+  initAccountButton();
 }
 /* ===== Session cookie and profile photos outside the JWT =====
    The Worker protects its routes with the HttpOnly cookie __Host-disenito-session, which carries the
@@ -165,6 +166,22 @@ async function avatarSource(meta){
   }catch(error){}
  }
  return meta.avatar_data||meta.avatar_url||'';
+}
+// Top-bar account button. Drawn when the editor loads (sign-in and reload), not only when «Mi cuenta» opens.
+function drawAccountButton(meta,email,avatar){
+ const b=document.getElementById('bAcc');if(!b)return;
+ const label=(meta.full_name||email||'Mi cuenta').slice(0,18);
+ if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label;
+}
+async function initAccountButton(){
+ try{
+  const u=await sbUser('GET');
+  if(document.readyState==='loading')await new Promise(ok=>document.addEventListener('DOMContentLoaded',ok,{once:true}));
+  // «Mi cuenta» already drew the button (and owns the current blob: URL): do not replace it.
+  if(document.getElementById('accountBox'))return;
+  const meta=u.user_metadata||{};
+  drawAccountButton(meta,u.email||(SES&&SES.email),await avatarSource(meta));
+ }catch(error){}
 }
 async function leaveEditor(){
   const token=SES?.access_token;
@@ -323,7 +340,7 @@ async function accountPanel({entry=false}={}){
   const logout=btn('Cerrar sesión',leaveEditor);logout.className='studio-danger';footer.append(logout);
   const note=document.createElement('p');note.className='studio-muted';note.textContent='Si cambias el correo, es posible que tengas que confirmar la nueva dirección.';fields.append(note);
   content.append(footer);
-  const b=document.getElementById('bAcc');if(b){const label=(meta.full_name||u.email||'Mi cuenta').slice(0,18);if(avatar){const bi=document.createElement('img');bi.src=avatar;bi.alt='';bi.style.cssText='width:22px;height:22px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px';b.replaceChildren(bi,document.createTextNode(label))}else b.textContent='👤 '+label}
+  drawAccountButton(meta,u.email,avatar);
  };
  const recoveryType=recoveryParams.get('type'),recoveryToken=recoveryParams.get('access_token'),recoveryError=recoveryParams.get('error_description')||recoveryParams.get('error');
  if(recoveryType==='recovery'&&recoveryToken)drawPasswordReset(recoveryToken);
@@ -331,4 +348,7 @@ async function accountPanel({entry=false}={}){
  else if(entry)drawLogin();
  else await drawProfile();
 }
+// Reload of /editor (served directly by the Worker): show the profile photo in the top bar at once. After
+// sign-in, enterEditor does it instead (this second copy of auth.js does not run there).
+if(SES&&document.getElementById('bAcc'))initAccountButton();
 

@@ -447,6 +447,72 @@ test('perfil: subir foto nueva (Storage, JWT pequeño), sustituirla (borra la an
   await s.ctx.close();
 });
 
+test('barra superior: la foto aparece al entrar y al recargar sin abrir «Mi cuenta», y sigue los cambios hasta cerrar sesión', async () => {
+  const id = 'foto-en-barra';
+  crearUsuario(id, { user_metadata: { full_name: 'Bea Barra', avatar_path: id + '/avatar-migrado.jpg' } });
+  supa.objetos.set(id + '/avatar-migrado.jpg', { bytes: BYTES_FOTO, tipo: 'image/jpeg', dueño: id });
+  const s = await abrirReal(browser, { sesion: emitirSesion(id) });
+  const fotoBarra = () => s.page.evaluate(() => document.querySelector('#bAcc img')?.src || null);
+  const textoBarra = () => s.page.evaluate(() => document.getElementById('bAcc')?.textContent);
+  const bytesDe = src => s.page.evaluate(async u => (await (await fetch(u)).arrayBuffer()).byteLength, src);
+  const sinPanel = () => s.page.evaluate(() => !document.getElementById('accountBox'));
+  // Inicio de sesión: descarga autenticada y blob: local, sin abrir «Mi cuenta».
+  await entrarAlEditor(s.page);
+  const alEntrar = await esperar(fotoBarra);
+  assert.ok(await sinPanel(), 'no se ha abierto «Mi cuenta»');
+  assert.match(alEntrar, /^blob:https:\/\/nuhio\.test\//);
+  assert.equal(await bytesDe(alEntrar), BYTES_FOTO.length);
+  assert.match(await textoBarra(), /Bea Barra/);
+  // Recarga: el Worker sirve /editor directamente con la cookie.
+  await esperar(() => cookieSesion(s.ctx));
+  await s.page.goto('https://nuhio.test/editor');
+  await s.page.waitForFunction(() => typeof S === 'object' && document.getElementById('c2'), null, { timeout: 20000 });
+  const alRecargar = await esperar(fotoBarra);
+  assert.ok(await sinPanel());
+  assert.match(alRecargar, /^blob:https:\/\/nuhio\.test\//);
+  assert.equal(await bytesDe(alRecargar), BYTES_FOTO.length);
+  const lecturas = estadoSupabase.reqs.filter(r => r.includes('/object/authenticated/avatars/'));
+  assert.ok(lecturas.length >= 2, 'lectura autenticada al entrar y al recargar');
+  assert.ok(!estadoSupabase.reqs.some(r => r.includes('/object/public/') || r.includes('/object/sign/')), 'sin URLs públicas ni firmadas');
+  // Cambiar la foto: la barra muestra la nueva.
+  await s.page.evaluate(() => accountPanel());
+  await s.page.waitForSelector('#accountBox input[type=file][accept="image/*"]', { state: 'attached' });
+  await s.page.setInputFiles('#accountBox input[type=file][accept="image/*"]', { name: 'foto.png', mimeType: 'image/png', buffer: PNG_1PX });
+  await esperar(() => supa.usuarios.get(id).user_metadata.avatar_path !== id + '/avatar-migrado.jpg');
+  // Abrir «Mi cuenta» ya renueva el blob: (misma foto); se espera al que contiene los bytes de la nueva.
+  const bytesNueva = supa.objetos.get(supa.usuarios.get(id).user_metadata.avatar_path).bytes.length;
+  assert.notEqual(bytesNueva, BYTES_FOTO.length);
+  const nueva = await esperar(async () => { const src = await fotoBarra(); return src && (await bytesDe(src).catch(() => 0)) === bytesNueva && src; });
+  assert.match(nueva, /^blob:https:\/\/nuhio\.test\//);
+  // Eliminarla: la barra vuelve al icono genérico con el nombre.
+  await s.page.click('#accountBox button:has-text("Eliminar foto")');
+  await esperar(async () => !(await fotoBarra()) && (await textoBarra()) === '👤 Bea Barra');
+  await s.page.evaluate(() => document.getElementById('accountBox')?.remove());
+  // Recargar sin foto: icono genérico, sin peticiones a Storage.
+  await s.page.goto('https://nuhio.test/editor');
+  await s.page.waitForFunction(() => typeof S === 'object' && document.getElementById('c2'), null, { timeout: 20000 });
+  await esperar(async () => (await textoBarra()) === '👤 Bea Barra');
+  assert.equal(await fotoBarra(), null);
+  // Cerrar sesión: vuelve a /acceso y la barra desaparece con el editor.
+  await Promise.all([s.page.waitForURL('**/acceso'), s.page.evaluate(() => leaveEditor())]);
+  assert.equal(await cookieSesion(s.ctx), null);
+  assert.equal(await s.page.evaluate(() => document.getElementById('bAcc')), null);
+  assert.deepEqual(errores(s), []);
+  await s.ctx.close();
+});
+
+test('barra superior: una foto antigua aún incrustada también se ve al entrar, mientras se migra', async () => {
+  conFoto();
+  const s = await abrirReal(browser, { sesion: emitirSesion('usuario-con-foto') });
+  await entrarAlEditor(s.page);
+  const src = await esperar(() => s.page.evaluate(() => document.querySelector('#bAcc img')?.src || null));
+  assert.match(src, /^(data:image\/jpeg;base64,|blob:https:\/\/nuhio\.test\/)/);
+  assert.equal(await s.page.evaluate(() => !document.getElementById('accountBox')), true);
+  await migracionTerminada(s.page);
+  assert.deepEqual(errores(s), []);
+  await s.ctx.close();
+});
+
 test('guardar el nombre después de una migración en segundo plano no vuelve a incrustar la foto en el JWT', async () => {
   conFoto();
   const s = await abrirReal(browser, { sesion: emitirSesion('usuario-con-foto') });
