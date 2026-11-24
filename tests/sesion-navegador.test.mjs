@@ -308,7 +308,8 @@ test('varias pestañas: cerrar sesión en una termina la sesión de las demás',
 
 test('reversión del código: con el auth.js anterior, las cuentas ya migradas y las no migradas siguen entrando', async () => {
   const { execFileSync } = await import('node:child_process');
-  const anterior = execFileSync('git', ['show', 'desarrollo-cloudflare:disenador-web/auth.js'], { encoding: 'utf8' });
+  // Referencia fija: el último commit publicado antes de estos cambios (no una rama, que avanza al integrar).
+  const anterior = execFileSync('git', ['show', '6402092:disenador-web/auth.js'], { encoding: 'utf8' });
   assert.ok(!anterior.includes('syncSessionCookie'), 'es la versión anterior');
   crearUsuario('migrado', { user_metadata: { full_name: 'Migrado', avatar_path: 'migrado/avatar-migrado.jpg' } });
   supa.objetos.set('migrado/avatar-migrado.jpg', { bytes: BYTES_FOTO, tipo: 'image/jpeg', dueño: 'migrado' });
