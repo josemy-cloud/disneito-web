@@ -3,7 +3,7 @@
 // Ejecutar: node --test tests/sesion-worker.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { llamarWorker, supa, crearUsuario, emitirSesion, reiniciarSupabase, estadoSupabase, USER } from './harness/real-harness.mjs';
+import { llamarWorker, supa, crearUsuario, emitirSesion, reiniciarSupabase, estadoSupabase, USER, SUPABASE_HOST } from './harness/real-harness.mjs';
 
 const ORIGEN = { Origin: 'https://nuhio.test' };
 const bearer = t => ({ ...ORIGEN, Authorization: 'Bearer ' + t });
@@ -117,4 +117,47 @@ test('/api/editor sigue funcionando con Bearer (también con un token grande) y 
   const r = await llamarWorker('/api/editor', { headers: { Authorization: 'Bearer ' + grande } });
   assert.equal(r.status, 200); assert.equal(r.headers.get('x-disenito-editor'), '1');
   assert.equal((await llamarWorker('/api/editor', { headers: { Authorization: 'Bearer a.b.c' } })).status, 401);
+});
+
+// Llamadas directas al Supabase simulado (fetch de Node interceptado: sin red).
+const sb = (ruta, { token, method = 'GET', body } = {}) => fetch('https://' + SUPABASE_HOST + ruta, {
+  method, headers: { apikey: 'anon', 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+  body: body && JSON.stringify(body) });
+
+test('cierre de sesión: el refresh token queda invalidado y el Worker rechaza al instante el access token; REST y Storage lo aceptan solo hasta su caducidad', async () => {
+  const ses = emitirSesion(USER.id, { expiraEn: 600 });
+  supa.objetos.set(USER.id + '/avatar-migrado.jpg', { bytes: Buffer.from('x'), tipo: 'image/jpeg', dueño: USER.id });
+  const cookie = valorCookie((await crearCookie(ses.access_token)).headers.get('set-cookie'));
+  assert.equal((await llamarWorker('/api/sesion', { method: 'DELETE', cookie, headers: bearer(ses.access_token) })).status, 204);
+  // 1. Refresh token: invalidado (no se pueden obtener tokens nuevos).
+  const r = await sb('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: ses.refresh_token } });
+  assert.equal(r.status, 400);
+  // 2. Access token en /auth/v1/user: rechazado al instante. El Worker valida así la cookie y /api/editor.
+  assert.equal((await sb('/auth/v1/user', { token: ses.access_token })).status, 401);
+  assert.equal((await llamarWorker('/inventario-modelos-3d.json', { cookie })).status, 302);
+  assert.equal((await llamarWorker('/api/editor', { headers: { Authorization: 'Bearer ' + ses.access_token } })).status, 401);
+  assert.equal((await crearCookie(ses.access_token)).status, 401, 'no se puede recrear la cookie');
+  // 3. Vigencia residual: REST y Storage solo verifican firma y caducidad, como en Supabase.
+  assert.equal((await sb('/rest/v1/proyectos?select=id', { token: ses.access_token })).status, 200, 'REST: residual hasta exp');
+  assert.equal((await sb('/storage/v1/object/authenticated/avatars/' + USER.id + '/avatar-migrado.jpg', { token: ses.access_token })).status, 200, 'Storage: residual hasta exp');
+  // ... y nunca más allá de exp: un token caducado se rechaza en todas partes.
+  const caducado = emitirSesion(USER.id, { expiraEn: -1 });
+  assert.equal((await sb('/rest/v1/proyectos?select=id', { token: caducado.access_token })).status, 401);
+  assert.notEqual((await sb('/storage/v1/object/authenticated/avatars/' + USER.id + '/avatar-migrado.jpg', { token: caducado.access_token })).status, 200);
+});
+
+test('cierre de sesión: solo afecta a esa sesión; otra sesión del mismo usuario (otro dispositivo) sigue funcionando', async () => {
+  const movil = emitirSesion(USER.id), portatil = emitirSesion(USER.id);
+  await sb('/auth/v1/logout?scope=local', { token: movil.access_token, method: 'POST' });
+  assert.equal((await sb('/auth/v1/user', { token: movil.access_token })).status, 401);
+  assert.equal((await sb('/auth/v1/user', { token: portatil.access_token })).status, 200);
+  assert.equal((await sb('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: portatil.refresh_token } })).status, 200);
+});
+
+test('tras renovar el token, la sesión sigue siendo la misma: cerrarla invalida también los tokens renovados', async () => {
+  const ses = emitirSesion(USER.id);
+  const nueva = await (await sb('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: ses.refresh_token } })).json();
+  await sb('/auth/v1/logout?scope=local', { token: ses.access_token, method: 'POST' });
+  assert.equal((await sb('/auth/v1/user', { token: nueva.access_token })).status, 401);
+  assert.equal((await sb('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: nueva.refresh_token } })).status, 400);
 });

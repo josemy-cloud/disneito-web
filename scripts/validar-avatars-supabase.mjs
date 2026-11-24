@@ -102,10 +102,29 @@ try {
   comprobar('PUT /auth/v1/user fusiona: no se pierden otras claves de user_metadata', JSON.stringify(Object.keys(resto).sort()) === JSON.stringify(Object.keys(antes).filter(k => k !== 'nuhio_validacion').sort()));
   const largo = A.access_token.length;
   comprobar('el JWT de A cabe en la cookie (≤ 3976 caracteres)', largo <= 4000 - '__Host-disenito-session='.length, largo + ' caracteres');
+  // 6. Cierre de sesión: tres efectos distintos, que se comprueban por separado.
+  //    a) el refresh token queda invalidado (no se obtienen tokens nuevos);
+  //    b) /auth/v1/user rechaza el access token: es lo que usa el Worker para la cookie y /api/editor;
+  //    c) REST y Storage solo verifican firma y caducidad: el access token puede seguir valiendo allí hasta
+  //       su `exp` (vigencia residual, como máximo la duración del JWT). Se informa como AVISO, no como fallo.
   const otra = await sesion(cuentas[0]);
-  await fetch(`${URL_SB}/auth/v1/logout?scope=local`, { method: 'POST', headers: h(otra.access_token) });
+  const expOtra = JSON.parse(Buffer.from(otra.access_token.split('.')[1], 'base64url')).exp;
+  const cierre = await fetch(`${URL_SB}/auth/v1/logout?scope=local`, { method: 'POST', headers: h(otra.access_token) });
+  comprobar('cierre de sesión aceptado por Supabase', cierre.ok, 'HTTP ' + cierre.status);
+  const renovar = await fetch(`${URL_SB}/auth/v1/token?grant_type=refresh_token`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: otra.refresh_token }) });
+  comprobar('tras cerrar sesión, el refresh token queda invalidado', !renovar.ok, 'HTTP ' + renovar.status);
   const tras_logout = await fetch(`${URL_SB}/auth/v1/user`, { headers: h(otra.access_token) });
-  comprobar('un token de una sesión cerrada ya no se acepta en /auth/v1/user (el Worker lo rechaza)', !tras_logout.ok, 'HTTP ' + tras_logout.status);
+  comprobar('tras cerrar sesión, /auth/v1/user rechaza el access token (el Worker lo rechaza al instante)', !tras_logout.ok, 'HTTP ' + tras_logout.status);
+  const restante = Math.max(0, expOtra - Math.floor(Date.now() / 1000));
+  const residualStorage = (await leer(otra.access_token, rutaA)).status;
+  const residualRest = (await fetch(`${URL_SB}/rest/v1/proyectos?select=id&limit=1`, { headers: h(otra.access_token) })).status;
+  for (const [servicio, estado] of [['Storage', residualStorage], ['REST', residualRest]]) {
+    if (ok2xx(estado)) aviso(`vigencia residual en ${servicio}`, `acepta el access token de la sesión cerrada hasta que caduque (en ${restante} s). Esperado en Supabase; el Worker no lo acepta.`);
+    else comprobar(`${servicio} rechaza ya el access token de la sesión cerrada`, true, 'HTTP ' + estado);
+  }
+  comprobar('la vigencia residual está acotada a la duración del JWT (≤ 1 h)', restante <= 3600, restante + ' s');
+  // Otra sesión del mismo usuario (otro dispositivo) no se ve afectada.
+  comprobar('cerrar una sesión no afecta a las demás del mismo usuario', (await fetch(`${URL_SB}/auth/v1/user`, { headers: h(A.access_token) })).ok);
 } catch (e) {
   comprobar('ejecución', false, e.message);
 } finally {

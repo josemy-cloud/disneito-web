@@ -67,11 +67,16 @@ const PASSWORD_PRUEBA = 'Prueba-Local-1';
 //    devuelve la misma sesión hija; después, Supabase revoca la sesión entera (aquí, todas las del usuario).
 //  * `fallos.red` corta la conexión de una subida; `fallos.respuestaPerdida` aplica el cambio de metadatos y
 //    corta la conexión antes de responder (el cliente no sabe si se aplicó).
-export const supa = { usuarios: new Map(), tokens: new Map(), refresh: new Map(), usados: new Map(), objetos: new Map(), fallos: {}, intervaloReutilizacion: 10, n: 0 };
+//  * Cierre de sesión como en Supabase: invalida los refresh tokens de esa sesión y /auth/v1/user rechaza sus
+//    access tokens (comprueba que la sesión existe), pero REST y Storage solo verifican firma y caducidad:
+//    el access token sigue valiendo allí hasta `exp` (vigencia residual).
+export const supa = { usuarios: new Map(), tokens: new Map(), refresh: new Map(), refreshSesion: new Map(), sesionesCerradas: new Set(), usados: new Map(), objetos: new Map(), fallos: {}, intervaloReutilizacion: 10, n: 0 };
 export function reiniciarSupabase() {
   supa.usuarios = new Map([[USER.id, { ...USER, password: PASSWORD_PRUEBA, user_metadata: {} }]]);
-  supa.tokens = new Map([[FAKE_JWT, { userId: USER.id, exp: null }]]);
+  supa.tokens = new Map([[FAKE_JWT, { userId: USER.id, exp: null, sid: 's-fija' }]]);
   supa.refresh = new Map([['r', USER.id]]);
+  supa.refreshSesion = new Map([['r', 's-fija']]);
+  supa.sesionesCerradas = new Set();
   supa.usados = new Map();
   supa.intervaloReutilizacion = 10;
   supa.storageBloqueado = false;
@@ -85,21 +90,31 @@ export function crearUsuario(id, { email = id + '@local.invalid', user_metadata 
   return supa.usuarios.get(id);
 }
 // Emite una sesión como /auth/v1/token: el JWT lleva user_metadata en el momento de emitirse.
-export function emitirSesion(userId, { expiraEn = 3600 } = {}) {
-  const u = supa.usuarios.get(userId), exp = Math.floor(Date.now() / 1e3) + expiraEn;
-  const payload = { sub: u.id, email: u.email, exp, iat: exp - expiraEn, role: 'authenticated', aud: 'authenticated', session_id: 's' + (++supa.n), user_metadata: u.user_metadata, app_metadata: { provider: 'email' } };
-  const access_token = `${b64({ alg: 'ES256', typ: 'JWT' })}.${b64(payload)}.firma${supa.n}`;
-  const refresh_token = 'refresh-' + supa.n;
-  supa.tokens.set(access_token, { userId, exp });
+export function emitirSesion(userId, { expiraEn = 3600, sid = null } = {}) {
+  // Cada emisión tiene identificadores únicos; al renovar se conserva solo la sesión (sid).
+  const u = supa.usuarios.get(userId), exp = Math.floor(Date.now() / 1e3) + expiraEn, k = ++supa.n;
+  sid = sid || 's' + k;
+  const payload = { sub: u.id, email: u.email, exp, iat: exp - expiraEn, role: 'authenticated', aud: 'authenticated', session_id: sid, user_metadata: u.user_metadata, app_metadata: { provider: 'email' } };
+  const access_token = `${b64({ alg: 'ES256', typ: 'JWT' })}.${b64(payload)}.firma${k}`;
+  const refresh_token = 'refresh-' + k;
+  supa.tokens.set(access_token, { userId, exp, sid });
   supa.refresh.set(refresh_token, userId);
+  supa.refreshSesion.set(refresh_token, sid);
   return { access_token, refresh_token, expires_in: expiraEn, expires_at: exp, token_type: 'bearer', user: publico(u) };
 }
 const publico = u => ({ id: u.id, email: u.email, aud: 'authenticated', role: 'authenticated', user_metadata: structuredClone(u.user_metadata), app_metadata: { provider: 'email' } });
-function usuarioDeToken(headers) {
+// sesion=true: como /auth/v1/user, también exige que la sesión siga abierta. false: como REST/Storage (solo firma y exp).
+function usuarioDeToken(headers, { sesion = true } = {}) {
   const auth = headers.authorization || headers.Authorization || '';
   const rec = supa.tokens.get(auth.replace(/^Bearer\s+/i, ''));
-  if (!rec || rec.revocado || (rec.exp && rec.exp * 1e3 < Date.now())) return null;
+  if (!rec || (rec.exp && rec.exp * 1e3 < Date.now())) return null;
+  if (sesion && (rec.revocado || supa.sesionesCerradas.has(rec.sid))) return null;
   return supa.usuarios.get(rec.userId) || null;
+}
+function cerrarSesion(sid) {
+  supa.sesionesCerradas.add(sid);
+  for (const rec of supa.tokens.values()) if (rec.sid === sid) rec.revocado = true;
+  for (const [r, s] of supa.refreshSesion) if (s === sid) { supa.refresh.delete(r); supa.refreshSesion.delete(r); }
 }
 const texto = body => body == null ? '' : Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
 const AVATAR_TIPOS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -115,16 +130,17 @@ function supabase(method, url, headers, body) {
       if (!id) {
         const usado = supa.usados.get(datos.refresh_token);
         if (!usado) return json(400, { error_description: 'Invalid Refresh Token: Refresh Token Not Found' });
+        if (supa.sesionesCerradas.has(usado.sid)) return json(400, { error_description: 'Invalid Refresh Token: Session Expired' });
         if (Date.now() - usado.en <= supa.intervaloReutilizacion * 1e3) return json(200, usado.hija);
         // Reutilización fuera del margen: se revoca la sesión entera.
-        for (const rec of supa.tokens.values()) if (rec.userId === usado.userId) rec.revocado = true;
-        for (const [r, uid] of supa.refresh) if (uid === usado.userId) supa.refresh.delete(r);
+        cerrarSesion(usado.sid);
         supa.reutilizaciones = (supa.reutilizaciones || 0) + 1;
         return json(400, { error_description: 'Invalid Refresh Token: Already Used' });
       }
-      supa.refresh.delete(datos.refresh_token);                     // rotación como en Supabase
-      const hija = emitirSesion(id);
-      supa.usados.set(datos.refresh_token, { userId: id, hija, en: Date.now() });
+      const sid = supa.refreshSesion.get(datos.refresh_token);
+      supa.refresh.delete(datos.refresh_token);                     // rotación como en Supabase (misma sesión)
+      const hija = emitirSesion(id, { sid });
+      supa.usados.set(datos.refresh_token, { userId: id, sid, hija, en: Date.now() });
       return json(200, hija);
     }
     if (tipo === 'password') {
@@ -133,8 +149,8 @@ function supabase(method, url, headers, body) {
     }
     return json(400, { error_description: 'grant_type no simulado' });
   }
-  const user = usuarioDeToken(headers);
-  if (p === '/auth/v1/logout') { const t = (headers.authorization || '').replace(/^Bearer\s+/i, ''); if (supa.tokens.has(t)) supa.tokens.get(t).revocado = true; return json(204); }
+  const user = usuarioDeToken(headers), userJwt = usuarioDeToken(headers, { sesion: false });
+  if (p === '/auth/v1/logout') { const t = (headers.authorization || '').replace(/^Bearer\s+/i, ''); if (supa.tokens.has(t)) cerrarSesion(supa.tokens.get(t).sid); return json(204); }
   if (p === '/auth/v1/user') {
     if (!user) return json(401, { msg: 'JWT inválido o caducado' });
     if (method === 'GET') return json(200, publico(user));
@@ -149,6 +165,7 @@ function supabase(method, url, headers, body) {
   }
   const st = /^\/storage\/v1\/object\/(?:(authenticated|public|sign)\/)?([^/]+)\/(.+)$/.exec(p);
   if (st) {
+    const user = userJwt;                                            // Storage: solo firma y caducidad
     const [, modo, bucket, ruta] = st, clave = decodeURIComponent(ruta);
     if (bucket !== 'avatars') return json(400, { statusCode: '404', error: 'Bucket not found' });
     if (modo === 'public') return json(400, { statusCode: '404', error: 'Bucket not found', message: 'El bucket es privado' });
@@ -176,7 +193,7 @@ function supabase(method, url, headers, body) {
     if (method === 'DELETE' && !modo) { supa.objetos.delete(clave); return json(200, [{ name: clave }]); }
     return json(400, { error: 'operación de Storage no simulada' });
   }
-  if (!user) return json(401, { message: 'JWT inválido' });
+  if (!userJwt) return json(401, { message: 'JWT inválido' });          // REST: solo firma y caducidad
   if (p === '/rest/v1/proyectos') {
     if (method === 'GET') {
       const id = /^eq\.(.*)$/.exec(url.searchParams.get('id') || '')?.[1];
