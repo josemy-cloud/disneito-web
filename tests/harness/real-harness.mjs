@@ -70,6 +70,14 @@ const PASSWORD_PRUEBA = 'Prueba-Local-1';
 //  * Cierre de sesión como en Supabase: invalida los refresh tokens de esa sesión y /auth/v1/user rechaza sus
 //    access tokens (comprueba que la sesión existe), pero REST y Storage solo verifican firma y caducidad:
 //    el access token sigue valiendo allí hasta `exp` (vigencia residual).
+//  * Límite de cabeceras de Storage, medido contra el Supabase real el 25/11/2026 con JWT falsos: Auth y REST
+//    aceptan tokens de 30.000 caracteres; Storage responde 431 por encima de ~15.195 y, por encima de ~16.000,
+//    400 con una página HTML genérica del proxy (lo que vio Chrome con un JWT de 21.002). Aquí se modela sobre la
+//    cabecera Authorization; Chrome envía más cabeceras que Node, así que en el navegador el margen real es algo menor.
+//  * API de administración (solo para scripts/migrar-avatars-admin.mjs): SERVICE_KEY omite RLS en Storage y
+//    permite GET/PUT /auth/v1/admin/users/<id>. `ganchos.despuesDeSubir` simula cambios del usuario a mitad.
+export const SERVICE_KEY = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ iss: 'supabase', ref: 'aqfqwvzbsbjrixzgxtro', role: 'service_role' })}.firma-servicio`;
+export const STORAGE_LIMITE_431 = 15200, STORAGE_LIMITE_400 = 16000;
 export const supa = { usuarios: new Map(), tokens: new Map(), refresh: new Map(), refreshSesion: new Map(), sesionesCerradas: new Set(), usados: new Map(), objetos: new Map(), fallos: {}, intervaloReutilizacion: 10, n: 0 };
 export function reiniciarSupabase() {
   supa.usuarios = new Map([[USER.id, { ...USER, password: PASSWORD_PRUEBA, user_metadata: {} }]]);
@@ -83,6 +91,7 @@ export function reiniciarSupabase() {
   supa.reutilizaciones = 0;
   supa.objetos = new Map();
   supa.fallos = { subida: 0, corromper: 0, metadatos: 0, red: 0, respuestaPerdida: 0 };
+  supa.ganchos = {};
 }
 reiniciarSupabase();
 export function crearUsuario(id, { email = id + '@local.invalid', user_metadata = {} } = {}) {
@@ -149,6 +158,21 @@ function supabase(method, url, headers, body) {
     }
     return json(400, { error_description: 'grant_type no simulado' });
   }
+  const esServicio = (headers.authorization || '') === 'Bearer ' + SERVICE_KEY && headers.apikey === SERVICE_KEY;
+  const admin = /^\/auth\/v1\/admin\/users\/([^/]+)$/.exec(p);
+  if (admin) {
+    if (!esServicio) return json(403, { msg: 'User not allowed' });
+    const u = supa.usuarios.get(decodeURIComponent(admin[1]));
+    if (!u) return json(404, { code: 404, error_code: 'user_not_found', msg: 'User not found' });
+    if (method === 'GET') return json(200, publico(u));
+    if (method === 'PUT') {
+      if (supa.fallos.metadatos > 0) { supa.fallos.metadatos--; return json(500, { msg: 'Fallo simulado al actualizar metadatos' }); }
+      const datos = JSON.parse(texto(body) || '{}');
+      for (const [k, v] of Object.entries(datos.user_metadata || {})) v === null ? delete u.user_metadata[k] : u.user_metadata[k] = v;
+      if (supa.fallos.respuestaPerdida > 0) { supa.fallos.respuestaPerdida--; return { abortar: true }; }
+      return json(200, publico(u));
+    }
+  }
   const user = usuarioDeToken(headers), userJwt = usuarioDeToken(headers, { sesion: false });
   if (p === '/auth/v1/logout') { const t = (headers.authorization || '').replace(/^Bearer\s+/i, ''); if (supa.tokens.has(t)) cerrarSesion(supa.tokens.get(t).sid); return json(204); }
   if (p === '/auth/v1/user') {
@@ -165,14 +189,17 @@ function supabase(method, url, headers, body) {
   }
   const st = /^\/storage\/v1\/object\/(?:(authenticated|public|sign)\/)?([^/]+)\/(.+)$/.exec(p);
   if (st) {
-    const user = userJwt;                                            // Storage: solo firma y caducidad
+    const largo = (headers.authorization || '').length;
+    if (largo > STORAGE_LIMITE_400) return { status: 400, body: '<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad Request</h1></center>\r\n</body>\r\n</html>', contentType: 'text/html' };
+    if (largo > STORAGE_LIMITE_431) return json(431, { error: 'Request Header Fields Too Large', message: 'Exceeded maximum allowed header size' });
+    const user = esServicio ? { id: null, servicio: true } : userJwt; // Storage: solo firma y caducidad; service_role omite RLS
     const [, modo, bucket, ruta] = st, clave = decodeURIComponent(ruta);
     if (bucket !== 'avatars') return json(400, { statusCode: '404', error: 'Bucket not found' });
     if (modo === 'public') return json(400, { statusCode: '404', error: 'Bucket not found', message: 'El bucket es privado' });
     // SQL revertido (sin políticas permisivas): ningún usuario puede leer ni escribir.
     if (supa.storageBloqueado) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'sin políticas (migración revertida)' });
     if (!user) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'anon no tiene políticas en avatars' });
-    if (clave.split('/')[0] !== user.id) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+    if (!user.servicio && clave.split('/')[0] !== user.id) return json(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
     if ((method === 'POST' || method === 'PUT') && !modo) {
       if (supa.fallos.red > 0) { supa.fallos.red--; return { abortar: true }; }
       if (supa.fallos.subida > 0) { supa.fallos.subida--; return json(500, { error: 'Fallo simulado de Storage' }); }
@@ -183,7 +210,8 @@ function supabase(method, url, headers, body) {
       if (supa.objetos.has(clave) && headers['x-upsert'] !== 'true') return json(400, { statusCode: '409', error: 'Duplicate' });
       let guardado = bytes;
       if (supa.fallos.corromper > 0) { supa.fallos.corromper--; guardado = Buffer.concat([bytes.subarray(0, Math.max(0, bytes.length - 1)), Buffer.from([0])]); }
-      supa.objetos.set(clave, { bytes: guardado, tipo, dueño: user.id });
+      supa.objetos.set(clave, { bytes: guardado, tipo, dueño: user.servicio ? clave.split('/')[0] : user.id });
+      supa.ganchos.despuesDeSubir?.(clave);
       return json(200, { Key: 'avatars/' + clave });
     }
     if (method === 'GET' && (modo === 'authenticated' || !modo)) {

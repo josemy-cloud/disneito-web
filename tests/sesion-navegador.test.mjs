@@ -3,10 +3,14 @@
 // Ejecutar: node --test tests/sesion-navegador.test.mjs   (Chrome en CHROME_BIN)
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chromium, abrirReal, entrarAlEditor, supa, crearUsuario, emitirSesion, reiniciarSupabase, estadoSupabase, USER, SUPABASE_HOST } from './harness/real-harness.mjs';
+import { chromium, abrirReal, entrarAlEditor, supa, crearUsuario, emitirSesion, reiniciarSupabase, estadoSupabase, USER, SUPABASE_HOST, SERVICE_KEY } from './harness/real-harness.mjs';
+import { migrarAvatarsAdmin, sha256 } from '../scripts/migrar-avatars-admin.mjs';
 
 const PREEXISTENTE = /Identifier 'authPasswordMinLength' has already been declared/;
-const BYTES_FOTO = Buffer.alloc(11250, 7);                       // ≈15 KB en base64, como la foto real
+// Foto antigua que el navegador SÍ puede migrar: su JWT (~13 KB) supera la cookie pero no el límite de cabeceras
+// de Storage (como la cuenta A). Las de más tamaño se migran con scripts/migrar-avatars-admin.mjs (ver más abajo).
+const BYTES_FOTO = Buffer.alloc(7000, 7);
+const BYTES_FOTO_GRANDE = Buffer.from(Array.from({ length: 11234 }, (_, i) => (i * 31 + 7) % 256)); // como la cuenta real
 const FOTO_INCRUSTADA = 'data:image/jpeg;base64,' + BYTES_FOTO.toString('base64');
 const PNG_1PX = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
@@ -132,7 +136,7 @@ test('recuperación de sesión: tras cerrar el navegador (cookie de sesión perd
 test('migración de la foto incrustada: se sube, se verifica, se retira del JWT y la cookie queda establecida', async () => {
   conFoto();
   const ses = emitirSesion('usuario-con-foto');
-  assert.ok(ses.access_token.length > 20000);
+  assert.ok(ses.access_token.length > 4000 && ses.access_token.length < 15200, 'no cabe en la cookie, sí en Storage: ' + ses.access_token.length);
   const s = await abrirReal(browser, { sesion: ses });
   await entrarAlEditor(s.page);
   const c = await esperar(() => cookieSesion(s.ctx), 15000);
@@ -377,6 +381,47 @@ test('sesión antigua: un token emitido antes de migrar (en otro dispositivo) so
   const c = await esperar(() => cookieSesion(s.ctx), 15000);
   assert.ok(c.value.length < 1500);
   assert.ok(!estadoSupabase.reqs.some(r => r.startsWith('POST /storage/')), 'no se sube nada');
+  await s.ctx.close();
+});
+
+test('foto real grande (JWT ~21 KB): Storage rechaza la migración desde el navegador sin perder nada; la migración administrativa la completa y el navegador acaba con JWT pequeño, cookie y foto', async () => {
+  const id = '22222222-2222-4222-8222-000000000001';
+  const original = 'data:image/jpeg;base64,' + BYTES_FOTO_GRANDE.toString('base64');
+  crearUsuario(id, { user_metadata: { full_name: 'Cuenta Real', avatar_data: original } });
+  const grande = emitirSesion(id);
+  assert.ok(grande.access_token.length > 20000, 'como la cuenta real (21.002): ' + grande.access_token.length);
+  // 1. Navegador: la subida a Storage recibe el 400 HTML del proxy; la foto se sigue viendo y nada se pierde.
+  let s = await abrirReal(browser, { sesion: grande });
+  await entrarAlEditor(s.page);
+  await esperar(() => estadoSupabase.reqs.some(r => r.startsWith('POST /storage/v1/object/avatars/' + id + '/avatar-migrado.jpg')), 15000);
+  await migracionTerminada(s.page);
+  assert.equal(supa.usuarios.get(id).user_metadata.avatar_data, original, 'avatar_data intacto');
+  assert.equal(objetosDe(id).length, 0, 'sin objetos residuales');
+  assert.equal(await cookieSesion(s.ctx), null, 'la cookie sigue sin poder crearse');
+  assert.match(await esperar(() => s.page.evaluate(() => document.querySelector('#bAcc img')?.src || null)), /^data:image\/jpeg;base64,/);
+  assert.deepEqual(errores(s), []);
+  await s.ctx.close();
+  // 2. Migración administrativa (service_role, fuera del navegador), con el SHA-256 del inventario.
+  const [r] = await migrarAvatarsAdmin({ url: 'https://' + SUPABASE_HOST, clave: SERVICE_KEY, objetivos: [{ uid: id, sha256: sha256(BYTES_FOTO_GRANDE) }], ejecutar: true, log: () => {} });
+  assert.equal(r.estado, 'migrada', r.detalle);
+  // 3. El navegador con el token ANTIGUO guardado: lo renueva, el JWT queda pequeño, se crea la cookie y se ve la foto.
+  estadoSupabase.reqs = [];
+  s = await abrirReal(browser, { sesion: grande });
+  await entrarAlEditor(s.page);
+  const c = await esperar(() => cookieSesion(s.ctx), 15000);
+  const t = await tokenActual(s.page);
+  assert.ok(t.length < 1500, 'JWT pequeño: ' + t.length);
+  assert.equal(c.value, t);
+  assert.ok(!estadoSupabase.reqs.some(r => r.startsWith('POST /storage/')), 'el navegador no vuelve a subir nada');
+  // Limitación conocida, solo en esta primera entrada con el token antiguo guardado: la barra pide la foto a la vez
+  // que se renueva el token, Storage rechaza el token grande y muestra el icono genérico. Al recargar ya sale la foto.
+  // (Un inicio de sesión nuevo recibe directamente el token pequeño.)
+  await s.page.goto('https://nuhio.test/editor');
+  await s.page.waitForFunction(() => typeof S === 'object' && document.getElementById('c2'), null, { timeout: 20000 });
+  const src = await esperar(() => s.page.evaluate(() => { const i = document.querySelector('#bAcc img'); return i && i.src.startsWith('blob:') && i.src; }));
+  assert.equal(await s.page.evaluate(async u => (await (await fetch(u)).arrayBuffer()).byteLength, src), BYTES_FOTO_GRANDE.length);
+  assert.equal(await estado(s.page, '/inventario-modelos-3d.json'), 404);
+  assert.deepEqual(errores(s), []);
   await s.ctx.close();
 });
 
