@@ -6,8 +6,10 @@ if(typeof SES==='undefined'){SES=null;REMEMBER_SESSION=true;try{const savedLocal
 // reloads on that signal, which means sign-out) every time the token is renewed.
 var sesSave=x=>{SES=x;try{const keep=x?(REMEMBER_SESSION?localStorage:sessionStorage):null;for(const store of[localStorage,sessionStorage])if(store!==keep)store.removeItem('sbSes');if(keep)keep.setItem('sbSes',JSON.stringify(x))}catch(e){}};
 async function sbAuth(path,body,signal=AbortSignal.timeout(10000)){const r=await fetch(SBU+'/auth/v1/'+path,{signal,method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j}
-const authPasswordMinLength=8;
-const authPasswordRequirements='Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo (por ejemplo, !).';
+// var, not const: auth.js runs twice in the editor (acceso.html, then index.html after document.write) and a
+// second const declaration would abort that whole second copy with a SyntaxError.
+var authPasswordMinLength=8;
+var authPasswordRequirements='Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo (por ejemplo, !).';
 function validatedAuthEmail(value){
  const email=String(value||'').trim();
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Introduce un correo electrónico válido.');
@@ -32,9 +34,13 @@ async function sbTok(signal){if(!SES)throw new Error('Inicia sesión para contin
  if(navigator.locks)await navigator.locks.request('nuhio-sesion',{signal},renew);else await renew();
 }if(!SES)throw new Error('Inicia sesión para continuar.');return SES.access_token}
 // Keep other tabs in step: a renewal elsewhere is adopted and a sign-out elsewhere ends this tab's session.
-// Named function: document.open() erases window listeners, so enterEditor registers it again (duplicates are ignored).
+// document.open() erases window listeners, so enterEditor registers it again and marks the window. The second
+// copy of auth.js redeclares onSessionStorage as a new function object, which addEventListener would not treat as
+// a duplicate: it only registers when nothing has, and through a wrapper that always calls the current function.
 function onSessionStorage(e){if(e.key!=='sbSes'&&e.key!==null||!REMEMBER_SESSION)return;try{const raw=localStorage.getItem('sbSes'),s=raw&&JSON.parse(raw);if(!s){SES=null;clearTimeout(SESSION_REFRESH_TIMER);return}if(!SES||s.expires_at>=SES.expires_at){SES=s;scheduleSessionRefresh()}}catch(err){}}
-if(typeof window!=='undefined')window.addEventListener('storage',onSessionStorage);
+function onSessionStorageEvent(e){onSessionStorage(e)}
+function listenSessionStorage(){window.addEventListener('storage',onSessionStorageEvent);window.NUHIO_SESSION_LISTENER=onSessionStorageEvent}
+if(typeof window!=='undefined'&&!window.NUHIO_SESSION_LISTENER)listenSessionStorage();
 
 async function enterEditor(signal=AbortSignal.timeout(12000)){
   const token=await sbTok(signal);
@@ -59,18 +65,21 @@ async function enterEditor(signal=AbortSignal.timeout(12000)){
   document.write(html);
   document.close();
   // After document.open(): requests started earlier would be aborted together with the old document,
-  // and window listeners registered earlier have been erased.
-  window.addEventListener('storage',onSessionStorage);
+  // and window listeners registered earlier have been erased (the same function object is ignored if not).
+  listenSessionStorage();
   SESSION_SYNC=syncSessionCookie().catch(()=>'error');
-  initAccountButton();
+  // The top-bar photo is drawn by the editor's own copy of auth.js (last line of this file).
 }
 /* ===== Session cookie and profile photos outside the JWT =====
    The Worker protects its routes with the HttpOnly cookie __Host-disenito-session, which carries the
    Supabase access_token. Browsers drop cookies above 4096 characters, so the token must stay small:
    profile photos live in the private Storage bucket "avatars" and user_metadata only keeps avatar_path.
-   Declared with var/function because auth.js runs again inside the editor after document.write. */
-var SESSION_COOKIE_LIMIT=4000,SESSION_SYNC=null,SESSION_REFRESH_TIMER=0;
-var AVATAR_BUCKET='avatars',AVATAR_MIGRATION=null,AVATAR_MIGRATION_TRIES=0,AVATAR_OBJECT_URL='';
+   Declared with var/function because auth.js runs again inside the editor after document.write. That second run
+   happens while the session is already working (cookie sync, renewal timer, photo migration), so the state is only
+   initialised the first time: resetting it would lose the timer handle and operations in progress. */
+var SESSION_COOKIE_LIMIT=4000,AVATAR_BUCKET='avatars';
+var SESSION_SYNC,SESSION_REFRESH_TIMER,AVATAR_MIGRATION,AVATAR_MIGRATION_TRIES,AVATAR_OBJECT_URL;
+if(typeof AVATAR_MIGRATION_TRIES!=='number'){SESSION_SYNC=null;SESSION_REFRESH_TIMER=0;AVATAR_MIGRATION=null;AVATAR_MIGRATION_TRIES=0;AVATAR_OBJECT_URL=''}
 function sessionCookieFits(token){return('__Host-disenito-session='+token).length<=SESSION_COOKIE_LIMIT}
 function sessionRenewed(){SESSION_SYNC=syncSessionCookie().catch(()=>'error')}
 async function syncSessionCookie(){
@@ -348,7 +357,7 @@ async function accountPanel({entry=false}={}){
  else if(entry)drawLogin();
  else await drawProfile();
 }
-// Reload of /editor (served directly by the Worker): show the profile photo in the top bar at once. After
-// sign-in, enterEditor does it instead (this second copy of auth.js does not run there).
+// In the editor (its HTML includes #bAcc before this script) show the profile photo in the top bar at once:
+// after a reload of /editor (only copy) and after sign-in (the editor's own copy, after document.write).
 if(SES&&document.getElementById('bAcc'))initAccountButton();
 

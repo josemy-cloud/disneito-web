@@ -6,7 +6,6 @@ import assert from 'node:assert/strict';
 import { chromium, abrirReal, entrarAlEditor, supa, crearUsuario, emitirSesion, reiniciarSupabase, estadoSupabase, USER, SUPABASE_HOST, SERVICE_KEY } from './harness/real-harness.mjs';
 import { migrarAvatarsAdmin, sha256 } from '../scripts/migrar-avatars-admin.mjs';
 
-const PREEXISTENTE = /Identifier 'authPasswordMinLength' has already been declared/;
 // Foto antigua que el navegador SÍ puede migrar: su JWT (~13 KB) supera la cookie pero no el límite de cabeceras
 // de Storage (como la cuenta A). Las de más tamaño se migran con scripts/migrar-avatars-admin.mjs (ver más abajo).
 const BYTES_FOTO = Buffer.alloc(7000, 7);
@@ -19,7 +18,8 @@ test.before(async () => { browser = await chromium.launch({ executablePath: proc
 test.after(async () => { await browser?.close(); });
 test.beforeEach(() => reiniciarSupabase());
 
-const errores = s => s.errores.filter(e => !PREEXISTENTE.test(e) && !e.startsWith('dialog:'));
+// Solo se excluyen los avisos (alert) que las pruebas provocan a propósito; ningún error de página se filtra.
+const errores = s => s.errores.filter(e => !e.startsWith('dialog:'));
 async function esperar(cond, ms = 10000, paso = 100) { const fin = Date.now() + ms; for (;;) { const v = await cond(); if (v) return v; if (Date.now() > fin) throw new Error('Tiempo agotado esperando: ' + cond); await new Promise(r => setTimeout(r, paso)); } }
 const cookieSesion = async ctx => (await ctx.cookies('https://nuhio.test')).find(c => c.name === '__Host-disenito-session') || null;
 const tokenActual = page => page.evaluate(() => SES && SES.access_token);
@@ -326,7 +326,9 @@ test('reversión del código: con el auth.js anterior, las cuentas ya migradas y
     await s.page.waitForSelector('#accountBox .studio-profile');
     const tieneFoto = await s.page.evaluate(() => !!document.querySelector('#accountBox img[alt="Foto de perfil"]'));
     assert.equal(tieneFoto, id === 'sin-migrar', 'migrado: iniciales; sin migrar: su foto como antes');
-    assert.deepEqual(errores(s), [], id);
+    // El auth.js ANTERIOR (6402092) aún tenía el error de doble carga, corregido después: solo aquí se espera.
+    const ERROR_DEL_CODIGO_ANTERIOR = "SyntaxError: Identifier 'authPasswordMinLength' has already been declared";
+    assert.deepEqual(errores(s).filter(e => e !== ERROR_DEL_CODIGO_ANTERIOR), [], id);
     await s.ctx.close();
   }
   assert.ok(supa.objetos.has('migrado/avatar-migrado.jpg'), 'la foto migrada se conserva');
@@ -543,6 +545,41 @@ test('barra superior: la foto aparece al entrar y al recargar sin abrir «Mi cue
   assert.equal(await cookieSesion(s.ctx), null);
   assert.equal(await s.page.evaluate(() => document.getElementById('bAcc')), null);
   assert.deepEqual(errores(s), []);
+  await s.ctx.close();
+});
+
+test('doble carga de auth.js: la copia del editor se ejecuta sin errores, sin reiniciar la sesión ni duplicar listeners', async () => {
+  const id = 'doble-carga';
+  crearUsuario(id, { user_metadata: { full_name: 'Dora Doble', avatar_path: id + '/avatar-migrado.jpg' } });
+  supa.objetos.set(id + '/avatar-migrado.jpg', { bytes: BYTES_FOTO, tipo: 'image/jpeg', dueño: id });
+  const s = await abrirReal(browser, { sesion: emitirSesion(id) });
+  await entrarAlEditor(s.page);
+  // Las dos copias se han cargado (acceso.html y el editor tras document.write)…
+  assert.equal(await s.page.evaluate(() => performance.getEntriesByType('resource').filter(e => /\/auth\.js/.test(e.name)).length + (document.querySelector('script[src*="auth.js"]') ? 1 : 0) >= 2), true);
+  // …y la del editor se ha EJECUTADO: es la única que pinta la foto de la barra tras iniciar sesión.
+  await esperar(() => s.page.evaluate(() => document.querySelector('#bAcc img')?.src.startsWith('blob:')));
+  assert.deepEqual(s.errores, [], 'ningún error de página (tampoco el SyntaxError de authPasswordMinLength)');
+  // El estado de sesión creado por la primera copia sigue vivo: temporizador de renovación y cookie sincronizada.
+  const estadoSesion = await s.page.evaluate(async () => ({ timer: SESSION_REFRESH_TIMER, sync: await SESSION_SYNC, oyente: typeof window.NUHIO_SESSION_LISTENER }));
+  assert.ok(estadoSesion.timer > 0, 'el temporizador de renovación no se ha reiniciado');
+  assert.equal(estadoSesion.sync, 'ok');
+  assert.equal(estadoSesion.oyente, 'function');
+  await esperar(() => cookieSesion(s.ctx));
+  // Un solo listener de storage: cada evento llega una vez a la función vigente.
+  const llamadas = await s.page.evaluate(() => {
+    const original = onSessionStorage; let n = 0;
+    window.onSessionStorage = e => { n++; return original(e); };
+    window.dispatchEvent(new StorageEvent('storage', { key: 'otra-clave' }));
+    window.onSessionStorage = original;
+    return n;
+  });
+  assert.equal(llamadas, 1, 'sin listeners duplicados');
+  // Recarga directa del editor: una sola copia, también sin errores y con la foto.
+  await s.page.goto('https://nuhio.test/editor');
+  await s.page.waitForFunction(() => typeof S === 'object' && document.getElementById('c2'), null, { timeout: 20000 });
+  await esperar(() => s.page.evaluate(() => document.querySelector('#bAcc img')?.src.startsWith('blob:')));
+  assert.equal(await s.page.evaluate(() => { let n = 0; const o = onSessionStorage; window.onSessionStorage = e => { n++; return o(e); }; window.dispatchEvent(new StorageEvent('storage', { key: 'x' })); window.onSessionStorage = o; return n; }), 1);
+  assert.deepEqual(s.errores, []);
   await s.ctx.close();
 });
 

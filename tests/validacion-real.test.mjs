@@ -11,7 +11,6 @@ const proyecto = () => ({
   o: [], i: [], cm: [], ms: [], rooms: [], rid: 1,
   rv: [{ w: 1, side: 1, x0: -5, x1: 300, y0: 0, y1: 250, pat: 'recta', tw: 30, th: 60, j: .3, jc: '#cccccc', base: '#e9e6df', fin: 'brillante' }],
 });
-const PREEXISTENTE = /Identifier 'authPasswordMinLength' has already been declared/; // auth.js se carga dos veces tras document.write
 
 let browser;
 test.before(async () => { browser = await chromium.launch({ executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome', args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
@@ -22,7 +21,8 @@ async function editor(opts) {
   await entrarAlEditor(s.page);
   return s;
 }
-const erroresReales = s => s.errores.filter(e => !PREEXISTENTE.test(e));
+// Sin filtros: auth.js se carga dos veces tras document.write y debe hacerlo sin ningún error.
+const erroresReales = s => s.errores;
 const aviso = page => page.evaluate(() => P.querySelector('small[style*="f55"]')?.textContent ?? null);
 const seleccionaPared = page => page.evaluate(() => { sel = { k: 'w', id: 1 }; props(); });
 async function abrirMiEspacio(page) {

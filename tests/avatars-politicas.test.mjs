@@ -91,7 +91,12 @@ test('auth.js: cookie acotada, renovación coordinada entre pestañas y declarac
   assert.match(auth, /if\(!sessionCookieFits\(token\)\)\{migrateAvatar\(\)/);
   assert.match(auth, /var SESSION_COOKIE_LIMIT=4000/);
   assert.match(auth, /navigator\.locks\.request\('nuhio-sesion'/);
-  assert.match(auth, /window\.addEventListener\('storage',onSessionStorage\);\s*SESSION_SYNC=/, 'se vuelve a registrar tras document.open()');
+  assert.match(auth, /document\.close\(\);[\s\S]{0,300}?listenSessionStorage\(\);\s*SESSION_SYNC=/, 'se vuelve a registrar tras document.open()');
+  // Doble carga: sin const/let de nivel superior y el estado de sesión solo se inicializa la primera vez.
+  assert.doesNotMatch(auth, /^(const|let) /m, 'una segunda declaración const/let abortaría la segunda copia');
+  assert.match(auth, /if\(typeof AVATAR_MIGRATION_TRIES!=='number'\)\{SESSION_SYNC=null;SESSION_REFRESH_TIMER=0;AVATAR_MIGRATION=null;AVATAR_MIGRATION_TRIES=0;AVATAR_OBJECT_URL=''\}/);
+  assert.match(auth, /if\(typeof window!=='undefined'&&!window\.NUHIO_SESSION_LISTENER\)listenSessionStorage\(\);/);
+  assert.equal((auth.match(/(?<!function )initAccountButton\(\)/g) || []).length, 1, 'una sola llamada: la del final del archivo');
   assert.doesNotMatch(auth.match(/var sesSave=[^\n]*/)[0], /localStorage\.removeItem\('sbSes'\);sessionStorage/, 'no vacía el almacén antes de escribir');
   for (const nombre of ['syncSessionCookie', 'scheduleSessionRefresh', 'migrateAvatar', 'setAvatar', 'uploadAvatarVerified', 'avatarSource', 'refreshSessionNow', 'adoptStoredSession', 'onSessionStorage'])
     assert.match(auth, new RegExp('(async )?function ' + nombre + '\\('), nombre);
