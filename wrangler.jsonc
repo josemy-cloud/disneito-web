@@ -24,7 +24,13 @@
     },
     "vars": {
       "MASTER_USER_ID": "9c79c647-0b20-4be1-8516-3d2a76971b9d"
-    }
+    },
+    "kv_namespaces": [
+      {
+        "binding": "CATALOG_APPROVALS",
+        "id": "d91aee67ce274a47871af8b9c4769196"
+      }
+    ]
   },
   "vars": {
     "MASTER_USER_ID": "9c79c647-0b20-4be1-8516-3d2a76971b9d"
