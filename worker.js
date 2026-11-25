@@ -233,6 +233,21 @@ export default {
       return Response.json({ error: "Ruta retirada." }, { status: 410, headers: NO_STORE });
     }
 
+    // Análisis de catálogos PDF con IA: solo existía en la antigua versión local de escritorio y no está
+    // implementado en la versión web. El editor consulta este estado; se declara de forma explícita.
+    // (No afecta a Foto IA: /api/ia/editar y /api/ia/estadisticas.)
+    if (url.pathname === "/api/ia/estado") {
+      if (request.method !== "GET") return Response.json({ error: "Utiliza GET." }, { status: 405, headers: NO_STORE });
+      const token = bearer(request) || sessionCookie(request);
+      const user = token && await getSupabaseUser(token).catch(() => null);
+      if (!user) return Response.json({ error: "Inicia sesión para continuar." }, { status: 401, headers: NO_STORE });
+      return Response.json({
+        servicio: false,
+        configurada: false,
+        motivo: "El análisis de PDF con IA todavía no está disponible en la versión web."
+      }, { headers: NO_STORE });
+    }
+
     if (url.pathname === "/api/ia/estadisticas") {
       if (request.method !== "GET") return Response.json({ error: "Utiliza GET." }, { status: 405 });
       const token = bearer(request);
