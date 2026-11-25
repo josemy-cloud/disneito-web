@@ -2683,6 +2683,17 @@ function previewPixelRatio(w,h){
 function resize(){if(!r3)return;const w=d3.clientWidth,h=d3.clientHeight;if(!w||!h)return;const ratio=previewPixelRatio(w,h);if(r3.getPixelRatio()!==ratio)r3.setPixelRatio(ratio);r3.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
 new ResizeObserver(()=>{resize();draw()}).observe($('#view'));
 const M=(c,r=.55,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+/* ===== Recursos de escena compartidos (no se liberan al reconstruir) =====
+   build3d() y addRealisticDetails() rehacen sus grupos en cada reconstrucción y liberan lo que deja de usarse
+   (releaseSceneResources). Lo registrado aquí pertenece a una caché o a un modelo importado: lo reutilizan varias
+   reconstrucciones u objetos y nunca se libera por ese motivo. */
+const SHARED_SCENE_RESOURCES=new WeakSet();
+function shareSceneResources(object){
+ object?.traverse?.(node=>{
+  if(node.geometry)SHARED_SCENE_RESOURCES.add(node.geometry);
+  for(const material of [].concat(node.material||[]))if(material)SHARED_SCENE_RESOURCES.add(material);
+ });
+}
 /* Cajas paramétricas con cantos suavizados: conserva las cotas exteriores y evita el aspecto de bloques CAD sin acabado. */
 const BOX_GEO_CACHE=new Map();
 function boxGeo(w,h,d,edgeRadius){
@@ -2695,7 +2706,12 @@ function boxGeo(w,h,d,edgeRadius){
  const depth=Math.max(.05,d-2*bevel);
  const geo=new T.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:2});
  geo.translate(0,0,-depth/2);geo.computeVertexNormals();
- if(BOX_GEO_CACHE.size>280)BOX_GEO_CACHE.clear();
+ if(BOX_GEO_CACHE.size>280){
+  // Al vaciarse, sus cajas dejan de ser compartidas: la siguiente reconstrucción libera las que ya nadie use.
+  for(const cached of BOX_GEO_CACHE.values())SHARED_SCENE_RESOURCES.delete(cached);
+  BOX_GEO_CACHE.clear();
+ }
+ SHARED_SCENE_RESOURCES.add(geo);
  BOX_GEO_CACHE.set(key,geo);return geo;
 }
 function B(g,w,h,d,x,y,z,mt,edgeRadius){const m=new T.Mesh(boxGeo(w,h,d,edgeRadius),mt);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;g.add(m);return m}
@@ -6768,7 +6784,66 @@ function configureFixtureShadows(scene,coarse){
   if(!wasShadowed||!shadow.map)shadow.needsUpdate=true;
  }
 }
-function build3d(){if(!r3)return;roomsUpdate();
+/* ===== Liberación de recursos al reconstruir la escena =====
+   root.clear() y realisticDetails.clear() solo sacan los objetos de la escena: sus geometrías y materiales seguían
+   registrados en el renderer (y en la GPU) indefinidamente. Tras cada reconstrucción se liberan los recursos del grupo
+   anterior que ya no usa ningún objeto de las escenas (sc y la de la vista previa) y que no son compartidos
+   (SHARED_SCENE_RESOURCES). Lo que se reutiliza no se toca, así que no vuelve a subirse a la GPU. Las texturas no se
+   liberan aquí: pertenecen a cachés propias. Un subárbol con userData.keepResources gestiona sus recursos él mismo. */
+function collectSceneResources(node,out={geometries:new Set(),materials:new Set(),instanced:new Set()}){
+ if(!node||node.userData?.keepResources)return out;
+ if(node.geometry&&!node.isSprite)out.geometries.add(node.geometry);
+ for(const material of [].concat(node.material||[]))if(material?.isMaterial)out.materials.add(material);
+ if(node.isInstancedMesh)out.instanced.add(node);
+ for(const child of node.children)collectSceneResources(child,out);
+ return out;
+}
+/* Un material ya dibujado sostiene sus programas de shader (three.js destruye un programa cuando su uso llega a 0).
+   Si se liberase antes de que la escena nueva vuelva a usar esos programas, habría que compilarlos otra vez. Por eso
+   un material retirado solo se libera cuando cada uno de sus programas sigue teniendo otros usuarios; si no, se queda
+   como ancla (como máximo uno por programa) hasta que la escena vuelva a usarlo. Las anclas están acotadas por el
+   número de programas. Los materiales que nunca se dibujaron se liberan al momento. Las geometrías no afectan. */
+let retiredSceneMaterials=[];
+function flushRetiredSceneMaterials(){
+ if(!retiredSceneMaterials.length)return;
+ const live=collectSceneResources(sc);
+ try{collectSceneResources(sc4,live)}catch(error){}
+ const candidates=retiredSceneMaterials.filter(material=>!live.materials.has(material)); // en uso otra vez: no se libera
+ const programsOf=material=>[...(r3.properties.get(material).programs?.values()||[])];
+ const retiredUsers=new Map();
+ for(const material of candidates)for(const program of programsOf(material))retiredUsers.set(program,(retiredUsers.get(program)||0)+1);
+ const anchored=new Set(),anchors=[];
+ for(const material of candidates){
+  let anchor=false;
+  for(const program of programsOf(material)){
+   if(program.usedTimes>retiredUsers.get(program)||anchored.has(program))continue;
+   anchored.add(program);anchor=true;
+  }
+  if(anchor)anchors.push(material);else material.dispose();
+ }
+ retiredSceneMaterials=anchors;
+}
+function releaseSceneResources(previous){
+ const live=collectSceneResources(sc);
+ try{collectSceneResources(sc4,live)}catch(error){}
+ for(const mesh of previous.instanced)if(!live.instanced.has(mesh))mesh.dispose();
+ for(const geometry of previous.geometries)if(!live.geometries.has(geometry)&&!SHARED_SCENE_RESOURCES.has(geometry))geometry.dispose();
+ const pending=new Set(retiredSceneMaterials);
+ for(const material of previous.materials){
+  if(live.materials.has(material)||SHARED_SCENE_RESOURCES.has(material)||pending.has(material))continue;
+  if(r3.properties.get(material).programs?.size)retiredSceneMaterials.push(material);
+  else material.dispose();
+ }
+ flushRetiredSceneMaterials();
+ // Tras el siguiente fotograma, la escena nueva ya usa sus programas y las anclas sobrantes pueden liberarse.
+ if(retiredSceneMaterials.length)requestAnimationFrame(()=>requestAnimationFrame(flushRetiredSceneMaterials));
+}
+function build3d(){
+ if(!r3)return;
+ const previous=collectSceneResources(root);
+ try{rebuildScene3d()}finally{releaseSceneResources(previous)}
+}
+function rebuildScene3d(){roomsUpdate();
  root.traverse(light=>{
   if(light.isLight&&light.userData.fixtureShadow&&light.shadow.map){
    light.shadow.map.dispose();light.shadow.map=null;
@@ -6803,7 +6878,9 @@ function contactShadowMaterial(){
  map.magFilter=map.minFilter=T.LinearFilter;map.needsUpdate=true;
  contactGeometry=new T.PlaneGeometry(1,1);
  contactGeometry.rotateX(-Math.PI/2);
- return contactMaterial=new T.MeshBasicMaterial({color:'#33291e',map,transparent:true,opacity:.39,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ contactMaterial=new T.MeshBasicMaterial({color:'#33291e',map,transparent:true,opacity:.39,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ SHARED_SCENE_RESOURCES.add(contactGeometry);SHARED_SCENE_RESOURCES.add(contactMaterial);
+ return contactMaterial;
 }
 function windowFillSpecs(walls,openings,rooms){
  const windows=[];
@@ -6836,7 +6913,8 @@ function pilotExteriorFor(window){
    geometries.forEach(geometry=>geometry.dispose());
    materials.forEach(material=>material.dispose());
   }
-  const group=pilotExterior=new T.Group();
+  // Se reutiliza entre reconstrucciones y libera sus recursos solo al sustituirse (arriba): no lo hace releaseSceneResources.
+  const group=pilotExterior=new T.Group();group.userData.keepResources=true;
   pilotExteriorWidth=width;
   const box=new T.BoxGeometry(1,1,1);
   const stone=[M('#a69e8e',.92),M('#b5aa98',.94),M('#aaa392',.9)];
@@ -6928,6 +7006,10 @@ function invalidateInteriorShadows(){
  for(const object of realisticDetails.children)if(object.isSpotLight&&object.castShadow)object.shadow.needsUpdate=true;
 }
 function addRealisticDetails(){
+ const previous=collectSceneResources(realisticDetails);
+ try{rebuildRealisticDetails()}finally{releaseSceneResources(previous)}
+}
+function rebuildRealisticDetails(){
  for(const object of realisticDetails.children)if(object.userData.windowOpening!=null)object.shadow.map?.dispose();
  realisticDetails.clear();
  if(RVo)return;
@@ -8463,7 +8545,7 @@ $('#pvx').onclick=()=>{if(pendingModel){const id=pendingModel.data.id;for(let i=
 function mv(o,p){const m=Object.assign({o,v:p.it.op[p.k]?1:0,x0:o.position.x,y0:o.position.y,z0:o.position.z},p);o.userData.mv=m;MV.push(m);return m}
 function toggleMotion(m){if(m.toggle)m.toggle();else m.it.op[m.k]=!m.it.op[m.k]}
 function stepMV(m){const t=m.it.op[m.k]&&!(m.exclusive&&m.k===1&&m.it.op[0])?1:0;m.v+=(t-m.v)*(m.ease||.14);const a=(m.angle||m.it.ang||100)*D,o=m.o,v=m.v;switch(m.t){case'd':o.rotation.y=m.sg*a*v;break;case's':o.position.z=m.z+v*m.sl;break;case'u':o.rotation.x=-a*v;break;case'h':o.rotation.x=a*v;break;case'e':o.position.y=m.y0+v*m.dy;break;case'f':o.rotation.y=m.sg*a*.55*v;m.c.rotation.y=-m.sg*a*1.1*v;break;case'x':o.position.x=m.x0+v*(m.dx||0);o.position.z=m.z0+v*(m.dz||0);o.rotation.y=v*(m.ry||0)}m.update?.()}
-const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardMaterial({color:'#bfe3f5',transparent:true,opacity:.3,roughness:.05});
+const FIN={mate:[.9,0],satinado:[.5,0],brillo:[.12,.05]},GLS=new T.MeshStandardMaterial({color:'#bfe3f5',transparent:true,opacity:.3,roughness:.05});SHARED_SCENE_RESOURCES.add(GLS);
 const AFIN={acero:['#c4c7cc',.3,.9],negro:['#1c1c1e',.35,.2],blanco:['#f4f4f4',.35,.1],'cristal negro':['#0b0e12',.05,.35],'negro mate':['#1a1a1c',.75,.1],'negro brillante':['#0c0c0e',.08,.2],'acero antihuellas':['#b9bcc1',.45,.85],'blanco mate':['#eeeeec',.8,.05],'blanco brillante':['#fafafa',.1,.05],gris:['#8d9096',.45,.3],grafito:['#3b3e44',.4,.5],'cristal blanco':['#f1f3f5',.05,.2],'cristal oscuro':['#10131a',.05,.4],'gris metal':['#999999',.3,.9],aluminio:['#d0d3d8',.4,.95],dorado:['#c9a24a',.3,1],cobre:['#b87333',.35,1],bronce:['#6b5a3e',.35,1]},finM=f=>{const a=AFIN[f]||AFIN.acero;return M(a[0],a[1],a[2])};
 const MINH={cafetera:38,horno:59,hornoc:44,micro:37,lavadora:81,secadora:81,lavavajillas:81,frigo:120,combi:150,vinoteca:80,puerta:15,cajon:12,hueco:0},APD={cafetera:45,horno:55,micro:38,lavadora:55,secadora:55,lavavajillas:56,frigo:55,combi:55,vinoteca:55};
 function fm(c,acab,mat){if(mat&&mat!='liso')return sm(mat,c,60,60,30,.2,'#999');const f=FIN[acab||'satinado'];return new T.MeshStandardMaterial({color:c,roughness:f[0],metalness:f[1]})}
@@ -8630,7 +8712,7 @@ LAY['puertas+cajones']=(g,it,c,Mx,y0,H,iw)=>{
 LAY['fregadero']=(g,it,c,Mx,y0,H,iw)=>{const p=new T.Group();p.position.set(0,y0+H-8,it.d/2);g.add(p);pan(p,iw-.3,14,0,c,Mx.mf);const n=iw>=80?2:1,w=iw/n;for(let i=0;i<n;i++)fdoor(g,it,i,-iw/2+i*w,w-.3,y0+1.5,H-18,n>1?i>=n/2:it.fl,Mx)};
 LAY['placa']=(g,it,c,Mx,y0,H,iw)=>LAY['cajones'](g,it,Object.assign({},c,{nc:3,dh:true}),Mx,y0,H,iw);
 LAY['columna']=(g,it,c,Mx,y0,H,iw)=>{const n=Math.max(0,c.nc|0),lo=n?H*.35:0,n2=Math.max(1,c.nd|0),w=iw/n2;for(let i=0;i<n;i++)ndrw(g,it,i,-iw/2,iw,y0+1+i*lo/n,lo/n-.6,Mx);for(let i=0;i<n2;i++)fdoor(g,it,10+i,-iw/2+i*w,w-.3,y0+lo+1.5,H-lo-3,n2>1?i>=n2/2:it.fl,Mx)};
-const trayM=M('#cfd3d6',.4,.6),tray=(g,r,x,y,z,full)=>{const m=new T.Mesh(full?new T.CylinderGeometry(r,r,1.5,32):new T.CylinderGeometry(r,r,1.5,28,1,false,.6,4.9),trayM);m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
+const trayM=M('#cfd3d6',.4,.6),tray=(g,r,x,y,z,full)=>{const m=new T.Mesh(full?new T.CylinderGeometry(r,r,1.5,32):new T.CylinderGeometry(r,r,1.5,28,1,false,.6,4.9),trayM);m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};SHARED_SCENE_RESOURCES.add(trayM);
 const cornerPhase=(v,start,end)=>Math.max(0,Math.min(1,(v-start)/(end-start)));
 function syncCornerDoor(door,extension=()=>0){
  const motion=door.userData.mv;motion.angle=105;
@@ -10655,7 +10737,7 @@ const idbPut=async o=>{const d=await idb();return new Promise((res,rej)=>{const 
 const idbDel=async id=>{const d=await idb();return new Promise(res=>{const t=d.transaction('m','readwrite');t.objectStore('m').delete(id);t.oncomplete=res})};
 const idbAll=async()=>{const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('m').objectStore('m').getAll();q.onsuccess=()=>res(q.result);q.onerror=rej})};
 const parseModel=m=>new Promise((res,rej)=>{if(m.files){const F=m.files,mg=new T.LoadingManager();mg.setURLModifier(u=>{const dd=decodeURIComponent(u);let b=null;for(const r in F)if(dd.endsWith('/'+r)&&(!b||r.length>b.length))b=r;return b?F[b]:u});(m.ext=='obj'?new T.OBJLoader(mg):new T.GLTFLoader(mg)).load(F[m.mainRel],o=>res(o.scene||o),undefined,rej)}else if(m.url){(m.ext=='obj'?new T.OBJLoader():new T.GLTFLoader()).load(m.url,o=>res(o.scene||o),undefined,rej)}else if(m.ext=='obj')res(new T.OBJLoader().parse(m.data));else new T.GLTFLoader().parse(m.data,'',g=>res(g.scene),rej)});
-async function addModel(m){const o=await parseModel(m),w=new T.Group();w.add(o);o.scale.set(m.units,m.units,m.units);w.updateMatrixWorld(true);const b=new T.Box3().setFromObject(o),sz=b.getSize(new T.Vector3()),ct=b.getCenter(new T.Vector3());if(!Number.isFinite(sz.x+sz.y+sz.z)||Math.min(sz.x,sz.y,sz.z)<.5||Math.max(sz.x,sz.y,sz.z)>1000)throw new Error('Dimensiones no válidas o fuera de escala. Revisa las unidades del archivo.');let meshes=0,triangles=0;const mats=new Set(),textures=new Set();o.traverse(x=>{if(!x.isMesh||!x.geometry||!x.geometry.attributes.position)return;meshes++;const g=x.geometry;triangles+=g.index?g.index.count/3:Math.floor(g.attributes.position.count/3);[].concat(x.material||[]).forEach(m0=>{if(!m0)return;mats.add(m0.uuid||m0);['map','normalMap','roughnessMap','metalnessMap','aoMap','bumpMap'].forEach(k=>{if(m0[k])textures.add(m0[k].uuid||m0[k])})});x.castShadow=x.receiveShadow=true});if(meshes<1||triangles<1500)throw new Error('Modelo rechazado: solo '+meshes+' mallas y '+Math.floor(triangles)+' triángulos. Se exige geometría 3D detallada (mínimo 1.500 triángulos); no se aceptan primitivas simples ni modelos demasiado básicos.');if(!mats.size)throw new Error('Modelo rechazado: no contiene materiales reconocibles.');o.position.set(o.position.x-ct.x,o.position.y-b.min.y,o.position.z-ct.z);MODS[m.id]={obj:w,W:sz.x,H:sz.y,D:sz.z};const quality={meshes,triangles:Math.floor(triangles),materials:mats.size,textures:textures.size,dimensions:[R(sz.x*10)/10,R(sz.y*10)/10,R(sz.z*10)/10]};const entry={t:'model',mid:m.id,lic:m.lic,source:m.source,author:m.author,n:m.name,brand:m.brand,ref:m.ref,upd:m.date,c:m.cat||'Importados',s:'importado',w:quality.dimensions[0],h:quality.dimensions[1],d:quality.dimensions[2],e:0,col:'#cccccc'};if(!LIB.some(l=>l.mid==m.id))LIB.push(entry);return{entry,quality}}
+async function addModel(m){const o=await parseModel(m),w=new T.Group();w.add(o);o.scale.set(m.units,m.units,m.units);w.updateMatrixWorld(true);const b=new T.Box3().setFromObject(o),sz=b.getSize(new T.Vector3()),ct=b.getCenter(new T.Vector3());if(!Number.isFinite(sz.x+sz.y+sz.z)||Math.min(sz.x,sz.y,sz.z)<.5||Math.max(sz.x,sz.y,sz.z)>1000)throw new Error('Dimensiones no válidas o fuera de escala. Revisa las unidades del archivo.');let meshes=0,triangles=0;const mats=new Set(),textures=new Set();o.traverse(x=>{if(!x.isMesh||!x.geometry||!x.geometry.attributes.position)return;meshes++;const g=x.geometry;triangles+=g.index?g.index.count/3:Math.floor(g.attributes.position.count/3);[].concat(x.material||[]).forEach(m0=>{if(!m0)return;mats.add(m0.uuid||m0);['map','normalMap','roughnessMap','metalnessMap','aoMap','bumpMap'].forEach(k=>{if(m0[k])textures.add(m0[k].uuid||m0[k])})});x.castShadow=x.receiveShadow=true});if(meshes<1||triangles<1500)throw new Error('Modelo rechazado: solo '+meshes+' mallas y '+Math.floor(triangles)+' triángulos. Se exige geometría 3D detallada (mínimo 1.500 triángulos); no se aceptan primitivas simples ni modelos demasiado básicos.');if(!mats.size)throw new Error('Modelo rechazado: no contiene materiales reconocibles.');o.position.set(o.position.x-ct.x,o.position.y-b.min.y,o.position.z-ct.z);MODS[m.id]={obj:w,W:sz.x,H:sz.y,D:sz.z};shareSceneResources(w);const quality={meshes,triangles:Math.floor(triangles),materials:mats.size,textures:textures.size,dimensions:[R(sz.x*10)/10,R(sz.y*10)/10,R(sz.z*10)/10]};const entry={t:'model',mid:m.id,lic:m.lic,source:m.source,author:m.author,n:m.name,brand:m.brand,ref:m.ref,upd:m.date,c:m.cat||'Importados',s:'importado',w:quality.dimensions[0],h:quality.dimensions[1],d:quality.dimensions[2],e:0,col:'#cccccc'};if(!LIB.some(l=>l.mid==m.id))LIB.push(entry);return{entry,quality}}
 BUILD.model=(g,it)=>{const m=MODS[it.mid];if(!m){console.warn('Modelo 3D no disponible; se omite para no sustituirlo por una caja:',it.mid);return}const c=m.obj.clone(true);const sx=it.w/m.W,sy=it.h/m.H,sz=it.d/m.D;const scale=Math.min(sx,sy,sz);if(!Number.isFinite(scale)||scale<=0){console.warn('Dimensiones no válidas para el modelo 3D:',it.mid);return}c.scale.setScalar(scale);g.add(c)};
 
 /* ===== Producto comercial investigado: Roca Ona A357687000 =====
