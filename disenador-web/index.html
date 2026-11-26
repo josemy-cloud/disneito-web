@@ -2607,7 +2607,48 @@ if(r3){
  r3.outputEncoding=T.sRGBEncoding;r3.toneMapping=T.ACESFilmicToneMapping;r3.toneMappingExposure=.92;r3.shadowMap.type=T.PCFShadowMap;
  r3.domElement.style.display='block';r3.domElement.style.outline='none';r3.domElement.tabIndex=-1;d3.append(r3.domElement);
  oc.target.set(150,50,150);oc.enableDamping=true;oc.dampingFactor=.075;oc.minDistance=90;oc.maxDistance=6500;oc.maxPolarAngle=Math.PI/2;
+ // Sombras bajo demanda: se recalculan cuando cambia la escena (invalidateScene), no al mover la cámara.
+ r3.shadowMap.autoUpdate=false;r3.shadowMap.needsUpdate=true;
 }
+/* ===== Renderizado bajo demanda =====
+   Los bucles de dibujo (editor 3D, vista previa, Ver en Realidad, panorama) solo dibujan cuando algo puede haber
+   cambiado: la escena (sceneVersion), la cámara, el tamaño del lienzo, otro proceso que dibujó en el mismo lienzo o una
+   interacción en curso (renderActiveUntil). Con la escena quieta no se dibuja; durante las interacciones se dibuja en
+   cada fotograma, sin límite de FPS.
+   - invalidateScene(): cambio de escena. También pide recalcular sombras.
+   - keepRendering(ms): ventana de gracia tras un evento de usuario (sin recalcular sombras: mover la cámara no las cambia).
+   Los cambios de escena se detectan automáticamente al añadir o quitar objetos y al marcar needsUpdate en texturas,
+   materiales o atributos (cargas asíncronas incluidas); el resto los señala el propio código (sol, aspecto, sombras). */
+let sceneVersion=0,renderActiveUntil=0;
+const RENDER_INPUT_GRACE_MS=350;
+function invalidateScene(){
+ sceneVersion++;
+ if(r3)r3.shadowMap.needsUpdate=true;
+}
+function keepRendering(ms=RENDER_INPUT_GRACE_MS){
+ renderActiveUntil=Math.max(renderActiveUntil,performance.now()+ms);
+}
+(function installSceneInvalidation(){
+ for(const name of ['add','remove','clear','attach']){
+  const original=T.Object3D.prototype[name];
+  if(typeof original==='function')T.Object3D.prototype[name]=function(){invalidateScene();return original.apply(this,arguments)};
+ }
+ // En three r128 el setter de Material no es reconfigurable: entonces se define en cada subclase, que lo sombrea.
+ const invalidateOnNeedsUpdate=Base=>{
+  const descriptor=Object.getOwnPropertyDescriptor(Base.prototype,'needsUpdate');
+  if(!descriptor?.set)return;
+  const accessor={configurable:true,enumerable:descriptor.enumerable,get:descriptor.get,set(value){descriptor.set.call(this,value);if(value)invalidateScene()}};
+  const targets=descriptor.configurable?[Base]:Object.values(T).filter(C=>typeof C==='function'&&C.prototype instanceof Base);
+  for(const C of targets)if(!Object.getOwnPropertyDescriptor(C.prototype,'needsUpdate')||C===Base)Object.defineProperty(C.prototype,'needsUpdate',accessor);
+ };
+ invalidateOnNeedsUpdate(T.Texture);invalidateOnNeedsUpdate(T.Material);invalidateOnNeedsUpdate(T.BufferAttribute);
+ // Red de seguridad: cualquier interacción mantiene el dibujo activo unos instantes (los efectos pueden ser asíncronos).
+ const options={capture:true,passive:true};
+ for(const type of ['pointerdown','pointerup','pointercancel','wheel','keydown','keyup','input','change','click','dblclick','contextmenu','drop'])addEventListener(type,()=>keepRendering(),options);
+ addEventListener('pointermove',event=>{if(event.buttons||document.pointerLockElement)keepRendering()},options);
+ addEventListener('resize',()=>keepRendering(),{passive:true});
+ document.addEventListener('visibilitychange',()=>keepRendering());
+})();
 const hemi=new T.HemisphereLight('#fafcff','#8b8276',.54),sun=new T.DirectionalLight('#fff5e8',.78),fill=new T.DirectionalLight('#e5efff',.16),rim=new T.DirectionalLight('#fffaf0',.09);sc.add(hemi,sun,sun.target,fill,rim);
 fill.position.set(-900,1100,650);rim.position.set(700,850,-900);
 sun.shadow.bias=-.00012;sun.shadow.normalBias=.8;
@@ -2643,12 +2684,14 @@ function setSun(){
  Object.assign(camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,
   near:distance-shadowExtent,far:distance+shadowExtent});
  camera.updateProjectionMatrix();
+ invalidateScene();
 }
 function setSunShadowSize(size){
  const shadow=sun.shadow;
  if(shadow.mapSize.x===size)return;
  shadow.mapSize.set(size,size);
  if(shadow.map){shadow.map.dispose();shadow.map=null}
+ invalidateScene();
 }
 function dayInteriorActive(){return $('#sq').value==='q'&&previousInteriorSun!==null}
 function eveningInteriorActive(preset){return !RVo&&$('#sq').value==='q'&&interiorEvening===preset}
@@ -2668,6 +2711,7 @@ function applyViewportLook(){
  hemi.intensity=night?.11:sunset?.19:day?.34:realistic?.53:materials?.95:.55;
  fill.intensity=realistic?(night||sunset?0:day?.025:.07):materials?0:.20;
  rim.intensity=realistic?0:materials?0:.12;
+ invalidateScene();
 }
 function setQ(){
  if(!r3)return;
@@ -7002,6 +7046,7 @@ function pilotExteriorFor(window){
  return pilotExterior;
 }
 function invalidateInteriorShadows(){
+ invalidateScene();
  root.traverse(node=>{if(node.userData.fixtureShadow&&node.castShadow)node.shadow.needsUpdate=true});
  for(const object of realisticDetails.children)if(object.isSpotLight&&object.castShadow)object.shadow.needsUpdate=true;
 }
@@ -7172,7 +7217,8 @@ function animate(){requestAnimationFrame(animate);
   if(!itemTouchDrag)oc.update();
   if(cam.position.y<8){cam.position.y=8;cam.lookAt(oc.target)}
  }
- renderLayerViewport()}
+ prepareLayerViewport();
+ if(viewportNeedsRender())renderLayerViewport()}
 let pd=null,walkPressTravel=0;
 const viewPointers=new Set();
 let itemTouchDrag=null;
@@ -8215,13 +8261,37 @@ function layerMeshHidden(mesh){
  return false;
 }
 let previousWindowShadowLayers='';
-function renderLayerViewport(){
+// Cada fotograma: aplica al 3D los cambios pendientes del plano (vista dual) y de las capas; si hay alguno, invalida.
+function prepareLayerViewport(){
  if(dualView)syncPlanGpuTransforms();
  const windowShadowLayers=editorHidden.size?[...editorHidden].join('|'):'';
  if(windowShadowLayers!==previousWindowShadowLayers){
   previousWindowShadowLayers=windowShadowLayers;
   invalidateInteriorShadows();
  }
+}
+/* Estado del último fotograma dibujado en el editor 3D: si nada ha cambiado desde entonces, no se vuelve a dibujar.
+   La cámara se compara por posición y orientación con una tolerancia ínfima (la inercia del paseo y de la órbita
+   se extingue de forma asintótica) y por su matriz de proyección exacta (aspecto, campo de visión, zoom). */
+const viewportDrawn={version:-1,frame:-1,width:-1,height:-1,ratio:-1,position:new T.Vector3(NaN,NaN,NaN),quaternion:new T.Quaternion(NaN,NaN,NaN,NaN),projection:new Float64Array(16)};
+function viewportNeedsRender(){
+ const drawn=viewportDrawn,canvas=r3.domElement,projection=cam.projectionMatrix.elements;
+ if(performance.now()<renderActiveUntil||drawn.version!==sceneVersion||drawn.frame!==r3.info.render.frame)return true;
+ if(drawn.width!==canvas.width||drawn.height!==canvas.height||drawn.ratio!==r3.getPixelRatio())return true;
+ if(drawn.position.distanceToSquared(cam.position)>1e-8||1-Math.abs(drawn.quaternion.dot(cam.quaternion))>1e-10)return true;
+ for(let i=0;i<16;i++)if(drawn.projection[i]!==projection[i])return true;
+ return false;
+}
+function rememberViewportFrame(){
+ const drawn=viewportDrawn,canvas=r3.domElement;
+ drawn.version=sceneVersion;drawn.frame=r3.info.render.frame;
+ drawn.width=canvas.width;drawn.height=canvas.height;drawn.ratio=r3.getPixelRatio();
+ drawn.position.copy(cam.position);drawn.quaternion.copy(cam.quaternion);drawn.projection.set(cam.projectionMatrix.elements);
+}
+function renderLayerViewport(){
+ try{drawLayerViewport()}finally{rememberViewportFrame()}
+}
+function drawLayerViewport(){
  if(!editorHidden.size){r3.render(sc,cam);return}
  const hidden=[];
  const hide=node=>{if(node.visible){node.visible=false;hidden.push(node)}};
@@ -8517,13 +8587,24 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
  }
  P2.append(document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · '+(pvIt.lic?'Licencia '+pvIt.lic+' · ':'')+(pvIt.source?'Origen '+pvIt.source+' · ':'')+(r4?'arrastra para girar, rueda para zoom':''));if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}function pvLoop(){
  if(!pvOpen||!r4)return;
- requestAnimationFrame(pvLoop);PV.forEach(m=>stepMV(m));oc4.update();
+ requestAnimationFrame(pvLoop);
+ let moving=false;
+ for(const motion of PV){const before=motion.v;stepMV(motion);if(Math.abs(motion.v-before)>.0005)moving=true}
+ const orbiting=oc4.update();
+ // Bajo demanda: solo si algo se mueve o ha cambiado (escena, cámara, tamaño, otro dibujo en r4 como las miniaturas).
+ const drawn=previewDrawn,canvas=r4.domElement;
+ if(!moving&&!orbiting&&performance.now()>=renderActiveUntil&&drawn.version===sceneVersion&&drawn.frame===r4.info.render.frame&&
+    drawn.width===canvas.width&&drawn.height===canvas.height&&drawn.position.distanceToSquared(cam4.position)<=1e-8&&
+    1-Math.abs(drawn.quaternion.dot(cam4.quaternion))<=1e-10&&drawn.projection.every((value,i)=>value===cam4.projectionMatrix.elements[i]))return;
  const detailed=detailedAccessoryPreview(pvIt),shadowEnabled=r4.shadowMap.enabled;
  if(detailed){dl4.castShadow=true;r4.shadowMap.enabled=true;}
  try{r4.render(sc4,cam4)}finally{
   if(detailed){dl4.castShadow=false;r4.shadowMap.enabled=shadowEnabled;}
+  drawn.version=sceneVersion;drawn.frame=r4.info.render.frame;drawn.width=canvas.width;drawn.height=canvas.height;
+  drawn.position.copy(cam4.position);drawn.quaternion.copy(cam4.quaternion);drawn.projection.set(cam4.projectionMatrix.elements);
  }
 }
+const previewDrawn={version:-1,frame:-1,width:-1,height:-1,position:new T.Vector3(NaN,NaN,NaN),quaternion:new T.Quaternion(NaN,NaN,NaN,NaN),projection:new Float64Array(16)};
 let pvKitchenPresets=null,pvKitchenVariant=0;
 function openPrev(i){const o=LIB[i],presets=KITCHEN_PRESETS.get(o);openPrevObj(presets?.[0]||o,presets)}
 function resizePreviewRenderer(){if(!r4)return;const host=$('#pvc');if(!host)return;const w=Math.max(160,Math.floor(host.clientWidth||520)),h=Math.max(140,Math.floor(host.clientHeight||260));r4.setSize(w,h,false);r4.domElement.style.width='100%';r4.domElement.style.height='100%';cam4.aspect=w/h;cam4.updateProjectionMatrix();oc4.update()}
@@ -10446,7 +10527,9 @@ function realMode(){
  const kc=K=>{K/=100;let r,g,b;if(K<=66){r=255;g=99.47*Math.log(K)-161.12;b=K<=19?0:138.52*Math.log(K-10)-305.04}else{r=329.7*Math.pow(K-60,-.1332);g=288.12*Math.pow(K-60,-.0755);b=255}const c=x=>Math.max(1,Math.min(255,x))/255;return[c(r),c(g),c(b)]},wbm=()=>{const a=kc(6500),b=kc(st.k),m=a.map((v,i)=>v/b[i]),mx=Math.max(...m);return m.map(v=>v/mx)},
  applyLight=acc=>{const w=wbm();sun.color.setRGB(sunC0.r*w[0],sunC0.g*w[1],sunC0.b*w[2]);sun.intensity=sunI0*st.sunI;skyL.color.setRGB(.86*w[0],.91*w[1],w[2]);hemi.color.setRGB(w[0],w[1],w[2]);if(acc){hemi.intensity=.035;skyL.intensity=.62*st.sky}else{skyL.intensity=0;hemi.intensity=.16+.16*st.sky}cv.style.filter='contrast('+st.con+') saturate('+st.sat+')'};
  const setCam=asp=>{c2.position.set(st.x,st.h,st.z);c2.rotation.set(st.pitch,st.yaw,0,'YXZ');const hf=2*Math.atan(18/st.mm);c2.fov=2*Math.atan(Math.tan(hf/2)/asp)/D;c2.aspect=asp;c2.updateProjectionMatrix()};
- const live=()=>{if(!RVo)return;requestAnimationFrame(live);if(view!='live'||still||busy)return;applyLight(false);const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;rr.setPixelRatio(1);rr.setSize(W,H,false);setCam(W/H);rr.toneMappingExposure=st.exp;rr.render(sc,c2)};
+ // Bajo demanda: la vista en vivo solo dibuja si cambian sus ajustes (st), el tamaño, la escena u otro dibujo en rr.
+ let liveDrawn='';const liveKey=(W,H)=>JSON.stringify(st)+'|'+W+'x'+H+'|'+sceneVersion+'|'+rr.info.render.frame;
+ const live=()=>{if(!RVo)return;requestAnimationFrame(live);if(view!='live'||still||busy){liveDrawn='';return}const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;if(liveKey(W,H)===liveDrawn&&performance.now()>=renderActiveUntil)return;applyLight(false);rr.setPixelRatio(1);rr.setSize(W,H,false);setCam(W/H);rr.toneMappingExposure=st.exp;rr.render(sc,c2);liveDrawn=liveKey(W,H)};
  const bar=document.createElement('details');bar.className='nuhio-render-card';settings.append(bar);
  bar.innerHTML='<summary>Cámara y luz de la vista previa</summary>';
  const msg=document.createElement('span');
@@ -10476,7 +10559,9 @@ function realMode(){
   out.getContext('2d').putImageData(im,0,0);busy=false;msg.textContent='';view='pano';const sc2=new T.Scene(),g=new T.SphereGeometry(500,64,32);g.scale(-1,1,1);const tx=new T.CanvasTexture(out);tx.encoding=T.sRGBEncoding;sc2.add(new T.Mesh(g,new T.MeshBasicMaterial({map:tx,toneMapped:false})));const p2=new T.PerspectiveCamera(75,1,.1,2000);let lon=0,lat=0;
   const pb=document.createElement('div');pb.style.cssText='position:absolute;top:10px;right:10px;z-index:3;background:rgba(15,18,24,.88);padding:8px;border-radius:8px';stage.append(pb);const bt=(l,fn)=>{const b=document.createElement('button');b.textContent=l;b.onclick=fn;b.style.margin='2px';pb.append(b)};bt('💾 Guardar 360°',()=>dlc(out,'panorama-360.png'));bt('↩ Volver',()=>{view='live';pb.remove();cv.onpointermove=mv0;cv.onwheel=null});
   cv.onpointermove=e=>dragRenderCamera(e,(dx,dy)=>{lon+=dx*.004;lat=Math.max(-1.5,Math.min(1.5,lat+dy*.004))});cv.onwheel=e=>{p2.fov=Math.max(30,Math.min(100,p2.fov+e.deltaY*.05))};
-  const L=()=>{if(!RVo||view!='pano')return;requestAnimationFrame(L);const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;rr.setSize(W,H,false);p2.aspect=W/H;p2.updateProjectionMatrix();p2.rotation.set(lat,lon,0,'YXZ');rr.render(sc2,p2)};L()}
+  // Bajo demanda: el panorama solo dibuja si cambian la orientación, el campo de visión o el tamaño.
+  let panoDrawn='';const panoKey=(W,H)=>[lon,lat,p2.fov,W,H,rr.info.render.frame].join('|');
+  const L=()=>{if(!RVo||view!='pano')return;requestAnimationFrame(L);const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;if(panoKey(W,H)===panoDrawn&&performance.now()>=renderActiveUntil)return;rr.setSize(W,H,false);p2.aspect=W/H;p2.updateProjectionMatrix();p2.rotation.set(lat,lon,0,'YXZ');rr.render(sc2,p2);panoDrawn=panoKey(W,H)};L()}
  let renderDrag=null;
  cv.onpointerdown=e=>{
   if(renderDrag||!e.isPrimary||e.button!==0)return;
