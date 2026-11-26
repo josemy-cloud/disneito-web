@@ -15,8 +15,12 @@ async function editor(tamano = [2, 1, 6]) {
   const s = await abrirReal(browser);
   await s.ctx.addInitScript(() => {
     const raf = window.requestAnimationFrame.bind(window);
-    window.__raf = {}; window.__pendientes = {};
-    window.requestAnimationFrame = cb => { const k = cb.name || 'anónima'; window.__pendientes[k] = (window.__pendientes[k] || 0) + 1; return raf(t => { window.__pendientes[k]--; window.__raf[k] = (window.__raf[k] || 0) + 1; cb(t); }); };
+    // Solicitudes pendientes por identificador (contempla cancelAnimationFrame, que R1.3 usa para evitar duplicados).
+    const caf = window.cancelAnimationFrame.bind(window), vivos = new Map();
+    window.__raf = {};
+    Object.defineProperty(window, '__pendientes', { get() { const p = {}; for (const k of vivos.values()) p[k] = (p[k] || 0) + 1; return p; } });
+    window.requestAnimationFrame = cb => { const k = cb.name || 'anónima'; const id = raf(t => { vivos.delete(id); window.__raf[k] = (window.__raf[k] || 0) + 1; cb(t); }); vivos.set(id, k); return id; };
+    window.cancelAnimationFrame = id => { vivos.delete(id); return caf(id); };
   });
   await entrarAlEditor(s.page);
   await prepararProyecto(s.page, tamano);
@@ -37,14 +41,14 @@ async function editor(tamano = [2, 1, 6]) {
 }
 const reposo = (page, ms = 2500, renderer = 'r3') => page.evaluate(async ([ms, renderer]) => { await __esperar(1500); const r = eval(renderer), a = __n(r), b = __raf.animate || 0; await __esperar(ms); return { dibujos: __n(r) - a, callbacks: (__raf.animate || 0) - b }; }, [ms, renderer]);
 
-test('reposo: con la escena quieta no se dibuja en 3D materiales, Realista ni vista dual (el bucle sigue vivo y es único)', async () => {
+test('reposo: con la escena quieta no se dibuja en 3D materiales, Realista ni vista dual (con un único bucle como máximo)', async () => {
   const s = await editor();
   for (const m of ['m', 'q', 'dual']) {
     await s.page.evaluate(m => __modo(m), m);
     const r = await reposo(s.page);
     assert.equal(r.dibujos, 0, `${m}: dibujos en reposo`);
-    assert.ok(r.callbacks > 3, `${m}: el bucle de animate sigue activo (${r.callbacks})`);
-    assert.equal(await s.page.evaluate(() => __pendientes.animate), 1, `${m}: un solo bucle de animate`);
+    // Desde R1.3 el bucle se suspende en reposo (0 callbacks); nunca hay más de un fotograma pendiente.
+    assert.ok(await s.page.evaluate(() => (__pendientes.animate || 0) <= 1), `${m}: un solo bucle de animate como máximo`);
   }
   assert.deepEqual(s.errores, []);
   await s.ctx.close();
@@ -54,7 +58,8 @@ test('reactivación: cámara, edición, textura asíncrona, sol, tamaño, objeto
   const s = await editor();
   await s.page.evaluate(() => __modo('q'));
   const r = await s.page.evaluate(async () => ({
-    camara: await __hastaDibujo(() => { cam.position.x += 15; }),
+    // Un cambio de cámara por código fuera de una interacción despierta el motor con keepRendering() (R1.3).
+    camara: await __hastaDibujo(() => { cam.position.x += 15; keepRendering(); }),
     edicion: await __hastaDibujo(() => { S.i[0].x += 3; commit(); }),
     textura: await __hastaDibujo(() => { let t = null; root.traverse(o => [].concat(o.material || []).forEach(m => { if (!t && m?.map) t = m.map; })); t.needsUpdate = true; }),
     material: await __hastaDibujo(() => { let m = null; root.traverse(o => { if (!m && o.isMesh && !Array.isArray(o.material)) m = o.material; }); m.needsUpdate = true; }),
@@ -122,7 +127,7 @@ test('sombras bajo demanda (Realista): mover la cámara no recalcula sombras; ed
     r3.shadowMap.render = function () { if (this.enabled && (this.autoUpdate || this.needsUpdate)) sombras++; return o.apply(this, arguments); };
     const foto = async () => { await __fotogramas(3); const c = document.createElement('canvas'); c.width = r3.domElement.width; c.height = r3.domElement.height; const x = c.getContext('2d'); x.drawImage(r3.domElement, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; };
     const p0 = cam.position.clone(), a = await foto();
-    sombras = 0; cam.position.x += 40; await __fotogramas(3); cam.position.copy(p0); const b = await foto();
+    sombras = 0; cam.position.x += 40; keepRendering(); await __fotogramas(3); cam.position.copy(p0); keepRendering(); const b = await foto();
     const porCamara = sombras;
     sombras = 0; S.i[0].x += 2; commit(); await __fotogramas(3);
     let distintos = 0; for (let i = 0; i < a.length; i += 4) if (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2]) distintos++;
@@ -142,11 +147,11 @@ test('vista previa de muebles: no dibuja en reposo, dibuja al girarla y al cambi
   const quieto = await reposo(s.page, 2000, 'r4');
   assert.equal(quieto.dibujos, 0, 'vista previa quieta: sin dibujos');
   const r = await s.page.evaluate(async () => ({
-    giro: await __hastaDibujo(() => { cam4.position.x += 20; }, r4),
+    giro: await __hastaDibujo(() => { cam4.position.x += 20; keepRendering(); }, r4),
     cambio: await __hastaDibujo(() => { pvIt.col = '#336699'; buildPrev(pvIt, 1); }, r4),
   }));
   assert.ok(r.giro <= 2 && r.cambio <= 2, JSON.stringify(r));
-  assert.equal(await s.page.evaluate(() => __pendientes.pvLoop || 0), 1, 'un solo bucle de vista previa');
+  assert.ok(await s.page.evaluate(() => (__pendientes.pvLoop || 0) <= 1), 'un solo bucle de vista previa como máximo');
   await s.page.evaluate(() => closePreview()); await s.page.waitForTimeout(300);
   assert.equal(await s.page.evaluate(() => __pendientes.pvLoop || 0), 0, 'al cerrar, el bucle termina');
   assert.deepEqual(s.errores.filter(e => !e.startsWith('dialog:')), []);

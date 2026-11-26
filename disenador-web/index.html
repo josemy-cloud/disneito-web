@@ -495,13 +495,18 @@ async function createRender(container, j, opt, cb) {
   Object.assign(ctrl, {
     setExposure(v) { renderer.toneMappingExposure = v; }, setKelvin(k) { st.k = k; env(); }, setLight(sun, sky) { st.sun = sun; st.sky = sky; env(); }, setLens(fs, fd) { st.fs = fs; st.fd = fd; sz(); pt.updateCamera(); pt.reset(); },
     cancel() { if (ctrl.state == 'renderizando') { ctrl.state = 'cancelado'; cb({ state: 'cancelado', samples: pt.samples, target: st.target }); } },
-    resume() { if (ctrl.state == 'cancelado' || ctrl.state == 'listo') { st.target = Math.max(st.target, pt.samples + P.samples); ctrl.state = 'renderizando'; } },
-    pano() { mode = 'pano'; eq = new EquirectCamera(); eq.position.copy(cam.position); sz(); pt.setScene(scene, eq); pt.reset(); ctrl.state = 'renderizando'; },
-    photo() { mode = 'foto'; sz(); pt.setScene(scene, cam); pt.reset(); ctrl.state = 'renderizando'; },
+    resume() { if (ctrl.state == 'cancelado' || ctrl.state == 'listo') { st.target = Math.max(st.target, pt.samples + P.samples); ctrl.state = 'renderizando'; wake(); } },
+    pano() { mode = 'pano'; eq = new EquirectCamera(); eq.position.copy(cam.position); sz(); pt.setScene(scene, eq); pt.reset(); ctrl.state = 'renderizando'; wake(); },
+    photo() { mode = 'foto'; sz(); pt.setScene(scene, cam); pt.reset(); ctrl.state = 'renderizando'; wake(); },
     save(type) { canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (mode == 'pano' ? 'panorama-360' : 'render') + (type == 'jpg' ? '.jpg' : '.png'); a.click(); }, type == 'jpg' ? 'image/jpeg' : 'image/png', .95); },
     dispose() { dead = true; try { pt.dispose && pt.dispose(); renderer.dispose(); } catch (e) { } canvas.remove(); }
   });
-  (function loop() { if (dead) return; requestAnimationFrame(loop); if (ctrl.state != 'renderizando') return; if (pt.samples < st.target) pt.renderSample(); else { ctrl.state = 'listo'; } cb({ state: ctrl.state, samples: pt.samples, target: st.target }); })();
+  // Progresivo bajo demanda: solo pide fotogramas mientras renderiza; al terminar o detenerse se suspende y
+  // vuelve a arrancar con resume(), pano() o photo().
+  let looping = 0;
+  function loop() { looping = 0; if (dead || ctrl.state != 'renderizando') return; if (pt.samples < st.target) pt.renderSample(); else { ctrl.state = 'listo'; } cb({ state: ctrl.state, samples: pt.samples, target: st.target }); if (ctrl.state == 'renderizando') wake(); }
+  function wake() { if (!dead && !looping) looping = requestAnimationFrame(loop); }
+  wake();
   return ctrl;
 }
 
@@ -2621,12 +2626,21 @@ if(r3){
    materiales o atributos (cargas asíncronas incluidas); el resto los señala el propio código (sol, aspecto, sombras). */
 let sceneVersion=0,renderActiveUntil=0;
 const RENDER_INPUT_GRACE_MS=350;
+/* Suspensión de bucles: cada bucle de dibujo (editor, vista previa, Ver en Realidad, panorama, path tracer) deja de
+   pedir fotogramas cuando no tiene trabajo pendiente y registra aquí su función para despertar. invalidateScene() y
+   keepRendering() (y con ella cualquier interacción del usuario) los despiertan a todos en el siguiente fotograma.
+   Un cambio programático fuera de una interacción debe llamar a invalidateScene() (escena, luces, sombras) o a
+   keepRendering() (solo cámara o vista) para despertar el motor. */
+const animationWakers=new Set();
+function wakeAnimations(){for(const wake of animationWakers)wake()}
 function invalidateScene(){
  sceneVersion++;
  if(r3)r3.shadowMap.needsUpdate=true;
+ wakeAnimations();
 }
 function keepRendering(ms=RENDER_INPUT_GRACE_MS){
  renderActiveUntil=Math.max(renderActiveUntil,performance.now()+ms);
+ wakeAnimations();
 }
 (function installSceneInvalidation(){
  for(const name of ['add','remove','clear','attach']){
@@ -2724,7 +2738,7 @@ function previewPixelRatio(w,h){
   const budget=coarse?1600000:4000000;
   return Math.min(devicePixelRatio,2,Math.max(1,Math.sqrt(budget/Math.max(1,w*h))));
 }
-function resize(){if(!r3)return;const w=d3.clientWidth,h=d3.clientHeight;if(!w||!h)return;const ratio=previewPixelRatio(w,h);if(r3.getPixelRatio()!==ratio)r3.setPixelRatio(ratio);r3.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
+function resize(){if(!r3)return;const w=d3.clientWidth,h=d3.clientHeight;if(!w||!h)return;const ratio=previewPixelRatio(w,h);if(r3.getPixelRatio()!==ratio)r3.setPixelRatio(ratio);r3.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();wakeAnimations()}
 new ResizeObserver(()=>{resize();draw()}).observe($('#view'));
 const M=(c,r=.55,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
 /* ===== Recursos de escena compartidos (no se liberan al reconstruir) =====
@@ -7170,14 +7184,39 @@ function walkAction(){
  if(motion)return {motion};
  return item&&hasItemLight(item)?{item}:null;
 }
-let lastNavigationFrame=performance.now();
-function animate(){requestAnimationFrame(animate);
+/* Bucle del editor bajo demanda: solo pide el siguiente fotograma mientras haya trabajo (navegación o modificadores
+   mantenidos, puertas y cajones en movimiento, inercia del paseo o de la órbita, rotación automática, arrastre táctil,
+   ventana de gracia de una interacción o un dibujo recién hecho). Sin trabajo, se suspende y lo despiertan
+   invalidateScene(), keepRendering(), las interacciones del usuario o un cambio de tamaño. Un único fotograma
+   pendiente como máximo. */
+let lastNavigationFrame=performance.now(),editorAnimationFrame=0,walkAimPending=false;
+function scheduleEditorAnimation(){if(!editorAnimationFrame)editorAnimationFrame=requestAnimationFrame(animate)}
+function wakeEditorAnimation(){
+ if(editorAnimationFrame)return;
+ lastNavigationFrame=performance.now()-16;   // al despertar, el primer paso usa un fotograma normal (sin saltos)
+ scheduleEditorAnimation();
+}
+animationWakers.add(wakeEditorAnimation);
+function animate(){
+ if(editorAnimationFrame){cancelAnimationFrame(editorAnimationFrame);editorAnimationFrame=0}
+ if(editorAnimationStep()||performance.now()<renderActiveUntil)scheduleEditorAnimation();
+}
+function updateWalkAim(now){
+ lastWalkPick=now;walkAimPending=false;
+ const interactive=!!walkAction();
+ $('#walkAim').classList.toggle('is-interactive',interactive);
+ walkInteract.disabled=!interactive;
+}
+// Un paso del editor. Devuelve true si queda trabajo para el siguiente fotograma.
+function editorAnimationStep(){
  const now=performance.now(),dt=Math.min(.05,(now-lastNavigationFrame)/1000);lastNavigationFrame=now;
  if(navigationHeld.size){
   if(canNavigate3D()&&!document.activeElement?.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])')){if(!walk)moveNavigationCamera(dt);}
   else navigationHeld.clear();
  }
- walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return;
+ walkOverlay.classList.toggle('active',walk&&touchWalk);if(mode!='3d')return navigationHeld.size>0;
+ // Teclas de navegación o modificadoras de elevación mantenidas (cameraLift actúa tras 160 ms).
+ let busy=navigationHeld.size>0||cameraModifiers.size>0||!!itemTouchDrag;
  let sceneMotion=false;
  for(const motion of MV){
   const before=motion.v;
@@ -7185,15 +7224,11 @@ function animate(){requestAnimationFrame(animate);
   if(Math.abs(motion.v-before)>.0005)sceneMotion=true;
  }
  if(sceneMotion){
+  busy=true;
   invalidateInteriorShadows();
   if(dualView)requestPlanGpu();
  }
- if(walk&&now-lastWalkPick>=100){
-  lastWalkPick=now;
-  const interactive=!!walkAction();
-  $('#walkAim').classList.toggle('is-interactive',interactive);
-  walkInteract.disabled=!interactive;
- }
+ if(walk&&now-lastWalkPick>=100)updateWalkAim(now);
  if(walk){const sp=+$('#sp').value,y=cam.rotation.y;let fx=walkX*Math.cos(y)+walkY*Math.sin(y),fz=-walkX*Math.sin(y)+walkY*Math.cos(y);if(walkK.w||walkK.arrowup){fx-=Math.sin(y);fz-=Math.cos(y)}if(walkK.s||walkK.arrowdown){fx+=Math.sin(y);fz+=Math.cos(y)}if(walkK.a||walkK.arrowleft){fx-=Math.cos(y);fz+=Math.sin(y)}if(walkK.d||walkK.arrowright){fx+=Math.cos(y);fz-=Math.sin(y)}
   vel.x+=(fx*sp-vel.x)*.15;vel.z+=(fz*sp-vel.z)*.15;if(!blocked(cam.position.x+vel.x,cam.position.z))cam.position.x+=vel.x;else vel.x=0;if(!blocked(cam.position.x,cam.position.z+vel.z))cam.position.z+=vel.z;else vel.z=0;
   const lift=cameraLift(dt,now);
@@ -7202,10 +7237,15 @@ function animate(){requestAnimationFrame(animate);
    const ceiling=+(room?.ceil?.h||S.w[0]?.h||250);
    cam.position.y=T.MathUtils.clamp(cam.position.y+lift,20,Math.max(20,ceiling-10));
   }
+  // Inercia del paseo: por debajo de 0,001 cm por fotograma el movimiento es imperceptible y se da por terminado.
+  const walking=walkX||walkY||Object.values(walkK).some(Boolean)||lift||Math.abs(vel.x)>1e-3||Math.abs(vel.z)>1e-3;
+  if(walking){busy=true;walkAimPending=true}
+  else{vel.x=vel.z=0;if(walkAimPending)updateWalkAim(now)}   // último apuntado antes de suspender
  }
  else{
   const lift=cameraLift(dt,now);
   if(lift){
+   busy=true;
    stopOrbit();
    const height=Math.max(8,cam.position.y+lift);
    oc.target.y+=height-cam.position.y;
@@ -7214,11 +7254,13 @@ function animate(){requestAnimationFrame(animate);
   // Permite mirar hacia arriba sin orbitar por debajo del suelo.
   const radius=Math.max(oc.minDistance,cam.position.distanceTo(oc.target));
   oc.maxPolarAngle=Math.acos(T.MathUtils.clamp((8-oc.target.y)/radius,-.98,.98));
-  if(!itemTouchDrag)oc.update();
+  // update() devuelve true mientras la cámara se mueve (inercia o rotación automática).
+  if(!itemTouchDrag&&oc.update())busy=true;
   if(cam.position.y<8){cam.position.y=8;cam.lookAt(oc.target)}
  }
  prepareLayerViewport();
- if(viewportNeedsRender())renderLayerViewport()}
+ if(viewportNeedsRender()){renderLayerViewport();busy=true}
+ return busy}
 let pd=null,walkPressTravel=0;
 const viewPointers=new Set();
 let itemTouchDrag=null;
@@ -7580,7 +7622,7 @@ function setMode(m){
  hint();sbUpdate();
 }
 $('#bM').onclick=()=>setMode(mode=='2d'?'3d':'2d');$('#bU').onclick=undo;$('#bR').onclick=redo;$('#sq').onchange=setQ;$('#ct').onchange=()=>{wallVis=$('#ct').checked;wvBar();build3d()};$('#sa').oninput=setSun;$('#se').oninput=setSun;
-function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.fov=48;cam.updateProjectionMatrix();cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update()}
+function vw(t){if(!r3)return;if(walk)exitWalk();stopOrbit();oc.enabled=true;cam.rotation.order='XYZ';cam.fov=48;cam.updateProjectionMatrix();cam.position.set(t=='top'?sunC.x:sunC.x+600,t=='top'?1500:600,t=='top'?sunC.z+1:sunC.z+800);oc.target.copy(sunC);if(t!=='top')oc.target.y=120;oc.update();keepRendering()}
 function showOrbit(rotate=true){
  vw('iso');
  const box=projectBounds3D();
@@ -7599,6 +7641,7 @@ function showOrbit(rotate=true){
  oc.autoRotate=rotate;
  oc.enableDamping=!rotate;
  oc.autoRotateSpeed=.95;
+ keepRendering();
 }
 function startEditorOrbit(){
  if(!startupOrbitPending)return;
@@ -7637,6 +7680,7 @@ function interiorCamera(detail=false){
  cam.fov=portrait?(pilot&&!detail?68:60):(pilot&&!detail?51:48);cam.updateProjectionMatrix();
  cam.position.fromArray(view.position);oc.target.fromArray(view.target);
  oc.minDistance=30;oc.update();oc.enableDamping=true;
+ keepRendering();
 }
 let previousInteriorSun=null,interiorEvening=null;
 function setInteriorDay(enabled){
@@ -8586,8 +8630,8 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
   const b2=document.createElement('button');b2.textContent='Colocar en proyecto';b2.style.background='#3d7be0';b2.onclick=()=>{place=JSON.parse(JSON.stringify(pvIt));place.id=null;tool='place';closePreview();$('#cat').style.display='none';if($('#lib').classList.contains('nuhio-library-open'))$('#tl').click();if(mode!='2d'&&!dualView)setMode('2d');drawTools();$('#editorHint').textContent='Mueve el cursor por el plano y haz clic para colocar. Esc cancela'};P2.append(b2,' ');
  }
  P2.append(document.createElement('br'),(pvIt.brand?pvIt.brand+' · ':'')+(pvIt.ref?'Ref. '+pvIt.ref+' · ':'')+(pvIt.upd?'importado '+pvIt.upd+' · ':'')+(pvIt.prec?'medidas '+pvIt.prec+' · ':'')+pvIt.c+' · '+(pvIt.lic?'Licencia '+pvIt.lic+' · ':'')+(pvIt.source?'Origen '+pvIt.source+' · ':'')+(r4?'arrastra para girar, rueda para zoom':''));if(pvIt.cfg){const sv=P,sk=CB;P=P2;CB=()=>{buildPrev(pvIt,1);fitCam();pvUI()};cfgUI(pvIt);P=sv;CB=sk}}function pvLoop(){
+ if(previewAnimationFrame){cancelAnimationFrame(previewAnimationFrame);previewAnimationFrame=0}
  if(!pvOpen||!r4)return;
- requestAnimationFrame(pvLoop);
  let moving=false;
  for(const motion of PV){const before=motion.v;stepMV(motion);if(Math.abs(motion.v-before)>.0005)moving=true}
  const orbiting=oc4.update();
@@ -8603,8 +8647,13 @@ function pvUI(){const P2=$('#pvp');P2.style.overflowY='auto';P2.style.overflowX=
   drawn.version=sceneVersion;drawn.frame=r4.info.render.frame;drawn.width=canvas.width;drawn.height=canvas.height;
   drawn.position.copy(cam4.position);drawn.quaternion.copy(cam4.quaternion);drawn.projection.set(cam4.projectionMatrix.elements);
  }
+ // Tras dibujar se comprueba el fotograma siguiente; sin cambios, el bucle se suspende hasta que algo lo despierte.
+ wakePreviewAnimation();
 }
 const previewDrawn={version:-1,frame:-1,width:-1,height:-1,position:new T.Vector3(NaN,NaN,NaN),quaternion:new T.Quaternion(NaN,NaN,NaN,NaN),projection:new Float64Array(16)};
+let previewAnimationFrame=0;
+function wakePreviewAnimation(){if(pvOpen&&r4&&!previewAnimationFrame)previewAnimationFrame=requestAnimationFrame(pvLoop)}
+animationWakers.add(wakePreviewAnimation);
 let pvKitchenPresets=null,pvKitchenVariant=0;
 function openPrev(i){const o=LIB[i],presets=KITCHEN_PRESETS.get(o);openPrevObj(presets?.[0]||o,presets)}
 function resizePreviewRenderer(){if(!r4)return;const host=$('#pvc');if(!host)return;const w=Math.max(160,Math.floor(host.clientWidth||520)),h=Math.max(140,Math.floor(host.clientHeight||260));r4.setSize(w,h,false);r4.domElement.style.width='100%';r4.domElement.style.height='100%';cam4.aspect=w/h;cam4.updateProjectionMatrix();oc4.update()}
@@ -10529,7 +10578,10 @@ function realMode(){
  const setCam=asp=>{c2.position.set(st.x,st.h,st.z);c2.rotation.set(st.pitch,st.yaw,0,'YXZ');const hf=2*Math.atan(18/st.mm);c2.fov=2*Math.atan(Math.tan(hf/2)/asp)/D;c2.aspect=asp;c2.updateProjectionMatrix()};
  // Bajo demanda: la vista en vivo solo dibuja si cambian sus ajustes (st), el tamaño, la escena u otro dibujo en rr.
  let liveDrawn='';const liveKey=(W,H)=>JSON.stringify(st)+'|'+W+'x'+H+'|'+sceneVersion+'|'+rr.info.render.frame;
- const live=()=>{if(!RVo)return;requestAnimationFrame(live);if(view!='live'||still||busy){liveDrawn='';return}const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;if(liveKey(W,H)===liveDrawn&&performance.now()>=renderActiveUntil)return;applyLight(false);rr.setPixelRatio(1);rr.setSize(W,H,false);setCam(W/H);rr.toneMappingExposure=st.exp;rr.render(sc,c2);liveDrawn=liveKey(W,H)};
+ // Suspendido sin cambios; lo despiertan las interacciones, invalidateScene() y el cierre de un render (closeR).
+ let liveFrame=0;
+ const live=()=>{if(liveFrame){cancelAnimationFrame(liveFrame);liveFrame=0}if(!RVo)return;if(view!='live'||still||busy){liveDrawn='';return}const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;if(liveKey(W,H)===liveDrawn&&performance.now()>=renderActiveUntil)return;applyLight(false);rr.setPixelRatio(1);rr.setSize(W,H,false);setCam(W/H);rr.toneMappingExposure=st.exp;rr.render(sc,c2);liveDrawn=liveKey(W,H);wakeLive()};
+ const wakeLive=()=>{if(RVo&&!liveFrame)liveFrame=requestAnimationFrame(live)};animationWakers.add(wakeLive);
  const bar=document.createElement('details');bar.className='nuhio-render-card';settings.append(bar);
  bar.innerHTML='<summary>Cámara y luz de la vista previa</summary>';
  const msg=document.createElement('span');
@@ -10561,7 +10613,10 @@ function realMode(){
   cv.onpointermove=e=>dragRenderCamera(e,(dx,dy)=>{lon+=dx*.004;lat=Math.max(-1.5,Math.min(1.5,lat+dy*.004))});cv.onwheel=e=>{p2.fov=Math.max(30,Math.min(100,p2.fov+e.deltaY*.05))};
   // Bajo demanda: el panorama solo dibuja si cambian la orientación, el campo de visión o el tamaño.
   let panoDrawn='';const panoKey=(W,H)=>[lon,lat,p2.fov,W,H,rr.info.render.frame].join('|');
-  const L=()=>{if(!RVo||view!='pano')return;requestAnimationFrame(L);const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;if(panoKey(W,H)===panoDrawn&&performance.now()>=renderActiveUntil)return;rr.setSize(W,H,false);p2.aspect=W/H;p2.updateProjectionMatrix();p2.rotation.set(lat,lon,0,'YXZ');rr.render(sc2,p2);panoDrawn=panoKey(W,H)};L()}
+  // Suspendido sin cambios; lo despiertan el arrastre y la rueda. Al salir del panorama se da de baja.
+  let panoFrame=0;
+  const L=()=>{if(panoFrame){cancelAnimationFrame(panoFrame);panoFrame=0}if(!RVo||view!='pano'){animationWakers.delete(wakePano);return}const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;if(panoKey(W,H)===panoDrawn&&performance.now()>=renderActiveUntil)return;rr.setSize(W,H,false);p2.aspect=W/H;p2.updateProjectionMatrix();p2.rotation.set(lat,lon,0,'YXZ');rr.render(sc2,p2);panoDrawn=panoKey(W,H);wakePano()};
+  const wakePano=()=>{if(RVo&&view=='pano'&&!panoFrame)panoFrame=requestAnimationFrame(L)};animationWakers.add(wakePano);L()}
  let renderDrag=null;
  cv.onpointerdown=e=>{
   if(renderDrag||!e.isPrimary||e.button!==0)return;
@@ -10621,7 +10676,7 @@ let RE=null,rcv=null,renderRun=0;
  const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');rp.append(zc);
  const pg=document.createElement('progress');pg.max=1;pg.value=0;pg.style.width='100%';const pm=document.createElement('div');pm.className='studio-muted';pm.setAttribute('role','status');actions.append(pg,pm);
  const renderLights=document.createElement('div');renderLights.className='studio-muted';rp.append(renderLights);
- const closeR=()=>{renderRun++;if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0;renderLights.textContent=''};
+ const closeR=()=>{renderRun++;if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0;renderLights.textContent='';wakeLive()};
  zc.onchange=()=>{
   const hadRender=view==='render';
   rvCeil=zc.value;
@@ -10639,7 +10694,7 @@ let RE=null,rcv=null,renderRun=0;
   if(run!==renderRun){engine.dispose();return}RE=engine;
   if(RE.warnings.length)pm.textContent=RE.warnings.join(' ')}catch(e){if(run!==renderRun)return;console.error(e);pm.textContent='No se pudo iniciar el render: '+e.message+' (F12 → Console para más detalle)';if(rcv){rcv.remove();rcv=null}view='live'}}).className='studio-primary';
  rb('⏹ Cancelar',()=>RE&&RE.cancel());rb('⏵ Seguir',()=>RE&&RE.resume());rb('🌐 360°',()=>RE&&RE.pano());rb('📷 Foto',()=>RE&&RE.photo());rb('💾 PNG',()=>RE&&RE.save('png'));rb('💾 JPG',()=>RE&&RE.save('jpg'));rb('✕ Cerrar render',closeR);
- function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
+ function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();animationWakers.delete(wakeLive);setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
 function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
@@ -10707,6 +10762,7 @@ function frameProject(item=null,target=null){
   distance=Math.max(distance,p.dot(direction)+Math.max(Math.abs(p.dot(right))/(slope*cam.aspect),Math.abs(p.dot(up))/slope,cam.near));
  }
  oc.target.copy(center);cam.position.copy(center).addScaledVector(direction,distance);oc.update();
+ keepRendering();
 }
 $('#fitProject').onclick=()=>{const item=sel?.k==='i'?get():null;frameProject(item&&!item.hid?item:null)};
 function importScannedRoom(data,project,sources){
