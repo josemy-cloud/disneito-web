@@ -425,7 +425,20 @@ if(new URLSearchParams(location.search).get('ui')==='legacy'){
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/build/index.module.js","three-mesh-bvh/":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/","three-gpu-pathtracer":"https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.23/src/index.js"}}</script>
 <script type="module">
 /* Motor de render fotorrealista (path tracing en la GPU del usuario). Módulo ES cargado bajo demanda desde index.html.
-   Usa three 0.163 + three-mesh-bvh 0.7.4 + three-gpu-pathtracer 0.0.23 (ver import map en index.html). */
+   Usa three 0.163 + three-mesh-bvh 0.7.4 + three-gpu-pathtracer 0.0.23 (ver import map en index.html).
+
+   ATENCIÓN — DEPENDENCIA DE APIS INTERNAS. createRender corrige fallos y rendimiento de estas versiones exactas usando
+   piezas no públicas. Cualquier actualización de three o three-gpu-pathtracer en el import map obliga a revisar y volver
+   a medir esta corrección (ver tests/ver-en-realidad-render.test.mjs y la referencia de compilaciones de abajo):
+   - three-gpu-pathtracer 0.0.23: WebGLPathTracer._pathTracer / _lowResPathTracer / _quad; PathTracingRenderer
+     ._compileFunction, .compileMaterial, ._primaryTarget, .material.onBeforeRender y el evento 'recompilation' de
+     MaterialBase (oneCompile y la compilación de la variante del render target); WebGLPathTracer.dispose() falla en
+     esta versión (usa _renderQuad), por eso dispose libera cada parte por separado.
+   - three 0.163: WebGLRenderer.compileAsync y la clave de programa que depende del render target activo
+     (toneMapping/outputColorSpace), base de la compilación en _primaryTarget.
+   Si faltan esas piezas, oneCompile y la compilación en el render target se desactivan solos (comportamiento original).
+   Referencia medida con la librería real (2026-11-27, 360° directo): 5 programas de path tracing → 1; cambio a Foto:
+   4 → 1; contextos WebGL liberados tras 4 renders cerrados: 0/4 → 4/4. */
 
 const PRESETS = { prev: { res: '1280x720', samples: 64, bounces: 6 }, alta: { res: '1920x1080', samples: 512, bounces: 8 }, pro: { res: '2560x1440', samples: 2048, bounces: 10 } };
 
@@ -456,13 +469,43 @@ const loadImg = (u, max) => new Promise((ok, ko) => { const i = new Image(); i.o
 async function createRender(container, j, opt, cb) {
   const THREE = await import('three'), { WebGLPathTracer, PhysicalCamera, EquirectCamera, PhysicalSpotLight } = await import('three-gpu-pathtracer');
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain'; container.append(canvas);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }), gl = renderer.getContext(), P = PRESETS[opt.quality] || PRESETS.alta;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' }), gl = renderer.getContext(), P = PRESETS[opt.quality] || PRESETS.alta;
   const A = adapt(opt.res || P.res, { maxTex: renderer.capabilities.maxTextureSize, maxRb: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), mem: navigator.deviceMemory });
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = opt.exp ?? 1.05;
   const pt = new WebGLPathTracer(renderer); pt.bounces = P.bounces; pt.tiles.set(2, 2); pt.filteredGlossyFactor = .5;
-  const st = { sun: opt.sun ?? 1250, sky: opt.sky ?? 1.45, fs: 22, fd: 3, target: P.samples, k: (j.look && j.look.k) || 6500 }; let W = A.w, H = A.h, mode = 'foto', dead = false, scene, cam, eq;
-  const ctrl = { state: 'cargando', warnings: A.warn, get samples() { return pt.samples; } };
-  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ctrl.state = 'error'; cb({ state: 'error', msg: 'La GPU se quedó sin memoria o se reinició. Baja la resolución o la calidad.' }); });
+  const st = { sun: opt.sun ?? 1250, sky: opt.sky ?? 1.45, fs: 22, fd: 3, target: P.samples, k: (j.look && j.look.k) || 6500 }; let W = A.w, H = A.h, mode = opt.mode == 'pano' ? 'pano' : 'foto', dead = false, scene, cam, eq;
+  const gpuInfo = gl.getExtension('WEBGL_debug_renderer_info');
+  const ctrl = { state: 'cargando', warnings: A.warn, gpu: gpuInfo ? String(gl.getParameter(gpuInfo.UNMASKED_RENDERER_WEBGL)) : '', get samples() { return pt.samples; }, get compiling() { return pt.isCompiling; } };
+  /* Una sola compilación por cambio. three-gpu-pathtracer 0.0.23 (versión fijada en el import map) compila el shader
+     en cuanto cambia cada define: al preparar la escena o al pasar de foto a 360° se lanzaban compilaciones de
+     variantes intermedias, más la del material de baja resolución que NuHio no usa (dynamicLowRes desactivado), y la
+     GPU las terminaba todas. oneCompile agrupa los cambios y compila una vez con los valores finales. Si la librería
+     no expone lo esperado, se ejecuta tal cual (comportamiento original). */
+  const ptMain = pt._pathTracer, ptLow = pt._lowResPathTracer;
+  const canBatch = !!(ptMain && ptLow && ptMain.material && ptLow.material && typeof ptMain._compileFunction == 'function' && typeof ptLow._compileFunction == 'function' && typeof ptMain.material.onBeforeRender == 'function');
+  let batching = false;
+  function oneCompile(fn) {
+    if (!canBatch || batching) return fn();
+    batching = true; let pending = false;
+    const mark = () => { pending = true; }, skip = () => {};
+    ptMain.material.removeEventListener('recompilation', ptMain._compileFunction); ptMain.material.addEventListener('recompilation', mark);
+    ptLow.material.removeEventListener('recompilation', ptLow._compileFunction); ptLow.material.addEventListener('recompilation', skip);
+    try { fn(); ptMain.material.onBeforeRender(); }
+    finally {
+      ptMain.material.removeEventListener('recompilation', mark); ptMain.material.addEventListener('recompilation', ptMain._compileFunction);
+      ptLow.material.removeEventListener('recompilation', skip); ptLow.material.addEventListener('recompilation', ptLow._compileFunction);
+      batching = false;
+    }
+    if (pending) ptMain._compileFunction();
+  }
+  /* La compilación asíncrona de la librería usa el lienzo como destino (variante con tone mapping y salida sRGB), pero
+     el path tracer dibuja en su render target lineal: three compilaba otra variante en el primer dibujo, de forma
+     síncrona, y la página quedaba bloqueada decenas de segundos. Se compila en segundo plano la variante que se usa. */
+  if (canBatch && typeof ptMain.compileMaterial == 'function' && ptMain._primaryTarget) {
+    const compileMaterial = ptMain.compileMaterial;
+    ptMain.compileMaterial = function () { const previous = renderer.getRenderTarget(); renderer.setRenderTarget(ptMain._primaryTarget); try { return compileMaterial.apply(this, arguments); } finally { renderer.setRenderTarget(previous); } };
+  }
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); if (dead) return; ctrl.state = 'error'; cb({ state: 'error', msg: 'La GPU se quedó sin memoria o se reinició. Baja la resolución o la calidad.' }); });
   const sz = () => { renderer.setSize(mode == 'pano' ? Math.min(2048, W) : W, mode == 'pano' ? Math.min(2048, W) / 2 : H, false); if (cam) { cam.filmGauge = 36; cam.aspect = W / H; cam.setFocalLength(j.cam.mm); cam.fStop = st.fs; cam.focusDistance = st.fd; cam.updateProjectionMatrix(); } };
   const env = () => { const hex = new THREE.Color(j.sun.color), K = st.k, k = K ? kc(6500).map((v, i) => v / kc(K)[i]) : [1, 1, 1], mx = Math.max(...k), sc = [hex.r * k[0] / mx, hex.g * k[1] / mx, hex.b * k[2] / mx];
     const t = new THREE.DataTexture(makeEnv(1024, 512, j.sun.dir, st.sun, Math.max(.0001, st.sky), sc), 1024, 512, THREE.RGBAFormat, THREE.FloatType); t.mapping = THREE.EquirectangularReflectionMapping; t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true;
@@ -491,20 +534,33 @@ async function createRender(container, j, opt, cb) {
   }
   world.updateMatrixWorld(true);
   cam = new PhysicalCamera(60, W / H, .05, 200); cam.position.set(j.cam.x * .01, j.cam.y * .01, j.cam.z * .01); cam.rotation.set(j.cam.pitch, j.cam.yaw, 0, 'YXZ');
-  sz(); env(); pt.setScene(scene, cam); ctrl.state = 'renderizando';
+  // La vista previa rasterizada no admite la cámara equirectangular (se veía negra con rectángulos): en 360° se omite.
+  if (mode == 'pano') { eq = new EquirectCamera(); eq.position.copy(cam.position); }
+  pt.rasterizeScene = mode != 'pano';
+  oneCompile(() => { sz(); env(); pt.setScene(scene, mode == 'pano' ? eq : cam); }); ctrl.state = 'renderizando';
   Object.assign(ctrl, {
-    setExposure(v) { renderer.toneMappingExposure = v; }, setKelvin(k) { st.k = k; env(); }, setLight(sun, sky) { st.sun = sun; st.sky = sky; env(); }, setLens(fs, fd) { st.fs = fs; st.fd = fd; sz(); pt.updateCamera(); pt.reset(); },
+    setExposure(v) { renderer.toneMappingExposure = v; }, setKelvin(k) { st.k = k; oneCompile(env); }, setLight(sun, sky) { st.sun = sun; st.sky = sky; oneCompile(env); }, setLens(fs, fd) { st.fs = fs; st.fd = fd; oneCompile(() => { sz(); pt.updateCamera(); }); pt.reset(); },
     cancel() { if (ctrl.state == 'renderizando') { ctrl.state = 'cancelado'; cb({ state: 'cancelado', samples: pt.samples, target: st.target }); } },
     resume() { if (ctrl.state == 'cancelado' || ctrl.state == 'listo') { st.target = Math.max(st.target, pt.samples + P.samples); ctrl.state = 'renderizando'; wake(); } },
-    pano() { mode = 'pano'; eq = new EquirectCamera(); eq.position.copy(cam.position); sz(); pt.setScene(scene, eq); pt.reset(); ctrl.state = 'renderizando'; wake(); },
-    photo() { mode = 'foto'; sz(); pt.setScene(scene, cam); pt.reset(); ctrl.state = 'renderizando'; wake(); },
+    pano() { mode = 'pano'; eq = new EquirectCamera(); eq.position.copy(cam.position); pt.rasterizeScene = false; oneCompile(() => { sz(); pt.setCamera(eq); }); pt.reset(); ctrl.state = 'renderizando'; wake(); },
+    photo() { mode = 'foto'; pt.rasterizeScene = true; oneCompile(() => { sz(); pt.setCamera(cam); }); pt.reset(); ctrl.state = 'renderizando'; wake(); },
     save(type) { canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (mode == 'pano' ? 'panorama-360' : 'render') + (type == 'jpg' ? '.jpg' : '.png'); a.click(); }, type == 'jpg' ? 'image/jpeg' : 'image/png', .95); },
-    dispose() { dead = true; try { pt.dispose && pt.dispose(); renderer.dispose(); } catch (e) { } canvas.remove(); }
+    dispose() {
+      // WebGLPathTracer.dispose() de la 0.0.23 falla en su primera línea (usa _renderQuad; la propiedad es _quad) y el
+      // renderer nunca llegaba a liberarse. Cada paso se ejecuta por separado y al final se pierde el contexto WebGL
+      // para devolver la memoria de la GPU sin esperar a la recolección (y no agotar el límite de contextos).
+      dead = true; const quietly = f => { try { f(); } catch (e) { } };
+      quietly(() => pt.dispose());
+      quietly(() => { pt._quad.dispose(); pt._quad.material.dispose(); });
+      quietly(() => ptMain.dispose()); quietly(() => ptLow.dispose());
+      quietly(() => renderer.dispose()); quietly(() => renderer.forceContextLoss());
+      canvas.remove();
+    }
   });
   // Progresivo bajo demanda: solo pide fotogramas mientras renderiza; al terminar o detenerse se suspende y
   // vuelve a arrancar con resume(), pano() o photo().
   let looping = 0;
-  function loop() { looping = 0; if (dead || ctrl.state != 'renderizando') return; if (pt.samples < st.target) pt.renderSample(); else { ctrl.state = 'listo'; } cb({ state: ctrl.state, samples: pt.samples, target: st.target }); if (ctrl.state == 'renderizando') wake(); }
+  function loop() { looping = 0; if (dead || ctrl.state != 'renderizando') return; if (pt.samples < st.target) pt.renderSample(); else { ctrl.state = 'listo'; } cb({ state: ctrl.state, samples: pt.samples, target: st.target, compiling: pt.isCompiling, mode }); if (ctrl.state == 'renderizando') wake(); }
   function wake() { if (!dead && !looping) looping = requestAnimationFrame(loop); }
   wake();
   return ctrl;
@@ -10704,13 +10760,32 @@ let RE=null,rcv=null,renderRun=0;
     misma cámara, solo se cambia el modo con el que arrancará. */
  const renderCamKey=()=>[st.x,st.h,st.z,st.yaw,st.pitch,st.mm].join('|');
  let renderCam='',renderStart=null;
- async function startPathRender(mode='foto'){closeR();const run=renderRun,key=renderCamKey();renderStart={run,key,mode};pm.textContent='Exportando la escena…';view='render';try{await Promise.all(Object.values(PCH).map(t=>t.complete).filter(Boolean));if(run!==renderRun)return;const j=exportScene(root,{cam:{x:st.x,y:st.h,z:st.z,yaw:st.yaw,pitch:st.pitch,mm:st.mm},sun:{dir:sun.position.clone().sub(sun.target.position).normalize().toArray(),color:'#'+sunC0.getHexString()},look:{exp:st.exp,k:st.k}});
+ async function startPathRender(mode='foto'){closeR();const run=renderRun,key=renderCamKey();renderStart={run,key,mode};renderStatus({state:'preparando'});view='render';try{await Promise.all(Object.values(PCH).map(t=>t.complete).filter(Boolean));if(run!==renderRun)return;const j=exportScene(root,{cam:{x:st.x,y:st.h,z:st.z,yaw:st.yaw,pitch:st.pitch,mm:st.mm},sun:{dir:sun.position.clone().sub(sun.target.position).normalize().toArray(),color:'#'+sunC0.getHexString()},look:{exp:st.exp,k:st.k}});
   const lightCount=j.lights.length;
   renderLights.textContent=lightCount===1?'1 fuente de luz encendida en el render':lightCount+' fuentes de luz encendidas en el render';
   rcv=document.createElement('div');rcv.style.cssText='position:absolute;inset:0;z-index:1;background:#000;display:flex;align-items:center;justify-content:center';stage.append(rcv);const eng=window.RENDER_ENGINE;if(!eng)throw new Error('el motor de render no se cargó (recarga con Ctrl+F5)');
-  const engine=await eng.createRender(rcv,j,{quality:rq.value,res:rz.value,sun:+sS.value,sky:+sK.value,exp:+sE.value},s=>{if(run!==renderRun)return;pg.value=s.target?Math.min(1,s.samples/s.target):0;pm.textContent=s.msg||({renderizando:'Renderizando',listo:'Listo',cancelado:'Cancelado',cargando:'Cargando',error:'Error'}[s.state]||s.state)+' · '+Math.floor(s.samples||0)+' / '+(s.target||0)+' muestras'});
-  if(run!==renderRun){engine.dispose();return}RE=engine;renderCam=key;const startMode=renderStart.mode;renderStart=null;if(startMode==='pano')RE.pano();
-  if(RE.warnings.length)pm.textContent=RE.warnings.join(' ')}catch(e){if(run!==renderRun)return;renderStart=null;console.error(e);pm.textContent='No se pudo iniciar el render: '+e.message+' (F12 → Console para más detalle)';if(rcv){rcv.remove();rcv=null}view='live'}}
+  const initialMode=renderStart.mode;
+  const engine=await eng.createRender(rcv,j,{quality:rq.value,res:rz.value,sun:+sS.value,sky:+sK.value,exp:+sE.value,mode:initialMode},s=>{if(run===renderRun)renderStatus(s)});
+  if(run!==renderRun){engine.dispose();return}RE=engine;renderCam=key;const startMode=renderStart.mode;renderStart=null;if(startMode!==initialMode)startMode==='pano'?RE.pano():RE.photo();
+  if(RE.gpu)renderLights.textContent+=' · GPU: '+RE.gpu;
+  if(RE.warnings.length)pm.textContent=RE.warnings.join(' ')}catch(e){if(run!==renderRun)return;renderStart=null;console.error(e);renderStatus({state:'error',msg:'No se pudo iniciar el render: '+e.message+' (F12 → Console para más detalle)'});if(rcv){rcv.remove();rcv=null}view='live'}}
+ /* Estado visible del render: preparación (exportar y cargar), compilación del motor, renderizado con muestras,
+    listo, cancelado y error. La pausa en segundo plano tiene su propio aviso (pauseNote). Mientras se prepara o
+    compila, la barra queda indeterminada. */
+ function renderStatus(s){
+  const n=Math.floor(s.samples||0),of=' · '+n+' / '+(s.target||0)+' muestras',what=s.mode==='pano'?'panorama 360°':'foto';
+  let text,busy=false;
+  if(s.state==='error')text=s.msg||'Error en el render';
+  else if(s.state==='preparando'||s.state==='cargando'){text=s.msg||'Preparando la escena…';busy=true}
+  else if(s.state==='renderizando'&&s.compiling){text='Compilando el motor de render ('+what+')… La primera vez en esta sesión puede tardar uno o dos minutos y la página puede no responder unos segundos.';busy=true}
+  else if(s.state==='renderizando'&&!n){text='Preparando la primera muestra ('+what+')…';busy=true}
+  else if(s.state==='renderizando')text='Renderizando '+what+of;
+  else if(s.state==='listo')text='Listo'+of;
+  else if(s.state==='cancelado')text='Cancelado'+of+' · pulsa «Seguir» para continuar';
+  else text=s.state+of;
+  pm.textContent=text;pm.dataset.state=s.state==='renderizando'&&s.compiling?'compilando':s.state;
+  if(busy)pg.removeAttribute('value');else pg.value=s.target?Math.min(1,(s.samples||0)/s.target):0;
+ }
  function renderMode(mode){
   const key=renderCamKey();
   if(RE&&renderCam===key)return mode==='pano'?RE.pano():RE.photo();
