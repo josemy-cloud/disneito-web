@@ -10676,7 +10676,19 @@ let RE=null,rcv=null,renderRun=0;
  const kS=rs('Temperatura de color (K)',3000,9000,6500,100,v=>{st.k=v;RE&&RE.setKelvin&&RE.setKelvin(v)}),ln=()=>RE&&RE.setLens(+fsS.value,+fdS.value),fsS=rs('Apertura f/ (menor = más desenfoque)',1.4,32,22,.2,ln),fdS=rs('Distancia de enfoque (m)',.5,10,3,.1,ln);const zc=document.createElement('select');[['full','Techo completo (render realista)'],['hidden','Techo oculto (ver el interior)']].forEach(([v,l])=>zc.add(new Option(l,v)));zc.value=rvCeil;zc.setAttribute('aria-label','Visibilidad del techo');rp.append(zc);
  const pg=document.createElement('progress');pg.max=1;pg.value=0;pg.style.width='100%';const pm=document.createElement('div');pm.className='studio-muted';pm.setAttribute('role','status');actions.append(pg,pm);
  const renderLights=document.createElement('div');renderLights.className='studio-muted';rp.append(renderLights);
- const closeR=()=>{renderRun++;if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0;renderLights.textContent='';wakeLive()};
+ /* Chrome no ejecuta requestAnimationFrame con la pestaña oculta o la ventana tapada: el render fotográfico se
+    detiene y continúa solo al volver. Se avisa (aquí y en el título de la pestaña) y se retira al reanudarse. */
+ const pauseNote=document.createElement('div');pauseNote.className='studio-muted nuhio-render-paused';pauseNote.setAttribute('role','status');pauseNote.hidden=true;
+ pauseNote.textContent='Render en pausa: el navegador lo detiene mientras NuHio no está visible. Continuará al volver.';actions.append(pauseNote);
+ const pauseTitle='⏸ Render en pausa · ';
+ function renderPaused(on){
+  pauseNote.hidden=!on;
+  if(on&&!document.title.startsWith(pauseTitle))document.title=pauseTitle+document.title;
+  else if(!on&&document.title.startsWith(pauseTitle))document.title=document.title.slice(pauseTitle.length);
+ }
+ const renderVisibility=()=>renderPaused(document.hidden&&RE?.state==='renderizando');
+ document.addEventListener('visibilitychange',renderVisibility);
+ const closeR=()=>{renderRun++;renderStart=null;renderCam='';renderPaused(false);if(RE){try{RE.dispose()}catch(e){}RE=null}if(rcv){rcv.remove();rcv=null}view='live';pg.value=0;renderLights.textContent='';wakeLive()};
  zc.onchange=()=>{
   const hadRender=view==='render';
   rvCeil=zc.value;
@@ -10686,15 +10698,28 @@ let RE=null,rcv=null,renderRun=0;
   setEnvI(.55);
   pm.textContent=hadRender?'Techo actualizado en la vista previa. Pulsa «Generar render» para actualizar la imagen.':'Techo actualizado en la vista previa.';
  };
- rb('▶ Generar render',async()=>{closeR();const run=renderRun;pm.textContent='Exportando la escena…';view='render';try{await Promise.all(Object.values(PCH).map(t=>t.complete).filter(Boolean));if(run!==renderRun)return;const j=exportScene(root,{cam:{x:st.x,y:st.h,z:st.z,yaw:st.yaw,pitch:st.pitch,mm:st.mm},sun:{dir:sun.position.clone().sub(sun.target.position).normalize().toArray(),color:'#'+sunC0.getHexString()},look:{exp:st.exp,k:st.k}});
+ /* Un único motor de render: se crea con la posición y orientación actuales de la cámara (renderCamKey) y
+    arranca en modo foto o panorama. 360° y Foto reutilizan el motor si la cámara no ha cambiado; si no hay motor
+    o la cámara se movió, lo crean de nuevo (closeR libera el anterior). Mientras uno se está creando para la
+    misma cámara, solo se cambia el modo con el que arrancará. */
+ const renderCamKey=()=>[st.x,st.h,st.z,st.yaw,st.pitch,st.mm].join('|');
+ let renderCam='',renderStart=null;
+ async function startPathRender(mode='foto'){closeR();const run=renderRun,key=renderCamKey();renderStart={run,key,mode};pm.textContent='Exportando la escena…';view='render';try{await Promise.all(Object.values(PCH).map(t=>t.complete).filter(Boolean));if(run!==renderRun)return;const j=exportScene(root,{cam:{x:st.x,y:st.h,z:st.z,yaw:st.yaw,pitch:st.pitch,mm:st.mm},sun:{dir:sun.position.clone().sub(sun.target.position).normalize().toArray(),color:'#'+sunC0.getHexString()},look:{exp:st.exp,k:st.k}});
   const lightCount=j.lights.length;
   renderLights.textContent=lightCount===1?'1 fuente de luz encendida en el render':lightCount+' fuentes de luz encendidas en el render';
   rcv=document.createElement('div');rcv.style.cssText='position:absolute;inset:0;z-index:1;background:#000;display:flex;align-items:center;justify-content:center';stage.append(rcv);const eng=window.RENDER_ENGINE;if(!eng)throw new Error('el motor de render no se cargó (recarga con Ctrl+F5)');
   const engine=await eng.createRender(rcv,j,{quality:rq.value,res:rz.value,sun:+sS.value,sky:+sK.value,exp:+sE.value},s=>{if(run!==renderRun)return;pg.value=s.target?Math.min(1,s.samples/s.target):0;pm.textContent=s.msg||({renderizando:'Renderizando',listo:'Listo',cancelado:'Cancelado',cargando:'Cargando',error:'Error'}[s.state]||s.state)+' · '+Math.floor(s.samples||0)+' / '+(s.target||0)+' muestras'});
-  if(run!==renderRun){engine.dispose();return}RE=engine;
-  if(RE.warnings.length)pm.textContent=RE.warnings.join(' ')}catch(e){if(run!==renderRun)return;console.error(e);pm.textContent='No se pudo iniciar el render: '+e.message+' (F12 → Console para más detalle)';if(rcv){rcv.remove();rcv=null}view='live'}}).className='studio-primary';
- rb('⏹ Cancelar',()=>RE&&RE.cancel());rb('⏵ Seguir',()=>RE&&RE.resume());rb('🌐 360°',()=>RE&&RE.pano());rb('📷 Foto',()=>RE&&RE.photo());rb('💾 PNG',()=>RE&&RE.save('png'));rb('💾 JPG',()=>RE&&RE.save('jpg'));rb('✕ Cerrar render',closeR);
- function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();animationWakers.delete(wakeLive);setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
+  if(run!==renderRun){engine.dispose();return}RE=engine;renderCam=key;const startMode=renderStart.mode;renderStart=null;if(startMode==='pano')RE.pano();
+  if(RE.warnings.length)pm.textContent=RE.warnings.join(' ')}catch(e){if(run!==renderRun)return;renderStart=null;console.error(e);pm.textContent='No se pudo iniciar el render: '+e.message+' (F12 → Console para más detalle)';if(rcv){rcv.remove();rcv=null}view='live'}}
+ function renderMode(mode){
+  const key=renderCamKey();
+  if(RE&&renderCam===key)return mode==='pano'?RE.pano():RE.photo();
+  if(renderStart&&renderStart.run===renderRun&&renderStart.key===key){renderStart.mode=mode;return}
+  startPathRender(mode);
+ }
+ rb('▶ Generar render',()=>startPathRender('foto')).className='studio-primary';
+ rb('⏹ Cancelar',()=>RE&&RE.cancel());rb('⏵ Seguir',()=>RE&&RE.resume());rb('🌐 360°',()=>renderMode('pano'));rb('📷 Foto',()=>renderMode('foto'));rb('💾 PNG',()=>RE&&RE.save('png'));rb('💾 JPG',()=>RE&&RE.save('jpg'));rb('✕ Cerrar render',closeR);
+ function exit(){if(!RVo)return;RVo=false;cancel=true;closeR();animationWakers.delete(wakeLive);setEnvI(1);sc.remove(skyL,skyL.target);sun.color.copy(sunC0);hemi.color.set('#fafcff');removeEventListener('keydown',kd);document.removeEventListener('visibilitychange',renderVisibility);ov.remove();sc.environment=null;renderEnvironment?.dispose();rr.dispose();sc.background=bg0;hemi.intensity=h0;sun.position.copy(p0);$('#ct').checked=kept.ct;sel=kept.sel;selPart=kept.selPart;setQ();setSun();build3d()}
  live()}
 /* ===== Interfaz: menús desplegables, iconos y modos de vista ===== */
 function modeUI(){const q=$('#sq').value,m3=mode=='3d';$('#vInteriorDetail').hidden=S.interiorPilot!==1;if(useCompact())updateMobileView();
