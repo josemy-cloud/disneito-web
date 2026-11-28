@@ -2015,7 +2015,7 @@ function finishPlanMarquee(d){
   }
   selectPlanItems(ids);
  }
- refresh();hint();
+ refreshSelection();hint();
 }
 c2.oncontextmenu=e=>e.preventDefault();
 c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.left,e.clientY-r.top),x=sn(wx),y=sn(wy);
@@ -2050,14 +2050,14 @@ c2.onmousedown=e=>{const r=c2.getBoundingClientRect(),[wx,wy]=W2(e.clientX-r.lef
   if(e.shiftKey){
    const ids=planSelectionIds();
    if(ids.has(hit.id))ids.delete(hit.id);else ids.add(hit.id);
-   selectPlanItems(ids);refresh();hint();return;
+   selectPlanItems(ids);refreshSelection();hint();return;
   }
   if(sel?.k==='group'&&sel.ids.has(hit.id)){
    startPlanGroupDrag(wx,wy);return;
   }
  }
- if(tool=='measure'){S.ms=S.ms||[];for(const m of S.ms){if(m.visible===false)continue;const r=mres(m);if(r&&Math.abs(wx-(r.p[0]+r.q[0])/2)<30/k&&Math.abs(wy-(r.p[1]+r.q[1])/2)<10/k){const v=prompt('Separación exacta (cm):',R(r.d));if(v!==null&&v!==''){setGap(m,r,+v);commit()}return}}const pk=pick(wx,wy);if(!pk){sel=null;selPart=null;refresh();return}if(!measA){measA=pk;$('#editorHint').textContent='Ahora elige el segundo objeto'}else{S.ms.push({a:measA,b:pk});measA=null;commit()}return}
- if(tool=='sel'){for(let mi=0;mi<(S.ms||[]).length;mi++){const m=S.ms[mi],mr=mres(m);if(S.showMeasures!==false&&m.visible!==false&&mr&&Math.abs(wx-(mr.p[0]+mr.q[0])/2)<30/k&&Math.abs(wy-(mr.p[1]+mr.q[1])/2)<10/k){sel={k:'ms',id:mi};refresh();return}}for(const w of S.w){const L=len(w),nx=(w.y2-w.y1)/L,ny=-(w.x2-w.x1)/L,of=w.t/2+22,cx=(w.x1+w.x2)/2+nx*of,cy=(w.y1+w.y2)/2+ny*of;if(Math.abs(wx-cx)<45/k&&Math.abs(wy-cy)<10/k){const v=prompt('Longitud de la pared (cm):',R(L));if(v&&+v>0){setLen(w,+v);sel={k:'w',id:w.id};commit()}return}}}
+ if(tool=='measure'){S.ms=S.ms||[];for(const m of S.ms){if(m.visible===false)continue;const r=mres(m);if(r&&Math.abs(wx-(r.p[0]+r.q[0])/2)<30/k&&Math.abs(wy-(r.p[1]+r.q[1])/2)<10/k){const v=prompt('Separación exacta (cm):',R(r.d));if(v!==null&&v!==''){setGap(m,r,+v);commit()}return}}const pk=pick(wx,wy);if(!pk){sel=null;selPart=null;refreshSelection();return}if(!measA){measA=pk;$('#editorHint').textContent='Ahora elige el segundo objeto'}else{S.ms.push({a:measA,b:pk});measA=null;commit()}return}
+ if(tool=='sel'){for(let mi=0;mi<(S.ms||[]).length;mi++){const m=S.ms[mi],mr=mres(m);if(S.showMeasures!==false&&m.visible!==false&&mr&&Math.abs(wx-(mr.p[0]+mr.q[0])/2)<30/k&&Math.abs(wy-(mr.p[1]+mr.q[1])/2)<10/k){sel={k:'ms',id:mi};refreshSelection();return}}for(const w of S.w){const L=len(w),nx=(w.y2-w.y1)/L,ny=-(w.x2-w.x1)/L,of=w.t/2+22,cx=(w.x1+w.x2)/2+nx*of,cy=(w.y1+w.y2)/2+ny*of;if(Math.abs(wx-cx)<45/k&&Math.abs(wy-cy)<10/k){const v=prompt('Longitud de la pared (cm):',R(L));if(v&&+v>0){setLen(w,+v);sel={k:'w',id:w.id};commit()}return}}}
  if(!hit){const R=(S.rooms||[]).find(r=>r.poly&&inPoly(wx,wy,r.poly));if(R)hit={k:'rooms',id:R.id,o:R}}
  if(tool==='sel'&&!armed&&!wallVis&&!e.touch&&(!hit||hit.k==='rooms')){
   drag={marquee:true,x:wx,y:wy,cx:wx,cy:wy,additive:e.shiftKey,
@@ -2111,7 +2111,7 @@ window.onmouseup=()=>{
  const d=drag;drag=null;
  if(d.marquee){finishPlanMarquee(d);return}
  if(d.group){
-  if(!d.moved){refresh();return}
+  if(!d.moved){refreshSelection();return}
   if(!planGroupFits(d)){
    shiftPlanGroup(d,0,0);refresh();
    $('#editorHint').textContent='Movimiento del grupo cancelado: hay una colisión o una apertura sale de su pared.';
@@ -2218,14 +2218,14 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'){
   if(pvOpen){e.preventDefault();$('#pvx').click();return}
   if(RVo||document.querySelector('dialog[open]')||$('#fotoIAModal')?.style.display==='flex')return;
-  const hadSelection=!!sel;
+  const hadSelection=!!sel,hadGroupDrag=!!drag?.group;
   if(drag?.group){shiftPlanGroup(drag,0,0);drag=null}
   if(drag?.marquee)drag=null;
   sel=null;selPart=null;
   ghost=null;place=null;measA=null;smode=false;
   closePreview();cur=null;armed=null;tool='sel';buf='';
   drawTools();libUI();hint();
-  if(hadSelection){e.preventDefault();refresh()}
+  if(hadSelection){e.preventDefault();hadGroupDrag?refresh():refreshSelection()}
   else draw();
   return;
  }
@@ -6955,7 +6955,37 @@ function releaseSceneResources(previous){
 function build3d(){
  if(!r3)return;
  const previous=collectSceneResources(root);
- try{rebuildScene3d()}finally{releaseSceneResources(previous)}
+ scene3dBuiltState=null;
+ try{rebuildScene3d();scene3dBuiltState=scene3dState()}finally{releaseSceneResources(previous)}
+}
+/* R1.4 · Reconstruir solo cuando cambia lo que se dibuja. La escena depende del proyecto S y de unos pocos ajustes
+   (calidad, techos, Ver en Realidad, modos interiores, modelos cargados y tipo de puntero para las sombras); la
+   selección solo añade los recuadros de los objetos seleccionados. scene3dState() resume todo eso (JSON de S, medido
+   en el proyecto de 260 objetos) y se guarda al final de cada build3d(). Si coincide, la selección y los
+   cambios de vista solo actualizan los recuadros; si no, se reconstruye como siempre. Las ediciones, los cambios de
+   calidad y la llegada de modelos o texturas siguen llamando a build3d()/refresh() directamente. */
+let scene3dBuiltState=null;
+// props() completa al seleccionar partColors:{} (todos los objetos) y cfg.pbr:{} (muebles modulares); la escena los
+// trata igual que ausentes (||{} y ?.), así que la clave los omite vacíos para que seleccionar no la invalide. Otras
+// normalizaciones (p. ej. cfg.mat de los electrodomésticos) sí cambian la clave y reconstruyen una vez, como antes.
+const scene3dEquivalentEmpty=(key,value)=>(key==='partColors'||key==='pbr')&&value&&typeof value==='object'&&!Array.isArray(value)&&!Object.keys(value).length?undefined:value;
+function scene3dState(){
+ return JSON.stringify(S,scene3dEquivalentEmpty)+'|'+[$('#sq').value,showCeil,rvCeil,RVo,interiorEvening,previousInteriorSun!==null,Object.keys(MODS).length,matchMedia('(pointer:coarse)').matches].join('|');
+}
+function scene3dCurrent(){return !!r3&&scene3dBuiltState!==null&&scene3dBuiltState===scene3dState()}
+// Retira y libera los recuadros de selección (geometría y material propios de cada BoxHelper) y crea los actuales.
+function updateSelectionOverlays(){
+ for(const node of root.children.slice())if(node.userData.selectionOverlay){root.remove(node);node.geometry?.dispose();node.material?.dispose()}
+ for(const node of root.children.slice())if(node.userData.selectable&&planElementSelected('i',node.userData.id)){
+  node.updateMatrixWorld(true);const box=new T.BoxHelper(node,0x3d7be0);box.userData.editorOverlay=true;box.userData.selectionOverlay=true;root.add(box);
+ }
+ requestPlanGpu();
+}
+// Refresca la interfaz tras un cambio de selección. Sin reconstruir si la escena está al día; con piezas
+// seleccionadas (selPart, resaltadas dentro de la geometría) o con la escena desactualizada, hace refresh().
+function refreshSelection(){
+ if(selPart||!scene3dCurrent())return refresh();
+ modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();updateSelectionOverlays();draw();props();
 }
 function rebuildScene3d(){roomsUpdate();
  root.traverse(light=>{
@@ -6969,7 +6999,7 @@ function rebuildScene3d(){roomsUpdate();
  let a=[1e9,1e9,-1e9,-1e9];S.w.forEach(w=>{a=[Math.min(a[0],w.x1,w.x2),Math.min(a[1],w.y1,w.y2),Math.max(a[2],w.x1,w.x2),Math.max(a[3],w.y1,w.y2)]});if(a[0]>1e8)a=[0,0,400,400];
  const fw=a[2]-a[0]+20,fd=a[3]-a[1]+20,f=new T.Mesh(new T.PlaneGeometry(fw,fd),floorMaterial(S.fl,fw,fd,[fw/2,fd/2]));f.rotation.x=-Math.PI/2;f.position.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);f.receiveShadow=true;f.userData.fl=1;if(!(S.rooms&&S.rooms.some(R=>R.poly&&R.poly.length>=3)))root.add(f);addRooms();sunC.set((a[0]+a[2])/2,0,(a[1]+a[3])/2);
  const gnd=new T.Mesh(new T.PlaneGeometry(9000,9000),M('#d7d5cf',.96));gnd.rotation.x=-Math.PI/2;gnd.position.set(sunC.x,-1,sunC.z);gnd.receiveShadow=true;gnd.userData.editorGround=true;root.add(gnd);
- S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);const visualVisible=syncCeilingSpotVisuals(g,it);if(visualVisible&&planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;root.add(bh)});
+ S.i.forEach(it=>{if(it.hid)return;const g=new T.Group();g.userData.id=it.id;it.op=it.op||[];buildItemGeometry(g,it,M(it.col,it.t=='frigo'?.35:.55,it.t=='frigo'?.5:0),M('#9a9a9a',.3,.9));if(useFixtureShadows&&!isLightingFixture(it))enableFurnitureShadows(g);g.position.set(it.x,it.e,it.y);g.rotation.y=-it.r*D;root.add(g);const visualVisible=syncCeilingSpotVisuals(g,it);g.userData.selectable=visualVisible;if(visualVisible&&planElementSelected('i',it.id)){g.updateMatrixWorld(true);const bh=new T.BoxHelper(g,0x3d7be0);bh.userData.editorOverlay=true;bh.userData.selectionOverlay=true;root.add(bh)}});root.updateMatrixWorld(true);HL.forEach(o=>{const bh=new T.BoxHelper(o,0xffaa00);bh.userData.editorOverlay=true;bh.userData.selectionOverlay=true;root.add(bh)});
  if(useFixtureShadows)configureFixtureShadows(root,matchMedia('(pointer:coarse)').matches);
  fitSunToProject();setSun();addRealisticDetails();rebuildPlanMeshIndex();requestPlanGpu();
 }
@@ -7379,7 +7409,7 @@ r3?.domElement.addEventListener('pointermove',e=>{
  if(!point)return;
  const item=gesture.item;
  if(!gesture.dragged){
-  gesture.dragged=true;sel={k:'i',id:item.id};selPart=null;refresh();
+  gesture.dragged=true;sel={k:'i',id:item.id};selPart=null;refreshSelection();
  }
  const x=gesture.x+sn(point.x-gesture.start.x),y=gesture.y+sn(point.z-gesture.start.z);
  if(x===item.x&&y===item.y)return;
@@ -7419,7 +7449,7 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
   activateWalkAction();
  }
  return;
-}if(!start||start[2]!==e.pointerId||Math.hypot(e.clientX-start[0],e.clientY-start[1])>(e.pointerType==='mouse'?4:9))return;const h=pickEditor3D(viewRay(e));if(!h){if(sel||selPart){sel=null;selPart=null;refresh()}return}let mv=null,it=null,wl=null,fl=0,rm=null,opening=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.opening!=null)opening=u.opening;if(u.fl)fl=1;if(u.room)rm=u.room}
+}if(!start||start[2]!==e.pointerId||Math.hypot(e.clientX-start[0],e.clientY-start[1])>(e.pointerType==='mouse'?4:9))return;const h=pickEditor3D(viewRay(e));if(!h){if(sel||selPart){sel=null;selPart=null;refreshSelection()}return}let mv=null,it=null,wl=null,fl=0,rm=null,opening=null;for(let o=h.object;o;o=o.parent){const u=o.userData;if(u.mv&&!mv)mv=u.mv;if(u.id)it=u.id;if(u.wall)wl=u.wall;if(u.opening!=null)opening=u.opening;if(u.fl)fl=1;if(u.room)rm=u.room}
  if(wallVis&&wl&&!it){const w=S.w.find(x=>x.id==wl);if(w){wvToggle(w);commit()}return}
  if(armed){
   const w=wl&&S.w.find(w=>w.id==wl);
@@ -7434,16 +7464,16 @@ r3?.domElement.addEventListener('pointerup',e=>{viewPointers.delete(e.pointerId)
   }
   return;
  }
- if(smode){let pt=null,pit=null;for(let o=h.object;o;o=o.parent){if(o.userData.part&&!pt)pt=o.userData.part;if(o.userData.id)pit=o.userData.id}if(pit){sel={k:'i',id:pit};selPart=pt?Object.assign({id:pit},pt):null;refresh();return}if(selPart){selPart=null;refresh()}return}
- if(rm&&!it&&!mv&&!wl){sel={k:'rooms',id:rm};selPart=null;refresh();return}
+ if(smode){let pt=null,pit=null;for(let o=h.object;o;o=o.parent){if(o.userData.part&&!pt)pt=o.userData.part;if(o.userData.id)pit=o.userData.id}if(pit){sel={k:'i',id:pit};selPart=pt?Object.assign({id:pit},pt):null;refreshSelection();return}if(selPart){selPart=null;refreshSelection()}return}
+ if(rm&&!it&&!mv&&!wl){sel={k:'rooms',id:rm};selPart=null;refreshSelection();return}
  if(opening!=null){
   sel={k:'o',id:opening};selPart=null;
   if(mv){toggleMotion(mv);commitQ();draw();props()}
-  else refresh();
+  else refreshSelection();
   return;
  }
  if(mv&&!it){toggleMotion(mv);commitQ();return}
- if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refresh()}else if(wl){sel={k:'w',id:wl};selPart=null;refresh()}else{sel=null;selPart=null;refresh()}});
+ if(it){sel={k:'i',id:it};selPart=null;const e2=S.i.find(i=>i.id==it);if(mv&&!e2.lk){toggleMotion(mv);commitQ();props()}else refreshSelection()}else if(wl){sel={k:'w',id:wl};selPart=null;refreshSelection()}else{sel=null;selPart=null;refreshSelection()}});
 /* ===== Control general ===== */
 function refresh(light,planTransform=false){modeUI();if(wallVis)wvBar();$('#ckMeasures').checked=S.showMeasures!==false;syncNuhioTitle();sbUpdate();if(!planTransform&&(mode=='3d'||!light))build3d();draw();props()}
 const editorView=$('#view');
@@ -7673,7 +7703,7 @@ function setMode(m){
  $('#bM').textContent=mode==='2d'?'Cambiar a 3D':'Cambiar a 2D';
  walk=false;if(oc)oc.enabled=true;
  modeUI();
- if(showModel){resize();build3d()}else draw();
+ if(showModel){resize();if(selPart||!scene3dCurrent())build3d();else requestPlanGpu()}else draw();
  if(dual)requestAnimationFrame(()=>{resize();draw()});
  hint();sbUpdate();
 }
@@ -11624,7 +11654,7 @@ try{
 try{JSON.parse(localStorage.getItem('ml')||'[]').forEach(o=>{ML.push(o);LIB.push(o)})}catch(e){}
 if(r4)r4.outputEncoding=T.sRGBEncoding;
 if(!r3)$('#editorHint').textContent=WEBGL_UNAVAILABLE;
-drawTools();libUI();hint();setSun();setQ();refresh();
+drawTools();libUI();hint();setSun();setQ();refreshSelection();
 if(!startupProject)startEditorOrbit();
 animate();
 document.body.classList.remove('editor-booting');
